@@ -172,6 +172,7 @@ Proof.
             rewrite Nat.div_mul in H5; lia.
        * rewrite H4. replace (n - n) with 0 by lia. rewrite Nat.sub_0_r. repeat rewrite Nat.add_0_r. auto.
        * replace ((t - (n - t * (t + 1) / 2) + (n - t * (t + 1) / 2))) with t by nia. lia.
+       Show Proof.
 Qed.
 
 Theorem theorem_30_3' : forall {T : Type} (A B : Ensemble T),
