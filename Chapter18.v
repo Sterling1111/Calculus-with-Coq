@@ -1,4 +1,4 @@
-Require Import Imports QRT WI_SI_WO String.
+Require Import Imports QRT WI_SI_WO.
 
 Require Export Chapter17.
 
