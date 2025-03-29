@@ -1,5 +1,5 @@
 Require Import Imports Reals_util.
-
+From Stdlib Require Import List.
 Open Scope R_scope.
 
 Notation "'∑' i n f" := (sum_f i n f)
