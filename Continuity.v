@@ -607,3 +607,25 @@ Proof.
   - pose proof theorem_7_6_a f a b H1 H2 as [N H3]. exists N. intros y [x [H4 H5]]. subst. apply H3. solve_R.
   - pose proof theorem_7_6_b f a b H1 H2 as [N H3]. exists N. intros y [x [H4 H5]]. subst. apply H3. solve_R.
 Qed.
+
+Theorem continuous_function_attains_glb_on_interval : forall (f : ℝ -> ℝ) (a b : ℝ),
+  a < b ->
+  continuous_on f [a, b] ->
+  exists x, x ∈ [a, b] /\
+    is_glb (fun y : ℝ => exists x : ℝ, x ∈ [a, b] /\ y = f x) (f x).
+Proof.
+  intros f a b H1 H2. pose proof theorem_7_7 f a b H1 H2 as [x [H3 H4]]. exists x. split; auto; split.
+  - intros x2 [x3 [H5 H6]]. specialize (H4 x3 H5). lra.
+  - intros lb H5. apply H5. exists x; auto.
+Qed.
+
+Lemma continuous_function_attains_lub_on_interval : forall (f : ℝ -> ℝ) (a b : ℝ),
+  a < b ->
+  continuous_on f [a, b] ->
+  exists x, x ∈ [a, b] /\
+    is_lub (fun y : ℝ => exists x : ℝ, x ∈ [a, b] /\ y = f x) (f x).
+Proof.
+  intros f a b H1 H2. pose proof theorem_7_3 f a b H1 H2 as [x [H3 H4]]. exists x. split; auto; split.
+  - intros x2 [x3 [H5 H6]]. specialize (H4 x3 H5). lra.
+  - intros ub H5. apply H5. exists x; auto.
+Qed.

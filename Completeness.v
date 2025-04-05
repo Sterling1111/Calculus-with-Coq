@@ -144,6 +144,14 @@ Proof.
        exists (a - x), (y + a). repeat split; auto. lra.
 Qed.
 
+Lemma inf_le_sup : forall (E : Ensemble ℝ) a b, is_glb E a -> is_lub E b -> a <= b.
+Proof.
+  intros E a b H1 H2. pose proof exists_lub_set_not_empty E b H2 as H3. assert (exists x, x ∈ E) as [x H4].
+  { apply not_Empty_In in H3. auto. }
+  pose proof glb_le_all_In E a x H1 H4 as H5.
+  pose proof lub_ge_all_In E b x H2 H4 as H6. lra.
+Qed.
+
 Lemma sup_le_inf : forall (E1 E2 : Ensemble ℝ) a b, is_lub E1 a -> is_glb E2 b ->
   (forall x y, x ∈ E1 -> y ∈ E2 -> x <= y) -> a <= b.
 Proof.
