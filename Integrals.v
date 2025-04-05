@@ -92,6 +92,29 @@ Proof.
   - simpl; lia.
 Qed.
 
+Lemma partition_first : forall a b (P : partition_R a b),
+  nth 0 (points a b P) 0 = a.
+Proof.
+  intros a b P. pose proof partition_length a b P as H0. destruct P as [l1 H1 H2 H3 H4 H5]. simpl in *.
+  pose proof Rtotal_order (nth 0 l1 0) a as [H6 | [H6 | H6]]; auto.
+  - assert (List.In (nth 0 l1 0) l1) as H7. { apply nth_In; lia. } 
+    specialize (H5 (nth 0 l1 0) H7). simpl in H5. lra.
+  - pose proof In_nth l1 a 0 H3 as [n [H7 H8]]. assert (n = 0 \/ n > 0)%nat as [H9 | H9] by lia.
+    -- subst. simpl in H6. lra.
+    -- pose proof Sorted_Rlt_nth l1 0 n H2 ltac:(lia) as H10. lra.
+Qed.
+
+Lemma partition_last : forall a b (P : partition_R a b),
+  nth (length (points a b P) - 1) (points a b P) 0 = b.
+Proof.
+  intros a b P. pose proof partition_length a b P as H0. destruct P as [l1 H1 H2 H3 H4 H5]. simpl in *.
+  pose proof Rtotal_order (nth (length l1 - 1) l1 0) b as [H6 | [H6 | H6]]; auto.
+  2 : { assert (List.In (nth (length l1 - 1) l1 0) l1) as H7. { apply nth_In; lia. } 
+    specialize (H5 (nth (length l1 - 1) l1 0) H7). simpl in H5. lra. }
+  pose proof In_nth l1 b 0 H4 as [n [H7 H8]]. assert (n = length l1 - 1 \/ n < length l1 - 1)%nat as [H9 | H9] by lia.
+  - subst. simpl in H6. lra.
+  - pose proof Sorted_Rlt_nth l1 n (length l1 - 1) H2 ltac:(lia) as H10. lra.
+Qed.
 Record bounded_function_R (a b : ℝ) : Type := mkbounded_function_R
 {
   f : ℝ -> ℝ;
@@ -182,8 +205,7 @@ Definition lower_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition_R 
   let l1 := p.(points a b) in
   let l2 := proj1_sig (partition_sublist_elem_has_inf f a b p bounded) in
   let n : ℕ := length l2 in
-  let sum_term := fun i => (nth i l2 0) * (nth (i+1) l1 0 - nth (i) l1 0) in
-  sum_f 0 (n-1) sum_term.
+  sum_f 0 (n-1) (fun i => (nth i l2 0) * (nth (i+1) l1 0 - nth (i) l1 0)).
 
 Definition upper_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition_R a b) : ℝ :=
   let f := bf.(f a b) in
@@ -219,8 +241,6 @@ Section lower_upper_sum_test.
 
   Let P : partition_R a b := mkpartition_R a b l1 a_lt_b l1_sorted a_In_l1 b_In_l1 x_In_l1.
 
-  Print P.
-
   Lemma f_bounded_On : bounded_On f [a, b].
   Proof.
     unfold bounded_On, f, a, b. repeat split; try lra.
@@ -229,8 +249,6 @@ Section lower_upper_sum_test.
   Qed.
 
   Let bf : bounded_function_R a b := mkbounded_function_R a b f f_bounded_On.
-
-  Print bf.
 
   Lemma glb_f_1_2_is_1 : is_glb (fun y => exists x, x ∈ [1, 2] /\ y = f x) 1.
   Proof.
@@ -828,8 +846,14 @@ Proof.
   specialize (H2 (b - a) ltac:(lra)). lra.
 Qed.
 
+Lemma exists_partition_with_step_lt : forall (a b : ℝ) (δ : ℝ),
+  δ > 0 -> exists (P : partition_R a b), forall i, (i < length (P.(points a b)) - 1)%nat -> nth (i + 1) (P.(points a b)) 0 - nth i (P.(points a b)) 0 < δ.
+Proof.
+  intros a b δ H0.
+Admitted.
+
 Theorem theorem_13_2_a : forall (a b : ℝ) (f : bounded_function_R a b),
-  a < b -> Integrable_On f.(Integrals.f a b) a b <-> (forall ε, ε > 0 -> exists P : partition_R a b, (U(f, P(a, b)) - L(f, P(a, b))) < ε).
+  a < b -> (Integrable_On f.(Integrals.f a b) a b <-> (forall ε, ε > 0 -> exists P : partition_R a b, (U(f, P(a, b)) - L(f, P(a, b))) < ε)).
 Proof.
   intros a b f H0. split.
   - intros H1. unfold Integrable_On in H1. destruct H1 as [H1 | [ H1 | H1]]; try lra.

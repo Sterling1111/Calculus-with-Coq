@@ -1,4 +1,4 @@
-Require Import Imports Fibonacci QRT DecimalString String.
+Require Import Imports Fibonacci QRT.
 Require Export Chapter16.
 
 Open Scope Z_scope.
