@@ -908,7 +908,7 @@ Proof.
   intros f a b H1 H2. assert (H3 : bounded_On f [a, b]). { apply continuous_imp_bounded; auto. }
   pose proof theorem_8_A_1 f a b H1 H2 as H4. set (bf := mkbounded_function_R a b f H3).
   apply (theorem_13_2_a a b bf); auto. 
-  intros ε H5. specialize (H4 (ε / (2 * (b - a))) ltac:(apply Rdiv_pos_pos; lra)) as [δ [H4 H6]].
+  intros ε H5. specialize (H4 (ε / ((b - a))) ltac:(apply Rdiv_pos_pos; lra)) as [δ [H4 H6]].
   destruct (exists_partition_delta_lt a b δ ltac:(auto) ltac:(lra)) as [P H7].
   exists P. unfold upper_sum, lower_sum, proj1_sig; simpl.
   destruct (partition_sublist_elem_has_inf f a b P H3) as [l1 [H8 H9]]; 
@@ -952,8 +952,7 @@ Proof.
     assert (H18 : List.In (nth i l 0) l). { apply nth_In; lia. }
     assert (H19 : List.In (nth (i+1) l 0) l). { apply nth_In; lia. }
     specialize (partition_R_P10 (nth i l 0) H18) as H20. specialize (partition_R_P10 (nth (i+1) l 0) H19) as H21.
-    unfold In in *. specialize (H7 i ltac:(lia)). specialize (H6 x y ltac:(lra) ltac:(lra) ltac:(solve_R)).
-    apply Rmult_lt_compat_l with (r := 2) in H6; try lra. field_simplify in H6; try lra. solve_R.
+    unfold In in *. specialize (H7 i ltac:(lia)). specialize (H6 x y ltac:(lra) ltac:(lra) ltac:(solve_R)). solve_R.
   }
   replace (length l1) with (length l2) by lia. rewrite sum_f_minus; try lia.
   assert (∑ 0 (length l2 - 1) (λ i : ℕ, nth i l2 0 * (nth (i + 1) (points a b P) 0 - nth i (points a b P) 0) -
@@ -965,8 +964,10 @@ Proof.
     specialize (H12 i ltac:(lia)). specialize (H13 i ltac:(lia)). specialize (H14 i ltac:(lia)).
     pose proof Sorted_Rlt_nth (points a b P) i (i+1) ltac:(destruct P; auto) ltac:(lia) as H17. nra.
   }
-  rewrite <- r_mult_sum_f_i_n_f_l in H15.
-Admitted.
+  rewrite <- r_mult_sum_f_i_n_f_l in H15. replace (length l2 - 1)%nat with (length (points a b P) - 2)%nat in H15 at 2 by lia.
+  rewrite sum_f_list_sub_alt in H15. 2 : { apply partition_length. } rewrite partition_last, partition_first in H15.
+  field_simplify in H15; try lra.
+Qed.
 
 Theorem FTC1 : ∀ f F a b,
   (∀ x, x ∈ [a, b] -> ∫ a x f = (F x)) -> continuous_on f [a, b] -> ⟦ der ⟧ F (a, b) = f.
