@@ -1,4 +1,4 @@
-Require Import Imports Binomial Reals_util Utf8.
+Require Import Imports Binomial Reals_util.
 
 Import ListNotations Binomial.Choose_Notations.
 

@@ -1,4 +1,6 @@
-Require Import Imports List.
+Require Import Imports.
+
+Notation In := List.In.
 
 Inductive count_occ_of {A : Type} (x : A) : list A -> nat -> Prop :=
   | count_nil : count_occ_of x nil 0

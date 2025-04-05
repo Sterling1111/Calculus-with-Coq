@@ -21,14 +21,6 @@ From Coq Require Export
   Arith.Compare_dec
   Lia
   
-  (* Sets and Lists *)
-  Lists.List
-  Sets.Ensembles
-  Sets.Classical_sets
-  Sets.Powerset
-  Sets.Finite_sets
-  Sets.Image
-  
   (* Logic *)
   Logic.Classical
   Logic.ClassicalFacts
@@ -38,12 +30,22 @@ From Coq Require Export
   Logic.ClassicalChoice
   
   (* Utilities *)
+  String
+  DecimalString
   Program
   Orders
   Sorting
   Permutation
   Utf8
-  Classes.Morphisms.
+  Classes.Morphisms
+
+  (* Sets and Lists *)
+  Lists.List
+  Sets.Ensembles
+  Sets.Classical_sets
+  Sets.Powerset
+  Sets.Finite_sets
+  Sets.Image.
   
 
 (* Common notations *)

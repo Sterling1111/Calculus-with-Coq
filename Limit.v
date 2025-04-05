@@ -1,4 +1,4 @@
-Require Import Imports Sequence Sets Chapter12 Reals_util Sequence Notations Utf8 Functions.
+Require Import Imports Sequence Sets Chapter12 Reals_util Sequence Notations Functions.
 Import SetNotations.
 
 Open Scope R_scope.

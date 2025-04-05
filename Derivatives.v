@@ -242,7 +242,8 @@ Proof.
   assert (continuous_at φ 0) as H3.
   {
     intros ε H4. specialize (H2 ε H4) as [δ' [H5 H6]].  unfold φ. rewrite Rplus_0_r, Rminus_diag.
-    assert (H7 : continuous_at g a). { apply theorem_9_1_a. unfold differentiable_at. unfold derivative_at in H1. exists (g' a). auto. }
+    assert (H7 : continuous_at g a). 
+    { apply theorem_9_1_a. unfold differentiable_at. unfold derivative_at in H1. exists (g' a). auto. }
     specialize (H7 δ' H5) as [δ [H8 H9]]. exists δ. split; auto. intros x H10.
     destruct (Req_dec (g (a + x) - g a) 0) as [H11 | H11]; destruct (Req_dec 0 0) as [H12 | H12]; try lra; clear H12.
      - solve_R.
