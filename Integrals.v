@@ -458,6 +458,16 @@ Proof.
     -- simpl. specialize (IH t' n' i'). rewrite IH; auto. lia.
 Qed.
 
+Lemma firstn_Sorted_Rlt : forall (l1 : list ℝ) (n : ℕ),
+  Sorted Rlt l1 -> Sorted Rlt (firstn n l1).
+Proof.
+  induction l1 as [| h t IH]; intros n H1.
+  - rewrite firstn_nil; auto.
+  - destruct n as [| n'].
+    -- simpl; auto.
+    -- apply Sorted_inv in H1 as [H1 H2]. simpl.
+Admitted.
+
 Lemma insert_Sorted_Rlt_nth : forall (l1 l2 : list ℝ) (r : ℝ),
   Sorted Rlt l1 -> ~List.In r l1 -> l2 = insert_Sorted_Rlt r l1 -> 
     exists (i : ℕ), (i < length l2)%nat /\ nth i l2 0 = r /\ 
@@ -467,7 +477,12 @@ Proof.
   intros l1 l2 r H1 H2 H3. pose proof insert_Sorted_Rlt_in r l1 as H4. pose proof In_nth l2 r 0 ltac:(subst; auto) as [n [H5 H6]].
   exists n; do 2 (split; auto). split; [intro j | intro k]; intro H7.
   - assert (firstn n l1 = firstn n l2) as H8.
-    { apply Sorted_Rlt_eq. admit. admit. admit. } apply firstn_nth_eq with (n := n) (i := j) in H8; auto.
+    { apply Sorted_Rlt_eq. admit. admit.
+      intro x. split; intro H8.
+      - rewrite H3 in *. admit.
+      - admit.
+    }
+    apply firstn_nth_eq with (n := n) (i := j) in H8; auto.
   - assert (skipn n l1 = skipn (n+1) l2) as H8.
     { apply Sorted_Rlt_eq. admit. admit. admit. } apply skipn_nth_eq' with (n := n) (i := k) in H8; auto.
 Admitted.
@@ -880,6 +895,13 @@ Proof.
     exists f, sup, inf; repeat (split; auto).
 Qed.
 
+Lemma exists_partition_delta_lt : forall a b ε,
+  a < b -> ε > 0 -> exists (P : partition_R a b), forall i, (i < length (P.(points a b)) - 1)%nat -> 
+    (nth (i + 1) (P.(points a b)) 0 - nth i (P.(points a b)) 0) < ε.
+Proof.
+
+Admitted.
+
 Theorem theorem_13_3 : forall f a b,
   a < b -> continuous_on f [a, b] -> Integrable_On f a b.
 Proof.
@@ -887,17 +909,63 @@ Proof.
   pose proof theorem_8_A_1 f a b H1 H2 as H4. set (bf := mkbounded_function_R a b f H3).
   apply (theorem_13_2_a a b bf); auto. 
   intros ε H5. specialize (H4 (ε / (2 * (b - a))) ltac:(apply Rdiv_pos_pos; lra)) as [δ [H4 H6]].
-  pose proof (exists_partition_with_step_lt a b δ H4) as [P H7]. exists P.
-  unfold upper_sum, lower_sum; simpl. destruct (partition_sublist_elem_has_sup) as [l1 [H8 H9]];
-  destruct (partition_sublist_elem_has_inf) as [l2 [H10 H11]]; simpl. replace (length l2) with (length l1) by lia.
-  rewrite sum_f_minus; try lia. set (p := points a b P). replace (points a b P) with p in *; auto.
-  assert (H12 : forall i x y, (i < length p - 1)%nat -> x ∈ [nth i p 0, nth (i + 1) p 0] -> y ∈ [nth i p 0, nth (i + 1) p 0] -> |f x - f y| < ε / (2 * (b - a))).
-  { intros i x y H12 H13 H14. apply H6. 3 : { unfold In in *. specialize (H7 i ltac:(lia)). solve_R. } admit. admit. }
-  assert (H13 : forall i, (i < length p - 1)%nat -> nth i l1 0 - nth i l2 0 < ε / (2 * (b - a))).
-  { intros i H13. specialize (H9 i ltac:(lia)) as H14. specialize (H11 i ltac:(lia)) as H15.
-    assert (H16 : continuous_on f [nth i p 0, nth (i + 1) p 0]). { apply continuous_on_subset with (A2 := [a, b]); auto. apply Subset_def.
-    intros x H16.
-  admit. }
+  destruct (exists_partition_delta_lt a b δ ltac:(auto) ltac:(lra)) as [P H7].
+  exists P. unfold upper_sum, lower_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_inf f a b P H3) as [l1 [H8 H9]]; 
+  destruct (partition_sublist_elem_has_sup f a b P H3) as [l2 [H10 H11]].
+  assert (H12 : forall i, (i < length (points a b P) - 1)%nat -> (nth i l1 0 ∈ (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth i (points a b P) 0 <= x0 <= nth (i + 1) (points a b P) 0) ∧ y = f x))).
+  { 
+    intros i H12. assert (H13 : nth i (points a b P) 0 < nth (i + 1) (points a b P) 0). { apply Sorted_Rlt_nth; try lia. destruct P; auto. }
+    assert (H14 : continuous_on f [nth i (points a b P) 0, nth (i + 1) (points a b P) 0]).
+    { apply continuous_on_subset with (A2 := [a, b]). intros x H14. unfold In in *. destruct P as [l]; simpl in *.
+      assert (H15 : List.In (nth i l 0) l). { apply nth_In; lia. }
+      assert (H16 : List.In (nth (i + 1) l 0) l). { apply nth_In; lia. }
+      specialize (partition_R_P10 (nth i l 0) H15) as H17. specialize (partition_R_P10 (nth (i + 1) l 0) H16) as H18. lra. auto.
+    }
+    pose proof continuous_function_attains_glb_on_interval f (nth i (points a b P) 0) (nth (i + 1) (points a b P) 0) H13 H14 as [x [H15 H16]].
+    specialize (H9 i ltac:(lia)). pose proof glb_unique (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth i (points a b P) 0 <= x0 <= nth (i + 1) (points a b P) 0) ∧ y = f x) (nth i l1 0) (f x) H9 H16 as H17.
+    rewrite H17. exists x. split; auto.
+  }
+  assert (H13 : forall i, (i < length (points a b P) - 1)%nat -> (nth i l2 0 ∈ (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth i (points a b P) 0 <= x0 <= nth (i + 1) (points a b P) 0) ∧ y = f x))).
+  { 
+    intros i H13. assert (H14 : nth i (points a b P) 0 < nth (i + 1) (points a b P) 0). { apply Sorted_Rlt_nth; try lia. destruct P; auto. }
+    assert (H15 : continuous_on f [nth i (points a b P) 0, nth (i + 1) (points a b P) 0]).
+    { apply continuous_on_subset with (A2 := [a, b]). intros x H15. unfold In in *. destruct P as [l]; simpl in *.
+      assert (H16 : List.In (nth i l 0) l). { apply nth_In; lia. }
+      assert (H17 : List.In (nth (i + 1) l 0) l). { apply nth_In; lia. }
+      specialize (partition_R_P10 (nth i l 0) H16) as H18. specialize (partition_R_P10 (nth (i + 1) l 0) H17) as H19. lra. auto.
+    }
+    pose proof continuous_function_attains_lub_on_interval f (nth i (points a b P) 0) (nth (i + 1) (points a b P) 0) H14 H15 as [x [H16 H17]].
+    specialize (H11 i ltac:(lia)). pose proof lub_unique (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth i (points a b P) 0 <= x0 <= nth (i + 1) (points a b P) 0) ∧ y = f x) (nth i l2 0) (f x) H11 H17 as H18.
+    rewrite H18. exists x. split; auto.
+  }
+  assert (H14 : forall i, (i < length (points a b P) - 1)%nat -> nth i l2 0 - nth i l1 0 < ε / (b - a)).
+  {
+    intros i H14. specialize (H12 i H14) as [y [H12 H15]]. specialize (H13 i H14) as [x [H13 H16]].
+    rewrite H15, H16. assert (f y <= f x) as H17.
+    { 
+      apply inf_le_sup with (E := (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth i (points a b P) 0 <= x0 <= nth (i + 1) (points a b P) 0) ∧ y = f x)).
+      specialize (H9 i ltac:(lia)). rewrite <- H15. auto.
+      specialize (H11 i ltac:(lia)). rewrite <- H16. auto. 
+    }
+    destruct P as [l]; simpl in *.
+    assert (H18 : List.In (nth i l 0) l). { apply nth_In; lia. }
+    assert (H19 : List.In (nth (i+1) l 0) l). { apply nth_In; lia. }
+    specialize (partition_R_P10 (nth i l 0) H18) as H20. specialize (partition_R_P10 (nth (i+1) l 0) H19) as H21.
+    unfold In in *. specialize (H7 i ltac:(lia)). specialize (H6 x y ltac:(lra) ltac:(lra) ltac:(solve_R)).
+    apply Rmult_lt_compat_l with (r := 2) in H6; try lra. field_simplify in H6; try lra. solve_R.
+  }
+  replace (length l1) with (length l2) by lia. rewrite sum_f_minus; try lia.
+  assert (∑ 0 (length l2 - 1) (λ i : ℕ, nth i l2 0 * (nth (i + 1) (points a b P) 0 - nth i (points a b P) 0) -
+  nth i l1 0 * (nth (i + 1) (points a b P) 0 - nth i (points a b P) 0)) < 
+  ∑ 0 (length l2 - 1) (λ i : ℕ, (ε / (b-a)) * (nth (i + 1) (points a b P) 0 - nth i (points a b P) 0))) as H15.
+  {
+    apply sum_f_congruence_lt; try lia. intros i H15.
+    assert (i < length (points a b P) - 1)%nat as H16. { rewrite <- H10. pose proof partition_length a b P; lia. } 
+    specialize (H12 i ltac:(lia)). specialize (H13 i ltac:(lia)). specialize (H14 i ltac:(lia)).
+    pose proof Sorted_Rlt_nth (points a b P) i (i+1) ltac:(destruct P; auto) ltac:(lia) as H17. nra.
+  }
+  rewrite <- r_mult_sum_f_i_n_f_l in H15.
 Admitted.
 
 Theorem FTC1 : ∀ f F a b,
