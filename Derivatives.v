@@ -245,7 +245,7 @@ Proof.
     assert (H7 : continuous_at g a). { apply theorem_9_1_a. unfold differentiable_at. unfold derivative_at in H1. exists (g' a). auto. }
     specialize (H7 δ' H5) as [δ [H8 H9]]. exists δ. split; auto. intros x H10.
     destruct (Req_dec (g (a + x) - g a) 0) as [H11 | H11]; destruct (Req_dec 0 0) as [H12 | H12]; try lra; clear H12.
-     - solve_R. 
+     - solve_R.
      - specialize (H9 (a + x) ltac:(solve_R)). specialize (H6 (g (a + x) - g a) ltac:(solve_R)).
        replace (g a + (g (a + x) - g a)) with (g (a + x)) in H6 by lra. auto.
   }
@@ -261,7 +261,7 @@ Qed.
 Theorem chain_rule : forall f g f' g',
   ⟦ der ⟧ g = g' -> ⟦ der ⟧ f = f' -> ⟦ der ⟧ (f ∘ g) = (f' ∘ g) ∙ g'.
 Proof.
-  intros f g f' g' H1 H2 x H3. apply theorem_10_9; auto. specialize (H2 (g x) ltac:(apply Full_intro)). auto. 
+  intros f g f' g' H1 H2 x H3. specialize (H2 (g x) ltac:(apply Full_intro)). apply theorem_10_9; auto.
 Qed.
 
 Example example_d1 : ⟦ der ⟧ (fun x => x^3) = (fun x => 3 * x^2).

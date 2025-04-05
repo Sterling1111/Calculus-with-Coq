@@ -205,6 +205,20 @@ Proof.
        { apply H2. lia. } apply Rplus_le_compat. apply IH. lia. intros k H5. apply H2. lia. apply H4.
 Qed.
 
+Lemma sum_f_congruence_lt : forall (f1 f2 : nat -> R) (i n : nat),
+  (i <= n)%nat ->
+  (forall k, (i <= k <= n)%nat -> f1 k < f2 k) ->
+  sum_f i n f1 < sum_f i n f2.
+Proof.
+  intros f1 f2 i n H1 H2. unfold sum_f. induction n as [| n' IH].
+  - simpl. apply H2. lia.
+  - assert (H3 : (i = S n')%nat \/ (i < S n')%nat) by lia. destruct H3 as [H3 | H3].
+    -- replace (S n' - i)%nat with 0%nat by lia. simpl. apply H2. lia.
+    -- replace (S n' - i)%nat with (S (n' - i)%nat) by lia. repeat rewrite sum_f_R0_f_Sn.
+       replace (S (n' - i) + i)%nat with (S n')%nat by lia. assert (f1 (S n') < f2 (S n')) as H4.
+       { apply H2. lia. } apply Rplus_lt_compat. apply IH; try lia. intros k H5. apply H2; try lia. apply H4.
+Qed.
+
 Lemma sum_f_nonneg : forall f i n,
   (i <= n)%nat ->
   (forall k, (i <= k <= n)%nat -> 0 <= f k) -> 0 <= sum_f i n f.
@@ -544,4 +558,16 @@ Proof.
   - exists 0%nat. simpl. reflexivity.
   - replace (S k * (S k + 1))%nat with ((k^2 + k) + (2*k + 2))%nat by (simpl; lia).
     destruct IH as [m H1]. exists (m + (k + 1))%nat. simpl. lia.
+Qed.
+
+Lemma sum_f_list_sub_alt : forall l : list R,
+  (length l >= 2)%nat -> sum_f 0 (length l - 2) (fun i => (nth (i+1) l 0) - nth i l 0) = nth (length l - 1) l 0 - nth 0 l 0.
+Proof.
+  intros l H1. induction l as [| h t IH].
+  - simpl in H1. lia.
+  - assert (length (h :: t) = 1 \/ length (h :: t) = 2 \/ length t >= 2)%nat as [H2 | [H2 | H2]] by (simpl; lia); try lia.
+    -- rewrite H2. reflexivity.
+    -- specialize (IH H2). replace (length (h :: t) - 2)%nat with (length t - 1)%nat by (simpl; lia).
+       rewrite sum_f_reindex' with (s := 1%nat) (i := 0%nat). replace (length t - 1 + 1)%nat with (length t) by lia.
+
 Qed.
