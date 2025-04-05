@@ -1,6 +1,9 @@
 Require Import Imports Reals_util.
 From Coq Require Import List.
+Import ListNotations.
 Open Scope R_scope.
+
+Notation length := Datatypes.length.
 
 Notation "'∑' i n f" := (sum_f i n f)
   (at level 45, i at level 0, n at level 0,
@@ -563,11 +566,13 @@ Qed.
 Lemma sum_f_list_sub_alt : forall l : list R,
   (length l >= 2)%nat -> sum_f 0 (length l - 2) (fun i => (nth (i+1) l 0) - nth i l 0) = nth (length l - 1) l 0 - nth 0 l 0.
 Proof.
-  intros l H1. induction l as [| h t IH].
-  - simpl in H1. lia.
-  - assert (length (h :: t) = 1 \/ length (h :: t) = 2 \/ length t >= 2)%nat as [H2 | [H2 | H2]] by (simpl; lia); try lia.
-    -- rewrite H2. reflexivity.
-    -- specialize (IH H2). replace (length (h :: t) - 2)%nat with (length t - 1)%nat by (simpl; lia).
-       rewrite sum_f_reindex' with (s := 1%nat) (i := 0%nat). replace (length t - 1 + 1)%nat with (length t) by lia.
-
+  intros l H1. rewrite <- sum_f_minus; try lia. rewrite sum_f_reindex' with (s := 1%nat) (i := 0%nat) at 1.
+  simpl. replace (length l - 2 + 1)%nat with (length l - 1)%nat by lia.
+  replace (∑ 1 (length l - 1) (λ x : nat, nth (x - 1 + 1) l 0)) with (∑ 1 (length l - 1) (λ x : nat, nth x l 0)).
+  2 : { apply sum_f_equiv; try lia. intros k H2. replace (k - 1 + 1)%nat with k by lia. reflexivity. }
+  replace (length l - 1)%nat with (S (length l - 2))%nat at 1 by lia.
+  assert (length l = 2 \/ length l > 2)%nat as [H2 | H2] by lia.
+  - rewrite H2. reflexivity.
+  - rewrite sum_f_i_Sn_f at 1; try lia. rewrite sum_f_Si with (i := 0%nat); try lia. field_simplify.
+    replace (S (length l - 2))%nat with (length l - 1)%nat by lia. lra.
 Qed.
