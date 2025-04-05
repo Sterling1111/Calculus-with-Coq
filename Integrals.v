@@ -1,6 +1,8 @@
 Require Import Imports Notations Completeness Sets Functions Sums Reals_util Continuity Derivatives Limit Pigeonhole.
 Import SetNotations IntervalNotations.
 
+Notation In := Ensembles.In.
+
 Lemma Sorted_Rlt_nth : forall (l : list ℝ) (i1 i2 : ℕ),
   Sorted Rlt l -> (i1 < i2 < length l)%nat -> nth i1 l 0 < nth i2 l 0.
 Proof.
@@ -831,6 +833,8 @@ Proof.
   specialize (H2 (b - a) ltac:(lra)). lra.
 Qed.
 
+
+
 Lemma exists_partition_with_step_lt : forall (a b : ℝ) (δ : ℝ),
   δ > 0 -> exists (P : partition_R a b), forall i, (i < length (P.(points a b)) - 1)%nat -> nth (i + 1) (P.(points a b)) 0 - nth i (P.(points a b)) 0 < δ.
 Proof.
@@ -897,10 +901,10 @@ Proof.
 Admitted.
 
 Theorem FTC1 : ∀ f F a b,
-  (∀ x, x ∈ [a, b] -> ∫ a x f = (F x)) -> continuous_on f [a, b] -> ⟦ der ⟧ F ⦅a, b⦆ = f.
+  (∀ x, x ∈ [a, b] -> ∫ a x f = (F x)) -> continuous_on f [a, b] -> ⟦ der ⟧ F (a, b) = f.
 Proof.
   intros f F a b H1 H2 c H3. unfold derivative_at.
-  assert (H4 : forall h, h ∈ ⦅0, (b - c)⦆ -> ∫ a (c + h) f - ∫ a c f = (F (c + h) - F c)).
+  assert (H4 : forall h, h ∈ (0, (b - c)) -> ∫ a (c + h) f - ∫ a c f = (F (c + h) - F c)).
   { 
     intros h H4. specialize (H1 (c + h) ltac:(unfold Ensembles.In in *; lra)) as H5. 
     specialize (H1 c ltac:(unfold Ensembles.In in *; lra)) as H6. exists (F (c + h)), (F c). split; auto.

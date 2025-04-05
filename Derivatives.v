@@ -22,6 +22,9 @@ Definition derivative (f f' : R -> R) :=
 Notation "⟦ 'der' ⟧ f = f'" := (derivative f f')
   (at level 70, f at level 0, no associativity, format "⟦  'der'  ⟧  f  =  f'").
 
+Notation "'der' f = f'" := (derivative f f')
+  (at level 70, f at level 0, no associativity, format "'der' f = f'").
+
 Notation "⟦ 'der' ⟧ f D = f'" := (derivative_on f f' D)
   (at level 70, f at level 0, D at level 0, no associativity, format "⟦  'der'  ⟧  f  D  =  f'").
 
@@ -265,6 +268,12 @@ Proof.
   intros f g f' g' H1 H2 x H3. apply theorem_10_9; auto. specialize (H2 (g x) ltac:(apply Full_intro)). auto. 
 Qed.
 
+Theorem chain_rule' : forall f g f' g',
+  der g = g' -> der f = f' -> der (f ∘ g) = (f' ∘ g) ∙ g'.
+Proof.
+  apply chain_rule.
+Qed.
+
 Example example_d1 : ⟦ der ⟧ (fun x => x^3) = (fun x => 3 * x^2).
 Proof.
   apply power_rule' with (m := 3). simpl; lra.
@@ -315,7 +324,7 @@ Proof.
 Qed.
 
 Theorem theorem_11_1_a : forall f a b x,
-  maximum_point f ⦅a, b⦆ x -> differentiable_at f x -> ⟦ der x ⟧ f = (λ _, 0).
+  maximum_point f (a, b) x -> differentiable_at f x -> ⟦ der x ⟧ f = (λ _, 0).
 Proof.
   intros f a b x [H1 H2] [L H3]. assert (exists δ, 0 < δ /\ forall h, |h| < δ -> f (x + h) - f x <= 0) as [δ1 [H4 H5]].
   { exists (Rmin (b - x) (x - a)). split. unfold In in *. solve_R. intros h H4. specialize (H2 (x + h) ltac:(unfold In in *; solve_R)). lra. }
@@ -502,8 +511,8 @@ Proof.
 Qed.
 
 Theorem cauchy_mvt : forall f f' g g' a b,
-  a < b -> continuous_on f [a, b] -> continuous_on g [a, b] -> ⟦ der ⟧ f ⦅a, b⦆ = f' -> ⟦ der ⟧ g ⦅a, b⦆ = g' -> 
-    (forall x, x ∈ ⦅a, b⦆ -> g' x <> 0) -> g b <> g a -> exists x, x ∈ ⦅a, b⦆ /\ (f b - f a) / (g b - g a) = f' x / g' x.
+  a < b -> continuous_on f [a, b] -> continuous_on g [a, b] -> ⟦ der ⟧ f (a, b) = f' -> ⟦ der ⟧ g ⦅a, b⦆ = g' -> 
+    (forall x, x ∈ ⦅a, b⦆ -> g' x <> 0) -> g b <> g a -> exists x, x ∈ (a, b) /\ (f b - f a) / (g b - g a) = f' x / g' x.
 Proof.
   intros f f' g g' a b H1 H2 H3 H4 H5 H6 H7. pose proof theorem_11_8 f f' g g' a b H1 H2 H3 H4 H5 as [x [H8 H9]].
   exists x; split; auto. solve_R; split; solve_R.
