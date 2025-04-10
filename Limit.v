@@ -278,6 +278,14 @@ Proof.
   intros x H6. specialize (H5 x H6). rewrite <- H1; solve_R.
 Qed.
 
+Lemma limit_to_0_equiv' : forall f1 f2 L δ,
+  δ > 0 -> (forall x, (x <> 0 /\ |x| < δ) -> f1 x = f2 x) -> ⟦ lim 0 ⟧ f1 = L -> ⟦ lim 0 ⟧ f2 = L.
+Proof.
+  intros f1 f2 L δ H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ1 [H5 H6]].
+  exists (Rmin δ1 δ). split; [solve_R |].
+  intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
+Qed.
+
 Lemma lim_equality_substitution : forall f a L1 L2,
   L1 = L2 -> ⟦ lim a ⟧ f = L1 -> ⟦ lim a ⟧ f = L2.
 Proof.
