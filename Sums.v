@@ -1,5 +1,5 @@
 Require Import Imports Reals_util.
-From Coq Require Import List.
+From Stdlib Require Import List.
 Import ListNotations.
 Open Scope R_scope.
 
