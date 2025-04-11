@@ -1410,6 +1410,30 @@ Proof.
     -- replace (F (c + h) - F c) with (∫ a (c + h) f - ∫ a c f).
        2 : { unfold Ensembles.In in *. specialize (H2 (c + h) ltac:(solve_R)) as H8. specialize (H2 c ltac:(lra)) as H9. lra. }
        replace (∫ a (c + h) f - ∫ a c f) with (∫ c (c + h) f) by admit.
+       assert (exists m, forall h, h ∈ (0, b - c) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (m h)) as [m H8] by admit.
+       assert (exists M, forall h, h ∈ (0, b - c) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (M h)) as [M H9] by admit.
+       assert (H10 : Integrable_On f c (c + h)).
+       { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. unfold Ensembles.In in *. solve_R. }
+       assert (H11 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c <= x0 <= c + h) → m h <= f x <= M h).
+       { 
+          intros x H11. unfold Ensembles.In in *. destruct H11 as [H11 H12]. specialize (H8 h ltac:(solve_R)). specialize (H9 h ltac:(solve_R)).
+          destruct H8 as [H8 _]. destruct H9 as [H9 _]. specialize (H8 (f x) ltac:(exists x; auto)). specialize (H9 (f x) ltac:(exists x; auto)). lra. 
+       }
+       assert (H12 : forall h, h ∈ (0, b - c) -> m h * h <= ∫ c (c + h) f <= M h * h).
+       { intros h' H12.
+       pose proof theorem_13_7' c (c + h) f (m h) (M h) ltac:(lra) H10 H11 as H12. replace (c + h - c) with h in H12 by lra.
+       clear H10 H11. rename H12 into H10. assert (H11 : m h <= ∫ c (c + h) f / h <= M h).
+       {
+          destruct H10 as [H10 H11]. apply Rmult_le_compat_l with (r := /h) in H10, H11; try (apply Rlt_le; apply Rinv_pos; auto).
+          field_simplify in H10; auto. field_simplify in H11; auto.
+       }
+
+       assert (H10 : forall h, h ∈ (0, b - c) -> m h * h <= ∫ c (c + h) f <= M h * h).
+       { intros h'. 
+       pose proof theorem_13_7'.
+       
+       { apply continuous_function_attains_glb_on_interval; auto. }
+       { apply continuous_imp_bounded; auto. }
        pose proof 
        apply H3. apply Rlt_le; auto.
   - solve_lim.
