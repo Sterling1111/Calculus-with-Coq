@@ -1,7 +1,8 @@
 Require Import Imports Sequence Sets Chapter12 Reals_util Sequence Notations Functions.
-Import SetNotations.
+Import SetNotations IntervalNotations.
 
 Open Scope R_scope.
+Open Scope interval_scope.
 
 Record Rsub (P : Ensemble ℝ) : Type := mkRsub { val : ℝ; prop : In _ P val }.
 
@@ -284,6 +285,21 @@ Proof.
   intros f1 f2 L δ H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ1 [H5 H6]].
   exists (Rmin δ1 δ). split; [solve_R |].
   intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
+Qed.
+
+Lemma limit_sandwich : forall f1 f2 f3 a b c L,
+  a < b -> c ∈ (a, b) -> ⟦ lim c ⟧ f1 = L -> ⟦ lim c ⟧ f3 = L -> (forall x, x ∈ ((a, c) ⋃ (c, b)) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c ⟧ f2 = L.
+Proof.
+  intros f1 f2 f3 a b c L H1 H2 H3 H4 H5 ε H6. specialize (H3 ε H6) as [δ1 [H7 H8]].
+  specialize (H4 ε H6) as [δ2 [H9 H10]]. set (δ := Rmin δ1 (Rmin δ2 (Rmin (b - c) (c - a)))). unfold Ensembles.In in *.
+  assert (δ > 0) as H11 by (unfold δ; solve_min). exists δ. split; auto. intros x H12. specialize (H8 x ltac:(unfold δ in *; solve_R)).
+  specialize (H10 x ltac:(unfold δ in *; solve_R)).
+  assert (x ∈ ((a, c) ⋃ (c, b))) as H13. {
+    assert (x < c \/ x > c) as [H14 | H14] by solve_R.
+    - left. unfold Ensembles.In in *. unfold δ in *; solve_R.
+    - right. unfold Ensembles.In in *. unfold δ in *; solve_R.
+  }
+  specialize (H5 x H13). assert (f1 x <= f2 x <= f3 x) as H15 by auto. solve_R.
 Qed.
 
 Lemma lim_equality_substitution : forall f a L1 L2,
