@@ -1404,38 +1404,90 @@ Theorem FTC1 : ∀ f F a b,
   a < b -> (∀ x, x ∈ [a, b] -> ∫ a x f = (F x)) -> continuous_on f [a, b] -> ⟦ der ⟧ F (a, b) = f.
 Proof.
   intros f F a b H1 H2 H3 c H4. unfold derivative_at.
+  assert (exists m, forall h, (h ∈ (0, b - c) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (m h)) /\ 
+                         (h ∈ (a - c, 0) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (m h))) as [m H5] by admit.
+  assert (exists M, forall h, (h ∈ (0, b - c) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (M h)) /\ 
+                         (h ∈ (a - c, 0) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (M h))) as [M H6] by admit.
   apply limit_to_0_equiv' with (f1 := fun h => f c) (δ:= b - c).
   - unfold Ensembles.In in *. lra.
-  - intros h [H5 H6]. assert (h > 0 \/ h < 0) as [H7 | H7] by lra.
-    -- replace (F (c + h) - F c) with (∫ a (c + h) f - ∫ a c f).
-       2 : { unfold Ensembles.In in *. specialize (H2 (c + h) ltac:(solve_R)) as H8. specialize (H2 c ltac:(lra)) as H9. lra. }
-       replace (∫ a (c + h) f - ∫ a c f) with (∫ c (c + h) f) by admit.
-       assert (exists m, forall h, h ∈ (0, b - c) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (m h)) as [m H8] by admit.
-       assert (exists M, forall h, h ∈ (0, b - c) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (M h)) as [M H9] by admit.
-       assert (H10 : Integrable_On f c (c + h)).
-       { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. unfold Ensembles.In in *. solve_R. }
-       assert (H11 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c <= x0 <= c + h) → m h <= f x <= M h).
-       { 
-          intros x H11. unfold Ensembles.In in *. destruct H11 as [H11 H12]. specialize (H8 h ltac:(solve_R)). specialize (H9 h ltac:(solve_R)).
-          destruct H8 as [H8 _]. destruct H9 as [H9 _]. specialize (H8 (f x) ltac:(exists x; auto)). specialize (H9 (f x) ltac:(exists x; auto)). lra. 
-       }
-       assert (H12 : forall h, h ∈ (0, b - c) -> m h * h <= ∫ c (c + h) f <= M h * h).
-       { intros h' H12.
-       pose proof theorem_13_7' c (c + h) f (m h) (M h) ltac:(lra) H10 H11 as H12. replace (c + h - c) with h in H12 by lra.
-       clear H10 H11. rename H12 into H10. assert (H11 : m h <= ∫ c (c + h) f / h <= M h).
-       {
-          destruct H10 as [H10 H11]. apply Rmult_le_compat_l with (r := /h) in H10, H11; try (apply Rlt_le; apply Rinv_pos; auto).
-          field_simplify in H10; auto. field_simplify in H11; auto.
-       }
+  - intros h [H7 H8].
+    assert (H9 : forall h, h ∈ (0, b - c) -> m h <= ∫ c (c + h) f / h <= M h).
+    {
+      intros h' H9. unfold Ensembles.In in *.
+      assert (H10 : Integrable_On f c (c + h')).
+      { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. unfold Ensembles.In in *. solve_R. }
+      assert (H11 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c <= x0 <= c + h') → m h' <= f x <= M h').
+      { 
+        intros x H11. unfold Ensembles.In in *. destruct H11 as [H11 H12]. specialize (H5 h') as [H5 _]. specialize (H5 ltac:(solve_R)).
+        specialize (H6 h') as [H6 _]. specialize (H6 ltac:(solve_R)). destruct H5 as [H5 _]. destruct H6 as [H6 _].
+        specialize (H5 (f x) ltac:(exists x; auto)). specialize (H6 (f x) ltac:(exists x; auto)). lra. 
+      }
+      pose proof theorem_13_7' c (c + h') f (m h') (M h') ltac:(lra) H10 H11 as H12. replace (c + h' - c) with h' in H12 by lra.
+      clear H10 H11. rename H12 into H10. assert (H11 : m h' <= ∫ c (c + h') f / h' <= M h').
+      {
+        destruct H10 as [H10 H11]. apply Rmult_le_compat_l with (r := /h') in H10, H11; try (apply Rlt_le; apply Rinv_pos; lra).
+        field_simplify in H10; field_simplify in H11; lra.
+      } lra.
+    }
+    assert (H10 : forall h, h ∈ (a - c, 0) -> m h <= ∫ c (c + h) f / h <= M h).
+    {
+      intros h' H10. unfold Ensembles.In in *.
+      assert (H11 : Integrable_On f (c + h') c).
+      { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. unfold Ensembles.In in *. solve_R. }
+      assert (H12 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c + h' <= x0 <= c) → m h' <= f x <= M h').
+      { 
+        intros x H12. unfold Ensembles.In in *. destruct H12 as [H12 H13]. specialize (H5 h') as [_ H5]. specialize (H6 h') as [_ H6].
+        specialize (H5 ltac:(solve_R)). specialize (H6 ltac:(solve_R)). destruct H5 as [H5 _]. destruct H6 as [H6 _].
+        specialize (H5 (f x) ltac:(exists x; auto)). specialize (H6 (f x) ltac:(exists x; auto)). lra. 
+      }
+      pose proof theorem_13_7' (c + h') c f (m h') (M h') ltac:(lra) H11 H12 as H13. replace (c - (c + h')) with (-h') in H13 by lra.
+      clear H11 H12. rename H13 into H11. assert (H12 : m h' <= ∫ c (c + h') f / h' <= M h').
+      {
+        destruct H11 as [H11 H12]. apply Rmult_le_compat_neg_l with (r := /h') in H11, H12; try (apply Rlt_le; apply Rinv_neg; lra).
+        replace (∫ (c + h') c f) with (- ∫ c (c + h') f) in * by admit. replace (/ h' * (m h' * - h')) with (- m h') in H11 by (field; lra).
+        replace (/ h' * (M h' * - h')) with (- M h') in H12 by (field; lra). lra.
+      } lra.
+    }
+    assert (H11 : ⟦ lim 0 ⟧ m = f c).
+    {
+      intros ε H11. specialize (H3 c ltac:(unfold Ensembles.In in *; solve_R)) as H12. specialize (H12 ε H11) as [δ [H13 H14]].
+      exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split; auto. unfold Ensembles.In in *. solve_R.
+      intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
+      - specialize (H5 ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
+        pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra) H17 as [x0 [H18 H19]].
+        replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. 
+        apply H14. unfold Ensembles.In in *. solve_R.
+      - 
+      
+      
 
-       assert (H10 : forall h, h ∈ (0, b - c) -> m h * h <= ∫ c (c + h) f <= M h * h).
-       { intros h'. 
-       pose proof theorem_13_7'.
+
+      assert (x0 < c + δ/2) as H20 by solve_R. assert (x0 - c < δ) as H21 by lra. solve_R.
+        unfold limit.
+        apply limit_to_0_equiv' with (f1 := fun h => (f (h + c))) (δ := b - c).
+        - solve_lim.
+        - intros x [H11 H12]. pose proof continuous_function_attains_lub_on_interval. (* this holds great promise *) admit.
+        - admit.
+       pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra).
+      unfold limit.
+      apply limit_to_0_equiv' with (f1 := fun h => (f (h + c))) (δ := b - c).
+      - solve_lim.
+      - intros x [H11 H12]. pose proof continuous_function_attains_glb_on_interval. (* this holds great promise *) admit.
+      - admit.
+    }
+       assert (H12 : ⟦ lim 0 ⟧ M = f c).
+       {
+         apply limit_to_0_equiv' with (f1 := fun h => (f (h + c))) (δ := b - c).
+         - solve_lim.
+         - intros x [H12 H13]. pose proof continuous_function_attains_lub_on_interval. (* this holds great promise *) admit.
+         - admit.
+       }
+       replace (F (c + h) - F c) with (∫ a (c + h) f - ∫ a c f).
+       2 : { unfold Ensembles.In in *. specialize (H2 (c + h) ltac:(solve_R)) as H10. specialize (H2 c ltac:(lra)) as H11. lra. }
+       replace (∫ a (c + h) f - ∫ a c f) with (∫ c (c + h) f) by admit.
        
-       { apply continuous_function_attains_glb_on_interval; auto. }
-       { apply continuous_imp_bounded; auto. }
-       pose proof 
-       apply H3. apply Rlt_le; auto.
   - solve_lim.
 Admitted.
   assert (H5 : forall h, h ∈ (0, (b - c)) -> ∫ a (c + h) f - ∫ a c f = (F (c + h) - F c)).
