@@ -1408,9 +1408,7 @@ Proof.
                          (h ∈ (a - c, 0) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (m h))) as [m H5] by admit.
   assert (exists M, forall h, (h ∈ (0, b - c) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (M h)) /\ 
                          (h ∈ (a - c, 0) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (M h))) as [M H6] by admit.
-  apply limit_to_0_equiv' with (f1 := fun h => f c) (δ:= b - c).
-  - unfold Ensembles.In in *. lra.
-  - intros h [H7 H8].
+
     assert (H9 : forall h, h ∈ (0, b - c) -> m h <= ∫ c (c + h) f / h <= M h).
     {
       intros h' H9. unfold Ensembles.In in *.
@@ -1459,47 +1457,40 @@ Proof.
         replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
         assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. 
         apply H14. unfold Ensembles.In in *. solve_R.
-      - 
-      
-      
-
-
-      assert (x0 < c + δ/2) as H20 by solve_R. assert (x0 - c < δ) as H21 by lra. solve_R.
-        unfold limit.
-        apply limit_to_0_equiv' with (f1 := fun h => (f (h + c))) (δ := b - c).
-        - solve_lim.
-        - intros x [H11 H12]. pose proof continuous_function_attains_lub_on_interval. (* this holds great promise *) admit.
-        - admit.
-       pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra).
-      unfold limit.
-      apply limit_to_0_equiv' with (f1 := fun h => (f (h + c))) (δ := b - c).
-      - solve_lim.
-      - intros x [H11 H12]. pose proof continuous_function_attains_glb_on_interval. (* this holds great promise *) admit.
-      - admit.
+      - specialize (H5' ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
+        pose proof continuous_function_attains_glb_on_interval f (c + x) c ltac:(lra) H17 as [x0 [H18 H19]].
+        replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. 
+        apply H14. unfold Ensembles.In in *. solve_R.
     }
-       assert (H12 : ⟦ lim 0 ⟧ M = f c).
-       {
-         apply limit_to_0_equiv' with (f1 := fun h => (f (h + c))) (δ := b - c).
-         - solve_lim.
-         - intros x [H12 H13]. pose proof continuous_function_attains_lub_on_interval. (* this holds great promise *) admit.
-         - admit.
-       }
-       replace (F (c + h) - F c) with (∫ a (c + h) f - ∫ a c f).
-       2 : { unfold Ensembles.In in *. specialize (H2 (c + h) ltac:(solve_R)) as H10. specialize (H2 c ltac:(lra)) as H11. lra. }
-       replace (∫ a (c + h) f - ∫ a c f) with (∫ c (c + h) f) by admit.
-       
-  - solve_lim.
-Admitted.
-  assert (H5 : forall h, h ∈ (0, (b - c)) -> ∫ a (c + h) f - ∫ a c f = (F (c + h) - F c)).
-  { 
-    intros h H5. specialize (H2 (c + h) ltac:(unfold Ensembles.In in *; lra)) as H6. 
-    specialize (H2 c ltac:(unfold Ensembles.In in *; lra)) as H7. lra.
-  }
-  pose proof continuous_imp_bounded f a b H1 H3 as H6.
-  assert (H7 : forall h, 0 < h <= b - c -> [c, c + h] ⊆ [a, b]).
-  { intros h H7 x H8. unfold Ensembles.In in *. lra. }
-  assert (H8 : forall h, 0 < h <= b - c -> continuous_on f [c, c + h]).
-  { intros; apply continuous_on_subset with (A2 := [a, b]); auto. }
-  set (m := fun h => )
-  pose proof interval_has_inf a b f ltac:(apply Rlt_le; auto) H6. as [m [H7 H8]].
+    assert (H12 : ⟦ lim 0 ⟧ M = f c).
+    {
+      intros ε H12. specialize (H3 c ltac:(unfold Ensembles.In in *; solve_R)) as H13. specialize (H13 ε H12) as [δ [H14 H15]].
+      exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split; auto. unfold Ensembles.In in *. solve_R.
+      intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
+      - specialize (H6 ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
+        pose proof continuous_function_attains_lub_on_interval f c (c + x) ltac:(lra) H18 as [x0 [H19 H20]].
+        replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. 
+        apply H15. unfold Ensembles.In in *. solve_R.
+      - specialize (H6' ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
+        pose proof continuous_function_attains_lub_on_interval f (c + x) c ltac:(lra) H18 as [x0 [H19 H20]].
+        replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R.
+        apply H15. unfold Ensembles.In in *. solve_R.
+    }
+    assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, a - c < x0 < 0) ⋃ (λ x0 : ℝ, 0 < x0 < b - c) → m x <= (λ h : ℝ, ∫ c (c + h) f / h) x <= M x)).
+    {
+      intros x H13. assert (a - c < x < 0 \/ 0 < x < b - c) as [H14 | H14].
+      { apply In_Union_def in H13. unfold Ensembles.In in *. solve_R. }
+      - apply H10. unfold Ensembles.In in *. solve_R.
+      - apply H9. unfold Ensembles.In in *. solve_R.
+    }
+    pose proof limit_sandwich m (fun h => ∫ c (c + h) f / h) M (a - c) (b - c) 0 (f c) ltac:(lra) ltac:(unfold Ensembles.In in *; lra) H11 H12 H13 as H14.
+    apply limit_to_0_equiv' with (f1 := fun h => ∫ c (c + h) f / h) (δ:= Rmin (b - c) (c - a)); auto. unfold Ensembles.In in *. solve_R.
+    intros x [H15 H16]. replace (∫ c (c + x) f) with (∫ a (c + x) f - ∫ a c f) by admit. repeat rewrite H2. reflexivity.
+    unfold Ensembles.In in *. solve_R. unfold Ensembles.In in *. solve_R. 
 Admitted.
