@@ -3,22 +3,40 @@ Import SetNotations IntervalNotations.
 
 Open Scope interval_scope.
 
+Definition left_endpoint (A : Ensemble R) (a : R) :=
+  (exists δ, δ > 0 /\ (forall x, (x ∈ [a-δ, a) -> x ∉ A) /\ (x ∈ [a, a+δ) -> x ∈ A))).
+
+Definition right_endpoint (A : Ensemble R) (a : R) :=
+  (exists δ, δ > 0 /\ (forall x, (x ∈ (a, a+δ] -> x ∉ A) /\ (x ∈ (a-δ, a] -> x ∈ A))).
+
+Definition interior_point (A : Ensemble R) (a : R) :=
+  (exists δ, δ > 0 /\ forall x, x ∈ (a-δ, a+δ) -> x ∈ A).
+
+Definition isolated_point (A : Ensemble R) (a : R) :=
+  a ∈ A /\ (exists δ, δ > 0 /\ forall x, x ∈ (a-δ, a) ⋃ (a, a+δ) -> x ∉ A).
+
 Definition continuous_at (f : ℝ -> ℝ) (a : ℝ) : Prop :=
   ⟦ lim a ⟧ f = f a.
 
+Definition right_continuous_at (f : ℝ -> ℝ) (a : ℝ) : Prop :=
+  ⟦ lim a⁺ ⟧ f = f a.
+
+Definition left_continuous_at (f : ℝ -> ℝ) (a : ℝ) : Prop :=
+  ⟦ lim a⁻ ⟧ f = f a.
+
 Definition continuous_on (f : ℝ -> ℝ) (D : Ensemble ℝ) : Prop :=
-  ∀ a : ℝ, a ∈ D -> continuous_at f a.
+  ∀ a : ℝ,  a ∈ D -> (continuous_at f a \/ (left_endpoint D a /\ right_continuous_at f a) \/ (right_endpoint D a /\ left_continuous_at f a) \/ isolated_point D a).
 
 Definition uniformly_continuous_on (f : ℝ -> ℝ) (D : Ensemble ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ δ, δ > 0 /\ ∀ x y, x ∈ D -> y ∈ D -> |x - y| < δ -> |f x - f y| < ε.
 
 Definition continuous (f : ℝ -> ℝ) : Prop :=
-  continuous_on f (Full_set ℝ).
+  forall a, continuous_at f a.
 
 Example example_37_2 : forall c d,
   continuous_on (fun x => c * x + d) ℝ.
 Proof.
-  intros c d a H1. unfold continuous_at. solve_lim.
+  intros c d a H1. left. unfold continuous_at. solve_lim.
 Qed.
 
 Module module_37_3.
@@ -93,7 +111,7 @@ Qed.
 Lemma poly_c_example : continuous_on (fun x => 5*x^5 + 4*x^4 + 3*x^3 + 2*x^2 + x + 1) ℝ.
 Proof.
   replace (fun x : ℝ => 5 * x ^ 5 + 4 * x ^ 4 + 3 * x ^ 3 + 2 * x ^ 2 + x + 1) with (polynomial [5; 4; 3; 2; 1; 1]).
-  2 : { extensionality x. compute; lra. } unfold continuous_on. intros a H1. apply theorem_37_14.
+  2 : { extensionality x. compute; lra. } unfold continuous_on. intros a H1. left. apply theorem_37_14.
 Qed.
 
 Theorem theorem_6_1_a : forall f g a,
