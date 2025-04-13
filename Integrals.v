@@ -967,6 +967,9 @@ Proof.
     destruct (exists_largest_lower_sum a b bf H1) as [x2 [H8 H9]]; (split; auto).
 Qed.
 
+Lemma integral_neg : forall a b f,
+  a < b -> Integrable_On f a b -> Integrable_On (–f) b a.
+
 Example small_bulls : forall x, x = 3.21 -> x^2 - 1.1 = 9.2041.
 Proof. intros x H1. subst. lra. Qed.
 
@@ -1409,9 +1412,9 @@ Proof.
   assert (exists M, forall h, (h ∈ (0, b - c) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (M h)) /\ 
                          (h ∈ (a - c, 0) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (M h))) as [M H6] by admit.
 
-    assert (H9 : forall h, h ∈ (0, b - c) -> m h <= ∫ c (c + h) f / h <= M h).
+    assert (H9 : forall h, h ∈ (0, b - c) -> m h <= (F (c + h) - F c) / h <= M h).
     {
-      intros h' H9. unfold Ensembles.In in *.
+      intros h' H9. unfold Ensembles.In in *. repeat rewrite <- H2; solve_R. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in * by admit.
       assert (H10 : Integrable_On f c (c + h')).
       { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. unfold Ensembles.In in *. solve_R. }
       assert (H11 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c <= x0 <= c + h') → m h' <= f x <= M h').
@@ -1427,9 +1430,9 @@ Proof.
         field_simplify in H10; field_simplify in H11; lra.
       } lra.
     }
-    assert (H10 : forall h, h ∈ (a - c, 0) -> m h <= ∫ c (c + h) f / h <= M h).
+    assert (H10 : forall h, h ∈ (a - c, 0) -> m h <= (F (c + h) - F c) / h <= M h).
     {
-      intros h' H10. unfold Ensembles.In in *.
+      intros h' H10. unfold Ensembles.In in *. repeat rewrite <- H2; solve_R. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in * by admit.
       assert (H11 : Integrable_On f (c + h') c).
       { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. unfold Ensembles.In in *. solve_R. }
       assert (H12 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c + h' <= x0 <= c) → m h' <= f x <= M h').
@@ -1482,15 +1485,13 @@ Proof.
         assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R.
         apply H15. unfold Ensembles.In in *. solve_R.
     }
-    assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, a - c < x0 < 0) ⋃ (λ x0 : ℝ, 0 < x0 < b - c) → m x <= (λ h : ℝ, ∫ c (c + h) f / h) x <= M x)).
+    assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, a - c < x0 < 0) ⋃ (λ x0 : ℝ, 0 < x0 < b - c) → m x <= (λ h : ℝ, (F (c + h) - F c) / h) x <= M x)).
     {
       intros x H13. assert (a - c < x < 0 \/ 0 < x < b - c) as [H14 | H14].
       { apply In_Union_def in H13. unfold Ensembles.In in *. solve_R. }
       - apply H10. unfold Ensembles.In in *. solve_R.
       - apply H9. unfold Ensembles.In in *. solve_R.
     }
-    pose proof limit_sandwich m (fun h => ∫ c (c + h) f / h) M (a - c) (b - c) 0 (f c) ltac:(lra) ltac:(unfold Ensembles.In in *; lra) H11 H12 H13 as H14.
-    apply limit_to_0_equiv' with (f1 := fun h => ∫ c (c + h) f / h) (δ:= Rmin (b - c) (c - a)); auto. unfold Ensembles.In in *. solve_R.
-    intros x [H15 H16]. replace (∫ c (c + x) f) with (∫ a (c + x) f - ∫ a c f) by admit. repeat rewrite H2. reflexivity.
-    unfold Ensembles.In in *. solve_R. unfold Ensembles.In in *. solve_R. 
+    pose proof limit_sandwich m (fun h => (F (c + h) - F c) / h) M (a - c) (b - c) 0 (f c) ltac:(lra) ltac:(unfold Ensembles.In in *; lra) H11 H12 H13 as H14.
+    auto.
 Admitted.
