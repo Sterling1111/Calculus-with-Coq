@@ -158,6 +158,44 @@ Proof.
   } lra.
 Qed.
 
+Lemma left_limit_of_function_unique : forall f a L1 L2,
+  ⟦ lim a⁻ ⟧ f = L1 -> ⟦ lim a⁻ ⟧ f = L2 -> L1 = L2.
+Proof.
+  intros f a L1 L2 H1 H2. pose proof (classic (L1 = L2)) as [H3 | H3]; auto.
+  specialize (H1 (|L1 - L2| / 2) ltac:(solve_abs)) as [δ1 [H4 H5]].
+  specialize (H2 (|L1 - L2| / 2) ltac:(solve_abs)) as [δ2 [H6 H7]].
+  set (δ := Rmin δ1 δ2). set (x := a - δ / 2). assert (δ <= δ1 /\ δ <= δ2) as [H8 H9] by (unfold δ; solve_min).
+  assert (0 < δ / 2) as H10 by (apply Rdiv_pos_pos; solve_R). assert (x < a) as H11 by (unfold x; solve_min).
+  assert (0 < |x - a| < δ) as H12 by (unfold x; solve_R). specialize (H5 x ltac:(solve_R)). specialize (H7 x ltac:(solve_R)).
+  assert (|L1 - L2| < |L1 - L2|) as H13.
+  {
+    assert (|(L1 - f x + (f x - L2))| <= |L1 - f x| + |f x - L2|) as H22 by (apply Rabs_triang).
+    rewrite Rabs_minus_sym in H22. 
+    assert (|f x - L1| + |f x - L2| < |L1 - L2| / 2 + |L1 - L2| / 2) as H23 by lra.
+    field_simplify in H23. rewrite Rmult_div_r in H23; auto.
+    replace (L1 - f x + (f x - L2)) with (L1 - L2) in H22 by lra. lra.
+  } lra.
+Qed.
+
+Lemma right_limit_of_function_unique : forall f a L1 L2,
+  ⟦ lim a⁺ ⟧ f = L1 -> ⟦ lim a⁺ ⟧ f = L2 -> L1 = L2.
+Proof.
+  intros f a L1 L2 H1 H2. pose proof (classic (L1 = L2)) as [H3 | H3]; auto.
+  specialize (H1 (|L1 - L2| / 2) ltac:(solve_abs)) as [δ1 [H4 H5]].
+  specialize (H2 (|L1 - L2| / 2) ltac:(solve_abs)) as [δ2 [H6 H7]].
+  set (δ := Rmin δ1 δ2). set (x := a + δ / 2). assert (δ <= δ1 /\ δ <= δ2) as [H8 H9] by (unfold δ; solve_min).
+  assert (0 < δ / 2) as H10 by (apply Rdiv_pos_pos; solve_R). assert (x > a) as H11 by (unfold x; solve_min).
+  assert (0 < |x - a| < δ) as H12 by (unfold x; solve_R). specialize (H5 x ltac:(solve_R)). specialize (H7 x ltac:(solve_R)).
+  assert (|L1 - L2| < |L1 - L2|) as H13.
+  {
+    assert (|(L1 - f x + (f x - L2))| <= |L1 - f x| + |f x - L2|) as H22 by (apply Rabs_triang).
+    rewrite Rabs_minus_sym in H22. 
+    assert (|f x - L1| + |f x - L2| < |L1 - L2| / 2 + |L1 - L2| / 2) as H23 by lra.
+    field_simplify in H23. rewrite Rmult_div_r in H23; auto.
+    replace (L1 - f x + (f x - L2)) with (L1 - L2) in H22 by lra. lra.
+  } lra.
+Qed.
+
 Lemma left_limit_plus : forall f1 f2 a L1 L2,
   ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> ⟦ lim a⁻ ⟧ (f1 + f2) = (L1 + L2).
 Proof.

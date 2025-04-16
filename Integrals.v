@@ -1425,9 +1425,13 @@ Theorem FTC1 : ∀ f F a b,
 Proof.
   intros f F a b H1 H2 H3 c H4. unfold Ensembles.In in *. unfold derivative_at.
   assert (c = a \/ c = b \/ a < c < b) as [H5 | [H5 | H5]] by lra.
-  - admit.
-  - admit.
-  - clear H4. rename H5 into H4.
+  - subst. right; left. split.
+    -- apply left_interval_enpoint_closed; auto.
+    -- unfold right_derivative_at. admit.
+  - subst. right; right; split.
+    -- apply right_interval_enpoint_closed; auto.
+    -- unfold left_derivative_at. admit.
+  - clear H4. rename H5 into H4. left. split. apply is_interior_point_closed; auto.
   assert (exists m, forall h, (h ∈ (0, b - c) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (m h)) /\ 
                          (h ∈ (a - c, 0) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (m h))) as [m H5] by admit.
   assert (exists M, forall h, (h ∈ (0, b - c) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (M h)) /\ 
@@ -1472,8 +1476,9 @@ Proof.
     }
     assert (H11 : ⟦ lim 0 ⟧ m = f c).
     {
-      intros ε H11. specialize (H3 c ltac:(unfold Ensembles.In in *; solve_R)) as H12. specialize (H12 ε H11) as [δ [H13 H14]].
-      exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split; auto. unfold Ensembles.In in *. solve_R.
+      intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [H12 _].
+       specialize (H12 c ltac:(unfold Ensembles.In in *; solve_R)) as H12. specialize (H12 ε H11) as [δ [H13 H14]].
+      exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split. unfold Ensembles.In in *. solve_R.
       intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
       - specialize (H5 ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
         { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
@@ -1490,7 +1495,8 @@ Proof.
     }
     assert (H12 : ⟦ lim 0 ⟧ M = f c).
     {
-      intros ε H12. specialize (H3 c ltac:(unfold Ensembles.In in *; solve_R)) as H13. specialize (H13 ε H12) as [δ [H14 H15]].
+      intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [H13 _].
+      specialize (H13 c ltac:(unfold Ensembles.In in *; solve_R)). specialize (H13 ε H12) as [δ [H14 H15]].
       exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split; auto. unfold Ensembles.In in *. solve_R.
       intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
       - specialize (H6 ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
@@ -1517,7 +1523,12 @@ Proof.
     auto.
 Admitted.
 
-Lemma FTC2 : ∀ a b f g,
+
+
+
+
+
+Theorem FTC2 : ∀ a b f g,
     a < b -> continuous_on f [a, b] -> ⟦ der ⟧ g [a, b] = f -> ∫ a b f = g b - g a.
 Proof.
   intros a b f g H1 H2 H3. (set (F := fun x => ∫ a x f)). assert (H4 : ⟦ der ⟧ F [a, b] = f).
@@ -1531,24 +1542,30 @@ Proof.
   specialize (H5 b ltac:(unfold Ensembles.In in *; solve_R)). unfold F in H5. lra.
 Qed.
 
-Example FTC2_test : ∫ 0 1 (fun x => 2 * x) = 1.
+Example FTC2_test : ∫ 0 1 (λ x : ℝ, 2 * x) = 1.
 Proof.
-  set (f := fun x => 2 * x).
-  set (g := fun x => x^2).
+  set (f := λ x : ℝ, 2 * x).
+  set (g := λ x : ℝ, x^2).
   assert (H1 : 0 < 1) by lra.
   assert (H2 : continuous_on f [0, 1]).
   {
-    replace f with (polynomial [2; 0]) by (extensionality x; compute; lra).
-    unfold continuous_on. intros a H2. apply theorem_37_14.
+    assert (H2 : continuous f).
+    {
+      replace f with (polynomial [2; 0]) by (extensionality x; compute; lra).
+      intros x. apply theorem_37_14.
+    }
+    apply (continuous_imp_continuous_on f [0, 1]); auto.
   }
   assert (H3 : ⟦ der ⟧ g [0, 1] = f).
   {
-    apply derivative_imp_derivative_on. unfold f, g. replace (λ x : ℝ, 2 * x) with (λ x : ℝ, 2 * x^(2-1)).
+    apply derivative_imp_derivative_on; try lra.
+    unfold f, g. replace (λ x : ℝ, 2 * x) with (λ x : ℝ, 2 * x^(2-1)).
     apply power_rule'. auto. extensionality x. simpl. lra.
   }
   replace 1 with (g 1 - g 0) at 2 by (unfold g; lra).
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
+
 
 Example FTC2_test2 : ∫ 0 1 (fun x => x^2) = 1/3.
 Proof.
@@ -1558,12 +1575,16 @@ Proof.
   assert (H1 : 0 < 1) by lra.
   assert (H2 : continuous_on f [0, 1]).
   {
-    replace f with (polynomial [1; 0; 0]) by (extensionality x; compute; lra).
-    unfold continuous_on. intros a H2. apply theorem_37_14.
+    assert (H2 : continuous f).
+    {
+      replace f with (polynomial [1; 0; 0]) by (extensionality x; compute; lra).
+      intros x. apply theorem_37_14.
+    }
+    apply (continuous_imp_continuous_on f [0, 1]); auto.
   }
   assert (H3 : ⟦ der ⟧ g [0, 1] = f).
   {
-    apply derivative_imp_derivative_on. replace f with (1/3 * h)%function.
+    apply derivative_imp_derivative_on; try lra. replace f with (1/3 * h)%function.
     2 : { unfold f, h. extensionality x. simpl. lra. }
     apply theorem_10_5'. apply power_rule'. simpl; lra.
   }
