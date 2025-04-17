@@ -292,6 +292,13 @@ Proof.
   intros x H3. field. auto.
 Qed.
 
+Theorem theorem_9_1_d : forall f a b,
+  a < b -> differentiable_on f [a, a] -> continuous_on f [a, b].
+Proof.
+  intros f a b H1 H2. apply continuous_on_interval; auto. repeat split.
+  - intros y H3. 
+Qed.
+
 Theorem theorem_10_1 : forall c,
   ⟦ der ⟧ (fun _ => c) = (fun _ => 0).
 Proof.
@@ -774,8 +781,6 @@ Definition increasing (f: ℝ -> ℝ) :=
 Definition decreasing (f: ℝ -> ℝ) :=
   decreasing_on f ℝ.
 
-(*
-
 Corollary corollary_11_3_a : forall f f' a b, 
   a < b -> ⟦ der ⟧ f [a, b] = f' -> (forall x, x ∈ [a, b] -> f' x > 0) -> increasing_on f [a, b].
 Proof.
@@ -845,5 +850,3 @@ Theorem theorem_11_9 : forall f f' g g' a L,
 Proof.
   
 Admitted.
-
-*)

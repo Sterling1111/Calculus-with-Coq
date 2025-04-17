@@ -1421,7 +1421,8 @@ Proof.
 Qed.
 
 Theorem FTC1 : ∀ f F a b,
-  a < b -> (∀ x, x ∈ [a, b] -> ∫ a x f = (F x)) -> continuous_on f [a, b] -> ⟦ der ⟧ F [a, b] = f.
+  a < b -> (∀ x, x ∈ [a, b] -> ∫ a x f = (F x)) -> 
+    continuous_on f [a, b] -> ⟦ der ⟧ F [a, b] = f.
 Proof.
   intros f F a b H1 H2 H3 c H4. unfold Ensembles.In in *. unfold derivative_at.
   assert (c = a \/ c = b \/ a < c < b) as [H5 | [H5 | H5]] by lra.
@@ -1523,13 +1524,9 @@ Proof.
     auto.
 Admitted.
 
-
-
-
-
-
 Theorem FTC2 : ∀ a b f g,
-    a < b -> continuous_on f [a, b] -> ⟦ der ⟧ g [a, b] = f -> ∫ a b f = g b - g a.
+    a < b -> continuous_on f [a, b] -> 
+      ⟦ der ⟧ g [a, b] = f -> ∫ a b f = g b - g a.
 Proof.
   intros a b f g H1 H2 H3. (set (F := fun x => ∫ a x f)). assert (H4 : ⟦ der ⟧ F [a, b] = f).
   { unfold F. apply FTC1; auto. }
