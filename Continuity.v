@@ -1,5 +1,5 @@
 Require Import Imports Limit Sums Reals_util Sets Notations Functions Completeness.
-Import SetNotations IntervalNotations.
+Import SetNotations IntervalNotations Function_Notations.
 
 Open Scope interval_scope.
 
@@ -99,7 +99,7 @@ Proof.
 Qed.
 
 Lemma lemma_37_11_c : forall f g a,
-  g a ≠ 0 -> continuous_at f a -> continuous_at g a -> continuous_at (f ∕ g) a.
+  g a ≠ 0 -> continuous_at f a -> continuous_at g a -> continuous_at (f / g) a.
 Proof.
   intros f g a H1 H2 H3. unfold continuous_at in *. apply limit_div; auto.
 Qed.
@@ -157,7 +157,7 @@ Proof.
 Qed.
 
 Theorem theorem_6_1_d : forall f g a,
-  g a ≠ 0 -> continuous_at f a -> continuous_at g a -> continuous_at (f ∕ g) a.
+  g a ≠ 0 -> continuous_at f a -> continuous_at g a -> continuous_at (f / g) a.
 Proof.
   intros f g a H1 H2 H3. unfold continuous_at in *; solve_lim.
 Qed.

@@ -1,6 +1,6 @@
 Require Import Imports Limit Continuity Sets Reals_util Notations Functions Completeness.
 Require Export Chapter36.
-Import SetNotations.
+Import SetNotations Function_Notations.
 
 Lemma lemma_37_1 : continuous_at sqrt 9.
 Proof.
@@ -50,7 +50,7 @@ Section section_37_5.
   Variables l1 l2 : list ℝ.
   Let g := polynomial l1.
   Let h := polynomial l2.
-  Let f := (g ∕ h).
+  Let f := (g / h).
 
   Lemma lemma_37_5 : forall a,
     h a <> 0 -> continuous_at f a.

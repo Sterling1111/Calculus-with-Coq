@@ -1,5 +1,5 @@
 Require Import Imports Sets Notations Functions Limit Continuity Reals_util.
-Import SetNotations IntervalNotations.
+Import SetNotations IntervalNotations Function_Notations.
 
 Definition differentiable_at (f:R -> R) (a:R) :=
   exists L, ⟦ lim 0 ⟧ (fun h => (f (a + h) - f a) / h) = L.
@@ -155,10 +155,12 @@ Proof.
 Qed.
 
 Lemma is_interior_point_open : forall a b x,
-  a < b -> x ∈ (a, b) -> interior_point (a, b) x.
+  a < b -> (x ∈ (a, b) <-> interior_point (a, b) x).
 Proof.
-  intros a b x H1 H2. unfold In in *. exists (Rmin (x - a) (b - x)). split; unfold In in *; try solve_R.
-Qed.
+  intros a b x H1. split.
+  - intro H2. unfold In in *. exists (Rmin (x - a) (b - x)). split; unfold In in *; try solve_R.
+  - intros [δ [H2 H3]]. admit.
+Admitted.
 
 Lemma is_interior_point_closed : forall a b x,
   a < b -> x ∈ (a, b) -> interior_point [a, b] x.
@@ -293,11 +295,43 @@ Proof.
 Qed.
 
 Theorem theorem_9_1_d : forall f a b,
-  a < b -> differentiable_on f [a, a] -> continuous_on f [a, b].
+  a < b -> differentiable_on f [a, b] -> continuous_on f [a, b].
 Proof.
   intros f a b H1 H2. apply continuous_on_interval; auto. repeat split.
-  - intros y H3. 
+  - intros x H3. specialize (H2 x ltac:(unfold In in *; lra)) as [H2 | [H2 | H2]].
+    -- apply theorem_9_1_a; tauto.
+    -- exfalso. apply (not_left_endpoint a b x H1); tauto.
+    -- exfalso. apply (not_right_endpoint a b x H1); tauto.
+  - specialize (H2 a ltac:(unfold In in *; lra)) as [H2 | [H2 | H2]].
+    -- exfalso. apply (not_interior_point_left a b H1); tauto.
+    -- apply theorem_9_1_b; tauto.
+    -- exfalso. apply (not_right_endpoint_closed a b H1); tauto.
+  - specialize (H2 b ltac:(unfold In in *; lra)) as [H2 | [H2 | H2]].
+    -- exfalso. apply (not_interior_point_right a b H1); tauto.
+    -- exfalso. apply (not_left_endpoint_closed a b H1); tauto.
+    -- apply theorem_9_1_c; tauto.
 Qed.
+
+Lemma differentiable_on_closed_interval_subset : forall f a b c d,
+  a < b -> c < d -> differentiable_on f [a, b] -> [c, d] ⊆ [a, b] -> differentiable_on f [c, d].
+Proof.
+  intros f a b c d H1 H2 H3 H4 x H5. specialize (H4 x ltac:(auto)). specialize (H3 x H4) as [H3 | [H3 | H3]].
+Admitted.
+
+Lemma differentiable_on_open_interval_subset : forall f a b c d,
+  a < b -> c < d -> differentiable_on f (a, b) -> [c, d] ⊆ (a, b) -> differentiable_on f [c, d].
+Proof.
+Admitted.
+
+Lemma continuous_on_interval_subset : forall f a b c d,
+a < b -> c < d -> continuous_on f [a, b] -> [c, d] ⊆ [a, b] -> continuous_on f [c, d].
+Proof.
+  intros f a b c d H1 H2 H3 H4. apply continuous_on_interval in H3 as [H3 [H5 H6]]; auto.
+  apply continuous_on_interval; auto. repeat split.
+  - intros x H7. apply H3. specialize (H4 x ltac:(unfold In in *; lra)) as H8. admit.
+  - admit.
+  - admit.
+Admitted.
 
 Theorem theorem_10_1 : forall c,
   ⟦ der ⟧ (fun _ => c) = (fun _ => 0).
@@ -349,7 +383,7 @@ Qed.
 
 Lemma right_derivative_at_minus : forall f g f' g' a,
   ⟦ der a⁺ ⟧ f = f' -> ⟦ der a⁺ ⟧ g = g' ->
-    ⟦ der a⁺ ⟧ (f – g) = f' – g'.
+    ⟦ der a⁺ ⟧ (f - g) = f' - g'.
 Proof.
   intros f g f' g' a H1 H2. unfold right_derivative_at.
   replace (fun h => (f (a + h) - g (a + h) - (f a - g a)) / h) with
@@ -359,7 +393,7 @@ Qed.
 
 Lemma left_derivative_at_minus : forall f g f' g' a,
   ⟦ der a⁻ ⟧ f = f' -> ⟦ der a⁻ ⟧ g = g' ->
-    ⟦ der a⁻ ⟧ (f – g) = f' – g'.
+    ⟦ der a⁻ ⟧ (f - g) = f' - g'.
 Proof.
   intros f g f' g' a H1 H2. unfold left_derivative_at.
   replace (fun h => (f (a + h) - g (a + h) - (f a - g a)) / h) with
@@ -414,17 +448,17 @@ Qed.
 
 Theorem theorem_10_3_c : forall f g f' g' a,
   ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = g' ->
-  ⟦ der a ⟧ (f – g) = f' – g'.
+  ⟦ der a ⟧ (f - g) = f' - g'.
 Proof.
   intros f g f' g' a H1 H2. unfold minus. apply theorem_10_3_a; auto.
-  replace (– g) with (fun x => -1 * g x). 2 : { extensionality x. lra. }
-  replace (– g') with (fun x => -1 * g' x). 2 : { extensionality x. lra. }
+  replace (- g)%function with (fun x => -1 * g x). 2 : { extensionality x. lra. }
+  replace (- g')%function with (fun x => -1 * g' x). 2 : { extensionality x. lra. }
   apply theorem_10_5; auto.
 Qed.
 
 Theorem theorem_10_3_d : forall f g f' g',
   ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' ->
-  ⟦ der ⟧ (f – g) = f' – g'.
+  ⟦ der ⟧ (f - g) = f' - g'.
 Proof.
   intros f g f' g' H1 H2 x. apply theorem_10_3_c; auto.
 Qed.
@@ -467,7 +501,7 @@ Proof.
 Qed.
 
 Theorem theorem_10_7 : forall f f' a,
-  ⟦ der a ⟧ f = f' -> f a <> 0 -> ⟦ der a ⟧ (fun x => / f x) = (fun x => -1 * f' x) ∕ (fun x => f x ^ 2).
+  ⟦ der a ⟧ f = f' -> f a <> 0 -> ⟦ der a ⟧ (fun x => / f x) = (fun x => -1 * f' x) / (fun x => f x ^ 2).
 Proof.
   intros f f' a H1 H2. unfold derivative_at. assert (H3 : continuous_at f a). { apply theorem_9_1_a. unfold differentiable_at. exists (f' a). auto. }
   pose proof theorem_6_3_c f a H3 H2 as [δ [H4 H5]].
@@ -480,17 +514,17 @@ Proof.
 Qed.
 
 Theorem theorem_10_8 : forall f f' g g' a,
-  ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = g' -> g a <> 0 -> ⟦ der a ⟧ (f ∕ g) = (g ∙ f' – f ∙ g') ∕ (g ∙ g).
+  ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = g' -> g a <> 0 -> ⟦ der a ⟧ (f / g) = (g ∙ f' - f ∙ g')%function / (g ∙ g).
 Proof.
   intros f f' g g' a H1 H2 H3.
-  replace (f ∕ g)%function with (f ∙ (fun x => / g x))%function. 2 : { extensionality x. unfold Rdiv. reflexivity. }
+  replace (f / g)%function with (f ∙ (fun x => / g x))%function. 2 : { extensionality x. unfold Rdiv. reflexivity. }
   replace (λ x : ℝ, (g x * f' x - f x * g' x) / (g x * g x)) with (fun x => (f' x * /g x + (f x * ((-1 * g' x) * / (g x)^2)))).
   2 : { extensionality x. assert (g x = 0 \/ g x <> 0) as [H4 | H4] by lra. rewrite H4. simpl. unfold Rdiv. repeat rewrite Rmult_0_l. rewrite Rinv_0. nra. field; lra. }
   apply theorem_10_4_a; auto. apply theorem_10_7; auto.
 Qed.
 
 Theorem quotient_rule : forall f g f' g',
-  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> (forall x, g x <> 0) -> ⟦ der ⟧ (f ∕ g) = (g ∙ f' – f ∙ g') ∕ (g ∙ g).
+  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> (forall x, g x <> 0) -> ⟦ der ⟧ (f / g) = (g ∙ f' - f ∙ g')%function / (g ∙ g).
 Proof.
   intros f g f' g' H1 H2 H3 x. apply theorem_10_8; auto.
 Qed.
@@ -603,7 +637,7 @@ Qed.
 Theorem theorem_11_1_b : forall f a b x,
   minimum_point f ⦅a, b⦆ x -> differentiable_at f x -> ⟦ der x ⟧ f = (λ _, 0). 
 Proof.
-  intros f a b x [H1 H2] [L H3]. pose proof theorem_11_1_a (–f) a b x as H4. assert (⟦ der x ⟧ (– f) = (λ _ : ℝ, 0) -> ⟦ der x ⟧ f = (λ _ : ℝ, 0)) as H5.
+  intros f a b x [H1 H2] [L H3]. pose proof theorem_11_1_a (-f) a b x as H4. assert (⟦ der x ⟧ (-f) = (λ _ : ℝ, 0) -> ⟦ der x ⟧ f = (λ _ : ℝ, 0)) as H5.
   {
     intros H5. apply theorem_10_5 with (c := -1) in H5. replace (-1 * 0) with 0 in H5 by lra.
     replace ((λ x : ℝ, -1 * - f x)) with (λ x : ℝ, f x) in H5. 2 : { extensionality x'. lra. } auto.
@@ -627,7 +661,7 @@ Qed.
 Theorem theorem_11_2_b : forall f a b x,
   local_minimum_point f ⦅a, b⦆ x -> differentiable_at f x -> ⟦ der x ⟧ f = (λ _, 0).
 Proof.
-  intros f a b x [H1 [δ [H2 [H3 H4]]]] [L H5]. pose proof theorem_11_2_a (–f) a b x as H6. assert (⟦ der x ⟧ (– f) = (λ _ : ℝ, 0) -> ⟦ der x ⟧ f = (λ _ : ℝ, 0)) as H7.
+  intros f a b x [H1 [δ [H2 [H3 H4]]]] [L H5]. pose proof theorem_11_2_a (-f) a b x as H6. assert (⟦ der x ⟧ (-f) = (λ _ : ℝ, 0) -> ⟦ der x ⟧ f = (λ _ : ℝ, 0)) as H7.
   {
     intros H7. apply theorem_10_5 with (c := -1) in H7. replace (-1 * 0) with 0 in H7 by lra.
     replace ((λ x : ℝ, -1 * - f x)) with (λ x : ℝ, f x) in H7. 2 : { extensionality x'. lra. } auto.
@@ -765,7 +799,7 @@ Proof.
          try (exfalso; apply (not_right_endpoint a b x0 H1); try (unfold In in*; lra); try tauto).
   }
   assert (⟦ der ⟧ h [a, b] = (λ _, 0)) as H7.
-  { apply replace_der_f_on with (f1' := f' – g'); auto; try lra. intros x H7. specialize (H4 x H7). lra. }
+  { apply replace_der_f_on with (f1' := (f' - g')%function); auto; try lra. intros x H7. specialize (H4 x H7). lra. }
   apply corollary_11_1 with (a := a) (b := b) in H7 as [c H8]; auto. exists c. intros x H9. unfold h. specialize (H8 x H9). unfold h in H8. lra.
 Qed.
 
@@ -781,13 +815,49 @@ Definition increasing (f: ℝ -> ℝ) :=
 Definition decreasing (f: ℝ -> ℝ) :=
   decreasing_on f ℝ.
 
+Lemma derivative_at_imp_differentiable_at : forall a f f',
+  ⟦ der a ⟧ f = f' -> differentiable_at f a.
+Proof.
+  intros a f f' H1. exists (f' a). auto.
+Qed.
+
+Lemma right_derivative_at_imp_right_differentiable_at : forall a f f',
+  ⟦ der a⁺ ⟧ f = f' -> right_differentiable_at f a.
+Proof.
+  intros a f f' H1. exists (f' a). auto.
+Qed.
+
+Lemma left_derivative_at_imp_left_differentiable_at : forall a f f',
+  ⟦ der a⁻ ⟧ f = f' -> left_differentiable_at f a.
+Proof.
+  intros a f f' H1. exists (f' a). auto.
+Qed.
+
+Lemma derivative_on_imp_differentiable_on : forall a b f f',
+  a < b -> ⟦ der ⟧ f [a, b] = f' -> differentiable_on f [a, b].
+Proof.
+  intros a b f f' H1 H2 x H3. specialize (H2 x H3) as [H4 | [H4 | H4]].
+  - left. split; try tauto. apply (derivative_at_imp_differentiable_at x f f'); tauto.
+  - right. left. split; try tauto. apply (right_derivative_at_imp_right_differentiable_at x f f'); tauto.
+  - right. right. split; try tauto. apply (left_derivative_at_imp_left_differentiable_at x f f'); tauto.
+Qed.
+
+(*
+
 Corollary corollary_11_3_a : forall f f' a b, 
   a < b -> ⟦ der ⟧ f [a, b] = f' -> (forall x, x ∈ [a, b] -> f' x > 0) -> increasing_on f [a, b].
 Proof.
   intros f f' a b H1 H2 H3 x1 x2 H4 H5 H6. assert (H7 : continuous_on f [x1, x2]).
-  { intros x H7. apply theorem_9_1_a. exists (f' x). apply H2. unfold In in *. lra. }
-  assert (H8 : differentiable_on f ⦅x1, x2⦆).
-  { intros x H8. exists (f' x). apply H2. unfold In in *. lra. }
+  {
+    apply continuous_on_interval_subset with (a := a) (b := b); auto. 2 : { intros x H7. unfold In in *; lra. } 
+    apply theorem_9_1_d; auto. apply differentiable_on_open_interval_subset with (a := a) (b := b); auto.
+    admit. admit.
+  }
+  assert (H8 : differentiable_on f (x1, x2)).
+  {
+    admit.
+  }
+  
   pose proof theorem_11_4 f x1 x2 H6 H7 H8 as [x [H9 H10]]. 
   set (h := λ _ : ℝ, (f x2 - f x1) / (x2 - x1)). assert (h x = f' x) as H11.
   { apply derivative_of_function_at_x_unique with (f := f); auto. apply H2. unfold In in *. lra. }
@@ -850,3 +920,5 @@ Theorem theorem_11_9 : forall f f' g g' a L,
 Proof.
   
 Admitted.
+
+*)

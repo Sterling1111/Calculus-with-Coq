@@ -129,15 +129,21 @@ Proof.
        nra.
 Qed. 
 
-Notation "f + g" := (fun x : ℝ => f x + g x) (at level 50, left associativity) : function_scope.
-Notation "f – g" := (fun x : ℝ => f x - g x) (at level 50, left associativity) : function_scope.
-Notation "– f" := (fun x : ℝ => - f x) (at level 30) : function_scope.
-Notation "f ∙ g" := (fun x : ℝ => f x * g x) (at level 40, left associativity) : function_scope.
-Notation "f ∕ g" := (fun x : ℝ => f x / g x) (at level 40, left associativity) : function_scope.
-Notation "f ∘ g" := (fun x : ℝ => f (g x)) (at level 40, left associativity) : function_scope.
-Notation "c * f" := (fun x : ℝ => c * f x) (at level 40, left associativity) : function_scope.
-Notation "f ^ n" := (fun x : ℝ => (f x) ^ n) (at level 30, right associativity) : function_scope.
-Notation "∕ f" := (fun x : ℝ => 1 / f x) (at level 40, left associativity) : function_scope.
+Module Function_Notations.
+
+  Notation "f + g" := (fun x : ℝ => f x + g x) (at level 50, left associativity) : function_scope.
+  Notation "f - g" := (fun x : ℝ => f x - g x) (at level 50, left associativity) : function_scope.
+  Notation "- f" := (fun x : ℝ => - f x) (at level 35) : function_scope.
+  Notation "f ∙ g" := (fun x : ℝ => f x * g x) (at level 40, left associativity) : function_scope. 
+  Notation "c * f" := (fun x : ℝ => c * f x) (at level 40, left associativity) : function_scope. 
+  Notation "f / g" := (fun x : ℝ => f x / g x) (at level 40, left associativity) : function_scope.
+  Notation "f ∘ g" := (fun x : ℝ => f (g x)) (at level 40, left associativity) : function_scope.
+  Notation "f ^ n" := (fun x : ℝ => (f x) ^ n) (at level 30, right associativity) : function_scope.
+  Notation "∕ f" := (fun x : ℝ => 1 / f x) (at level 40, left associativity) : function_scope.
+
+End Function_Notations.
+
+Import Function_Notations.
 
 Lemma limit_of_function_unique : forall f a L1 L2,
   ⟦ lim a ⟧ f = L1 -> ⟦ lim a ⟧ f = L2 -> L1 = L2. 
@@ -260,7 +266,7 @@ Proof.
 Qed.
 
 Lemma left_limit_minus : forall f1 f2 a L1 L2,
-  ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> ⟦ lim a⁻ ⟧ (f1 – f2) = (L1 - L2).
+  ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> ⟦ lim a⁻ ⟧ (f1 - f2) = (L1 - L2).
 Proof.
   intros f1 f2 a L1 L2 H1 H2. unfold Rminus. apply left_limit_plus; auto.
   intros ε H3. specialize (H2 ε H3) as [δ [H4 H5]].
@@ -268,7 +274,7 @@ Proof.
 Qed.
 
 Lemma right_limit_minus : forall f1 f2 a L1 L2,
-  ⟦ lim a⁺ ⟧ f1 = L1 -> ⟦ lim a⁺ ⟧ f2 = L2 -> ⟦ lim a⁺ ⟧ (f1 – f2) = (L1 - L2).
+  ⟦ lim a⁺ ⟧ f1 = L1 -> ⟦ lim a⁺ ⟧ f2 = L2 -> ⟦ lim a⁺ ⟧ (f1 - f2) = (L1 - L2).
 Proof.
   intros f1 f2 a L1 L2 H1 H2. unfold Rminus. apply right_limit_plus; auto.
   intros ε H3. specialize (H2 ε H3) as [δ [H4 H5]].
@@ -276,7 +282,7 @@ Proof.
 Qed.
 
 Lemma limit_minus : forall f1 f2 a L1 L2,
-  ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> ⟦ lim a ⟧ (f1 – f2) = (L1 - L2).
+  ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> ⟦ lim a ⟧ (f1 - f2) = (L1 - L2).
 Proof.
   intros f1 f2 a L1 L2 H1 H2. apply left_right_iff in H1 as [H3 H4], H2 as [H5 H6].
   apply left_right_iff; split; [ apply left_limit_minus | apply right_limit_minus ]; auto.
@@ -341,23 +347,23 @@ Proof.
 Qed.
 
 Lemma left_limit_div : forall f1 f2 a L1 L2,
-  ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> L2 <> 0 -> ⟦ lim a⁻ ⟧ (f1 ∕ f2) = L1 / L2.
+  ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> L2 <> 0 -> ⟦ lim a⁻ ⟧ (f1 / f2) = L1 / L2.
 Proof.
-  intros f1 f2 a L1 L2 H1 H2 H3. replace (f1 ∕ f2)%function with (f1 ∙ (fun x => 1 / f2 x)).
+  intros f1 f2 a L1 L2 H1 H2 H3. replace (f1 / f2)%function with (f1 ∙ (fun x => 1 / f2 x)).
   2 : { extensionality x. lra. }
   unfold Rdiv. apply left_limit_mult; auto. apply left_limit_inv; auto.
 Qed.
 
 Lemma right_limit_div : forall f1 f2 a L1 L2,
-  ⟦ lim a⁺ ⟧ f1 = L1 -> ⟦ lim a⁺ ⟧ f2 = L2 -> L2 <> 0 -> ⟦ lim a⁺ ⟧ (f1 ∕ f2) = L1 / L2.
+  ⟦ lim a⁺ ⟧ f1 = L1 -> ⟦ lim a⁺ ⟧ f2 = L2 -> L2 <> 0 -> ⟦ lim a⁺ ⟧ (f1 / f2) = L1 / L2.
 Proof.
-  intros f1 f2 a L1 L2 H1 H2 H3. replace (f1 ∕ f2)%function with (f1 ∙ (fun x => 1 / f2 x)).
+  intros f1 f2 a L1 L2 H1 H2 H3. replace (f1 / f2)%function with (f1 ∙ (fun x => 1 / f2 x)).
   2 : { extensionality x. lra. }
   unfold Rdiv. apply right_limit_mult; auto. apply right_limit_inv; auto.
 Qed.
 
 Lemma limit_div : forall f1 f2 a L1 L2,
-  ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> L2 <> 0 -> ⟦ lim a ⟧ (f1 ∕ f2) = L1 / L2.
+  ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> L2 <> 0 -> ⟦ lim a ⟧ (f1 / f2) = L1 / L2.
 Proof.
   intros f1 f2 a L1 L2 H1 H2 H3. apply left_right_iff in H1 as [H4 H5], H2 as [H6 H7].
   apply left_right_iff; split; [ apply left_limit_div | apply right_limit_div ]; auto.
@@ -471,6 +477,36 @@ Qed.
 
 Lemma limit_sandwich : forall f1 f2 f3 a b c L,
   a < b -> c ∈ (a, b) -> ⟦ lim c ⟧ f1 = L -> ⟦ lim c ⟧ f3 = L -> (forall x, x ∈ ((a, c) ⋃ (c, b)) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c ⟧ f2 = L.
+Proof.
+  intros f1 f2 f3 a b c L H1 H2 H3 H4 H5 ε H6. specialize (H3 ε H6) as [δ1 [H7 H8]].
+  specialize (H4 ε H6) as [δ2 [H9 H10]]. set (δ := Rmin δ1 (Rmin δ2 (Rmin (b - c) (c - a)))). unfold Ensembles.In in *.
+  assert (δ > 0) as H11 by (unfold δ; solve_min). exists δ. split; auto. intros x H12. specialize (H8 x ltac:(unfold δ in *; solve_R)).
+  specialize (H10 x ltac:(unfold δ in *; solve_R)).
+  assert (x ∈ ((a, c) ⋃ (c, b))) as H13. {
+    assert (x < c \/ x > c) as [H14 | H14] by solve_R.
+    - left. unfold Ensembles.In in *. unfold δ in *; solve_R.
+    - right. unfold Ensembles.In in *. unfold δ in *; solve_R.
+  }
+  specialize (H5 x H13). assert (f1 x <= f2 x <= f3 x) as H15 by auto. solve_R.
+Qed.
+
+Lemma limit_sandwich_right : forall f1 f2 f3 a b c L,
+  a < b -> c ∈ (a, b) -> ⟦ lim c⁺ ⟧ f1 = L -> ⟦ lim c⁺ ⟧ f3 = L -> (forall x, x ∈ ((a, c) ⋃ (c, b)) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c⁺ ⟧ f2 = L.
+Proof.
+  intros f1 f2 f3 a b c L H1 H2 H3 H4 H5 ε H6. specialize (H3 ε H6) as [δ1 [H7 H8]].
+  specialize (H4 ε H6) as [δ2 [H9 H10]]. set (δ := Rmin δ1 (Rmin δ2 (Rmin (b - c) (c - a)))). unfold Ensembles.In in *.
+  assert (δ > 0) as H11 by (unfold δ; solve_min). exists δ. split; auto. intros x H12. specialize (H8 x ltac:(unfold δ in *; solve_R)).
+  specialize (H10 x ltac:(unfold δ in *; solve_R)).
+  assert (x ∈ ((a, c) ⋃ (c, b))) as H13. {
+    assert (x < c \/ x > c) as [H14 | H14] by solve_R.
+    - left. unfold Ensembles.In in *. unfold δ in *; solve_R.
+    - right. unfold Ensembles.In in *. unfold δ in *; solve_R.
+  }
+  specialize (H5 x H13). assert (f1 x <= f2 x <= f3 x) as H15 by auto. solve_R.
+Qed.
+
+Lemma limit_sandwich_left : forall f1 f2 f3 a b c L,
+  a < b -> c ∈ (a, b) -> ⟦ lim c⁻ ⟧ f1 = L -> ⟦ lim c⁻ ⟧ f3 = L -> (forall x, x ∈ ((a, c) ⋃ (c, b)) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c⁻ ⟧ f2 = L.
 Proof.
   intros f1 f2 f3 a b c L H1 H2 H3 H4 H5 ε H6. specialize (H3 ε H6) as [δ1 [H7 H8]].
   specialize (H4 ε H6) as [δ2 [H9 H10]]. set (δ := Rmin δ1 (Rmin δ2 (Rmin (b - c) (c - a)))). unfold Ensembles.In in *.
