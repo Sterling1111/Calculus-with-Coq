@@ -490,34 +490,26 @@ Proof.
   specialize (H5 x H13). assert (f1 x <= f2 x <= f3 x) as H15 by auto. solve_R.
 Qed.
 
-Lemma limit_sandwich_right : forall f1 f2 f3 a b c L,
-  a < b -> c ∈ (a, b) -> ⟦ lim c⁺ ⟧ f1 = L -> ⟦ lim c⁺ ⟧ f3 = L -> (forall x, x ∈ ((a, c) ⋃ (c, b)) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c⁺ ⟧ f2 = L.
+Lemma limit_sandwich_right : forall f1 f2 f3 c b L,
+  c < b -> ⟦ lim c⁺ ⟧ f1 = L -> ⟦ lim c⁺ ⟧ f3 = L -> (forall x, x ∈ (c, b) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c⁺ ⟧ f2 = L.
 Proof.
-  intros f1 f2 f3 a b c L H1 H2 H3 H4 H5 ε H6. specialize (H3 ε H6) as [δ1 [H7 H8]].
-  specialize (H4 ε H6) as [δ2 [H9 H10]]. set (δ := Rmin δ1 (Rmin δ2 (Rmin (b - c) (c - a)))). unfold Ensembles.In in *.
-  assert (δ > 0) as H11 by (unfold δ; solve_min). exists δ. split; auto. intros x H12. specialize (H8 x ltac:(unfold δ in *; solve_R)).
-  specialize (H10 x ltac:(unfold δ in *; solve_R)).
-  assert (x ∈ ((a, c) ⋃ (c, b))) as H13. {
-    assert (x < c \/ x > c) as [H14 | H14] by solve_R.
-    - left. unfold Ensembles.In in *. unfold δ in *; solve_R.
-    - right. unfold Ensembles.In in *. unfold δ in *; solve_R.
-  }
-  specialize (H5 x H13). assert (f1 x <= f2 x <= f3 x) as H15 by auto. solve_R.
+  intros f1 f2 f3 b c L H1 H2 H3 H4 ε H5. specialize (H3 ε H5) as [δ1 [H6 H7]].
+  specialize (H2 ε H5) as [δ2 [H8 H9]]. set (δ := Rmin δ1 (Rmin δ2 (c - b))). unfold Ensembles.In in *.
+  assert (δ > 0) as H10 by (unfold δ; solve_R). exists δ. split; auto. intros x H11. specialize (H7 x ltac:(unfold δ in *; solve_R)).
+  specialize (H9 x ltac:(unfold δ in *; solve_R)).
+  specialize (H4 x ltac:(unfold δ in *; solve_R)). 
+  solve_R.
 Qed.
 
-Lemma limit_sandwich_left : forall f1 f2 f3 a b c L,
-  a < b -> c ∈ (a, b) -> ⟦ lim c⁻ ⟧ f1 = L -> ⟦ lim c⁻ ⟧ f3 = L -> (forall x, x ∈ ((a, c) ⋃ (c, b)) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c⁻ ⟧ f2 = L.
+Lemma limit_sandwich_left : forall f1 f2 f3 a c L,
+  a < c -> ⟦ lim c⁻ ⟧ f1 = L -> ⟦ lim c⁻ ⟧ f3 = L -> (forall x, x ∈ (a, c) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c⁻ ⟧ f2 = L.
 Proof.
-  intros f1 f2 f3 a b c L H1 H2 H3 H4 H5 ε H6. specialize (H3 ε H6) as [δ1 [H7 H8]].
-  specialize (H4 ε H6) as [δ2 [H9 H10]]. set (δ := Rmin δ1 (Rmin δ2 (Rmin (b - c) (c - a)))). unfold Ensembles.In in *.
-  assert (δ > 0) as H11 by (unfold δ; solve_min). exists δ. split; auto. intros x H12. specialize (H8 x ltac:(unfold δ in *; solve_R)).
-  specialize (H10 x ltac:(unfold δ in *; solve_R)).
-  assert (x ∈ ((a, c) ⋃ (c, b))) as H13. {
-    assert (x < c \/ x > c) as [H14 | H14] by solve_R.
-    - left. unfold Ensembles.In in *. unfold δ in *; solve_R.
-    - right. unfold Ensembles.In in *. unfold δ in *; solve_R.
-  }
-  specialize (H5 x H13). assert (f1 x <= f2 x <= f3 x) as H15 by auto. solve_R.
+  intros f1 f2 f3 a c L H1 H2 H3 H4 ε H5. specialize (H3 ε H5) as [δ1 [H6 H7]].
+  specialize (H2 ε H5) as [δ2 [H8 H9]]. set (δ := Rmin δ1 (Rmin δ2 (c - a))). unfold Ensembles.In in *.
+  assert (δ > 0) as H10 by (unfold δ; solve_R). exists δ. split; auto. intros x H11. specialize (H7 x ltac:(unfold δ in *; solve_R)).
+  specialize (H9 x ltac:(unfold δ in *; solve_R)).
+  specialize (H4 x ltac:(unfold δ in *; solve_R)). 
+  solve_R.
 Qed.
 
 Lemma lim_equality_substitution : forall f a L1 L2,
