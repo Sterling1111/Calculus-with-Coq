@@ -2175,4 +2175,4 @@ Proof.
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
 
-Definition π := ∫ 0 1 (λ x : ℝ, 4 * (1 / (1 + x^2))).
+Definition π := 2 * ∫ (-1) 1 (λ x, √(1 - x^2)).
