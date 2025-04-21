@@ -600,11 +600,19 @@ Proof.
     assert (i = length l1 \/ i > length l1)%nat as [H9 | H9] by lia. rewrite H9 in *. rewrite H7. tauto. 
     rewrite nth_overflow. 2 : { rewrite insert_Sorted_Rlt_length in *. lia. } lia. 
 Qed.
+
 Lemma glb_subset : forall (E1 E2 : Ensemble ℝ) r1 r2,
   is_glb E1 r1 -> is_glb E2 r2 -> E1 ⊆ E2 -> r2 <= r1.
 Proof.
   intros E1 E2 r1 r2 H1 H2 H3. unfold is_glb in H1, H2. destruct H1 as [H1 H4], H2 as [H2 H5].
   specialize (H4 r2). apply Rge_le. apply H4. intros x H6. specialize (H3 x H6). specialize (H2 x). apply H2. auto.
+Qed.
+
+Lemma lub_subset : forall (E1 E2 : Ensemble ℝ) r1 r2,
+  is_lub E1 r1 -> is_lub E2 r2 -> E1 ⊆ E2 -> r1 <= r2.
+Proof.
+  intros E1 E2 r1 r2 H1 H2 H3. unfold is_lub in H1, H2. destruct H1 as [H1 H4], H2 as [H2 H5].
+  specialize (H4 r2). apply H4. intros x H6. specialize (H3 x H6). specialize (H2 x). apply H2. auto.
 Qed.
 
 Lemma insert_Parition_R_lower_sum : forall (a b r : ℝ) (bf : bounded_function_R a b) (P Q : partition_R a b),
@@ -788,7 +796,176 @@ Lemma insert_Parition_R_upper_sum : forall (a b r : ℝ) (bf : bounded_function_
   let l2 := Q.(points a b) in
   ~List.In r l1 -> l2 = insert_Sorted_Rlt r l1 -> U(bf, P(a, b)) >= U(bf, Q(a, b)).
 Proof.
-Admitted.
+  intros a b r [f H0 H1] P Q. unfold upper_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_sup f a b P H1) as [l3 [H2 H3]];
+  destruct (partition_sublist_elem_has_sup f a b Q H1) as [l4 [H4 H5]]. pose proof partition_length a b P as H6.
+  set (l1 := points a b P). set (l2 := points a b Q). replace (points a b P) with l1 in *; replace (points a b Q) with l2 in *; auto.
+  intros H7 H8. pose proof insert_Sorted_Rlt_nth l1 l2 r ltac:(pose proof partition_spec a b P as H9; apply H9) H7 H8 as [i [H10 [H11 [H12 H13]]]].
+  pose proof insert_Parition_R_not_first_or_last a b r P Q i H10 H7 ltac:(auto) H11 as H14.
+  assert (H15 : length l2 = S (length l1)). { rewrite H8. apply insert_Sorted_Rlt_length. } replace (points a b Q) with l2 in * by auto.
+  assert (i = 1%nat \/ i > 1)%nat as [H16 | H16] by lia.
+  - assert (length l3 = 1 \/ length l3 > 1)%nat as [H17 | H17] by lia.
+    -- rewrite H17. replace (length l4 - 1)%nat with 1%nat by lia. repeat sum_simpl. assert (nth 0 l3 0 >= nth 0 l4 0) as H18.
+       {
+         specialize (H3 0%nat ltac:(lia)). specialize (H5 0%nat ltac:(lia)). apply Rle_ge.
+         apply lub_subset with (E1 := (fun y => exists x, x ∈ [nth 0 l2 0, nth 1 l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth 0 l1 0, nth 1 l1 0] /\ y = f x)); auto.
+         intros x H18. rewrite H12 in H18; try lia. rewrite <- H13 with (k := 1%nat); try lia. destruct H18 as [x2 [H18 H19]]. exists x2. split; auto. unfold In in *.
+         assert (Sorted Rlt l2). { rewrite H8. apply insert_Sorted_Rlt_sorted; auto. unfold l1. pose proof partition_spec a b P; tauto. }
+         pose proof Sorted_Rlt_nth l2 1 2 0 ltac:(auto) ltac:(lia). simpl. lra.
+       }
+       assert (nth 0 l3 0 >= nth 1 l4 0) as H19.
+       {
+         specialize (H3 0%nat ltac:(lia)). specialize (H5 1%nat ltac:(simpl in *; lia)). 
+         apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth 1 l2 0, nth 2 l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth 0 l1 0, nth 1 l1 0] /\ y = f x)); auto.
+         intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. replace 2%nat with (1 + 1)%nat in H19 by lia. rewrite H13 in H19; try lia. rewrite <- H12; try lia.
+         assert (Sorted Rlt l2). { rewrite H8. apply insert_Sorted_Rlt_sorted; auto. unfold l1. pose proof partition_spec a b P; tauto. }
+         pose proof Sorted_Rlt_nth l2 0 1 0 ltac:(auto) ltac:(lia). simpl. lra.
+       }
+       assert (nth 0 l1 0 < nth 1 l2 0) as H20.
+       {
+         assert (Sorted Rlt l1) as H20. { pose proof partition_spec a b P; tauto. } assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. }
+         pose proof Sorted_Rlt_nth l1 0 1 0 ltac:(auto) ltac:(lia) as H22. pose proof Sorted_Rlt_nth l2 0 1 0 ltac:(auto) ltac:(lia) as H23. rewrite H12 in H23; try lia. lra.
+       }
+       replace (nth 2 l2 0) with (nth 1 l1 0). 2 : { replace 2%nat with (1 + 1)%nat by lia. rewrite H13; try lia. reflexivity. }
+       replace (nth 0 l2 0) with (nth 0 l1 0). 2 : { rewrite H12; try lia. reflexivity. } assert (H21 : nth 0 l1 0 < nth 1 l1 0).
+       { assert (Sorted Rlt l1) as H21. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 0 1 0 ltac:(auto) ltac:(lia) as H22. lra. }
+       assert (nth 1 l2 0 < nth 1 l1 0) as H22.
+       {
+         assert (Sorted Rlt l1) as H22. { pose proof partition_spec a b P; tauto. } assert (Sorted Rlt l2) as H23. { pose proof partition_spec a b Q; tauto. }
+         pose proof Sorted_Rlt_nth l2 1 (1+1) 0 ltac:(auto) ltac:(lia) as H24. rewrite H13 in H24; try lia. lra.
+       } nra.
+    -- rewrite sum_f_Si with (n := (length l4 - 1)%nat); try lia. rewrite sum_f_Si with (n := (length l4 - 1)%nat); try lia.
+       rewrite H16 in H11. simpl. rewrite sum_f_Si; try lia. simpl.
+       assert (∑ 1 (length l3 - 1) (λ i0 : ℕ, nth i0 l3 0 * (nth (i0 + 1) l1 0 - nth i0 l1 0)) >= ∑ 2 (length l4 - 1) (λ i0 : ℕ, nth i0 l4 0 * (nth (i0 + 1) l2 0 - nth i0 l2 0))) as H18.
+       {
+         rewrite sum_f_reindex' with (s := 1%nat). simpl. replace (length l3 - 1 + 1)%nat with (length l4 - 1)%nat by lia. apply Rle_ge.
+         apply sum_f_congruence_le; try lia. intros k H18. replace (k - 1 + 1)%nat with k by lia.
+         assert (nth (k-1) l3 0 >= nth k l4 0) as H19.
+         {
+           specialize (H3 (k-1)%nat ltac:(lia)). specialize (H5 k ltac:(lia)). replace (k-1+1)%nat with k in H3 by lia.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth k l2 0, nth (k+1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (k-1) l1 0, nth k l1 0] /\ y = f x)); auto.
+           intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite H13 in H19; try lia.
+           assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } rewrite <- H13; try lia. replace (k - 1 + 1)%nat with k by lia. lra.
+         }
+         rewrite H13; try lia. replace (nth k l2 0) with (nth (k-1) l1 0). 2 : { replace k with (k - 1 + 1)%nat at 2 by lia. rewrite H13; try lia. reflexivity. }
+         assert (Sorted Rlt l1) as H20. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 (k-1) k 0 ltac:(auto) ltac:(lia) as H21. nra.
+       }
+       assert (nth 0 l3 0 * (nth 1 l1 0 - nth 0 l1 0) >= nth 1 l4 0 * (nth 2 l2 0 - nth 1 l2 0) + nth 0 l4 0 * (nth 1 l2 0 - nth 0 l2 0)) as H19.
+       {
+         assert (nth 0 l1 0 < nth 1 l2 0 < nth 1 l1 0) as H19.
+         {
+           assert (Sorted Rlt l1) as H19. { pose proof partition_spec a b P; tauto. } assert (Sorted Rlt l2) as H20. { pose proof partition_spec a b Q; tauto. }
+           pose proof Sorted_Rlt_nth l1 0 1 0 ltac:(auto) ltac:(lia) as H21. pose proof Sorted_Rlt_nth l1 1 2 0 ltac:(auto) ltac:(lia) as H22.
+           pose proof Sorted_Rlt_nth l2 0 1 0 ltac:(auto) ltac:(lia) as H23. pose proof Sorted_Rlt_nth l2 1 2 0 ltac:(auto) ltac:(lia) as H24.
+           rewrite H12 in H23; try lia. replace 2%nat with (1+1)%nat in H24 by lia. rewrite H13 in H24; try lia. lra.
+         }
+         assert (nth 0 l3 0 >= nth 1 l4 0) as H20.
+         {
+           specialize (H3 0%nat ltac:(lia)). specialize (H5 1%nat ltac:(lia)).
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth 1 l2 0, nth 2 l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth 0 l1 0, nth 1 l1 0] /\ y = f x)); auto.
+           intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *.  rewrite <- H13 with (k := 1%nat); try lia. simpl. lra.
+         }
+         assert (nth 0 l3 0 >= nth 0 l4 0) as H21.
+         {
+           specialize (H3 0%nat ltac:(lia)). specialize (H5 0%nat ltac:(lia)).
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth 0 l2 0, nth 1 l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth 0 l1 0, nth 1 l1 0] /\ y = f x)); auto.
+           intros x [x2 [H21 H22]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. lra.
+         }
+         replace (nth 0 l2 0) with (nth 0 l1 0). 2 : { rewrite H12; try lia. reflexivity. } replace (nth 2 l2 0) with (nth 1 l1 0). 2 : { rewrite <- H13; try lia. reflexivity. } nra.
+       } nra.
+  - rewrite sum_f_split with (i := 0%nat) (j := (i-2)%nat) (n := (length l4 - 1)%nat); try lia. replace (S (i - 2)) with (i-1)%nat by lia.
+    rewrite sum_f_Si with (i := (i-1)%nat); try lia. assert (S (i-1) = length l4 - 1 \/ S (i-1) < length l4 - 1)%nat as [H17 | H17] by lia.
+    -- rewrite <- H17. rewrite sum_f_n_n. replace (S (i-1)) with i by lia. replace (i-1+1)%nat with i by lia. replace (length l3 - 1)%nat with (S (i-2))%nat by lia.
+       rewrite sum_f_i_Sn_f; try lia. replace (S (i-2)) with (i-1)%nat by lia.
+       assert (∑ 0 (i - 2) (λ i0 : ℕ, nth i0 l3 0 * (nth (i0 + 1) l1 0 - nth i0 l1 0)) >= ∑ 0 (i - 2) (λ i0 : ℕ, nth i0 l4 0 * (nth (i0 + 1) l2 0 - nth i0 l2 0))) as H18.
+       {
+        apply Rle_ge, sum_f_congruence_le; try lia. intros k H18. rewrite H12; try lia. rewrite H12; try lia. specialize (H3 k ltac:(lia)). specialize (H5 k ltac:(lia)).
+        assert (nth k l3 0 >= nth k l4 0) as H19.
+        {
+          apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth k l2 0, nth (k + 1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth k l1 0, nth (k + 1) l1 0] /\ y = f x)); auto.
+          intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite H12 in H19; try lia. rewrite H12 in H19; try lia. lra.
+        }
+        assert (Sorted Rlt l1) as H20. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 k (k+1) 0 ltac:(auto) ltac:(lia) as H21. nra.
+       }
+       replace (i-1+1)%nat with i by lia.
+       assert (nth (i - 1) l3 0 * (nth i l1 0 - nth (i - 1) l1 0) >= (nth i l4 0 * (nth (i + 1) l2 0 - nth i l2 0) + nth (i - 1) l4 0 * (nth i l2 0 - nth (i - 1) l2 0))) as H19.
+       {
+         assert (nth (i - 1) l3 0 >= nth i l4 0) as H19.
+         {
+           specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 i ltac:(lia)). replace (i-1+1)%nat with i in H3 by lia.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth i l2 0, nth (i+1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (i-1) l1 0, nth i l1 0] /\ y = f x)); auto.
+           intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
+           assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H22. lra.
+         }
+         assert (nth (i-1) l3 0 >= nth (i-1) l4 0) as H20.
+         {
+          specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 (i-1)%nat ltac:(lia)). replace (i-1+1)%nat with i in H3, H5 by lia.
+          apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth (i-1) l2 0, nth i l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (i-1) l1 0, nth i l1 0] /\ y = f x)); auto.
+          intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
+          assert (Sorted Rlt l2) as H22. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0  ltac:(auto) ltac:(lia) as H23. lra.
+         }
+         assert (nth (i-1) l1 0 < nth i l2 0 < nth i l1 0) as H21.
+         {
+           assert (Sorted Rlt l2) as H22. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0 ltac:(auto) ltac:(lia) as H24.
+           pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H25. rewrite H13 in H24; try lia. rewrite <- H12; try lia. lra.
+         }
+         replace (nth (i - 1) l2 0) with (nth (i-1) l1 0). 2 : { rewrite <- H12; try lia. reflexivity. } rewrite H13; try lia. nra.
+       } nra.
+    -- rewrite sum_f_split with (i := 0%nat)(j := (i-2)%nat) (n := (length l3 - 1)%nat); try lia.
+       rewrite sum_f_Si with (i := S (i-2)); try lia. replace (S (S (i-2))) with i by lia.
+       replace (S (i-2)) with (i-1)%nat by lia. replace (i-1+1)%nat with i by lia.
+       rewrite sum_f_Si with (i := (S (i-1))); try lia. replace (S (S (i-1))) with (i+1)%nat by lia.
+       rewrite sum_f_reindex with (s := 1%nat) (i := (i + 1)%nat); try lia. replace (i+1-1)%nat with i by lia.
+       replace (length l4 - 1 - 1)%nat with (length l3 - 1)%nat by lia.
+       replace (S (i-1)) with i by lia.
+       assert (nth (i - 1) l3 0 * (nth i l1 0 - nth (i - 1) l1 0) >= nth i l4 0 * (nth (i + 1) l2 0 - nth i l2 0) + nth (i - 1) l4 0 * (nth i l2 0 - nth (i - 1) l2 0)) as H18.
+       {
+         assert (nth (i - 1) l3 0 >= nth i l4 0) as H18.
+         {
+           specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 i ltac:(lia)). replace (i-1+1)%nat with i in H3 by lia.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth i l2 0, nth (i+1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (i-1) l1 0, nth i l1 0] /\ y = f x)); auto.
+           intros x [x2 [H18 H19]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
+           assert (Sorted Rlt l2) as H20. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H21. lra.
+         }
+         assert (nth (i-1) l3 0 >= nth (i-1) l4 0) as H19.
+         {
+           specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 (i-1)%nat ltac:(lia)). replace (i-1+1)%nat with i in H3, H5 by lia.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth (i-1) l2 0, nth i l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (i-1) l1 0, nth i l1 0] /\ y = f x)); auto.
+           intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
+           assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0 ltac:(auto) ltac:(lia) as H22. lra.
+         }
+         assert (nth (i-1) l1 0 < nth i l2 0 < nth i l1 0) as H21.
+         {
+           assert (Sorted Rlt l2) as H22. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0 ltac:(auto) ltac:(lia) as H24.
+           pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H25. rewrite H13 in H24; try lia. rewrite <- H12; try lia. lra.
+         }
+         replace (nth (i - 1) l2 0) with (nth (i-1) l1 0). 2 : { rewrite <- H12; try lia. reflexivity. } rewrite H13; try lia. nra.
+       }
+       assert (∑ 0 (i - 2) (λ i0 : ℕ, nth i0 l3 0 * (nth (i0 + 1) l1 0 - nth i0 l1 0)) >= ∑ 0 (i - 2) (λ i0 : ℕ, nth i0 l4 0 * (nth (i0 + 1) l2 0 - nth i0 l2 0))) as H19.
+       {
+         apply Rle_ge, sum_f_congruence_le; try lia. intros k H19. rewrite H12; try lia. rewrite H12; try lia. specialize (H3 k ltac:(lia)). specialize (H5 k ltac:(lia)).
+         assert (nth k l3 0 >= nth k l4 0) as H20.
+         {
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth k l2 0, nth (k + 1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth k l1 0, nth (k + 1) l1 0] /\ y = f x)); auto.
+           intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *. rewrite H12 in H20; try lia. rewrite H12 in H20; try lia. lra.
+         }
+         assert (Sorted Rlt l1) as H21. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 k (k+1) 0 ltac:(auto) ltac:(lia) as H22. nra.
+       }
+       assert (∑ i (length l3 - 1) (λ i0 : ℕ, nth i0 l3 0 * (nth (i0 + 1) l1 0 - nth i0 l1 0)) >= (∑ i (length l3 - 1) (λ x : ℕ, nth (x + 1) l4 0 * (nth (x + 1 + 1) l2 0 - nth (x + 1) l2 0)))) as H20.
+       {
+         apply Rle_ge, sum_f_congruence_le; try lia. intros k H20. replace (k + 1 + 1)%nat with (k + 2)%nat by lia.
+         assert (nth k l3 0 >= nth (k+1) l4 0) as H21.
+         {
+           specialize (H3 k ltac:(lia)). specialize (H5 (k+1)%nat ltac:(lia)). replace (k + 1 + 1)%nat with (k + 2)%nat in H5 by lia.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth (k+1) l2 0, nth (k+2) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth k l1 0, nth (k+1) l1 0] /\ y = f x)); auto.
+           intros x [x2 [H21 H22]]. exists x2. split; auto. unfold In in *. rewrite <- H13; try lia. replace (k + 2)%nat with (k + 1 + 1)%nat in H21 by lia.
+           rewrite (H13 (k + 1)%nat) in H21; try lia. lra.
+         }
+         rewrite H13; try lia. replace (k + 2)%nat with (k + 1 + 1)%nat by lia. rewrite H13; try lia.
+         assert (Sorted Rlt l1) as H22. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 k (k+1) 0 ltac:(auto) ltac:(lia) as H23. nra.
+       }
+       lra.
+Qed.
 
 Fixpoint add_points_Sorted_Rlt (l1 diff : list ℝ) : list R := 
   match diff with
@@ -936,6 +1113,7 @@ Qed.
 Lemma add_points_Dup : forall (l1 l2 : list ℝ) (r : ℝ),
   List.In r l2 -> List.In r l1 -> ~NoDup (add_points_Sorted_Rlt l1 l2).
 Proof.
+
 Admitted.
 
 Lemma lemma_13_1_a : forall (a b : ℝ) (bf : bounded_function_R a b) (Q P : partition_R a b),
@@ -1508,6 +1686,18 @@ Proof.
   field_simplify in H15; try lra.
 Qed.
 
+Lemma integral_eq_bounds : forall a f,
+  ∫ a a f = 0.
+Proof.
+  intros a f. unfold definite_integral. destruct (Rlt_dec a a) as [H1 | H1]; try lra.
+  assert (a < a -> False) as H2. { intros H2. lra. } exfalso. apply H2. auto.
+Qed.
+
+Lemma integral_minus : forall f a b c,
+  Integrable_On a (b + c) f -> ∫ a (b + c) f - ∫ a b f = ∫ b (b + c) f.
+Proof.
+Admitted.
+
 Theorem theorem_13_7 : forall a b f m M r,
   a < b -> integral f a b r -> (forall x, x ∈ [a, b] -> m <= f x <= M) ->
     m * (b - a) <= r <= M * (b - a).
@@ -1654,145 +1844,271 @@ Proof.
 Qed.
 
 Theorem FTC1 : ∀ f F a b,
-  a < b -> (∀ x, x ∈ [a, b] -> ∫ a x f = (F x)) -> 
-    continuous_on f [a, b] -> ⟦ der ⟧ F [a, b] = f.
+  a < b -> (∀ x, x ∈ [a, b] -> ∫ a x f = (F x)) -> continuous_on f [a, b] -> ⟦ der ⟧ F [a, b] = f.
 Proof.
   intros f F a b H1 H2 H3 c H4. unfold Ensembles.In in *.
   assert (exists m, forall h, (h ∈ (0, b - c) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (m h)) /\ 
-                         (h ∈ (a - c, 0) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (m h))) as [m H5] by admit.
+                         (h ∈ (a - c, 0) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (m h))) as [m H5].
+  {
+    assert (forall h, h ∈ (0, b - c) -> { inf | is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) inf} ) as H5.
+    {
+      pose proof interval_has_inf as H5. intros h H6.
+      assert (continuous_on f [c, c + h]) as H7.
+      { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H7. unfold Ensembles.In in *. solve_R. }
+      pose proof continuous_imp_bounded f c (c + h) ltac:(unfold In in *; lra) H7 as H8.
+      specialize (H5 c (c + h) f ltac:(unfold In in *; lra) H8) as [sup H9]. exists sup; auto. 
+    }
+    assert (forall h, h ∈ (a - c, 0) -> { inf | is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) inf }) as H6.
+    {
+      pose proof interval_has_inf as H6. intros h H7.
+      assert (continuous_on f [c + h, c]) as H8.
+      { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H8. unfold Ensembles.In in *. solve_R. }
+      pose proof continuous_imp_bounded f (c + h) c ltac:(unfold In in *; lra) H8 as H9.
+      specialize (H6 (c + h) c f ltac:(unfold In in *; lra) H9) as [inf H10]. exists inf; auto. 
+    }
+    assert (H7 : forall h, ~h <= (a - c) /\ h < 0 -> h ∈ (λ x : ℝ, a - c < x < 0)). 
+    { intros h H7. unfold In in *. lra. }
+    assert (H8 : forall h, ~h >= (b - c) /\ h > 0 -> h ∈ (λ x : ℝ, 0 < x < b - c)). 
+    { intros h H8. unfold In in *. lra. }
+    set (m := λ h, match (Rle_dec h (a - c)) with 
+                   | left _ => 0
+                   | right H9 => match (Rlt_dec h 0) with 
+                   | left H10 => proj1_sig (H6 h (H7 h (conj H9 H10)))
+                   | right H10 => match (Rge_dec h (b - c)) with 
+                   | left _ => 0
+                   | right H11 => match (Rgt_dec h 0) with
+                   | left H12 => proj1_sig (H5 h (H8 h (conj H11 H12)))
+                   | right H12 => 0
+                   end end end
+                   end).
+    exists m. intros h; split; intros [H9 H10]; unfold Ensembles.In in *; unfold m; clear m.
+    - destruct (Rle_dec h (a - c)) as [H11 | H11]; destruct (Rlt_dec h 0) as [H12 | H12]; destruct (Rge_dec h (b - c)) as [H13 | H13]; destruct (Rgt_dec h 0) as [H14 | H14]; solve_R.
+      -- assert (h > 0 /\ h < 0 -> False) as H15. { lra. } exfalso. apply H15. auto.
+      -- assert (h > 0 /\ h < 0 -> False) as H15. { lra. } exfalso. apply H15. auto.
+      -- apply (proj2_sig (H5 h (H8 h (conj H13 H14)))).
+    -  destruct (Rle_dec h (a - c)) as [H11 | H11]; destruct (Rlt_dec h 0) as [H12 | H12]; destruct (Rge_dec h (b - c)) as [H13 | H13]; destruct (Rgt_dec h 0) as [H14 | H14]; solve_R.
+       apply (proj2_sig (H6 h (H7 h (conj H11 H12)))).
+  }
   assert (exists M, forall h, (h ∈ (0, b - c) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (M h)) /\ 
-                         (h ∈ (a - c, 0) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (M h))) as [M H6] by admit.
-
-    assert (H9 : forall h, h ∈ (0, b - c) -> m h <= (F (c + h) - F c) / h <= M h).
+                         (h ∈ (a - c, 0) -> is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (M h))) as [M H6].
+  {
+    assert (forall h, h ∈ (0, b - c) -> { sup | is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) sup} ) as H6.
     {
-      intros h' H9. unfold Ensembles.In in *. repeat rewrite <- H2; solve_R. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in * by admit.
-      assert (H10 : Integrable_On c (c + h') f).
-      { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. unfold Ensembles.In in *. solve_R. }
-      assert (H11 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c <= x0 <= c + h') → m h' <= f x <= M h').
-      { 
-        intros x H11. unfold Ensembles.In in *. destruct H11 as [H11 H12]. specialize (H5 h') as [H5 _]. specialize (H5 ltac:(solve_R)).
-        specialize (H6 h') as [H6 _]. specialize (H6 ltac:(solve_R)). destruct H5 as [H5 _]. destruct H6 as [H6 _].
-        specialize (H5 (f x) ltac:(exists x; auto)). specialize (H6 (f x) ltac:(exists x; auto)). lra. 
-      }
-      pose proof theorem_13_7' c (c + h') f (m h') (M h') ltac:(lra) H10 H11 as H12. replace (c + h' - c) with h' in H12 by lra.
-      clear H10 H11. rename H12 into H10. assert (H11 : m h' <= ∫ c (c + h') f / h' <= M h').
-      {
-        destruct H10 as [H10 H11]. apply Rmult_le_compat_l with (r := /h') in H10, H11; try (apply Rlt_le; apply Rinv_pos; lra).
-        field_simplify in H10; field_simplify in H11; lra.
-      } lra.
+      pose proof interval_has_sup as H6. intros h H7.
+      assert (continuous_on f [c, c + h]) as H8.
+      { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H8. unfold Ensembles.In in *. solve_R. }
+      pose proof continuous_imp_bounded f c (c + h) ltac:(unfold In in *; lra) H8 as H9.
+      specialize (H6 c (c + h) f ltac:(unfold In in *; lra) H9) as [sup H10]. exists sup; auto. 
     }
-    assert (H10 : forall h, h ∈ (a - c, 0) -> m h <= (F (c + h) - F c) / h <= M h).
+    assert (forall h, h ∈ (a - c, 0) -> { sup | is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) sup }) as H7.
     {
-      intros h' H10. unfold Ensembles.In in *. repeat rewrite <- H2; solve_R. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in * by admit.
-      assert (H11 : Integrable_On (c + h') c f).
-      { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. unfold Ensembles.In in *. solve_R. }
-      assert (H12 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c + h' <= x0 <= c) → m h' <= f x <= M h').
-      { 
-        intros x H12. unfold Ensembles.In in *. destruct H12 as [H12 H13]. specialize (H5 h') as [_ H5]. specialize (H6 h') as [_ H6].
-        specialize (H5 ltac:(solve_R)). specialize (H6 ltac:(solve_R)). destruct H5 as [H5 _]. destruct H6 as [H6 _].
-        specialize (H5 (f x) ltac:(exists x; auto)). specialize (H6 (f x) ltac:(exists x; auto)). lra. 
-      }
-      pose proof theorem_13_7' (c + h') c f (m h') (M h') ltac:(lra) H11 H12 as H13. replace (c - (c + h')) with (-h') in H13 by lra.
-      clear H11 H12. rename H13 into H11. assert (H12 : m h' <= ∫ c (c + h') f / h' <= M h').
-      {
-        destruct H11 as [H11 H12]. apply Rmult_le_compat_neg_l with (r := /h') in H11, H12; try (apply Rlt_le; apply Rinv_neg; lra).
-        replace (∫ (c + h') c f) with (- ∫ c (c + h') f) in *. 2 : { apply eq_sym. apply integral_neg. } replace (/ h' * (m h' * - h')) with (- m h') in H11 by (field; lra).
-        replace (/ h' * (M h' * - h')) with (- M h') in H12 by (field; lra). lra.
-      } lra.
+      pose proof interval_has_sup as H7. intros h H8.
+      assert (continuous_on f [c + h, c]) as H9.
+      { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H9. unfold Ensembles.In in *. solve_R. }
+      pose proof continuous_imp_bounded f (c + h) c ltac:(unfold In in *; lra) H9 as H10.
+      specialize (H7 (c + h) c f ltac:(unfold In in *; lra) H10) as [sup H11]. exists sup; auto. 
     }
-    assert (c = a \/ c = b \/ a < c < b) as [H11 | [H11 | H11]] by lra; clear H4; rename H11 into H4.
-    - 
-    assert (H11 : ⟦ lim 0⁺ ⟧ m = f c).
+    assert (H8 : forall h, ~h <= (a - c) /\ h < 0 -> h ∈ (λ x : ℝ, a - c < x < 0)). 
+    { intros h H8. unfold In in *. lra. }
+    assert (H9 : forall h, ~h >= (b - c) /\ h > 0 -> h ∈ (λ x : ℝ, 0 < x < b - c)).
+    { intros h H9. unfold In in *. lra. }
+    set (M := λ h, match (Rle_dec h (a - c)) with 
+                   | left _ => 0
+                   | right H10 => match (Rlt_dec h 0) with 
+                   | left H11 => proj1_sig (H7 h (H8 h (conj H10 H11)))
+                   | right H11 => match (Rge_dec h (b - c)) with 
+                   | left _ => 0
+                   | right H12 => match (Rgt_dec h 0) with
+                   | left H13 => proj1_sig (H6 h (H9 h (conj H12 H13)))
+                   | right H13 => 0
+                   end end end
+                   end).
+    exists M. intros h; split; intros [H10 H11]; unfold Ensembles.In in *; unfold M; clear M.
+    - destruct (Rle_dec h (a - c)) as [H12 | H12]; destruct (Rlt_dec h 0) as [H13 | H13]; destruct (Rge_dec h (b - c)) as [H14 | H14]; destruct (Rgt_dec h 0) as [H15 | H15]; solve_R.
+      -- assert (h > 0 /\ h < 0 -> False) as H16. { lra. } exfalso. apply H16. auto.
+      -- assert (h > 0 /\ h < 0 -> False) as H16. { lra. } exfalso. apply H16. auto.
+      -- apply (proj2_sig (H6 h (H9 h (conj H14 H15)))).
+    - destruct (Rle_dec h (a - c)) as [H12 | H12]; destruct (Rlt_dec h 0) as [H13 | H13]; destruct (Rge_dec h (b - c)) as [H14 | H14]; destruct (Rgt_dec h 0) as [H15 | H15]; solve_R.
+       apply (proj2_sig (H7 h (H8 h (conj H12 H13)))).
+  }
+  assert (H9 : forall h, h ∈ (0, b - c) -> m h <= (F (c + h) - F c) / h <= M h).
+  {
+    intros h' H9. unfold Ensembles.In in *. repeat rewrite <- H2; solve_R. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in *.
+    2 : {
+       assert (a = c \/ a < c) as [H10 | H10] by lra; clear H4; rename H10 into H4. subst. rewrite integral_eq_bounds; auto. lra.
+       rewrite integral_minus; auto. apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. unfold Ensembles.In in *. solve_R. }
+    assert (H10 : Integrable_On c (c + h') f).
+    { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. unfold Ensembles.In in *. solve_R. }
+    assert (H11 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c <= x0 <= c + h') → m h' <= f x <= M h').
+    { 
+      intros x H11. unfold Ensembles.In in *. destruct H11 as [H11 H12]. specialize (H5 h') as [H5 _]. specialize (H5 ltac:(solve_R)).
+      specialize (H6 h') as [H6 _]. specialize (H6 ltac:(solve_R)). destruct H5 as [H5 _]. destruct H6 as [H6 _].
+      specialize (H5 (f x) ltac:(exists x; auto)). specialize (H6 (f x) ltac:(exists x; auto)). lra. 
+    }
+    pose proof theorem_13_7' c (c + h') f (m h') (M h') ltac:(lra) H10 H11 as H12. replace (c + h' - c) with h' in H12 by lra.
+    clear H10 H11. rename H12 into H10. assert (H11 : m h' <= ∫ c (c + h') f / h' <= M h').
     {
-      intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [_ [H12 _]].
-      specialize (H12 ε H11) as [δ [H13 H14]]. exists (Rmin (δ/2) (b-c)). split. solve_R. 
+      destruct H10 as [H10 H11]. apply Rmult_le_compat_l with (r := /h') in H10, H11; try (apply Rlt_le; apply Rinv_pos; lra).
+      field_simplify in H10; field_simplify in H11; lra.
+    } lra.
+  }
+  assert (H10 : forall h, h ∈ (a - c, 0) -> m h <= (F (c + h) - F c) / h <= M h).
+  {
+    intros h' H10. unfold Ensembles.In in *. repeat rewrite <- H2; solve_R. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in *.
+    2 : { rewrite integral_minus; auto. apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. unfold Ensembles.In in *. solve_R. }
+    assert (H11 : Integrable_On (c + h') c f).
+    { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. unfold Ensembles.In in *. solve_R. }
+    assert (H12 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c + h' <= x0 <= c) → m h' <= f x <= M h').
+    { 
+      intros x H12. unfold Ensembles.In in *. destruct H12 as [H12 H13]. specialize (H5 h') as [_ H5]. specialize (H6 h') as [_ H6].
+      specialize (H5 ltac:(solve_R)). specialize (H6 ltac:(solve_R)). destruct H5 as [H5 _]. destruct H6 as [H6 _].
+      specialize (H5 (f x) ltac:(exists x; auto)). specialize (H6 (f x) ltac:(exists x; auto)). lra. 
+    }
+    pose proof theorem_13_7' (c + h') c f (m h') (M h') ltac:(lra) H11 H12 as H13. replace (c - (c + h')) with (-h') in H13 by lra.
+    clear H11 H12. rename H13 into H11. assert (H12 : m h' <= ∫ c (c + h') f / h' <= M h').
+    {
+      destruct H11 as [H11 H12]. apply Rmult_le_compat_neg_l with (r := /h') in H11, H12; try (apply Rlt_le; apply Rinv_neg; lra).
+      replace (∫ (c + h') c f) with (- ∫ c (c + h') f) in *. 2 : { apply eq_sym. apply integral_neg. } replace (/ h' * (m h' * - h')) with (- m h') in H11 by (field; lra).
+      replace (/ h' * (M h' * - h')) with (- M h') in H12 by (field; lra). lra.
+    } lra.
+  }
+  assert (c = a \/ c = b \/ a < c < b) as [H11 | [H11 | H11]] by lra; clear H4; rename H11 into H4.
+  - 
+  assert (H11 : ⟦ lim 0⁺ ⟧ m = f c).
+  {
+    intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [_ [H12 _]].
+    specialize (H12 ε H11) as [δ [H13 H14]]. exists (Rmin (δ/2) (b-c)). split. solve_R. 
+    intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
+    - specialize (H5 ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+      { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
+      pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra) H17 as [x0 [H18 H19]].
+      replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
+      assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. subst. 
+      apply H14. unfold Ensembles.In in *. solve_R.
+    - specialize (H5' ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+      { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
+      pose proof continuous_function_attains_glb_on_interval f (c + x) c ltac:(lra) H17 as [x0 [H18 H19]].
+      replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
+      assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. subst. apply H14. unfold Ensembles.In in *. solve_R.
+  }
+  assert (H12 : ⟦ lim 0⁺ ⟧ M = f c).
+  {
+    intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [_ [H13 _]].
+    specialize (H13 ε H12) as [δ [H14 H15]]. exists (Rmin (δ/2) (b-c)). split. solve_R.
+    intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
+    - specialize (H6 ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+      { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
+      pose proof continuous_function_attains_lub_on_interval f c (c + x) ltac:(lra) H18 as [x0 [H19 H20]].
+      replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
+      assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst.
+      apply H15. unfold Ensembles.In in *. solve_R.
+    - specialize (H6' ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+      { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
+      pose proof continuous_function_attains_lub_on_interval f (c + x) c ltac:(lra) H18 as [x0 [H19 H20]].
+      replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
+      assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst. apply H15. unfold Ensembles.In in *. solve_R.
+  }
+  assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, 0 < x0 < b - c) → m x <= (λ h : ℝ, (F (c + h) - F c) / h) x <= M x)).
+  {
+    intros x H13. specialize (H9 x ltac:(unfold In in *; lra)). auto.
+  }
+  pose proof limit_sandwich_right m (λ h : ℝ, (F (c + h) - F c) / h) M 0 (b - c) (f c) ltac:(lra) H11 H12 H13 as H14. right. left.
+  split. exists (Rmin (b - c) (b - a)). split. solve_R. intros x. split. intros H15. unfold Ensembles.In in *. solve_R.
+  intros H15. unfold Ensembles.In in *. solve_R. auto.
+  - assert (H11 : ⟦ lim 0⁻ ⟧ m = f c).
+    {
+      intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [_ [_ H12]].
+      specialize (H12 ε H11) as [δ [H13 H14]]. exists (Rmin (δ/2) (c-a)). split. solve_R.
       intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
       - specialize (H5 ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
         { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
         pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra) H17 as [x0 [H18 H19]].
         replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
-        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. subst. 
+        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. subst.
         apply H14. unfold Ensembles.In in *. solve_R.
       - specialize (H5' ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
         { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
         pose proof continuous_function_attains_glb_on_interval f (c + x) c ltac:(lra) H17 as [x0 [H18 H19]].
         replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
-        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. subst. apply H14. unfold Ensembles.In in *. solve_R.
+        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. subst.
+        apply H14. unfold Ensembles.In in *. solve_R.
     }
-    assert (H12 : ⟦ lim 0⁺ ⟧ M = f c).
-    {
-      intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [_ [H13 _]].
-      specialize (H13 ε H12) as [δ [H14 H15]]. exists (Rmin (δ/2) (b-c)). split. solve_R.
-      intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
-      - specialize (H6 ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
-        { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
-        pose proof continuous_function_attains_lub_on_interval f c (c + x) ltac:(lra) H18 as [x0 [H19 H20]].
-        replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
-        assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst.
-        apply H15. unfold Ensembles.In in *. solve_R.
-      - specialize (H6' ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
-        { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
-        pose proof continuous_function_attains_lub_on_interval f (c + x) c ltac:(lra) H18 as [x0 [H19 H20]].
-        replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
-        assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst. apply H15. unfold Ensembles.In in *. solve_R.
-    }
-    assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, a - c < x0 < 0) ⋃ (λ x0 : ℝ, 0 < x0 < b - c) → m x <= (λ h : ℝ, (F (c + h) - F c) / h) x <= M x)).
-    {
-      intros x H13. assert (a - c < x < 0 \/ 0 < x < b - c) as [H14 | H14].
-      { apply In_Union_def in H13. unfold Ensembles.In in *. solve_R. }
-      - apply H10. unfold Ensembles.In in *. solve_R.
-      - apply H9. unfold Ensembles.In in *. solve_R.
-    }
-    
+  assert (H12 : ⟦ lim 0⁻ ⟧ M = f c).
+  {
+    intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [_ [_ H13]].
+    specialize (H13 ε H12) as [δ [H14 H15]]. exists (Rmin (δ/2) (c-a)). split. solve_R.
+    intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
+    - specialize (H6 ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+      { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
+      pose proof continuous_function_attains_lub_on_interval f c (c + x) ltac:(lra) H18 as [x0 [H19 H20]].
+      replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
+      assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst.
+      apply H15. unfold Ensembles.In in *. solve_R.
+    - specialize (H6' ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+      { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
+      pose proof continuous_function_attains_lub_on_interval f (c + x) c ltac:(lra) H18 as [x0 [H19 H20]].
+      replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
+      assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst.
+      apply H15. unfold Ensembles.In in *. solve_R.
+  }
+  assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, a - c < x0 < 0) → m x <= (λ h : ℝ, (F (c + h) - F c) / h) x <= M x)).
+  {
+    intros x H13. specialize (H10 x ltac:(unfold In in *; solve_R)). auto.
+  }
+  pose proof limit_sandwich_left m (λ h : ℝ, (F (c + h) - F c) / h) M (a - c) 0 (f c) ltac:(lra) H11 H12 H13 as H14. right. right.
+  split. exists (Rmin (c-a) (b-a)). split. solve_R. intros x. split. intros H15. unfold Ensembles.In in *. solve_R.
+  intros H15. unfold Ensembles.In in *. solve_R. auto.
+  -
 
-    assert (H11 : ⟦ lim 0 ⟧ m = f c).
-    {
-      intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [H12 _].
-       specialize (H12 c ltac:(unfold Ensembles.In in *; solve_R)) as H12. specialize (H12 ε H11) as [δ [H13 H14]].
-      exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split. unfold Ensembles.In in *. solve_R.
-      intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
-      - specialize (H5 ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
-        { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
-        pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra) H17 as [x0 [H18 H19]].
-        replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
-        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. 
-        apply H14. unfold Ensembles.In in *. solve_R.
-      - specialize (H5' ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
-        { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
-        pose proof continuous_function_attains_glb_on_interval f (c + x) c ltac:(lra) H17 as [x0 [H18 H19]].
-        replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
-        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. 
-        apply H14. unfold Ensembles.In in *. solve_R.
-    }
-    assert (H12 : ⟦ lim 0 ⟧ M = f c).
-    {
-      intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [H13 _].
-      specialize (H13 c ltac:(unfold Ensembles.In in *; solve_R)). specialize (H13 ε H12) as [δ [H14 H15]].
-      exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split; auto. unfold Ensembles.In in *. solve_R.
-      intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
-      - specialize (H6 ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
-        { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
-        pose proof continuous_function_attains_lub_on_interval f c (c + x) ltac:(lra) H18 as [x0 [H19 H20]].
-        replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
-        assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. 
-        apply H15. unfold Ensembles.In in *. solve_R.
-      - specialize (H6' ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
-        { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
-        pose proof continuous_function_attains_lub_on_interval f (c + x) c ltac:(lra) H18 as [x0 [H19 H20]].
-        replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
-        assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R.
-        apply H15. unfold Ensembles.In in *. solve_R.
-    }
-    assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, a - c < x0 < 0) ⋃ (λ x0 : ℝ, 0 < x0 < b - c) → m x <= (λ h : ℝ, (F (c + h) - F c) / h) x <= M x)).
-    {
-      intros x H13. assert (a - c < x < 0 \/ 0 < x < b - c) as [H14 | H14].
-      { apply In_Union_def in H13. unfold Ensembles.In in *. solve_R. }
-      - apply H10. unfold Ensembles.In in *. solve_R.
-      - apply H9. unfold Ensembles.In in *. solve_R.
-    }
-    pose proof limit_sandwich m (fun h => (F (c + h) - F c) / h) M (a - c) (b - c) 0 (f c) ltac:(lra) ltac:(unfold Ensembles.In in *; lra) H11 H12 H13 as H14.
-    auto.
-Admitted.
+  assert (H11 : ⟦ lim 0 ⟧ m = f c).
+  {
+    intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [H12 _].
+      specialize (H12 c ltac:(unfold Ensembles.In in *; solve_R)) as H12. specialize (H12 ε H11) as [δ [H13 H14]].
+    exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split. unfold Ensembles.In in *. solve_R.
+    intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
+    - specialize (H5 ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+      { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
+      pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra) H17 as [x0 [H18 H19]].
+      replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
+      assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. 
+      apply H14. unfold Ensembles.In in *. solve_R.
+    - specialize (H5' ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+      { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
+      pose proof continuous_function_attains_glb_on_interval f (c + x) c ltac:(lra) H17 as [x0 [H18 H19]].
+      replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
+      assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. 
+      apply H14. unfold Ensembles.In in *. solve_R.
+  }
+  assert (H12 : ⟦ lim 0 ⟧ M = f c).
+  {
+    intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [H13 _].
+    specialize (H13 c ltac:(unfold Ensembles.In in *; solve_R)). specialize (H13 ε H12) as [δ [H14 H15]].
+    exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split; auto. unfold Ensembles.In in *. solve_R.
+    intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
+    - specialize (H6 ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+      { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
+      pose proof continuous_function_attains_lub_on_interval f c (c + x) ltac:(lra) H18 as [x0 [H19 H20]].
+      replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
+      assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. 
+      apply H15. unfold Ensembles.In in *. solve_R.
+    - specialize (H6' ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+      { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
+      pose proof continuous_function_attains_lub_on_interval f (c + x) c ltac:(lra) H18 as [x0 [H19 H20]].
+      replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
+      assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R.
+      apply H15. unfold Ensembles.In in *. solve_R.
+  }
+  assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, a - c < x0 < 0) ⋃ (λ x0 : ℝ, 0 < x0 < b - c) → m x <= (λ h : ℝ, (F (c + h) - F c) / h) x <= M x)).
+  {
+    intros x H13. assert (a - c < x < 0 \/ 0 < x < b - c) as [H14 | H14].
+    { apply In_Union_def in H13. unfold Ensembles.In in *. solve_R. }
+    - apply H10. unfold Ensembles.In in *. solve_R.
+    - apply H9. unfold Ensembles.In in *. solve_R.
+  }
+  pose proof limit_sandwich m (fun h => (F (c + h) - F c) / h) M (a - c) (b - c) 0 (f c) ltac:(lra) ltac:(unfold Ensembles.In in *; lra) H11 H12 H13 as H14.
+  left. split. unfold interior_point. exists (Rmin (c - a) (b - c)). split. solve_R. intros x H15. unfold Ensembles.In in *. solve_R.
+  auto.
+Qed.
 
 Theorem FTC2 : ∀ a b f g,
     a < b -> continuous_on f [a, b] -> 
@@ -1858,3 +2174,5 @@ Proof.
   replace (1 / 3) with (g 1 - g 0) by (unfold g; lra).
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
+
+Definition π := ∫ 0 1 (λ x : ℝ, 4 * (1 / (1 + x^2))).
