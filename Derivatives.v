@@ -159,8 +159,8 @@ Lemma is_interior_point_open : forall a b x,
 Proof.
   intros a b x H1. split.
   - intro H2. unfold In in *. exists (Rmin (x - a) (b - x)). split; unfold In in *; try solve_R.
-  - intros [δ [H2 H3]]. admit.
-Admitted.
+  - intros [δ [H2 H3]]. specialize (H3 x ltac:(unfold In in *; lra)). auto.
+Qed.
 
 Lemma is_interior_point_closed : forall a b x,
   a < b -> x ∈ (a, b) -> interior_point [a, b] x.
@@ -312,6 +312,8 @@ Proof.
     -- apply theorem_9_1_c; tauto.
 Qed.
 
+
+(*
 Lemma differentiable_on_closed_interval_subset : forall f a b c d,
   a < b -> c < d -> differentiable_on f [a, b] -> [c, d] ⊆ [a, b] -> differentiable_on f [c, d].
 Proof.
@@ -332,6 +334,7 @@ Proof.
   - admit.
   - admit.
 Admitted.
+*)
 
 Theorem theorem_10_1 : forall c,
   ⟦ der ⟧ (fun _ => c) = (fun _ => 0).
