@@ -1303,15 +1303,18 @@ Qed.
 Axiom bounded_dec : forall a b (f : ℝ -> ℝ),
   a < b -> {bounded_On f [a, b]} + {~bounded_On f [a, b]}.
 
+Axiom integrable_dec : forall a b (f : ℝ -> ℝ),
+  a < b -> {Integrable_On a b f} + {~Integrable_On a b f}.
+
 Definition definite_integral a b (f : ℝ -> ℝ) : ℝ :=
   match (Rlt_dec a b) with
-  | left H1 => match (bounded_dec a b f H1) with 
-               | left H2 => let bf := mkbounded_function_R a b f H1 H2 in smallest_upper_sum a b bf
+  | left H1 => match (integrable_dec a b f H1) with 
+               | left H2 => let bf := mkbounded_function_R a b f H1 (Integrable_imp_bounded f a b H1 H2) in smallest_upper_sum a b bf
                | right _ => 0
                end
   | right H1 => match (Rlt_dec b a) with
-               | left H2 => match (bounded_dec b a f H2) with 
-                            | left H3 => let bf := mkbounded_function_R b a f H2 H3 in - (smallest_upper_sum b a bf)
+               | left H2 => match (integrable_dec b a f H2) with 
+                            | left H3 => let bf := mkbounded_function_R b a f H2 (Integrable_imp_bounded f b a H2 H3) in - (smallest_upper_sum b a bf)
                             | right _ => 0
                             end
                | right _ => 0
@@ -1343,17 +1346,17 @@ Proof.
 Qed.
 
 Lemma integral_unbounded : forall a b f,
-  ~bounded_On f [a, b] /\ ~bounded_On f [b, a] -> ∫ a b f = 0.
+  ~Integrable_On a b f /\ ~Integrable_On b a f -> ∫ a b f = 0.
 Proof.
   intros a b f [H1 H2]. unfold definite_integral. destruct (Rlt_dec a b) as [H3 | H3]; destruct (Rlt_dec b a) as [H4 | H4]; try lra; try (exfalso; lra).
-  destruct (bounded_dec a b f H3) as [H5 | H5]; try tauto. destruct (bounded_dec b a f H4) as [H6 | H6]; try tauto.
+  destruct (integrable_dec a b f H3) as [H5 | H5]; try tauto. destruct (integrable_dec b a f H4) as [H6 | H6]; try tauto.
 Qed.
 
 Lemma integral_neg : forall a b f,
   ∫ a b f = - ∫ b a f.
 Proof.
   intros a b f. unfold definite_integral. destruct (Rlt_dec a b) as [H1 | H1]; destruct (Rlt_dec b a) as [H2 | H2]; try lra; try (exfalso; lra).
-  destruct (bounded_dec a b f H1) as [H3 | H3]; try lra. destruct (bounded_dec b a f H2) as [H4 | H4]; try lra.
+  destruct (integrable_dec a b f H1) as [H3 | H3]; try lra. destruct (integrable_dec b a f H2) as [H4 | H4]; try lra.
 Qed.
 
 Lemma integral_equiv : forall a b f, 
@@ -1363,9 +1366,10 @@ Proof.
   intros a b f H1 H2. pose proof Integrable_imp_bounded f a b H1 H2 as H3.
   set (bf := mkbounded_function_R a b f H1 H3). exists bf. assert (H4 : bf.(bounded_f a b) = f) by auto. repeat split; auto.
   - unfold definite_integral; destruct (bounded_dec a b f H1) as [H5 | H5]; try tauto.
-    destruct (Rlt_dec a b) as [H6 | H6]; try lra. destruct (bounded_dec a b f H6) as [H7 | H7]; try tauto.
+    destruct (Rlt_dec a b) as [H6 | H6]; try lra. destruct (integrable_dec a b f H6) as [H7 | H7]; try tauto.
     destruct bf as [bf]; simpl in *. subst. f_equal. replace H6 with (bounded_function_R_P3). 2 : { apply proof_irrelevance. }
-    replace H7 with (bounded_function_R_P4). 2 : { apply proof_irrelevance. } reflexivity.
+    replace (Integrable_imp_bounded f a b bounded_function_R_P3 H7) with (bounded_function_R_P4).
+    2 : { apply proof_irrelevance. } reflexivity. 
   - unfold definite_integral; destruct (bounded_dec a b f H1) as [H5 | H5]; try tauto.
     destruct (Rlt_dec a b) as [H7 | H7]; try lra.
     replace (largest_lower_sum a b bf) with (smallest_upper_sum a b bf).
@@ -1378,10 +1382,10 @@ Proof.
       assert (H14 : x2 = sup). { apply lub_unique with (E := (λ x : ℝ, ∃ p : partition_R a b, x = (L(bf, p(a, b))))); [ split; tauto | tauto ]. }
       lra.
     }
-    destruct (bounded_dec a b f H7) as [H8 | H8]; try tauto.
-    destruct bf as [bf]; simpl in *. subst. f_equal. replace (Integrable_imp_bounded f a b H7 H2) with (bounded_function_R_P4).
-    2 : { apply proof_irrelevance. } replace H7 with (bounded_function_R_P3). 2 : { apply proof_irrelevance. }
-    replace H8 with (bounded_function_R_P4). 2 : { apply proof_irrelevance. } reflexivity. 
+    destruct (integrable_dec a b f H7) as [H8 | H8]; try tauto.
+    destruct bf as [bf]; simpl in *. subst. f_equal. replace H7 with (bounded_function_R_P3). 2 : { apply proof_irrelevance. }
+    replace (Integrable_imp_bounded f a b bounded_function_R_P3 H8) with (bounded_function_R_P4).
+    2 : { apply proof_irrelevance. } reflexivity.
 Qed.
 
 Lemma integral_eq' : forall a b f,
@@ -2008,7 +2012,7 @@ Proof.
       replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
       assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst. apply H15. unfold Ensembles.In in *. solve_R.
   }
-  assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, 0 < x0 < b - c) → m x <= (λ h : ℝ, (F (c + h) - F c) / h) x <= M x)).
+  assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, 0 < x0 < b - c) -> m x <= (λ h : ℝ, (F (c + h) - F c) / h) x <= M x)).
   {
     intros x H13. specialize (H9 x ltac:(unfold In in *; lra)). auto.
   }
@@ -2051,7 +2055,7 @@ Proof.
       assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst.
       apply H15. unfold Ensembles.In in *. solve_R.
   }
-  assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, a - c < x0 < 0) → m x <= (λ h : ℝ, (F (c + h) - F c) / h) x <= M x)).
+  assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, a - c < x0 < 0) -> m x <= (λ h : ℝ, (F (c + h) - F c) / h) x <= M x)).
   {
     intros x H13. specialize (H10 x ltac:(unfold In in *; solve_R)). auto.
   }
@@ -2098,7 +2102,7 @@ Proof.
       assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R.
       apply H15. unfold Ensembles.In in *. solve_R.
   }
-  assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, a - c < x0 < 0) ⋃ (λ x0 : ℝ, 0 < x0 < b - c) → m x <= (λ h : ℝ, (F (c + h) - F c) / h) x <= M x)).
+  assert (H13 : (∀ x : ℝ, x ∈ (λ x0 : ℝ, a - c < x0 < 0) ⋃ (λ x0 : ℝ, 0 < x0 < b - c) -> m x <= (λ h : ℝ, (F (c + h) - F c) / h) x <= M x)).
   {
     intros x H13. assert (a - c < x < 0 \/ 0 < x < b - c) as [H14 | H14].
     { apply In_Union_def in H13. unfold Ensembles.In in *. solve_R. }
@@ -2111,8 +2115,7 @@ Proof.
 Qed.
 
 Theorem FTC2 : ∀ a b f g,
-    a < b -> continuous_on f [a, b] -> 
-      ⟦ der ⟧ g [a, b] = f -> ∫ a b f = g b - g a.
+    a < b -> continuous_on f [a, b] -> ⟦ der ⟧ g [a, b] = f -> ∫ a b f = g b - g a.
 Proof.
   intros a b f g H1 H2 H3. (set (F := fun x => ∫ a x f)). assert (H4 : ⟦ der ⟧ F [a, b] = f).
   { unfold F. apply FTC1; auto. }
@@ -2149,7 +2152,6 @@ Proof.
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
 
-
 Example FTC2_test2 : ∫ 0 1 (fun x => x^2) = 1/3.
 Proof.
   set (f := fun x => x^2).
@@ -2174,5 +2176,7 @@ Proof.
   replace (1 / 3) with (g 1 - g 0) by (unfold g; lra).
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
+
+
 
 Definition π := 2 * ∫ (-1) 1 (λ x, √(1 - x^2)).
