@@ -1,15 +1,13 @@
-Require Import Imports.
+Require Import Imports Notations Sets.
+Import SetNotations.
 
 Open Scope nat_scope.
 
-Definition induction_nat := forall P : nat -> Prop,
-  (P 0 /\ (forall k : nat, P k -> P (S k))) -> forall n, P n.
+Definition induction_nat := ∀ P : ℕ → Prop, (P 0 ∧ ∀ k, P k → P (S k)) → ∀ n, P n.
 
-Definition strong_induction_nat := forall P : nat -> Prop,
-  (forall m, (forall k : nat, k < m -> P k) -> P m) -> forall n, P n.
+Definition strong_induction_nat := ∀ P : ℕ → Prop, (∀ m, (∀ k, k < m → P k) → P m) → ∀ n, P n.
 
-Definition well_ordering_nat := forall E : nat -> Prop,
-  (exists x, E x) -> (exists n, E n /\ forall m, E m -> (n <= m)).
+Definition well_ordering_nat := ∀ E, E ≠ ∅ → (∃ n, n ∈ E ∧ ∀ m, m ∈ E → (n ≤ m)).
 
 Definition well_ordering_principle_contrapositive_nat := forall E : nat -> Prop,
   (~(exists m, E m /\ forall k, E k -> m <= k)) -> (~(exists n, E n)).
@@ -27,7 +25,7 @@ Proof.
   unfold well_ordering_nat, induction_nat. intros well_ordering_nat P [Hbase H_inductive] n.
   set (E := fun m => ~ P m).
   specialize (well_ordering_nat E). assert (H1 : forall n : nat, E n -> False).
-  - intros x H1. assert (H3 : exists x, E x) by (exists x; auto). apply well_ordering_nat in H3.
+  - intros x H1. assert (H3 : E ≠ ∅) by (apply not_Empty_In; exists x; auto). apply well_ordering_nat in H3.
     destruct H3 as [least_elem_E H3]. destruct H3 as [H3 H4]. specialize (H_inductive (least_elem_E - 1)).
     destruct least_elem_E as [| least_elem_E'].
     -- apply H3. apply Hbase.
@@ -41,9 +39,12 @@ Lemma lemma_2_11 : induction_nat -> strong_induction_nat.
 Proof.
   unfold induction_nat, strong_induction_nat. intros induction_nat P H1 n.
   assert (H2 : forall k, k <= n -> P k).
-  - apply induction_nat with (n := n). split.
-    -- intros k Hk. inversion Hk. apply H1. intros k' Hk'. inversion Hk'.
-    -- intros k Hk. intros k' Hk'. apply H1. intros k'' Hk''. apply Hk. lia.
+  - specialize (induction_nat (fun k => k <= n -> P k)). cbv in induction_nat.
+    apply induction_nat; split. 
+    -- intros H2. apply H1. intros k H3. inversion H3.
+    -- intros k. specialize (H1 k). intros H2.
+      ++ intros H3. apply H1. lia.
+      ++ intros H3. assert (H4 : S k <= n -> P (S k)) by lia. apply H4.
   - apply H2. lia.
 Qed.
 
