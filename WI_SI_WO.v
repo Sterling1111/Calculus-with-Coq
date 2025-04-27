@@ -39,13 +39,14 @@ Lemma lemma_2_11 : induction_nat -> strong_induction_nat.
 Proof.
   unfold induction_nat, strong_induction_nat. intros induction_nat P H1 n.
   assert (H2 : forall k, k <= n -> P k).
-  - specialize (induction_nat (fun k => k <= n -> P k)). cbv in induction_nat.
-    apply induction_nat; split. 
-    -- intros H2. apply H1. intros k H3. inversion H3.
-    -- intros k. specialize (H1 k). intros H2.
-      ++ intros H3. apply H1. lia.
-      ++ intros H3. assert (H4 : S k <= n -> P (S k)) by lia. apply H4.
-  - apply H2. lia.
+  {
+    set (P2 := fun n => ∀ k, k ≤ n → P k). specialize (induction_nat P2). assert (H3 : P2 0).
+    { unfold P2. intros k H2. apply H1. intros k' H3. inversion H2. subst. inversion H3. }
+    assert (H4 : (∀ k : ℕ, P2 k → P2 (S k))).
+    { unfold P2. intros k H4 k' H5. apply H1. intros k'' H6. apply H4. lia. }
+    apply induction_nat; auto.
+  }
+  apply H2; auto.
 Qed.
 
 Lemma strong_induction_nat_imp_well_ordering_contrapositive_nat : strong_induction_nat -> well_ordering_principle_contrapositive_nat.
@@ -72,7 +73,7 @@ Proof.
   clear H1. rename H2 into H1. intros E H2. 
   assert (H3 : ~(exists m, E m /\ forall k, E k -> m <= k) -> ~(exists n, E n)) by apply H1.
   destruct (classic (exists m, E m /\ forall k, E k -> m <= k)) as [H4 | H4]; auto.
-  exfalso. apply H3 in H4. apply H4. apply H2.
+  exfalso. apply H3 in H4. apply H4. apply not_Empty_In; auto.
 Qed.
 
 Lemma WI_SO_WO_equiv : (well_ordering_nat <-> strong_induction_nat) /\ (strong_induction_nat <-> induction_nat) /\ (induction_nat <-> well_ordering_nat).

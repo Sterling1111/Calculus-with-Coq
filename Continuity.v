@@ -236,8 +236,17 @@ Proof.
   - specialize (H4 x ltac:(solve_R)). solve_R.
 Qed.
 
+Lemma Rtotal_order_dec : forall x y,
+  {x < y} + {x = y} + {x > y}.
+Proof.
+  intros x y. destruct (Rle_dec x y) as [H1 | H1]; destruct (Rle_dec y x) as [H2 | H2]; try lra.
+  - left; right; lra.
+  - left; left; lra.
+  - right; lra.
+Qed.
+
 Theorem theorem_7_1 : forall f a b,
-  a < b -> continuous_on f [a, b] -> f a < 0 < f b -> ∃ x, x ∈ [a, b] /\ f x = 0.
+  a < b -> continuous_on f [a, b] -> f a < 0 < f b -> { x | x ∈ [a, b] /\ f x = 0 }.
 Proof.
   intros f a b H1 H2 H3.
   set (A := (fun x1 => x1 ∈ [a, b] /\ ∀ x2, x2 ∈ [a, x1] -> f x2 < 0)).
@@ -273,7 +282,7 @@ Proof.
     }
     assert (H13 : x > a). { unfold x. solve_R. } destruct H8 as [H8 H14]. specialize (H8 x H12). lra. 
   }
-  pose proof Rtotal_order (f α) 0 as [H11 | [H11 | H11]]; [ exfalso | | exfalso].
+  pose proof Rtotal_order_dec (f α) 0 as [[H11 | H11] | H11]; [ exfalso | | exfalso].
   - assert (H12 : continuous_at f α). 
     { apply continuous_on_interval in H2 as [H2 _]; auto. apply H2. unfold In; lra. }
     pose proof theorem_6_3_b f α H12 H11 as [δ [H13 H14]]. 
@@ -496,7 +505,7 @@ Proof.
 Qed.
 
 Theorem theorem_7_4 : forall f a b c,
-  a < b -> continuous_on f [a, b] -> f a < c < f b -> ∃ x, x ∈ [a, b] /\ f x = c.
+  a < b -> continuous_on f [a, b] -> f a < c < f b -> { x | x ∈ [a, b] /\ f x = c }.
 Proof.
   intros f a b c H1 H2 H3. (set (g := fun x => f x - c)). assert (H4 : continuous_on g [a, b]).
   {
@@ -537,15 +546,29 @@ Proof.
 Qed.
 
 Theorem theorem_7_8 : forall α,
-  α > 0 -> exists x, x * x = α.
+  α >= 0 -> { x | x * x = α }.
 Proof.
-  intros α H1. set (f := fun x => x * x). assert (H2 : continuous f). { intros a. solve_lim. }
-  assert (α < 1 \/ α = 1 \/ α > 1) as [H3 | [H3 | H3]] by lra.
+  intros α H1. destruct (Req_dec α 0) as [H2 | H2]; [ exists 0; lra | ]. assert (H3 : α > 0) by lra. clear H1 H2. rename H3 into H1.
+   set (f := fun x => x * x). assert (H2 : continuous f). { intros a. solve_lim. }
+  pose proof Rtotal_order_dec α 1 as [[H3 | H3] | H3].
   - pose proof theorem_7_4 f 0 1 α ltac:(lra) ltac:(apply continuous_imp_continuous_on; auto) ltac:(unfold f; solve_R) as [x [H4 H5]].
     exists x. apply H5.
   - exists 1. lra.
   - pose proof theorem_7_4 f 0 α α H1  ltac:(apply continuous_imp_continuous_on; auto) ltac:(unfold f; split; solve_R) as [x [H4 H5]].
     exists x. apply H5.
+Qed.
+
+Definition sqrt (x : ℝ) := 
+  match (Rge_dec x 0) with
+  | left H => proj1_sig (theorem_7_8 x H)
+  | right _ => 0
+  end.
+
+Lemma sqrt_spec : forall x,
+  x >= 0 -> sqrt x * sqrt x = x.
+Proof.
+  intros x H1. unfold sqrt. unfold proj1_sig. destruct (Rge_dec x 0) as [H2 | H2]; try lra.
+  destruct (theorem_7_8 x H2) as [y H3]. auto.
 Qed.
 
 Lemma continuous_on_subset : forall A1 A2 f,
@@ -573,9 +596,11 @@ Qed.
 
 (* clearly this proof need major work. *)
 Theorem theorem_8_A_1 : forall f a b,
-  a < b -> continuous_on f [a, b] -> uniformly_continuous_on f [a, b].
+  a <= b -> continuous_on f [a, b] -> uniformly_continuous_on f [a, b].
 Proof.
-  intros f a b H1 H2. intros ε H3.
+  intros f a b H1 H2. assert (a = b \/ a < b) as [H3 | H3] by lra.
+  subst. exists 1. split; [lra|]. intros x y H4 H5 H6. unfold In in *. replace x with y by lra. solve_R.
+  clear H1. rename H3 into H1. intros ε H3.
   set (A := fun x => a <= x <= b /\ exists δ, δ > 0 /\ forall y z, a <= y <= x -> a <= z <= x -> |y - z| < δ -> |f y - f z| < ε).
   assert (H4 : A ≠ ∅).
   { apply not_Empty_In. exists a. split. lra. exists 1. split; [lra|]. intros y z H4 H5 H6. replace y with a by lra. replace z with a by lra. solve_R. }
@@ -658,11 +683,15 @@ Definition bounded_On (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
   has_upper_bound (fun y => exists x, x ∈ A /\ y = f x).
 
 Lemma continuous_imp_bounded : forall f a b,
-  a < b -> continuous_on f [a, b] -> bounded_On f [a, b].
+  a <= b -> continuous_on f [a, b] -> bounded_On f [a, b].
 Proof.
-  intros f a b H1 H2. split.
-  - pose proof theorem_7_6_a f a b H1 H2 as [N H3]. exists N. intros y [x [H4 H5]]. subst. apply H3. solve_R.
-  - pose proof theorem_7_6_b f a b H1 H2 as [N H3]. exists N. intros y [x [H4 H5]]. subst. apply H3. solve_R.
+  intros f a b H1 H2. assert (a = b \/ a < b) as [H3 | H3] by lra.
+  - split.
+    -- exists (f a). intros y [x [H4 H5]]. subst. replace x with b by (unfold In in H4; lra). lra.
+    -- exists (f a). intros y [x [H4 H5]]. subst. replace x with b by (unfold In in H4; lra). lra.
+  - split.
+    -- pose proof theorem_7_6_a f a b H3 H2 as [N H4]. exists N. intros y [x [H5 H6]]. subst. apply H4. solve_R.
+    -- pose proof theorem_7_6_b f a b H3 H2 as [N H4]. exists N. intros y [x [H5 H6]]. subst. apply H4. solve_R.
 Qed.
 
 Theorem continuous_function_attains_glb_on_interval : forall (f : ℝ -> ℝ) (a b : ℝ),

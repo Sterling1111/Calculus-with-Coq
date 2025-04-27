@@ -455,7 +455,7 @@ Ltac destruct_finite_sets H :=
 
 Ltac destruct_all_finitesets :=
   repeat match goal with
-  | [ H : ?x ∈ _ |- _ ] => try (destruct_finite_sets H; inversion H; solve_R)
+  | [ H : ?x ∈ _ |- _ ] => try (destruct_finite_sets H; inversion H; solve [ lra | solve_R ])
   end.
 
 Ltac break_union_intersection_2 :=

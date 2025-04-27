@@ -49,10 +49,10 @@ Notation "⟦ 'der' a ⟧ f = f'" := (derivative_at f f' a)
   (at level 70, f at level 0, no associativity, format "⟦  'der'  a  ⟧  f  =  f'").
 
 Notation "⟦ 'der' a ⁺ ⟧ f = f'" := (right_derivative_at f f' a)
-  (at level 70, f at level 0, no associativity, format "⟦  'der'  a ⁺  ⟧ f  =  f'").
+  (at level 70, f at level 0, no associativity, format "⟦  'der'  a ⁺  ⟧  f  =  f'").
 
 Notation "⟦ 'der' a ⁻ ⟧ f = f'" := (left_derivative_at f f' a)
-  (at level 70, f at level 0, no associativity, format "⟦  'der'  a ⁻  ⟧ f  =  f'").
+  (at level 70, f at level 0, no associativity, format "⟦  'der'  a ⁻  ⟧  f  =  f'").
 
 Lemma interior_point_Full_set : forall a,
   interior_point (Full_set R) a.
