@@ -1,5 +1,7 @@
-Require Import Imports Fibonacci WI_SI_WO.
+Require Import Imports Fibonacci WI_SI_WO Sets.
 Require Export Chapter14.
+
+Import SetNotations.
 
 Open Scope nat_scope.
 
@@ -86,13 +88,13 @@ Section section_15_7.
     intros n H1. assert (n = 1 \/ n = 2 \/ n = 3 \/ n > 3) as [H2 | [H2 | [H2 | H2]]] by lia;
     [exists 1 | exists 2 | exists 3 |]; try (simpl; lia). clear H1. rename H2 into H1.
     set (E i := F i > n). assert (exists i, E i) as H2. { exists n. unfold E. apply fib_n_gt_n; auto. }
-    pose proof WI_SI_WO as [_ [_ WO]]. apply WO in H2 as [i [H2 H3]].
-    exists (i - 1). assert (i = 0 \/ i > 0) as [H4 | H4] by lia.
-    - rewrite H4 in H2. unfold E in H2. simpl in H2. lia.
+    pose proof WI_SI_WO as [_ [_ WO]]. specialize (WO E ltac:(apply not_Empty_In; apply H2)) as [i [H3 H4]].
+    exists (i - 1). assert (i = 0 \/ i > 0) as [H5 | H5] by lia.
+    - rewrite H5 in H3. unfold E, Ensembles.In in H3. simpl in H3. lia.
     - split.
-      -- unfold E in H2. pose proof classic (F (i -1) <= n) as [H5 | H5]; auto.
-         apply not_le in H5. specialize (H3 (i - 1) H5). lia.
-      -- replace (S (i - 1)) with i by lia. unfold E in H2. auto.
+      -- unfold E in H3. pose proof classic (F (i -1) <= n) as [H6 | H6]; auto.
+         apply not_le in H6. specialize (H4 (i - 1) H6). lia.
+      -- replace (S (i - 1)) with i by lia. apply H3.
   Qed.
   
   Lemma fold_right_plus_nat_In : forall l n,

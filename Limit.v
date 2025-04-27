@@ -4,8 +4,6 @@ Import SetNotations IntervalNotations.
 Open Scope R_scope.
 Open Scope interval_scope.
 
-Record Rsub (P : Ensemble ℝ) : Type := mkRsub { val : ℝ; prop : In _ P val }.
-
 Definition limit (f : ℝ -> ℝ) (a L : ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ δ, δ > 0 /\ ∀ x, 0 < |x - a| < δ -> |f x - L| < ε.
 
@@ -541,10 +539,3 @@ Ltac solve_lim :=
          ])); apply (lim_equality_substitution f a L2 rhs);
       solve_R; auto
   end.
-
-Lemma f_subtype_independent (P : Ensemble R) (f : Rsub P -> R) (x : R) (H1 H2 : In _ P x) :
-  f {| val := x; prop := H1 |} = f {| val := x; prop := H2 |}.
-Proof.
-  assert ({| val := x; prop := H1 |} = {| val := x; prop := H2 |}) as H3 by (f_equal; apply proof_irrelevance).
-  rewrite H3. reflexivity.
-Qed.
