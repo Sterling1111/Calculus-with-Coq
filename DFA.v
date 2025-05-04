@@ -1,5 +1,8 @@
 Require Import Imports Sets Functions.
 Import SetNotations.
+
+Notation Length := List.length.
+
 Set Implicit Arguments.
 
 Record Fin_Type (T : Type) : Type := {
@@ -58,8 +61,10 @@ Module DFA_Theory.
                       length (x ++ y) <= p /\
                       forall i, (x ++ (y ^ i) ++ z) ∈ L.
   Proof.
-    intros Σ L H1. destruct H1 as [Q [δ [q0 [F [[l H2 H3 H4] [H5 H6]]]]]]; simpl in *.
-    exists (length l). intros s H7 H8. 
+    intros Σ L H1. destruct H1 as [Q [δ [q0 [F [H2 [H3 H4]]]]]]; simpl in *.
+    set (M := mk_DFA δ q0 F H2 H3). fold M in H4.
+    set (l := H2.(Fin_Type_l)). exists (length l). intros s H5 H6.
+
   Admitted.
 
 End DFA_Theory.
