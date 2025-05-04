@@ -81,6 +81,7 @@ Proof.
     rewrite <- Rmult_plus_distr_l.
     lra.
 Qed.
+
 Lemma C_Field_Theory : @field_theory C 0 1 Cplus Cmult Cminus Copp Cdiv Cinv eq.
 Proof.
   constructor. constructor.
