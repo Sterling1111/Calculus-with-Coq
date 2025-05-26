@@ -712,6 +712,7 @@ Lemma continuous_function_attains_lub_on_interval : forall (f : ℝ -> ℝ) (a b
     is_lub (fun y : ℝ => exists x : ℝ, x ∈ [a, b] /\ y = f x) (f x).
 Proof.
   intros f a b H1 H2. pose proof theorem_7_3 f a b H1 H2 as [x [H3 H4]]. exists x. split; auto; split.
-  - intros x2 [x3 [H5 H6]]. specialize (H4 x3 H5). lra.
+  - intros x2 [x3 [H5 H6]]. specialize (H4 x3 H5). rewrite H6. apply Rge_le. auto.
   - intros ub H5. apply H5. exists x; auto.
+  Show Proof.
 Qed.

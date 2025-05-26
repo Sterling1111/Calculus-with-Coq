@@ -168,6 +168,16 @@ Proof.
   intros a b x H1 H2. unfold In in *. exists (Rmin (x - a) (b - x)). split; unfold In in *; try solve_R.
 Qed.
 
+Lemma is_left_endpoint_closed : forall a b x,
+  a < b -> left_endpoint [a, b] x -> x = a.
+Proof.
+  intros a b x H1 [δ [H2 H3]]. specialize (H3 (x - δ/2)) as [H4 H5].
+  - intros [δ [H2 H3]]. specialize (H3 x). ltac:(solve_R)). unfold In in *.
+    assert (H4 : a < x < b). { apply H3. }
+    set (ε := Rmin (x - a) δ). specialize (H3 (x - ε/2)) as [H5 H6].
+    apply H5; unfold ε in *; solve_R.
+Qed.
+
 Theorem derivative_of_function_at_x_unique : forall f f1' f2' x,
   ⟦ der x ⟧ f = f1' -> ⟦ der x ⟧ f = f2' -> f1' x = f2' x.
 Proof.
@@ -249,6 +259,16 @@ Proof.
     -- tauto.
 Qed.
 
+Lemma differentiable_at_iff : forall f a,
+  differentiable_at f a -> right_differentiable_at f a /\ left_differentiable_at f a.
+Proof.
+  intros f a. intros [L H1]. split.
+  - exists L. intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto.
+    intros x H5. specialize (H4 x ltac:(solve_R)). auto.
+  - exists L. intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto.
+    intros x H5. specialize (H4 x ltac:(solve_R)). auto.
+Qed.
+
 Lemma derivative_imp_derivative_on : forall f f' a b,
   a < b -> ⟦ der ⟧ f = f' -> ⟦ der ⟧ f [a, b] = f'.
 Proof.
@@ -313,12 +333,16 @@ Proof.
 Qed.
 
 
-(*
 Lemma differentiable_on_closed_interval_subset : forall f a b c d,
   a < b -> c < d -> differentiable_on f [a, b] -> [c, d] ⊆ [a, b] -> differentiable_on f [c, d].
 Proof.
-  intros f a b c d H1 H2 H3 H4 x H5. specialize (H4 x ltac:(auto)). specialize (H3 x H4) as [H3 | [H3 | H3]].
-Admitted.
+  intros f a b c d H1 H2 H3 H4 x H5. specialize (H4 x ltac:(auto)). specialize (H3 x H4) as [[H3 H6] | [[H3 H6] | H3]].
+  - assert (x = c \/ x = d \/ (c < x < d)) as [H7 | [H7 | H7]] by solve_R.
+    -- right; left; split. subst. apply left_interval_enpoint_closed; auto. apply differentiable_at_iff; auto.
+    -- right; right; split. subst. apply right_interval_enpoint_closed; auto. apply differentiable_at_iff; auto.
+    -- left. split; auto. apply is_interior_point_closed; solve_R.
+  - right. left. split; auto. exfalso. apply not_left_endpoint_closed with (a := a) (b := b); auto.
+    apply differentiable_at_iff; auto.
 
 Lemma differentiable_on_open_interval_subset : forall f a b c d,
   a < b -> c < d -> differentiable_on f (a, b) -> [c, d] ⊆ (a, b) -> differentiable_on f [c, d].
@@ -334,7 +358,6 @@ Proof.
   - admit.
   - admit.
 Admitted.
-*)
 
 Theorem theorem_10_1 : forall c,
   ⟦ der ⟧ (fun _ => c) = (fun _ => 0).
@@ -845,8 +868,6 @@ Proof.
   - right. right. split; try tauto. apply (left_derivative_at_imp_left_differentiable_at x f f'); tauto.
 Qed.
 
-(*
-
 Corollary corollary_11_3_a : forall f f' a b, 
   a < b -> ⟦ der ⟧ f [a, b] = f' -> (forall x, x ∈ [a, b] -> f' x > 0) -> increasing_on f [a, b].
 Proof.
@@ -868,6 +889,8 @@ Proof.
   unfold h in H11. assert (H12 : (f x2 - f x1) / (x2 - x1) > 0) by lra.
   apply Rmult_gt_compat_r with (r := (x2 - x1)) in H12; field_simplify in H12; lra.
 Qed.
+
+(*
 
 Corollary corollary_11_3_b : forall f f' a b, 
   a < b -> ⟦ der ⟧ f [a, b] = f' -> (forall x, x ∈ [a, b] -> f' x < 0) -> decreasing_on f [a, b].

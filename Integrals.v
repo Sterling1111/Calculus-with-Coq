@@ -2163,6 +2163,3 @@ Proof.
 Qed.
 
 Definition π := 2 * ∫ (-1) 1 (λ x, √(1 - x^2)).
-
-Definition integral' f F : Prop :=
-  ⟦ der ⟧ F = f.
