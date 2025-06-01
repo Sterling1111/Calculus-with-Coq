@@ -3,18 +3,6 @@ Import SetNotations IntervalNotations Function_Notations.
 
 Open Scope interval_scope.
 
-Definition left_endpoint (A : Ensemble R) (a : R) :=
-  exists δ, δ > 0 /\ forall x, (x ∈ [a-δ, a) -> x ∉ A) /\ (x ∈ [a, a+δ) -> x ∈ A).
-
-Definition right_endpoint (A : Ensemble R) (a : R) :=
-  exists δ, δ > 0 /\ forall x, (x ∈ (a, a+δ] -> x ∉ A) /\ (x ∈ (a-δ, a] -> x ∈ A).
-
-Definition interior_point (A : Ensemble R) (a : R) :=
-  exists δ, δ > 0 /\ forall x, x ∈ (a-δ, a+δ) -> x ∈ A.
-
-Definition isolated_point (A : Ensemble R) (a : R) :=
-  a ∈ A /\ (exists δ, δ > 0 /\ forall x, x ∈ (a-δ, a) ⋃ (a, a+δ) -> x ∉ A).
-
 Definition continuous_at (f : ℝ -> ℝ) (a : ℝ) : Prop :=
   ⟦ lim a ⟧ f = f a.
 
@@ -31,7 +19,7 @@ Definition uniformly_continuous_on (f : ℝ -> ℝ) (D : Ensemble ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ δ, δ > 0 /\ ∀ x y, x ∈ D -> y ∈ D -> |x - y| < δ -> |f x - f y| < ε.
 
 Definition continuous (f : ℝ -> ℝ) : Prop :=
-  forall a,  ⟦ lim a ⟧ f = f a.
+  forall a, ⟦ lim a ⟧ f = f a.
 
 Lemma continuous_on_interval : forall f a b,
     a < b -> (continuous_on f [a, b] <-> ((forall x, x ∈ (a, b) -> ⟦ lim x ⟧ f = f x) /\ ⟦ lim a⁺ ⟧ f = f a /\ ⟦ lim b⁻ ⟧ f = f b)).
@@ -714,5 +702,4 @@ Proof.
   intros f a b H1 H2. pose proof theorem_7_3 f a b H1 H2 as [x [H3 H4]]. exists x. split; auto; split.
   - intros x2 [x3 [H5 H6]]. specialize (H4 x3 H5). rewrite H6. apply Rge_le. auto.
   - intros ub H5. apply H5. exists x; auto.
-  Show Proof.
 Qed.

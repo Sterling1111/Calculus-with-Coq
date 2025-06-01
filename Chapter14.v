@@ -40,8 +40,10 @@ Qed.
 
 Open Scope R_scope.
 
+Import Notations.
+
 Lemma lemma_14_5 : forall (l : list R),
-  Rabs (sum_f 0 (length l - 1) (fun i => nth i l 0)) <= sum_f 0 (length l - 1) (fun i => Rabs (nth i l 0)).
+  | ∑ 0 (length l - 1) (fun i => nth i l 0) | <= ∑ 0 (length l - 1) (fun i => | nth i l 0 |).
 Proof.
   induction l as [| h t IH].
   - simpl. repeat rewrite sum_f_0_0; lra.
