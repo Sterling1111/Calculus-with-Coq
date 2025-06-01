@@ -32,6 +32,12 @@ Notation "⟦ 'lim' a ⟧ f D '=' L" :=
   (limit_on f D a L)
     (at level 70, f at level 0, D at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  D  '='  L").
 
+Lemma limit_imp_limit_on : forall f L D a,
+  ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ f D = L.
+Proof.
+  intros f L D a H1. intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ; split; auto.
+Qed.
+
 Lemma left_right_iff : forall f a L,
   ⟦ lim a ⟧ f = L <-> ⟦ lim a⁻ ⟧ f = L ∧ ⟦ lim a⁺ ⟧ f = L.
 Proof.
@@ -128,6 +134,8 @@ Proof.
 Qed. 
 
 Module Function_Notations.
+
+  Delimit Scope function_scope with f.
 
   Notation "f + g" := (fun x : ℝ => f x + g x) (at level 50, left associativity) : function_scope.
   Notation "f - g" := (fun x : ℝ => f x - g x) (at level 50, left associativity) : function_scope.
@@ -227,6 +235,17 @@ Proof.
   apply left_right_iff; split; [ apply left_limit_plus | apply right_limit_plus ]; auto.
 Qed.
 
+Lemma limit_on_plus : forall f1 f2 a D L1 L2,
+  ⟦ lim a ⟧ f1 D = L1 -> ⟦ lim a ⟧ f2 D = L2 -> ⟦ lim a ⟧ (f1 + f2) D = (L1 + L2).
+Proof.
+  intros f1 f2 a D L1 L2 H1 H2 ε H3. specialize (H1 (ε / 2) ltac:(lra)) as [δ1 [H4 H5]].
+  specialize (H2 (ε / 2) ltac:(lra)) as [δ2 [H6 H7]]. set (δ := Rmin δ1 δ2).
+  assert (δ > 0) as H8 by (unfold δ; solve_min). exists δ. split; try lra.
+  intros x H9 H10. specialize (H5 x ltac:(unfold δ in *; solve_R) ltac:(unfold δ in *; solve_R)).
+  specialize (H7 x ltac:(unfold δ in *; solve_R) ltac:(unfold δ in *; solve_R)). 
+  solve_R.
+Qed.
+
 Lemma left_limit_const : forall a c,
   ⟦ lim a⁻ ⟧ (fun _ => c) = c.
 Proof.
@@ -243,6 +262,12 @@ Lemma limit_const : forall a c,
   ⟦ lim a ⟧ (fun _ => c) = c.
 Proof.
   intros a c ε H1. exists 1; split; solve_abs.
+Qed.
+
+Lemma limit_on_const : forall a D c,
+  ⟦ lim a ⟧ (fun _ => c) D = c.
+Proof.
+  intros a D c ε H1. exists 1; split; solve_abs.
 Qed.
 
 Lemma  left_limit_id : forall a,
@@ -286,6 +311,17 @@ Proof.
   apply left_right_iff; split; [ apply left_limit_minus | apply right_limit_minus ]; auto.
 Qed.
 
+Lemma limit_on_minus : forall f1 f2 a D L1 L2,
+  ⟦ lim a ⟧ f1 D = L1 -> ⟦ lim a ⟧ f2 D = L2 -> ⟦ lim a ⟧ (f1 - f2) D = (L1 - L2).
+Proof.
+  intros f1 f2 a D L1 L2 H1 H2 ε H3. specialize (H1 (ε / 2) ltac:(lra)) as [δ1 [H4 H5]].
+  specialize (H2 (ε / 2) ltac:(lra)) as [δ2 [H6 H7]]. set (δ := Rmin δ1 δ2).
+  assert (δ > 0) as H8 by (unfold δ; solve_min). exists δ. split; try lra.
+  intros x H9 H10. specialize (H5 x ltac:(unfold δ in *; solve_R) ltac:(unfold δ in *; solve_R)).
+  specialize (H7 x ltac:(unfold δ in *; solve_R) ltac:(unfold δ in *; solve_R)).
+  solve_R.
+Qed.
+
 Lemma left_limit_mult : forall f1 f2 a L1 L2,
   ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> ⟦ lim a⁻ ⟧ (f1 ∙ f2) = L1 * L2.
 Proof.
@@ -315,6 +351,18 @@ Lemma limit_mult : forall f1 f2 a L1 L2,
 Proof.
   intros f1 f2 a L1 L2 H1 H2. apply left_right_iff in H1 as [H3 H4], H2 as [H5 H6].
   apply left_right_iff; split; [ apply left_limit_mult | apply right_limit_mult ]; auto.
+Qed.
+
+Lemma limit_on_mult : forall f1 f2 a D L1 L2,
+  ⟦ lim a ⟧ f1 D = L1 -> ⟦ lim a ⟧ f2 D = L2 -> ⟦ lim a ⟧ (f1 ∙ f2) D = L1 * L2.
+Proof.
+  intros f1 f2 a D L1 L2 H1 H2 ε H3. assert (ε / (2 * ((|L2|) + 1)) > 0 /\ ε / (2 * ((|L1|) + 1)) > 0) as [H4 H5].
+  { split; apply Rdiv_pos_pos; solve_abs. }
+  specialize (H1 (Rmin (ε / (2 * ((|L2|) + 1))) 1) ltac:(solve_min)) as [δ1 [H6 H7]].
+  specialize (H2 (Rmin (ε / (2 * ((|L1|) + 1))) 1) ltac:(solve_min)) as [δ2 [H8 H9]].
+  set (δ := Rmin δ1 δ2). assert (δ > 0) as H10 by (unfold δ; solve_min). exists δ. split; try lra.
+  intros x H11 H12. assert (0 < |x - a| < δ1 /\ 0 < |x - a| < δ2) as [H13 H14] by (unfold δ in *; solve_R).
+  specialize (H7 x H11 H13). specialize (H9 x H11 H14). apply lemma_1_21; auto. solve_R.
 Qed.
 
 Lemma left_limit_inv : forall f a L,
@@ -419,6 +467,7 @@ Qed.
 
 Lemma limit_sqrt_x : forall a,
   ⟦ lim a ⟧ (fun x => √x) = √a.
+  About sqrt.
 Proof.
   intros a ε H1. assert (a <= 0 \/ a > 0) as [H2 | H2] by lra.
   - exists (ε^2). split. nra. intros x H3. assert (x < a \/ x > a) as [H4 | H4] by solve_abs.
@@ -438,11 +487,6 @@ Proof.
          rewrite sqrt_limit_helper_1; try lra. apply Rmult_lt_reg_r with (r := √x + √a); try nra.
          field_simplify; nra.
 Qed.
-
-Lemma limit_sqrt : forall f a L,
-  ⟦ lim a ⟧ f = L -> L >= 0 -> ⟦ lim a ⟧ (fun x => √(f x)) = √L.
-Proof.
-Admitted.
 
 Lemma limit_to_0_equiv : forall f1 f2 L,
   (forall x, x <> 0 -> f1 x = f2 x) -> ⟦ lim 0 ⟧ f1 = L -> ⟦ lim 0 ⟧ f2 = L.
