@@ -22,6 +22,9 @@ Notation "a > b > c > d" := (a > b /\ b > c /\ c > d)
   (at level 70, b at next level, c at next level, d at next level) : R_scope.
 Notation "a = b = c" := (a = b /\ b = c) 
   (at level 70, b at next level, c at next level) : R_scope.
+Notation  "a <= b < c <= d" := (a <= b /\ b < c /\ c <= d)
+  (at level 70, b at next level, c at next level, d at next level) : R_scope.
+
 
 Declare Scope interval_scope.
 Delimit Scope interval_scope with interval.

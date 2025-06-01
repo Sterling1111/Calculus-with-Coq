@@ -163,19 +163,43 @@ Proof.
 Qed.
 
 Lemma is_interior_point_closed : forall a b x,
-  a < b -> x ∈ (a, b) -> interior_point [a, b] x.
+  a < b -> (x ∈ (a, b) <-> interior_point [a, b] x).
 Proof.
-  intros a b x H1 H2. unfold In in *. exists (Rmin (x - a) (b - x)). split; unfold In in *; try solve_R.
+  intros a b x H1. split.
+  - intros H2. unfold In in *. exists (Rmin (x - a) (b - x)). split; unfold In in *; try solve_R.
+  - intros [δ [H2 H3]]. assert (x = a \/ x <> a) as [H4 | H4] by lra.
+    -- specialize (H3 (a - δ/2) ltac:(solve_R)). solve_R.
+    -- assert (x = b \/ x <> b) as [H5 | H5] by lra.
+       * specialize (H3 (b + δ/2) ltac:(solve_R)). solve_R.
+       * specialize (H3 x ltac:(solve_R)). solve_R.
 Qed.
 
 Lemma is_left_endpoint_closed : forall a b x,
-  a < b -> left_endpoint [a, b] x -> x = a.
+  a < b -> (left_endpoint [a, b] x <-> x = a).
 Proof.
-  intros a b x H1 [δ [H2 H3]]. specialize (H3 (x - δ/2)) as [H4 H5].
-  - intros [δ [H2 H3]]. specialize (H3 x). ltac:(solve_R)). unfold In in *.
-    assert (H4 : a < x < b). { apply H3. }
-    set (ε := Rmin (x - a) δ). specialize (H3 (x - ε/2)) as [H5 H6].
-    apply H5; unfold ε in *; solve_R.
+  intros a b x H1. split.
+  - intros [δ [H2 H3]]. pose proof Rtotal_order x a as [H4 | [H4 | H4]]; auto.
+    -- specialize (H3 x) as [_ H3]. specialize (H3 ltac:(solve_R)). solve_R.
+    -- assert (x > b \/ x <= b) as [H5 | H5] by lra.
+       * specialize (H3 x) as [_ H3]. specialize (H3 ltac:(solve_R)). solve_R.
+       * destruct H5 as [H5 | H5].
+        2 : { specialize (H3 (x - Rmin (b - a) δ)) as [H3 _]. specialize (H3 ltac:(solve_R)). solve_R. }
+        assert (H6 : a < x < b) by lra. clear H1 H4 H5. rename H6 into H1.
+        specialize (H3 (Rmax a (x - δ))) as [H3 _]. specialize (H3 ltac:(solve_R)). solve_R.
+  - intros H2. subst. exists (b - a). split; solve_R.
+Qed.
+
+Lemma is_right_endpoint_closed : forall a b x,
+  a < b -> (right_endpoint [a, b] x <-> x = b).
+Proof.
+  intros a b x H1. split.
+  - intros [δ [H2 H3]].
+    pose proof Rtotal_order x b as [H4 | [H4 | H4]]; auto.
+    + assert (x < a \/ x >= a) as [H5 | H5] by lra.
+      * specialize (H3 x) as [_ H3]. specialize (H3 ltac:(solve_R)). solve_R.
+      * specialize (H3 (Rmin b (x + δ))) as [H3 _]. specialize (H3 ltac:(solve_R)). solve_R.
+    + specialize (H3 x) as [_ H3]. specialize (H3 ltac:(solve_R)). solve_R.
+  - intros H2. subst. exists (b - a). split; solve_R.
 Qed.
 
 Theorem derivative_of_function_at_x_unique : forall f f1' f2' x,
@@ -332,32 +356,48 @@ Proof.
     -- apply theorem_9_1_c; tauto.
 Qed.
 
+Lemma in_closed_interval_cases : forall x a b,
+  a < b -> x ∈ [a, b] -> left_endpoint [a, b] x \/ right_endpoint [a, b] x \/ interior_point [a, b] x.
+Proof.
+  intros x a b H1 H2. assert (x = a \/ x = b \/ a < x < b) as [H3 | [H3 | H3]] by solve_R.
+  - left. apply is_left_endpoint_closed; auto.
+  - right. left. apply is_right_endpoint_closed; auto.
+  - right; right. apply is_interior_point_closed; solve_R.
+Qed.
 
 Lemma differentiable_on_closed_interval_subset : forall f a b c d,
-  a < b -> c < d -> differentiable_on f [a, b] -> [c, d] ⊆ [a, b] -> differentiable_on f [c, d].
+  a <= c < d <= b -> differentiable_on f [a, b] -> differentiable_on f [c, d].
 Proof.
-  intros f a b c d H1 H2 H3 H4 x H5. specialize (H4 x ltac:(auto)). specialize (H3 x H4) as [[H3 H6] | [[H3 H6] | H3]].
-  - assert (x = c \/ x = d \/ (c < x < d)) as [H7 | [H7 | H7]] by solve_R.
-    -- right; left; split. subst. apply left_interval_enpoint_closed; auto. apply differentiable_at_iff; auto.
-    -- right; right; split. subst. apply right_interval_enpoint_closed; auto. apply differentiable_at_iff; auto.
-    -- left. split; auto. apply is_interior_point_closed; solve_R.
-  - right. left. split; auto. exfalso. apply not_left_endpoint_closed with (a := a) (b := b); auto.
-    apply differentiable_at_iff; auto.
+  intros f a b c d H1 H2 x H4. specialize (H2 x ltac:(solve_R)) as [[H5 H6] | [[H5 H6] | [H5 H6]]].
+  - apply in_closed_interval_cases in H4 as [H7 | [H7 | H7]]; solve_R.
+    -- right. left. split; auto. apply differentiable_at_iff; auto.
+    -- right; right; split; auto. apply differentiable_at_iff; auto.
+  - right. left. split; auto. apply is_left_endpoint_closed; solve_R. apply is_left_endpoint_closed in H5; solve_R.
+  - right; right; split; auto. apply is_right_endpoint_closed; solve_R. apply is_right_endpoint_closed in H5; solve_R.
+Qed.
 
 Lemma differentiable_on_open_interval_subset : forall f a b c d,
-  a < b -> c < d -> differentiable_on f (a, b) -> [c, d] ⊆ (a, b) -> differentiable_on f [c, d].
+  a <= c < d <= b -> differentiable_on f [a, b] -> differentiable_on f (c, d).
 Proof.
-Admitted.
+  intros f a b c d H1 H2 x H4. specialize (H2 x ltac:(solve_R)) as [[H5 H6] | [[H5 H6] | [H5 H6]]].
+  - left. split; auto. apply is_interior_point_open; solve_R.
+  - apply is_left_endpoint_closed in H5; solve_R.
+  - apply is_right_endpoint_closed in H5; solve_R.
+Qed.
 
-Lemma continuous_on_interval_subset : forall f a b c d,
-a < b -> c < d -> continuous_on f [a, b] -> [c, d] ⊆ [a, b] -> continuous_on f [c, d].
+Lemma continuous_on_closed_interval_subset : forall f a b c d,
+a <= c < d <= b -> continuous_on f [a, b] -> continuous_on f [c, d].
 Proof.
-  intros f a b c d H1 H2 H3 H4. apply continuous_on_interval in H3 as [H3 [H5 H6]]; auto.
-  apply continuous_on_interval; auto. repeat split.
-  - intros x H7. apply H3. specialize (H4 x ltac:(unfold In in *; lra)) as H8. admit.
-  - admit.
-  - admit.
-Admitted.
+  intros f a b c d H1 H2. apply continuous_on_interval in H2 as [H3 [H5 H6]]; solve_R.
+  apply continuous_on_interval; solve_R. repeat split.
+  - intros x H7. apply H3. solve_R.
+  - assert (a < c \/ a = c) as [H7 | H7] by solve_R.
+    -- specialize (H3 c ltac:(solve_R)). apply left_right_iff in H3. tauto.
+    -- subst. auto.
+  - assert (b > d \/ b = d) as [H7 | H7] by solve_R.
+    -- specialize (H3 d ltac:(solve_R)). apply left_right_iff in H3. tauto.
+    -- subst. tauto.
+Qed.
 
 Theorem theorem_10_1 : forall c,
   ⟦ der ⟧ (fun _ => c) = (fun _ => 0).
@@ -859,10 +899,10 @@ Proof.
   intros a f f' H1. exists (f' a). auto.
 Qed.
 
-Lemma derivative_on_imp_differentiable_on : forall a b f f',
-  a < b -> ⟦ der ⟧ f [a, b] = f' -> differentiable_on f [a, b].
+Lemma derivative_on_imp_differentiable_on : forall f f' A,
+  ⟦ der ⟧ f A = f' -> differentiable_on f A.
 Proof.
-  intros a b f f' H1 H2 x H3. specialize (H2 x H3) as [H4 | [H4 | H4]].
+  intros f f' A H1 x H2. specialize (H1 x H2) as [H3 | [H3 | H3]].
   - left. split; try tauto. apply (derivative_at_imp_differentiable_at x f f'); tauto.
   - right. left. split; try tauto. apply (right_derivative_at_imp_right_differentiable_at x f f'); tauto.
   - right. right. split; try tauto. apply (left_derivative_at_imp_left_differentiable_at x f f'); tauto.
@@ -873,18 +913,23 @@ Corollary corollary_11_3_a : forall f f' a b,
 Proof.
   intros f f' a b H1 H2 H3 x1 x2 H4 H5 H6. assert (H7 : continuous_on f [x1, x2]).
   {
-    apply continuous_on_interval_subset with (a := a) (b := b); auto. 2 : { intros x H7. unfold In in *; lra. } 
-    apply theorem_9_1_d; auto. apply differentiable_on_open_interval_subset with (a := a) (b := b); auto.
-    admit. admit.
+    apply continuous_on_closed_interval_subset with (a := a) (b := b); solve_R.
+    apply theorem_9_1_d; auto. apply derivative_on_imp_differentiable_on with (f' := f'); auto.
   }
   assert (H8 : differentiable_on f (x1, x2)).
   {
-    admit.
+    apply differentiable_on_open_interval_subset with (a := a) (b := b); solve_R.
+    apply derivative_on_imp_differentiable_on with (f' := f'); auto. 
   }
   
   pose proof theorem_11_4 f x1 x2 H6 H7 H8 as [x [H9 H10]]. 
   set (h := λ _ : ℝ, (f x2 - f x1) / (x2 - x1)). assert (h x = f' x) as H11.
-  { apply derivative_of_function_at_x_unique with (f := f); auto. apply H2. unfold In in *. lra. }
+  {
+    apply derivative_of_function_at_x_unique with (f := f); auto. specialize (H2 x ltac:(solve_R)) as [H2 | [H2 | H2]].
+    - apply H2.
+    - destruct H2 as [H2 _]. apply is_left_endpoint_closed in H2; solve_R.
+    - destruct H2 as [H2 _]. apply is_right_endpoint_closed in H2; solve_R.
+  }
   specialize (H3 x ltac:(unfold In in *; lra)). unfold h in H11. 
   unfold h in H11. assert (H12 : (f x2 - f x1) / (x2 - x1) > 0) by lra.
   apply Rmult_gt_compat_r with (r := (x2 - x1)) in H12; field_simplify in H12; lra.
