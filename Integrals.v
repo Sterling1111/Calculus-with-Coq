@@ -1294,7 +1294,7 @@ Proof.
   intros f a. unfold bounded_On. split; exists (f a); intros x [y [H1 H2]]; replace a with y by solve_R; lra.
 Qed.
 
-Definition Integrable_On (a b : ℝ) (f : ℝ -> ℝ) : Prop :=
+Definition integrable_on (a b : ℝ) (f : ℝ -> ℝ) : Prop :=
   a = b \/ 
   exists (bf : bounded_function_R a b) (sup inf : ℝ), bf.(bounded_f a b) = f /\
   let LS := (fun x : ℝ => exists p : partition_R a b, x = L(bf, p(a, b))) in
@@ -1302,7 +1302,7 @@ Definition Integrable_On (a b : ℝ) (f : ℝ -> ℝ) : Prop :=
   is_lub LS sup /\ is_glb US inf /\ sup = inf.
 
   Lemma Integrable_imp_bounded : forall f a b,
-  a <= b -> Integrable_On a b f -> bounded_On f [a, b].
+  a <= b -> integrable_on a b f -> bounded_On f [a, b].
 Proof.
   intros f a b H0 [H1 | [bf [sup [inf [H2 [H3 [H4 H5]]]]]]].
   - subst. apply bounded_on_n_n.
@@ -1310,7 +1310,7 @@ Proof.
 Qed.
 
 Axiom integrable_dec : forall a b (f : ℝ -> ℝ),
-  {Integrable_On a b f} + {~Integrable_On a b f}.
+  {integrable_on a b f} + {~integrable_on a b f}.
 
 Definition definite_integral a b (f : ℝ -> ℝ) : ℝ :=
   match (Rle_dec a b) with
@@ -1371,7 +1371,7 @@ Proof.
 Qed.
 
 Lemma integral_equiv : forall a b f, 
-  a <= b -> Integrable_On a b f -> exists bf : bounded_function_R a b,
+  a <= b -> integrable_on a b f -> exists bf : bounded_function_R a b,
     bf.(bounded_f a b) = f /\ ∫ a b f = smallest_upper_sum a b bf /\ ∫ a b f = largest_lower_sum a b bf.
 Proof.
   intros a b f H1 H2. assert (a = b \/ a < b) as [H3 | H3] by lra. subst. set (bf := mkbounded_function_R b b f (Rle_refl b) (bounded_on_n_n f b)).
@@ -1404,7 +1404,7 @@ Proof.
 Qed.
 
 Lemma integral_eq' : forall a b f,
-  a < b -> Integrable_On a b f -> exists bf r,
+  a < b -> integrable_on a b f -> exists bf r,
     bf.(bounded_f a b) = f /\ ∫ a b f = r /\ is_glb (fun x => exists p : partition_R a b, x = U(bf, p(a, b))) r /\
       is_lub (fun x => exists p : partition_R a b, x = L(bf, p(a, b))) r.
 Proof.
@@ -1429,7 +1429,7 @@ Qed.
 
 Theorem theorem_13_2_a : forall (a b : ℝ) (bf : bounded_function_R a b),
   let f := bf.(bounded_f a b) in
-  a < b -> (Integrable_On a b f <-> (forall ε, ε > 0 -> exists P : partition_R a b, (U(bf, P(a, b)) - L(bf, P(a, b))) < ε)).
+  a < b -> (integrable_on a b f <-> (forall ε, ε > 0 -> exists P : partition_R a b, (U(bf, P(a, b)) - L(bf, P(a, b))) < ε)).
 Proof.
   intros a b bf f' H0. split.
   - intros [H1' | [f [sup [inf [H1 [H2 [H3 H4]]]]]]] ε H5; try lra. replace bf with f in *.
@@ -1638,13 +1638,13 @@ Proof.
   repeat rewrite length_map in *. rewrite length_seq in *. lia.
 Qed.
 
-Lemma integrable_on_n_n : forall f a, Integrable_On a a f.
+Lemma integrable_on_n_n : forall f a, integrable_on a a f.
 Proof.
   intros f a. left. reflexivity.
 Qed.
 
 Theorem theorem_13_3 : forall f a b,
-  a <= b -> continuous_on f [a, b] -> Integrable_On a b f.
+  a <= b -> continuous_on f [a, b] -> integrable_on a b f.
 Proof.
   intros f a b H1 H2. assert (a = b \/ a < b) as [H3 | H3] by lra.
   subst. apply integrable_on_n_n. rename H3 into H1'.
@@ -1729,7 +1729,7 @@ Proof.
 Admitted.
 
 Lemma integrable_on_sub_interval_left : forall f a b c,
-  a < c < b -> Integrable_On a b f -> Integrable_On a c f.
+  a < c < b -> integrable_on a b f -> integrable_on a c f.
 Proof.
   intros f a b c H1 H2. pose proof H2 as H0. destruct H2 as [H2 | [bf1 [sup [inf [H3 [H4 [H5 H6]]]]]]]; [ left; lra |].
   pose proof theorem_13_2_a a b bf1 ltac:(lra) as [H7 _]. rewrite H3 in H7. specialize (H7 H0). clear H0.
@@ -1747,7 +1747,7 @@ Proof.
 Admitted.
 
 Lemma integrable_on_sub_interval : forall f a b c d,
-  a <= c <= d <= b -> Integrable_On a b f -> Integrable_On c d f.
+  a <= c <= d <= b -> integrable_on a b f -> integrable_on c d f.
 Proof.
   intros f a b c d H1. assert (a = b \/ a < b) as [H0 | H0] by lra.
   intros [H0' | [bf [sup [inf [H2 [H3 [H4 H5]]]]]]]; left; lra.
@@ -1761,7 +1761,7 @@ Proof.
 Admitted.
 
 Lemma integral_minus' : forall f a b c,
-  a < b -> c >= 0 -> Integrable_On a (b + c) f -> ∫ a (b + c) f - ∫ a b f = ∫ b (b + c) f.
+  a < b -> c >= 0 -> integrable_on a (b + c) f -> ∫ a (b + c) f - ∫ a b f = ∫ b (b + c) f.
 Proof.
   intros f a b c H1 H2 H3. apply Rge_gt_or_eq in H2 as [H2 | H2]; subst.
   - pose proof integrable_on_sub_interval f a (b + c) a b ltac:(lra) H3 as H4.
@@ -1774,12 +1774,12 @@ Proof.
 Admitted.
 
 Lemma integral_minus : forall f a b c,
-  Integrable_On a (b + c) f -> ∫ a (b + c) f - ∫ a b f = ∫ b (b + c) f.
+  integrable_on a (b + c) f -> ∫ a (b + c) f - ∫ a b f = ∫ b (b + c) f.
 Proof.
 Admitted.
 
 Theorem theorem_13_7 : forall a b f m M,
-  a <= b -> Integrable_On a b f -> (forall x, x ∈ [a, b] -> m <= f x <= M) ->
+  a <= b -> integrable_on a b f -> (forall x, x ∈ [a, b] -> m <= f x <= M) ->
     m * (b - a) <= ∫ a b f <= M * (b - a).
 Proof.
   intros a b f m M H1 H2 H3. assert (a = b \/ a < b) as [H4 | H4] by lra.
@@ -1854,7 +1854,7 @@ Proof.
 Qed.
 
 Theorem FTC1 : ∀ f F a b,
-  a < b -> (∀ x, x ∈ [a, b] -> ∫ a x f = (F x)) -> continuous_on f [a, b] -> ⟦ der ⟧ F [a, b] = f.
+  a < b -> (∀ x, x ∈ [a, b] -> ∫ a x f = F x) -> continuous_on f [a, b] -> ⟦ der ⟧ F [a, b] = f.
 Proof.
   intros f F a b H1 H2 H3 c H4.
   assert (exists m, forall h, (h ∈ (0, b - c) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (m h)) /\ 
@@ -1945,7 +1945,7 @@ Proof.
     2 : {
        assert (a = c \/ a < c) as [H10 | H10] by lra; clear H4; rename H10 into H4. subst. rewrite integral_n_n. auto. lra.
        rewrite integral_minus; auto. apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. unfold Ensembles.In in *. solve_R. }
-    assert (H10 : Integrable_On c (c + h') f).
+    assert (H10 : integrable_on c (c + h') f).
     { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. unfold Ensembles.In in *. solve_R. }
     assert (H11 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c <= x0 <= c + h') → m h' <= f x <= M h').
     { 
@@ -1964,7 +1964,7 @@ Proof.
   {
     intros h' H10. unfold Ensembles.In in *. repeat rewrite <- H2; solve_R. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in *.
     2 : { rewrite integral_minus; auto. apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. unfold Ensembles.In in *. solve_R. }
-    assert (H11 : Integrable_On (c + h') c f).
+    assert (H11 : integrable_on (c + h') c f).
     { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. unfold Ensembles.In in *. solve_R. }
     assert (H12 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c + h' <= x0 <= c) → m h' <= f x <= M h').
     { 
