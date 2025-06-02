@@ -467,7 +467,6 @@ Qed.
 
 Lemma limit_sqrt_x : forall a,
   ⟦ lim a ⟧ (fun x => √x) = √a.
-  About sqrt.
 Proof.
   intros a ε H1. assert (a <= 0 \/ a > 0) as [H2 | H2] by lra.
   - exists (ε^2). split. nra. intros x H3. assert (x < a \/ x > a) as [H4 | H4] by solve_abs.

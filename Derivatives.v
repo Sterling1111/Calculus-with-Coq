@@ -1039,9 +1039,10 @@ Proof.
   exists x; split; auto. solve_R; split; solve_R.
 Qed.
 
+(* L'hopitals rule *)
 Theorem theorem_11_9 : forall f f' g g' a L,
   ⟦ lim a ⟧ f = 0 -> ⟦ lim a ⟧ g = 0 -> ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = g' -> ⟦ lim a ⟧ (f' / g') = L ->
     ⟦ lim a ⟧ (f / g) = L.
 Proof.
-  
+  intros f f' g g' a L H1 H2 H3 H4 H5.
 Admitted.
