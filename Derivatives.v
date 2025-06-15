@@ -635,11 +635,101 @@ Proof.
   - field. auto.
 Qed.
 
+Close Scope program_scope.
+
 Theorem chain_rule : forall f g f' g',
-  ⟦ der ⟧ g = g' -> ⟦ der ⟧ f = f' -> ⟦ der ⟧ (f ∘ g) = (f' ∘ g) ∙ g'.
+  ⟦ der ⟧ g = g' -> ⟦ der ⟧ f = f' -> ⟦ der ⟧ (f ∘ g) = ((f' ∘ g) ∙ g').
 Proof.
   intros f g f' g' H1 H2 x. apply theorem_10_9; auto.
 Qed.
+
+Corollary chain_rule_3 : forall f g h f' g' h',
+  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' ->
+  ⟦ der ⟧ (f ∘ (g ∘ h)) = (f' ∘ (g ∘ h)) ∙ ((g' ∘ h) ∙ h').
+Proof.
+  intros f g h f' g' h' H1 H2 H3. set (i := (g ∘ h)).
+  assert (H4 : ⟦ der ⟧ i = (g' ∘ h) ∙ h'). { unfold i. apply chain_rule; auto. }
+  pose proof chain_rule f i f' (g' ∘ h ∙ h') H4 H1. auto.
+Qed.
+
+Corollary chain_rule_4 : forall f g h i f' g' h' i',
+  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' ->
+  ⟦ der ⟧ (f ∘ (g ∘ (h ∘ i))) = (f' ∘ (g ∘ (h ∘ i))) ∙ ((g' ∘ (h ∘ i)) ∙ ((h' ∘ i) ∙ i')).
+Proof.
+  intros f g h i f' g' h' i' H1 H2 H3 H4. set (j := (h ∘ i)).
+  assert (H5 : ⟦ der ⟧ j = (h' ∘ i) ∙ i'). { unfold j. apply chain_rule; auto. }
+  pose proof chain_rule_3 f g j f' g' ((h' ∘ i) ∙ i') H1 H2 H5 as H6. auto.
+Qed.
+
+Corollary chain_rule_5 : forall f g h i j f' g' h' i' j',
+  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' ->
+  ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ j)))) = (f' ∘ (g ∘ (h ∘ (i ∘ j)))) ∙ ((g' ∘ (h ∘ (i ∘ j))) ∙ ((h' ∘ (i ∘ j)) ∙ ((i' ∘ j) ∙ j'))).
+Proof.
+  intros f g h i j f' g' h' i' j' H1 H2 H3 H4 H5. set (k := (i ∘ j)).
+  assert (H6 : ⟦ der ⟧ k = (i' ∘ j) ∙ j'). { unfold k. apply chain_rule; auto. }
+  pose proof chain_rule_4 f g h k f' g' h' ((i' ∘ j) ∙ j') H1 H2 H3 H6 as H7. auto.
+Qed.
+
+Corollary chain_rule_6 : forall f g h i j k f' g' h' i' j' k',
+  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' -> ⟦ der ⟧ k = k' ->
+  ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ (j ∘ k))))) = (f' ∘ (g ∘ (h ∘ (i ∘ (j ∘ k))))) ∙ ((g' ∘ (h ∘ (i ∘ (j ∘ k)))) ∙ ((h' ∘ (i ∘ (j ∘ k))) ∙ ((i' ∘ (j ∘ k)) ∙ ((j' ∘ k) ∙ k')))).
+Proof.
+  intros f g h i j k f' g' h' i' j' k' H1 H2 H3 H4 H5 H6.
+  set (l := j ∘ k).
+  assert (H7 : ⟦ der ⟧ l = (j' ∘ k) ∙ k'). { unfold l. apply chain_rule; auto. }
+  pose proof chain_rule_5 f g h i l f' g' h' i' ((j' ∘ k) ∙ k') H1 H2 H3 H4 H7 as H8. auto.
+Qed.
+
+Corollary chain_rule_7 : forall f g h i j k l f' g' h' i' j' k' l',
+ ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' -> ⟦ der ⟧ k = k' -> ⟦ der ⟧ l = l' ->
+ ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ l)))))) = (f' ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ l)))))) ∙ ((g' ∘ (h ∘ (i ∘ (j ∘ (k ∘ l))))) ∙ ((h' ∘ (i ∘ (j ∘ (k ∘ l)))) ∙ ((i' ∘ (j ∘ (k ∘ l))) ∙ ((j' ∘ (k ∘ l)) ∙ ((k' ∘ l) ∙ l'))))).
+Proof.
+  intros f g h i j k l f' g' h' i' j' k' l' H1 H2 H3 H4 H5 H6 H7.
+  set (m := k ∘ l).
+  assert (H8 : ⟦ der ⟧ m = (k' ∘ l) ∙ l'). { unfold m. apply chain_rule; auto. }
+  pose proof chain_rule_6 f g h i j m f' g' h' i' j' ((k' ∘ l) ∙ l') H1 H2 H3 H4 H5 H8 as H9. auto.
+Qed.
+
+Corollary chain_rule_8 : forall f g h i j k l m f' g' h' i' j' k' l' m',
+ ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' -> ⟦ der ⟧ k = k' -> ⟦ der ⟧ l = l' -> ⟦ der ⟧ m = m' ->
+ ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ m))))))) = (f' ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ m))))))) ∙ ((g' ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ m)))))) ∙ ((h' ∘ (i ∘ (j ∘ (k ∘ (l ∘ m))))) ∙ ((i' ∘ (j ∘ (k ∘ (l ∘ m)))) ∙ ((j' ∘ (k ∘ (l ∘ m))) ∙ ((k' ∘ (l ∘ m)) ∙ ((l' ∘ m) ∙ m')))))).
+Proof.
+ intros f g h i j k l m f' g' h' i' j' k' l' m' H1 H2 H3 H4 H5 H6 H7 H8.
+ set (n := l ∘ m).
+ assert (H9 : ⟦ der ⟧ n = (l' ∘ m) ∙ m'). { unfold n. apply chain_rule; auto. }
+ pose proof chain_rule_7 f g h i j k n f' g' h' i' j' k' ((l' ∘ m) ∙ m') H1 H2 H3 H4 H5 H6 H9 as H10. auto.
+Qed.
+
+Corollary chain_rule_9 : forall f g h i j k l m n f' g' h' i' j' k' l' m' n',
+  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' -> ⟦ der ⟧ k = k' -> ⟦ der ⟧ l = l' -> ⟦ der ⟧ m = m' -> ⟦ der ⟧ n = n' ->
+  ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ n)))))))) = (f' ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ n)))))))) ∙ ((g' ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ n))))))) ∙ ((h' ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ n)))))) ∙ ((i' ∘ (j ∘ (k ∘ (l ∘ (m ∘ n))))) ∙ ((j' ∘ (k ∘ (l ∘ (m ∘ n)))) ∙ ((k' ∘ (l ∘ (m ∘ n))) ∙ ((l' ∘ (m ∘ n)) ∙ ((m' ∘ n) ∙ n'))))))).
+Proof.
+  intros f g h i j k l m n f' g' h' i' j' k' l' m' n' H1 H2 H3 H4 H5 H6 H7 H8 H9.
+  set (o := m ∘ n).
+  assert (H10 : ⟦ der ⟧ o = (m' ∘ n) ∙ n'). { unfold o. apply chain_rule; auto. }
+  pose proof chain_rule_8 f g h i j k l o f' g' h' i' j' k' l' ((m' ∘ n) ∙ n') H1 H2 H3 H4 H5 H6 H7 H10 as H11. auto.
+Qed.
+
+Corollary chain_rule_10 : forall f g h i j k l m n o f' g' h' i' j' k' l' m' n' o',
+  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' -> ⟦ der ⟧ k = k' -> ⟦ der ⟧ l = l' -> ⟦ der ⟧ m = m' -> ⟦ der ⟧ n = n' -> ⟦ der ⟧ o = o' ->
+  ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ o))))))))) = (f' ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ o))))))))) ∙ ((g' ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ o)))))))) ∙ ((h' ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ o))))))) ∙ ((i' ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ o)))))) ∙ ((j' ∘ (k ∘ (l ∘ (m ∘ (n ∘ o))))) ∙ ((k' ∘ (l ∘ (m ∘ (n ∘ o)))) ∙ ((l' ∘ (m ∘ (n ∘ o))) ∙ ((m' ∘ (n ∘ o)) ∙ ((n' ∘ o) ∙ o')))))))).
+Proof.
+  intros f g h i j k l m n o f' g' h' i' j' k' l' m' n' o' H1 H2 H3 H4 H5 H6 H7 H8 H9 H10.
+  set (p := n ∘ o).
+  assert (H11 : ⟦ der ⟧ p = (n' ∘ o) ∙ o'). { unfold p. apply chain_rule; auto. }
+  pose proof chain_rule_9 f g h i j k l m p f' g' h' i' j' k' l' m' ((n' ∘ o) ∙ o') H1 H2 H3 H4 H5 H6 H7 H8 H11 as H12. auto.
+Qed.
+
+Corollary chain_rule_11 : forall f g h i j k l m n o p f' g' h' i' j' k' l' m' n' o' p',
+  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' -> ⟦ der ⟧ k = k' -> ⟦ der ⟧ l = l' -> ⟦ der ⟧ m = m' -> ⟦ der ⟧ n = n' -> ⟦ der ⟧ o = o' -> ⟦ der ⟧ p = p' ->
+  ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ (o ∘ p)))))))))) = (f' ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ (o ∘ p)))))))))) ∙ ((g' ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ (o ∘ p))))))))) ∙ ((h' ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ (o ∘ p)))))))) ∙ ((i' ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ (o ∘ p))))))) ∙ ((j' ∘ (k ∘ (l ∘ (m ∘ (n ∘ (o ∘ p)))))) ∙ ((k' ∘ (l ∘ (m ∘ (n ∘ (o ∘ p))))) ∙ ((l' ∘ (m ∘ (n ∘ (o ∘ p)))) ∙ ((m' ∘ (n ∘ (o ∘ p))) ∙ ((n' ∘ (o ∘ p)) ∙ ((o' ∘ p) ∙ p'))))))))).
+Proof.
+  intros f g h i j k l m n o p f' g' h' i' j' k' l' m' n' o' p' H1 H2 H3 H4 H5 H6 H7 H8 H9 H10 H11.
+  set (q := o ∘ p).
+  assert (H12 : ⟦ der ⟧ q = (o' ∘ p) ∙ p'). { unfold q. apply chain_rule; auto. }
+  pose proof chain_rule_10 f g h i j k l m n q f' g' h' i' j' k' l' m' n' ((o' ∘ p) ∙ p') H1 H2 H3 H4 H5 H6 H7 H8 H9 H12 as H13. auto.
+Qed.
+
 
 Theorem chain_rule' : forall f g f' g',
   der g = g' -> der f = f' -> der (f ∘ g) = (f' ∘ g) ∙ g'.
@@ -1032,11 +1122,17 @@ Proof.
 Qed.
 
 Theorem cauchy_mvt : forall f f' g g' a b,
-  a < b -> continuous_on f [a, b] -> continuous_on g [a, b] -> ⟦ der ⟧ f (a, b) = f' -> ⟦ der ⟧ g ⦅a, b⦆ = g' -> 
-    (forall x, x ∈ ⦅a, b⦆ -> g' x <> 0) -> g b <> g a -> exists x, x ∈ (a, b) /\ (f b - f a) / (g b - g a) = f' x / g' x.
+  a < b -> continuous_on f [a, b] -> continuous_on g [a, b] -> ⟦ der ⟧ f (a, b) = f' -> ⟦ der ⟧ g (a, b) = g' -> 
+    (forall x, x ∈ (a, b) -> g' x <> 0) -> g b <> g a -> exists x, x ∈ (a, b) /\ (f b - f a) / (g b - g a) = f' x / g' x.
 Proof.
   intros f f' g g' a b H1 H2 H3 H4 H5 H6 H7. pose proof theorem_11_8 f f' g g' a b H1 H2 H3 H4 H5 as [x [H8 H9]].
   exists x; split; auto. solve_R; split; solve_R.
+Qed.
+
+Lemma deriv_test : der (λ x : ℝ, x^2) = (λ x : ℝ, 2 * x).
+Proof.
+  intros x. replace ((λ x : ℝ, 2 * x)) with ((λ x : ℝ, 2 * x^(2-1))).
+  2 : { extensionality y. simpl. lra. } apply power_rule'; auto.
 Qed.
 
 (* L'hopitals rule *)
