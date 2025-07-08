@@ -643,7 +643,7 @@ Proof.
   intros f g f' g' H1 H2 x. apply theorem_10_9; auto.
 Qed.
 
-Corollary chain_rule_3 : forall f g h f' g' h',
+Corollary chain_rule_2 : forall f g h f' g' h',
   ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' ->
   ⟦ der ⟧ (f ∘ (g ∘ h)) = (f' ∘ (g ∘ h)) ∙ ((g' ∘ h) ∙ h').
 Proof.
@@ -652,89 +652,13 @@ Proof.
   pose proof chain_rule f i f' (g' ∘ h ∙ h') H4 H1. auto.
 Qed.
 
-Corollary chain_rule_4 : forall f g h i f' g' h' i',
+Corollary chain_rule_3 : forall f g h i f' g' h' i',
   ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' ->
   ⟦ der ⟧ (f ∘ (g ∘ (h ∘ i))) = (f' ∘ (g ∘ (h ∘ i))) ∙ ((g' ∘ (h ∘ i)) ∙ ((h' ∘ i) ∙ i')).
 Proof.
   intros f g h i f' g' h' i' H1 H2 H3 H4. set (j := (h ∘ i)).
   assert (H5 : ⟦ der ⟧ j = (h' ∘ i) ∙ i'). { unfold j. apply chain_rule; auto. }
-  pose proof chain_rule_3 f g j f' g' ((h' ∘ i) ∙ i') H1 H2 H5 as H6. auto.
-Qed.
-
-Corollary chain_rule_5 : forall f g h i j f' g' h' i' j',
-  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' ->
-  ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ j)))) = (f' ∘ (g ∘ (h ∘ (i ∘ j)))) ∙ ((g' ∘ (h ∘ (i ∘ j))) ∙ ((h' ∘ (i ∘ j)) ∙ ((i' ∘ j) ∙ j'))).
-Proof.
-  intros f g h i j f' g' h' i' j' H1 H2 H3 H4 H5. set (k := (i ∘ j)).
-  assert (H6 : ⟦ der ⟧ k = (i' ∘ j) ∙ j'). { unfold k. apply chain_rule; auto. }
-  pose proof chain_rule_4 f g h k f' g' h' ((i' ∘ j) ∙ j') H1 H2 H3 H6 as H7. auto.
-Qed.
-
-Corollary chain_rule_6 : forall f g h i j k f' g' h' i' j' k',
-  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' -> ⟦ der ⟧ k = k' ->
-  ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ (j ∘ k))))) = (f' ∘ (g ∘ (h ∘ (i ∘ (j ∘ k))))) ∙ ((g' ∘ (h ∘ (i ∘ (j ∘ k)))) ∙ ((h' ∘ (i ∘ (j ∘ k))) ∙ ((i' ∘ (j ∘ k)) ∙ ((j' ∘ k) ∙ k')))).
-Proof.
-  intros f g h i j k f' g' h' i' j' k' H1 H2 H3 H4 H5 H6.
-  set (l := j ∘ k).
-  assert (H7 : ⟦ der ⟧ l = (j' ∘ k) ∙ k'). { unfold l. apply chain_rule; auto. }
-  pose proof chain_rule_5 f g h i l f' g' h' i' ((j' ∘ k) ∙ k') H1 H2 H3 H4 H7 as H8. auto.
-Qed.
-
-Corollary chain_rule_7 : forall f g h i j k l f' g' h' i' j' k' l',
- ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' -> ⟦ der ⟧ k = k' -> ⟦ der ⟧ l = l' ->
- ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ l)))))) = (f' ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ l)))))) ∙ ((g' ∘ (h ∘ (i ∘ (j ∘ (k ∘ l))))) ∙ ((h' ∘ (i ∘ (j ∘ (k ∘ l)))) ∙ ((i' ∘ (j ∘ (k ∘ l))) ∙ ((j' ∘ (k ∘ l)) ∙ ((k' ∘ l) ∙ l'))))).
-Proof.
-  intros f g h i j k l f' g' h' i' j' k' l' H1 H2 H3 H4 H5 H6 H7.
-  set (m := k ∘ l).
-  assert (H8 : ⟦ der ⟧ m = (k' ∘ l) ∙ l'). { unfold m. apply chain_rule; auto. }
-  pose proof chain_rule_6 f g h i j m f' g' h' i' j' ((k' ∘ l) ∙ l') H1 H2 H3 H4 H5 H8 as H9. auto.
-Qed.
-
-Corollary chain_rule_8 : forall f g h i j k l m f' g' h' i' j' k' l' m',
- ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' -> ⟦ der ⟧ k = k' -> ⟦ der ⟧ l = l' -> ⟦ der ⟧ m = m' ->
- ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ m))))))) = (f' ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ m))))))) ∙ ((g' ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ m)))))) ∙ ((h' ∘ (i ∘ (j ∘ (k ∘ (l ∘ m))))) ∙ ((i' ∘ (j ∘ (k ∘ (l ∘ m)))) ∙ ((j' ∘ (k ∘ (l ∘ m))) ∙ ((k' ∘ (l ∘ m)) ∙ ((l' ∘ m) ∙ m')))))).
-Proof.
- intros f g h i j k l m f' g' h' i' j' k' l' m' H1 H2 H3 H4 H5 H6 H7 H8.
- set (n := l ∘ m).
- assert (H9 : ⟦ der ⟧ n = (l' ∘ m) ∙ m'). { unfold n. apply chain_rule; auto. }
- pose proof chain_rule_7 f g h i j k n f' g' h' i' j' k' ((l' ∘ m) ∙ m') H1 H2 H3 H4 H5 H6 H9 as H10. auto.
-Qed.
-
-Corollary chain_rule_9 : forall f g h i j k l m n f' g' h' i' j' k' l' m' n',
-  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' -> ⟦ der ⟧ k = k' -> ⟦ der ⟧ l = l' -> ⟦ der ⟧ m = m' -> ⟦ der ⟧ n = n' ->
-  ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ n)))))))) = (f' ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ n)))))))) ∙ ((g' ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ n))))))) ∙ ((h' ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ n)))))) ∙ ((i' ∘ (j ∘ (k ∘ (l ∘ (m ∘ n))))) ∙ ((j' ∘ (k ∘ (l ∘ (m ∘ n)))) ∙ ((k' ∘ (l ∘ (m ∘ n))) ∙ ((l' ∘ (m ∘ n)) ∙ ((m' ∘ n) ∙ n'))))))).
-Proof.
-  intros f g h i j k l m n f' g' h' i' j' k' l' m' n' H1 H2 H3 H4 H5 H6 H7 H8 H9.
-  set (o := m ∘ n).
-  assert (H10 : ⟦ der ⟧ o = (m' ∘ n) ∙ n'). { unfold o. apply chain_rule; auto. }
-  pose proof chain_rule_8 f g h i j k l o f' g' h' i' j' k' l' ((m' ∘ n) ∙ n') H1 H2 H3 H4 H5 H6 H7 H10 as H11. auto.
-Qed.
-
-Corollary chain_rule_10 : forall f g h i j k l m n o f' g' h' i' j' k' l' m' n' o',
-  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' -> ⟦ der ⟧ k = k' -> ⟦ der ⟧ l = l' -> ⟦ der ⟧ m = m' -> ⟦ der ⟧ n = n' -> ⟦ der ⟧ o = o' ->
-  ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ o))))))))) = (f' ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ o))))))))) ∙ ((g' ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ o)))))))) ∙ ((h' ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ o))))))) ∙ ((i' ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ o)))))) ∙ ((j' ∘ (k ∘ (l ∘ (m ∘ (n ∘ o))))) ∙ ((k' ∘ (l ∘ (m ∘ (n ∘ o)))) ∙ ((l' ∘ (m ∘ (n ∘ o))) ∙ ((m' ∘ (n ∘ o)) ∙ ((n' ∘ o) ∙ o')))))))).
-Proof.
-  intros f g h i j k l m n o f' g' h' i' j' k' l' m' n' o' H1 H2 H3 H4 H5 H6 H7 H8 H9 H10.
-  set (p := n ∘ o).
-  assert (H11 : ⟦ der ⟧ p = (n' ∘ o) ∙ o'). { unfold p. apply chain_rule; auto. }
-  pose proof chain_rule_9 f g h i j k l m p f' g' h' i' j' k' l' m' ((n' ∘ o) ∙ o') H1 H2 H3 H4 H5 H6 H7 H8 H11 as H12. auto.
-Qed.
-
-Corollary chain_rule_11 : forall f g h i j k l m n o p f' g' h' i' j' k' l' m' n' o' p',
-  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' -> ⟦ der ⟧ j = j' -> ⟦ der ⟧ k = k' -> ⟦ der ⟧ l = l' -> ⟦ der ⟧ m = m' -> ⟦ der ⟧ n = n' -> ⟦ der ⟧ o = o' -> ⟦ der ⟧ p = p' ->
-  ⟦ der ⟧ (f ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ (o ∘ p)))))))))) = (f' ∘ (g ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ (o ∘ p)))))))))) ∙ ((g' ∘ (h ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ (o ∘ p))))))))) ∙ ((h' ∘ (i ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ (o ∘ p)))))))) ∙ ((i' ∘ (j ∘ (k ∘ (l ∘ (m ∘ (n ∘ (o ∘ p))))))) ∙ ((j' ∘ (k ∘ (l ∘ (m ∘ (n ∘ (o ∘ p)))))) ∙ ((k' ∘ (l ∘ (m ∘ (n ∘ (o ∘ p))))) ∙ ((l' ∘ (m ∘ (n ∘ (o ∘ p)))) ∙ ((m' ∘ (n ∘ (o ∘ p))) ∙ ((n' ∘ (o ∘ p)) ∙ ((o' ∘ p) ∙ p'))))))))).
-Proof.
-  intros f g h i j k l m n o p f' g' h' i' j' k' l' m' n' o' p' H1 H2 H3 H4 H5 H6 H7 H8 H9 H10 H11.
-  set (q := o ∘ p).
-  assert (H12 : ⟦ der ⟧ q = (o' ∘ p) ∙ p'). { unfold q. apply chain_rule; auto. }
-  pose proof chain_rule_10 f g h i j k l m n q f' g' h' i' j' k' l' m' n' ((o' ∘ p) ∙ p') H1 H2 H3 H4 H5 H6 H7 H8 H9 H12 as H13. auto.
-Qed.
-
-
-Theorem chain_rule' : forall f g f' g',
-  der g = g' -> der f = f' -> der (f ∘ g) = (f' ∘ g) ∙ g'.
-Proof.
-  apply chain_rule.
+  pose proof chain_rule_2 f g j f' g' ((h' ∘ i) ∙ i') H1 H2 H5 as H6. auto.
 Qed.
 
 Example example_d1 : ⟦ der ⟧ (fun x => x^3) = (fun x => 3 * x^2).
@@ -755,10 +679,10 @@ Definition minimum_value (f: ℝ -> ℝ) (A : Ensemble ℝ) (y : ℝ) :=
   exists x, minimum_point f A x /\ y = f x.
 
 Definition local_maximum_point (f: ℝ -> ℝ) (A : Ensemble ℝ) (x : ℝ) :=
-  x ∈ A /\ ∃ δ, δ > 0 /\ maximum_point f (A ⋂ ⦅x - δ, x + δ⦆) x.
+  x ∈ A /\ ∃ δ, δ > 0 /\ maximum_point f (A ⋂ (x - δ, x + δ)) x.
 
 Definition local_minimum_point (f: ℝ -> ℝ) (A : Ensemble ℝ) (x : ℝ) :=
-  x ∈ A /\ ∃ δ, δ > 0 /\ minimum_point f (A ⋂ ⦅x - δ, x + δ⦆) x.
+  x ∈ A /\ ∃ δ, δ > 0 /\ minimum_point f (A ⋂ (x - δ, x + δ)) x.
 
 Lemma continuous_exists_min_max : forall f a b,
   a < b -> continuous_on f [a, b] -> exists y1 y2, maximum_value f [a, b] y1 /\ minimum_value f [a, b] y2.
@@ -803,7 +727,7 @@ Proof.
 Qed.
 
 Theorem theorem_11_1_b : forall f a b x,
-  minimum_point f ⦅a, b⦆ x -> differentiable_at f x -> ⟦ der x ⟧ f = (λ _, 0). 
+  minimum_point f (a, b) x -> differentiable_at f x -> ⟦ der x ⟧ f = (λ _, 0). 
 Proof.
   intros f a b x [H1 H2] [L H3]. pose proof theorem_11_1_a (-f) a b x as H4. assert (⟦ der x ⟧ (-f) = (λ _ : ℝ, 0) -> ⟦ der x ⟧ f = (λ _ : ℝ, 0)) as H5.
   {
@@ -816,10 +740,10 @@ Proof.
 Qed.
 
 Theorem theorem_11_2_a : forall f a b x,
-  local_maximum_point f ⦅a, b⦆ x -> differentiable_at f x -> ⟦ der x ⟧ f = (λ _, 0).
+  local_maximum_point f (a, b) x -> differentiable_at f x -> ⟦ der x ⟧ f = (λ _, 0).
 Proof.
-  intros f a b x [H1 [δ [H2 H3]]] H4. assert (H5 : maximum_point f (⦅ Rmax a (x - δ), Rmin b (x + δ) ⦆) x).
-  { split. unfold In in *. solve_R. intros y H5. apply H3. replace ((λ x0 : ℝ, a < x0 < b) ⋂ λ x0 : ℝ, x - δ < x0 < x + δ) with (⦅ Rmax a (x - δ), Rmin b (x + δ) ⦆).
+  intros f a b x [H1 [δ [H2 H3]]] H4. assert (H5 : maximum_point f (( Rmax a (x - δ), Rmin b (x + δ) )) x).
+  { split. unfold In in *. solve_R. intros y H5. apply H3. replace ((λ x0 : ℝ, a < x0 < b) ⋂ λ x0 : ℝ, x - δ < x0 < x + δ) with (( Rmax a (x - δ), Rmin b (x + δ) )).
     2 : { apply set_equal_def. intros x0. split; intros H6. unfold In in *; split; unfold In in *; solve_R. apply In_Intersection_def in H6 as [H6 H7]. unfold In in *. solve_R. }
     unfold In in *. solve_R.
   }
@@ -827,7 +751,7 @@ Proof.
 Qed.
 
 Theorem theorem_11_2_b : forall f a b x,
-  local_minimum_point f ⦅a, b⦆ x -> differentiable_at f x -> ⟦ der x ⟧ f = (λ _, 0).
+  local_minimum_point f (a, b) x -> differentiable_at f x -> ⟦ der x ⟧ f = (λ _, 0).
 Proof.
   intros f a b x [H1 [δ [H2 [H3 H4]]]] [L H5]. pose proof theorem_11_2_a (-f) a b x as H6. assert (⟦ der x ⟧ (-f) = (λ _ : ℝ, 0) -> ⟦ der x ⟧ f = (λ _ : ℝ, 0)) as H7.
   {
@@ -851,7 +775,7 @@ Theorem theorem_11_3 : forall f a b,
 Proof.
   intros f a b H1 H2 H3 H4. pose proof continuous_exists_min_max f a b H1 H2 as [y1 [y2 [H5 H6]]].
   pose proof H5 as H5'. pose proof H6 as H6'. destruct H5' as [x1 [[H7 H8] H9]]. destruct H6' as [x2 [[H10 H11] H12]].
-  assert (x1 ∈ ⦅a, b⦆ \/ x2 ∈ ⦅a, b⦆ \/ ((x1 = a \/ x1 = b) /\ (x2 = a \/ x2 = b))) as [H13 | [H13 | [H13 H14]]] by (unfold In in *; lra).
+  assert (x1 ∈ (a, b) \/ x2 ∈ (a, b) \/ ((x1 = a \/ x1 = b) /\ (x2 = a \/ x2 = b))) as [H13 | [H13 | [H13 H14]]] by (unfold In in *; lra).
   - exists x1. split; auto. apply theorem_11_1_a with (a := a) (b := b); auto. unfold maximum_value in H5. 
     unfold maximum_point. split; auto. intros y H14. apply H8. unfold In in *. lra. destruct (H3 x1) as [[_ H15] | [[H14 _] | [H14 _]]]; auto.
     -- exfalso. apply (left_interval_endpoint_open a b x1); auto.
@@ -868,7 +792,7 @@ Proof.
 Qed.
 
 Theorem theorem_11_4 : forall f a b,
-  a < b -> continuous_on f [a, b] -> differentiable_on f ⦅a, b⦆ -> exists x, x ∈ ⦅a, b⦆ /\ ⟦ der x ⟧ f = (λ _, (f b - f a) / (b - a)).
+  a < b -> continuous_on f [a, b] -> differentiable_on f (a, b) -> exists x, x ∈ (a, b) /\ ⟦ der x ⟧ f = (λ _, (f b - f a) / (b - a)).
 Proof.
   intros f a b H1 H2 H3. set (h := fun x => f x - ((f b - f a) / (b - a)) * (x - a)).
   assert (continuous_on h [a, b]) as H4. 
@@ -881,7 +805,7 @@ Proof.
     - apply continuous_on_interval in H2 as [_ [_ H2]]; auto. unfold h. apply left_limit_minus; auto.
       apply left_limit_mult. apply left_limit_const. apply left_limit_minus. apply left_limit_id. apply left_limit_const.
   }
-  assert (differentiable_on h ⦅a, b⦆) as H5.
+  assert (differentiable_on h (a, b)) as H5.
   {
     intros x. left. destruct (H3 x ltac:(auto)) as [[H6 [L H7]] | [[H6 _] | [H6 H7]]].
     - split; auto. exists (L - (f b - f a) / (b - a)). unfold h.
@@ -1143,3 +1067,43 @@ Proof.
   intros f f' g g' a L H1 H2 H3 H4 H5.
 Admitted.
 
+Lemma derivative_on_all_imp_derivative : forall f f',
+  (forall a b, a < b -> ⟦ der ⟧ f [a, b] = f') -> ⟦ der ⟧ f = f'.
+Proof.
+  intros f f' H1 x ε H2. specialize (H1 (x - ε) (x + ε) ltac:(solve_R)) as H3.
+  specialize (H3 x ltac:(solve_R)) as [[H4  H5] | [[H4 _] | [H4 _]]].
+  - specialize (H5 ε H2); auto.
+  - exfalso. apply (not_left_endpoint (x - ε) (x + ε) x); solve_R.
+  - exfalso. apply (not_right_endpoint (x - ε) (x + ε) x); solve_R.
+Qed.
+
+Lemma derivative_on_sub_interval : forall f f' a b c d,
+  a <= c < d <= b -> ⟦ der ⟧ f [a, b] = f' -> ⟦ der ⟧ f [c, d] = f'.
+Proof.
+  intros f f' a b c d H1 H2 x H3.
+  assert (H4 : x ∈ [a, b]) by solve_R.
+  specialize (H2 x H4) as [[H6 H7] | [[H6 H7] | [H6 H7]]].
+  - assert (x = c \/ x = d \/ (c < x < d)) as [H8 | [H8 | H8]] by solve_R.
+    -- subst x. right; left; split.
+      --- apply left_interval_enpoint_closed; lra.
+      --- apply derivative_at_iff in H7; tauto.
+    -- subst x. right; right; split.
+      --- apply right_interval_enpoint_closed; lra.
+      --- apply derivative_at_iff in H7; tauto.
+    -- left; split.
+      --- apply is_interior_point_closed; solve_R.
+      --- assumption.
+  - assert (H8: x = c) by (apply is_left_endpoint_closed in H6; solve_R).
+    subst x. right; left; split.
+    -- apply left_interval_enpoint_closed; lra.
+    -- assumption.
+  - assert (H8: x = d) by (apply is_right_endpoint_closed in H6; solve_R).
+    subst x; right; right; split.
+    -- apply right_interval_enpoint_closed; lra.
+    -- assumption.
+Qed.
+
+Parameter Derive : (R -> R) -> (R -> R).
+
+Axiom Derive_def : forall f : R -> R,
+  differentiable f <-> ⟦ der ⟧ f = Derive f.

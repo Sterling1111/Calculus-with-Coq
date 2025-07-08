@@ -19,7 +19,7 @@ Definition uniformly_continuous_on (f : ℝ -> ℝ) (D : Ensemble ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ δ, δ > 0 /\ ∀ x y, x ∈ D -> y ∈ D -> |x - y| < δ -> |f x - f y| < ε.
 
 Definition continuous (f : ℝ -> ℝ) : Prop :=
-  forall a, ⟦ lim a ⟧ f = f a.
+  forall a, continuous_at f a.
 
 Lemma continuous_on_interval : forall f a b,
     a < b -> (continuous_on f [a, b] <-> ((forall x, x ∈ (a, b) -> ⟦ lim x ⟧ f = f x) /\ ⟦ lim a⁺ ⟧ f = f a /\ ⟦ lim b⁻ ⟧ f = f b)).
@@ -48,7 +48,7 @@ Qed.
 Example example_37_2 : forall c d,
   continuous (fun x => c * x + d).
 Proof.
-  intros c d a. solve_lim.
+  intros c d a. unfold continuous_at. solve_lim.
 Qed.
 
 Module module_37_3.
@@ -537,7 +537,7 @@ Theorem theorem_7_8 : forall α,
   α >= 0 -> { x | x * x = α }.
 Proof.
   intros α H1. destruct (Req_dec α 0) as [H2 | H2]; [ exists 0; lra | ]. assert (H3 : α > 0) by lra. clear H1 H2. rename H3 into H1.
-   set (f := fun x => x * x). assert (H2 : continuous f). { intros a. solve_lim. }
+   set (f := fun x => x * x). assert (H2 : continuous f). { intros a. unfold continuous_at. solve_lim. }
   pose proof Rtotal_order_dec α 1 as [[H3 | H3] | H3].
   - pose proof theorem_7_4 f 0 1 α ltac:(lra) ltac:(apply continuous_imp_continuous_on; auto) ltac:(unfold f; solve_R) as [x [H4 H5]].
     exists x. apply H5.
