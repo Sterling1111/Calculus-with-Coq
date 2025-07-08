@@ -1294,15 +1294,15 @@ Proof.
   intros f a. unfold bounded_On. split; exists (f a); intros x [y [H1 H2]]; replace a with y by solve_R; lra.
 Qed.
 
-Definition Integrable_On (a b : ℝ) (f : ℝ -> ℝ) : Prop :=
+Definition integrable_on (a b : ℝ) (f : ℝ -> ℝ) : Prop :=
   a = b \/ 
   exists (bf : bounded_function_R a b) (sup inf : ℝ), bf.(bounded_f a b) = f /\
   let LS := (fun x : ℝ => exists p : partition_R a b, x = L(bf, p(a, b))) in
   let US := (fun x : ℝ => exists p : partition_R a b, x = U(bf, p(a, b))) in
   is_lub LS sup /\ is_glb US inf /\ sup = inf.
 
-  Lemma Integrable_imp_bounded : forall f a b,
-  a <= b -> Integrable_On a b f -> bounded_On f [a, b].
+  Lemma integrable_imp_bounded : forall f a b,
+  a <= b -> integrable_on a b f -> bounded_On f [a, b].
 Proof.
   intros f a b H0 [H1 | [bf [sup [inf [H2 [H3 [H4 H5]]]]]]].
   - subst. apply bounded_on_n_n.
@@ -1310,17 +1310,17 @@ Proof.
 Qed.
 
 Axiom integrable_dec : forall a b (f : ℝ -> ℝ),
-  {Integrable_On a b f} + {~Integrable_On a b f}.
+  {integrable_on a b f} + {~integrable_on a b f}.
 
 Definition definite_integral a b (f : ℝ -> ℝ) : ℝ :=
   match (Rle_dec a b) with
   | left H1 => match (integrable_dec a b f) with 
-               | left H2 => let bf := mkbounded_function_R a b f H1 (Integrable_imp_bounded f a b H1 H2) in smallest_upper_sum a b bf
+               | left H2 => let bf := mkbounded_function_R a b f H1 (integrable_imp_bounded f a b H1 H2) in smallest_upper_sum a b bf
                | right _ => 0
                end
   | right H1 => match (Rle_dec b a) with
                | left H2 => match (integrable_dec b a f) with 
-                            | left H3 => let bf := mkbounded_function_R b a f H2 (Integrable_imp_bounded f b a H2 H3) in - (smallest_upper_sum b a bf)
+                            | left H3 => let bf := mkbounded_function_R b a f H2 (integrable_imp_bounded f b a H2 H3) in - (smallest_upper_sum b a bf)
                             | right _ => 0
                             end
                | right _ => 0
@@ -1371,17 +1371,17 @@ Proof.
 Qed.
 
 Lemma integral_equiv : forall a b f, 
-  a <= b -> Integrable_On a b f -> exists bf : bounded_function_R a b,
+  a <= b -> integrable_on a b f -> exists bf : bounded_function_R a b,
     bf.(bounded_f a b) = f /\ ∫ a b f = smallest_upper_sum a b bf /\ ∫ a b f = largest_lower_sum a b bf.
 Proof.
   intros a b f H1 H2. assert (a = b \/ a < b) as [H3 | H3] by lra. subst. set (bf := mkbounded_function_R b b f (Rle_refl b) (bounded_on_n_n f b)).
   exists bf. repeat split. rewrite smallest_upper_sum_n_n. apply integral_n_n. rewrite largest_lower_sum_n_n. apply integral_n_n.
-  rename H3 into H1'. pose proof Integrable_imp_bounded f a b H1 H2 as H3.
+  rename H3 into H1'. pose proof integrable_imp_bounded f a b H1 H2 as H3.
   set (bf := mkbounded_function_R a b f H1 H3). exists bf. assert (H4 : bf.(bounded_f a b) = f) by auto. repeat split; auto.
   - unfold definite_integral. destruct (integrable_dec a b f) as [H5 | H5]; try tauto.
     destruct (Rle_dec a b) as [H6 | H6]; try lra.
     destruct bf as [bf]; simpl in *. subst. f_equal. replace H6 with (bounded_function_R_P3). 2 : { apply proof_irrelevance. }
-    replace (Integrable_imp_bounded f a b bounded_function_R_P3 H5) with (bounded_function_R_P4).
+    replace (integrable_imp_bounded f a b bounded_function_R_P3 H5) with (bounded_function_R_P4).
     2 : { apply proof_irrelevance. } reflexivity. 
   - unfold definite_integral; destruct (integrable_dec a b f) as [H5 | H5]; try tauto.
     destruct (Rle_dec a b) as [H7 | H7]; try lra.
@@ -1399,12 +1399,12 @@ Proof.
     }
     destruct (integrable_dec a b f) as [H8 | H8]; try tauto.
     destruct bf as [bf]; simpl in *. subst. f_equal. replace H7 with (bounded_function_R_P3). 2 : { apply proof_irrelevance. }
-    replace (Integrable_imp_bounded f a b bounded_function_R_P3 H5) with (bounded_function_R_P4).
+    replace (integrable_imp_bounded f a b bounded_function_R_P3 H5) with (bounded_function_R_P4).
     2 : { apply proof_irrelevance. } reflexivity.
 Qed.
 
 Lemma integral_eq' : forall a b f,
-  a < b -> Integrable_On a b f -> exists bf r,
+  a < b -> integrable_on a b f -> exists bf r,
     bf.(bounded_f a b) = f /\ ∫ a b f = r /\ is_glb (fun x => exists p : partition_R a b, x = U(bf, p(a, b))) r /\
       is_lub (fun x => exists p : partition_R a b, x = L(bf, p(a, b))) r.
 Proof.
@@ -1429,7 +1429,7 @@ Qed.
 
 Theorem theorem_13_2_a : forall (a b : ℝ) (bf : bounded_function_R a b),
   let f := bf.(bounded_f a b) in
-  a < b -> (Integrable_On a b f <-> (forall ε, ε > 0 -> exists P : partition_R a b, (U(bf, P(a, b)) - L(bf, P(a, b))) < ε)).
+  a < b -> (integrable_on a b f <-> (forall ε, ε > 0 -> exists P : partition_R a b, (U(bf, P(a, b)) - L(bf, P(a, b))) < ε)).
 Proof.
   intros a b bf f' H0. split.
   - intros [H1' | [f [sup [inf [H1 [H2 [H3 H4]]]]]]] ε H5; try lra. replace bf with f in *.
@@ -1638,13 +1638,13 @@ Proof.
   repeat rewrite length_map in *. rewrite length_seq in *. lia.
 Qed.
 
-Lemma integrable_on_n_n : forall f a, Integrable_On a a f.
+Lemma integrable_on_n_n : forall f a, integrable_on a a f.
 Proof.
   intros f a. left. reflexivity.
 Qed.
 
 Theorem theorem_13_3 : forall f a b,
-  a <= b -> continuous_on f [a, b] -> Integrable_On a b f.
+  a <= b -> continuous_on f [a, b] -> integrable_on a b f.
 Proof.
   intros f a b H1 H2. assert (a = b \/ a < b) as [H3 | H3] by lra.
   subst. apply integrable_on_n_n. rename H3 into H1'.
@@ -1729,7 +1729,7 @@ Proof.
 Admitted.
 
 Lemma integrable_on_sub_interval_left : forall f a b c,
-  a < c < b -> Integrable_On a b f -> Integrable_On a c f.
+  a < c < b -> integrable_on a b f -> integrable_on a c f.
 Proof.
   intros f a b c H1 H2. pose proof H2 as H0. destruct H2 as [H2 | [bf1 [sup [inf [H3 [H4 [H5 H6]]]]]]]; [ left; lra |].
   pose proof theorem_13_2_a a b bf1 ltac:(lra) as [H7 _]. rewrite H3 in H7. specialize (H7 H0). clear H0.
@@ -1747,7 +1747,7 @@ Proof.
 Admitted.
 
 Lemma integrable_on_sub_interval : forall f a b c d,
-  a <= c <= d <= b -> Integrable_On a b f -> Integrable_On c d f.
+  a <= c <= d <= b -> integrable_on a b f -> integrable_on c d f.
 Proof.
   intros f a b c d H1. assert (a = b \/ a < b) as [H0 | H0] by lra.
   intros [H0' | [bf [sup [inf [H2 [H3 [H4 H5]]]]]]]; left; lra.
@@ -1761,7 +1761,7 @@ Proof.
 Admitted.
 
 Lemma integral_minus' : forall f a b c,
-  a < b -> c >= 0 -> Integrable_On a (b + c) f -> ∫ a (b + c) f - ∫ a b f = ∫ b (b + c) f.
+  a < b -> c >= 0 -> integrable_on a (b + c) f -> ∫ a (b + c) f - ∫ a b f = ∫ b (b + c) f.
 Proof.
   intros f a b c H1 H2 H3. apply Rge_gt_or_eq in H2 as [H2 | H2]; subst.
   - pose proof integrable_on_sub_interval f a (b + c) a b ltac:(lra) H3 as H4.
@@ -1769,17 +1769,17 @@ Proof.
     pose proof integral_eq' a b f H1 H4 as [bf1 [r1 [H7 [H8 [H9 H10]]]]].
     pose proof integral_eq' b (b + c) f ltac:(lra) H5 as [bf2 [r2 [H11 [H12 [H13 H14]]]]].
     pose proof integral_eq' a (b + c) f ltac:(lra) H3 as [bf3 [r3 [H15 [H16 [H17 H18]]]]].
-    rewrite H8, H12, H16. admit.
-  - admit.
+    rewrite H8, H12, H16. subst. admit.
+  - rewrite Rplus_0_r. rewrite integral_n_n. rewrite Rminus_diag. reflexivity.
 Admitted.
 
 Lemma integral_minus : forall f a b c,
-  Integrable_On a (b + c) f -> ∫ a (b + c) f - ∫ a b f = ∫ b (b + c) f.
+  integrable_on a (b + c) f -> ∫ a (b + c) f - ∫ a b f = ∫ b (b + c) f.
 Proof.
 Admitted.
 
 Theorem theorem_13_7 : forall a b f m M,
-  a <= b -> Integrable_On a b f -> (forall x, x ∈ [a, b] -> m <= f x <= M) ->
+  a <= b -> integrable_on a b f -> (forall x, x ∈ [a, b] -> m <= f x <= M) ->
     m * (b - a) <= ∫ a b f <= M * (b - a).
 Proof.
   intros a b f m M H1 H2 H3. assert (a = b \/ a < b) as [H4 | H4] by lra.
@@ -1788,7 +1788,7 @@ Proof.
   pose proof (integral_eq' a b f H1' H2) as [bf [r [H4 [H5 [H6 H7]]]]]. rewrite H5.
   assert (H8 : forall P, m * (b - a) <= L(bf, P(a, b))).
   {
-    intros P. pose proof Integrable_imp_bounded f a b H1 H2 as H8. rewrite <- H4 in H8.
+    intros P. pose proof integrable_imp_bounded f a b H1 H2 as H8. rewrite <- H4 in H8.
     unfold lower_sum, proj1_sig; destruct (partition_sublist_elem_has_inf (bounded_f a b bf) a b P) as [l1 [H9 H10]].
     rewrite H4 in *.
     replace (b - a) with (∑ 0 (length (points a b P) - 2) (λ i : ℕ, (nth (i+1) (points a b P) 0 - nth i (points a b P) 0))).
@@ -1814,7 +1814,7 @@ Proof.
   }
   assert (H9 : forall P, M * (b - a) >= U(bf, P(a, b))).
   {
-    intros P. pose proof Integrable_imp_bounded f a b H1 H2 as H9. rewrite <- H4 in H9.
+    intros P. pose proof integrable_imp_bounded f a b H1 H2 as H9. rewrite <- H4 in H9.
     unfold upper_sum, proj1_sig; destruct (partition_sublist_elem_has_sup (bounded_f a b bf) a b P) as [l2 [H10 H11]].
     rewrite H4 in *.
     replace (b - a) with (∑ 0 (length (points a b P) - 2) (λ i : ℕ, (nth (i+1) (points a b P) 0 - nth i (points a b P) 0))).
@@ -1853,10 +1853,12 @@ Proof.
   specialize (H8 P1). specialize (H9 P2). lra.
 Qed.
 
-Theorem FTC1 : ∀ f F a b,
-  a < b -> (∀ x, x ∈ [a, b] -> ∫ a x f = (F x)) -> continuous_on f [a, b] -> ⟦ der ⟧ F [a, b] = f.
+Theorem FTC1 : ∀ f a b,
+  a < b -> continuous_on f [a, b] -> ⟦ der ⟧ (λ x, ∫ a x f) [a, b] = f.
 Proof.
-  intros f F a b H1 H2 H3 c H4.
+  intros f a b H1 H3 c H4. set (F := λ x, ∫ a x f).
+  assert (H2 : (∀ x, x ∈ [a, b] -> ∫ a x f = (F x))).
+  { intros x H5. reflexivity. }
   assert (exists m, forall h, (h ∈ (0, b - c) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (m h)) /\ 
                          (h ∈ (a - c, 0) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (m h))) as [m H5].
   {
@@ -1912,7 +1914,7 @@ Proof.
     {
       pose proof interval_has_sup as H7. intros h H8.
       assert (continuous_on f [c + h, c]) as H9.
-      { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H9. unfold Ensembles.In in *. solve_R. }
+      { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H9. solve_R. }
       pose proof continuous_imp_bounded f (c + h) c ltac:(unfold In in *; lra) H9 as H10.
       specialize (H7 (c + h) c f ltac:(unfold In in *; lra) H10) as [sup H11]. exists sup; auto. 
     }
@@ -1944,9 +1946,9 @@ Proof.
     intros h' H9. unfold Ensembles.In in *. repeat rewrite <- H2; solve_R. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in *.
     2 : {
        assert (a = c \/ a < c) as [H10 | H10] by lra; clear H4; rename H10 into H4. subst. rewrite integral_n_n. auto. lra.
-       rewrite integral_minus; auto. apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. unfold Ensembles.In in *. solve_R. }
-    assert (H10 : Integrable_On c (c + h') f).
-    { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. unfold Ensembles.In in *. solve_R. }
+       rewrite integral_minus; auto. apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. solve_R. }
+    assert (H10 : integrable_on c (c + h') f).
+    { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. solve_R. }
     assert (H11 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c <= x0 <= c + h') → m h' <= f x <= M h').
     { 
       intros x H11. unfold Ensembles.In in *. destruct H11 as [H11 H12]. specialize (H5 h') as [H5 _]. specialize (H5 ltac:(solve_R)).
@@ -1963,9 +1965,9 @@ Proof.
   assert (H10 : forall h, h ∈ (a - c, 0) -> m h <= (F (c + h) - F c) / h <= M h).
   {
     intros h' H10. unfold Ensembles.In in *. repeat rewrite <- H2; solve_R. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in *.
-    2 : { rewrite integral_minus; auto. apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. unfold Ensembles.In in *. solve_R. }
-    assert (H11 : Integrable_On (c + h') c f).
-    { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. unfold Ensembles.In in *. solve_R. }
+    2 : { rewrite integral_minus; auto. apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. solve_R. }
+    assert (H11 : integrable_on (c + h') c f).
+    { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. solve_R. }
     assert (H12 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c + h' <= x0 <= c) → m h' <= f x <= M h').
     { 
       intros x H12. unfold Ensembles.In in *. destruct H12 as [H12 H13]. specialize (H5 h') as [_ H5]. specialize (H6 h') as [_ H6].
@@ -1981,136 +1983,133 @@ Proof.
     } lra.
   }
   assert (c = a \/ c = b \/ a < c < b) as [H11 | [H11 | H11]] by solve_R; clear H4; rename H11 into H4.
-  - 
-  assert (H11 : ⟦ lim 0⁺ ⟧ m = f c).
-  {
-    intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [_ [H12 _]].
-    specialize (H12 ε H11) as [δ [H13 H14]]. exists (Rmin (δ/2) (b-c)). split. solve_R. 
-    intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
-    - specialize (H5 ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
-      { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
-      pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra) H17 as [x0 [H18 H19]].
-      replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
-      assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. subst. 
-      apply H14. unfold Ensembles.In in *. solve_R.
-    - specialize (H5' ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
-      { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
-      pose proof continuous_function_attains_glb_on_interval f (c + x) c ltac:(lra) H17 as [x0 [H18 H19]].
-      replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
-      assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. subst. apply H14. unfold Ensembles.In in *. solve_R.
-  }
-  assert (H12 : ⟦ lim 0⁺ ⟧ M = f c).
-  {
-    intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [_ [H13 _]].
-    specialize (H13 ε H12) as [δ [H14 H15]]. exists (Rmin (δ/2) (b-c)). split. solve_R.
-    intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
-    - specialize (H6 ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
-      { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
-      pose proof continuous_function_attains_lub_on_interval f c (c + x) ltac:(lra) H18 as [x0 [H19 H20]].
-      replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
-      assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst.
-      apply H15. unfold Ensembles.In in *. solve_R.
-    - specialize (H6' ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
-      { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
-      pose proof continuous_function_attains_lub_on_interval f (c + x) c ltac:(lra) H18 as [x0 [H19 H20]].
-      replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
-      assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst. apply H15. unfold Ensembles.In in *. solve_R.
-  }
-  pose proof limit_sandwich_right m (λ h : ℝ, (F (c + h) - F c) / h) M 0 (b - c) (f c) ltac:(lra) H11 H12 H9 as H14.
-  right; left; split; [ exists (Rmin (b - c) (b - a)); split | ]; solve_R.
+  - assert (H11 : ⟦ lim 0⁺ ⟧ m = f c).
+    {
+      intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [_ [H12 _]].
+      specialize (H12 ε H11) as [δ [H13 H14]]. exists (Rmin (δ/2) (b-c)). split. solve_R. 
+      intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
+      - specialize (H5 ltac:(solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H17. solve_R. auto. }
+        pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra) H17 as [x0 [H18 H19]].
+        replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. subst. apply H14. solve_R.
+      - specialize (H5' ltac:(solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H17. solve_R. auto. }
+        pose proof continuous_function_attains_glb_on_interval f (c + x) c ltac:(lra) H17 as [x0 [H18 H19]].
+        replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. subst. apply H14. solve_R.
+    }
+    assert (H12 : ⟦ lim 0⁺ ⟧ M = f c).
+    {
+      intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [_ [H13 _]].
+      specialize (H13 ε H12) as [δ [H14 H15]]. exists (Rmin (δ/2) (b-c)). split. solve_R.
+      intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
+      - specialize (H6 ltac:(solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H18. solve_R. auto. }
+        pose proof continuous_function_attains_lub_on_interval f c (c + x) ltac:(lra) H18 as [x0 [H19 H20]].
+        replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst.
+        apply H15. solve_R.
+      - specialize (H6' ltac:(solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H18. solve_R. auto. }
+        pose proof continuous_function_attains_lub_on_interval f (c + x) c ltac:(lra) H18 as [x0 [H19 H20]].
+        replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst. apply H15. solve_R.
+    }
+    pose proof limit_sandwich_right m (λ h : ℝ, (F (c + h) - F c) / h) M 0 (b - c) (f c) ltac:(lra) H11 H12 H9 as H14.
+    right; left; split; [ exists (Rmin (b - c) (b - a)); split | ]; solve_R.
   - assert (H11 : ⟦ lim 0⁻ ⟧ m = f c).
     {
       intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [_ [_ H12]].
       specialize (H12 ε H11) as [δ [H13 H14]]. exists (Rmin (δ/2) (c-a)). split. solve_R.
       intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
-      - specialize (H5 ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
-        { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
+      - specialize (H5 ltac:(solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H17. solve_R. auto. }
         pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra) H17 as [x0 [H18 H19]].
         replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
         assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. subst.
-        apply H14. unfold Ensembles.In in *. solve_R.
-      - specialize (H5' ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
-        { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
+        apply H14. solve_R.
+      - specialize (H5' ltac:(solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H17. solve_R. auto. }
         pose proof continuous_function_attains_glb_on_interval f (c + x) c ltac:(lra) H17 as [x0 [H18 H19]].
         replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
         assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. subst. apply H14. solve_R.
     }
-  assert (H12 : ⟦ lim 0⁻ ⟧ M = f c).
-  {
-    intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [_ [_ H13]].
-    specialize (H13 ε H12) as [δ [H14 H15]]. exists (Rmin (δ/2) (c-a)). split. solve_R.
-    intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
-    - specialize (H6 ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
-      { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
-      pose proof continuous_function_attains_lub_on_interval f c (c + x) ltac:(lra) H18 as [x0 [H19 H20]].
-      replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
-      assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst.
-      apply H15. unfold Ensembles.In in *. solve_R.
-    - specialize (H6' ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
-      { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
-      pose proof continuous_function_attains_lub_on_interval f (c + x) c ltac:(lra) H18 as [x0 [H19 H20]].
-      replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
-      assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst. apply H15. solve_R.
-  }
-  pose proof limit_sandwich_left m (λ h : ℝ, (F (c + h) - F c) / h) M (a - c) 0 (f c) ltac:(lra) H11 H12 H10 as H14. right. right.
-  split. exists (Rmin (c-a) (b-a)). split. solve_R. intros x. split. intros H15. unfold Ensembles.In in *. solve_R.
-  intros H15. unfold Ensembles.In in *. solve_R. auto.
-  -
-
-  assert (H11 : ⟦ lim 0 ⟧ m = f c).
-  {
-    intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [H12 _].
-      specialize (H12 c ltac:(unfold Ensembles.In in *; solve_R)) as H12. specialize (H12 ε H11) as [δ [H13 H14]].
-    exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split. unfold Ensembles.In in *. solve_R.
-    intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
-    - specialize (H5 ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
-      { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
-      pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra) H17 as [x0 [H18 H19]].
-      replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
-      assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. 
-      apply H14. unfold Ensembles.In in *. solve_R.
-    - specialize (H5' ltac:(unfold Ensembles.In in *; solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
-      { apply continuous_on_subset with (A2 := [a, b]). intros y H17. unfold Ensembles.In in *. solve_R. auto. }
-      pose proof continuous_function_attains_glb_on_interval f (c + x) c ltac:(lra) H17 as [x0 [H18 H19]].
-      replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
-      assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. 
-      apply H14. unfold Ensembles.In in *. solve_R.
-  }
-  assert (H12 : ⟦ lim 0 ⟧ M = f c).
-  {
-    intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [H13 _].
-    specialize (H13 c ltac:(unfold Ensembles.In in *; solve_R)). specialize (H13 ε H12) as [δ [H14 H15]].
-    exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split; auto. unfold Ensembles.In in *. solve_R.
-    intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
-    - specialize (H6 ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
-      { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
-      pose proof continuous_function_attains_lub_on_interval f c (c + x) ltac:(lra) H18 as [x0 [H19 H20]].
-      replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
-      assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. 
-      apply H15. unfold Ensembles.In in *. solve_R.
-    - specialize (H6' ltac:(unfold Ensembles.In in *; solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
-      { apply continuous_on_subset with (A2 := [a, b]). intros y H18. unfold Ensembles.In in *. solve_R. auto. }
-      pose proof continuous_function_attains_lub_on_interval f (c + x) c ltac:(lra) H18 as [x0 [H19 H20]].
-      replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
-      assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R.
-      apply H15. unfold Ensembles.In in *. solve_R.
-  }
-  pose proof limit_sandwich m (fun h => (F (c + h) - F c) / h) M (a - c) (b - c) 0 (f c) ltac:(lra) ltac:(solve_R) H11 H12 ltac:(autoset) as H14.
-  left. split; auto. unfold interior_point. exists (Rmin (c - a) (b - c)). split; solve_R.
+    assert (H12 : ⟦ lim 0⁻ ⟧ M = f c).
+    {
+      intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [_ [_ H13]].
+      specialize (H13 ε H12) as [δ [H14 H15]]. exists (Rmin (δ/2) (c-a)). split. solve_R.
+      intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
+      - specialize (H6 ltac:(solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H18. solve_R. auto. }
+        pose proof continuous_function_attains_lub_on_interval f c (c + x) ltac:(lra) H18 as [x0 [H19 H20]].
+        replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst.
+        apply H15. solve_R.
+      - specialize (H6' ltac:(solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H18. solve_R. auto. }
+        pose proof continuous_function_attains_lub_on_interval f (c + x) c ltac:(lra) H18 as [x0 [H19 H20]].
+        replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. subst. apply H15. solve_R.
+    }
+    pose proof limit_sandwich_left m (λ h : ℝ, (F (c + h) - F c) / h) M (a - c) 0 (f c) ltac:(lra) H11 H12 H10 as H14. right. right.
+    split. exists (Rmin (c-a) (b-a)). split. solve_R. intros x. split. intros H15. solve_R.
+    intros H15. solve_R. auto.
+  - assert (H11 : ⟦ lim 0 ⟧ m = f c).
+    {
+      intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [H12 _].
+        specialize (H12 c ltac:(solve_R)) as H12. specialize (H12 ε H11) as [δ [H13 H14]].
+      exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split. solve_R.
+      intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
+      - specialize (H5 ltac:(solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+        { apply continuous_on_subset with (A2 := [a, b]); auto. intros y H17. solve_R. }
+        pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra) H17 as [x0 [H18 H19]].
+        replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. 
+        apply H14. solve_R.
+      - specialize (H5' ltac:(solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+        { apply continuous_on_subset with (A2 := [a, b]); auto. intros y H17. solve_R. }
+        pose proof continuous_function_attains_glb_on_interval f (c + x) c ltac:(lra) H17 as [x0 [H18 H19]].
+        replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R.
+        apply H14. solve_R.
+    }
+    assert (H12 : ⟦ lim 0 ⟧ M = f c).
+    {
+      intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [H13 _].
+      specialize (H13 c ltac:(solve_R)). specialize (H13 ε H12) as [δ [H14 H15]].
+      exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split; auto. solve_R.
+      intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
+      - specialize (H6 ltac:(solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H18. solve_R. auto. }
+        pose proof continuous_function_attains_lub_on_interval f c (c + x) ltac:(lra) H18 as [x0 [H19 H20]].
+        replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R. 
+        apply H15. solve_R.
+      - specialize (H6' ltac:(solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
+        { apply continuous_on_subset with (A2 := [a, b]). intros y H18. solve_R. auto. }
+        pose proof continuous_function_attains_lub_on_interval f (c + x) c ltac:(lra) H18 as [x0 [H19 H20]].
+        replace (M x) with (f x0). 2 : { apply lub_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c + x <= x1 <= c) ∧ y = f x0)); auto. }
+        assert (x0 = c \/ x0 <> c) as [H21 | H21] by lra. subst. solve_R.
+        apply H15. solve_R.
+    }
+    pose proof limit_sandwich m (fun h => (F (c + h) - F c) / h) M (a - c) (b - c) 0 (f c) ltac:(lra) ltac:(solve_R) H11 H12 ltac:(autoset) as H14.
+    left. split; auto. unfold interior_point. exists (Rmin (c - a) (b - c)). split; solve_R.
 Qed.
 
 Theorem FTC2 : ∀ a b f g,
     a < b -> continuous_on f [a, b] -> ⟦ der ⟧ g [a, b] = f -> ∫ a b f = g b - g a.
 Proof.
-  intros a b f g H1 H2 H3. (set (F := fun x => ∫ a x f)). assert (H4 : ⟦ der ⟧ F [a, b] = f).
+  intros a b f g H1 H2 H3.
+  (set (F := fun x => ∫ a x f)). assert (H4 : ⟦ der ⟧ F [a, b] = f).
   { unfold F. apply FTC1; auto. }
   assert (exists c, forall x, x ∈ [a, b] -> F x = g x + c) as [c H5].
   { apply corollary_11_2 with (f' := f) (g' := f); auto. }
   assert (H6 : F a = 0).
   { unfold F. apply integral_eq. reflexivity. }
   assert (H7 : c = - g a).
-  { specialize (H5 a ltac:(unfold Ensembles.In in *; solve_R)). lra. }
-  specialize (H5 b ltac:(unfold Ensembles.In in *; solve_R)). unfold F in H5. lra.
+  { specialize (H5 a ltac:(solve_R)). lra. }
+  specialize (H5 b ltac:(solve_R)). unfold F in H5. lra.
 Qed.
 
 Example FTC2_test : ∫ 0 1 (λ x : ℝ, 2 * x) = 1.
@@ -2162,4 +2161,67 @@ Proof.
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
 
+Close Scope program_scope.
+
+Theorem theorem_2_ : forall f g g' a b,
+  ⟦ der ⟧ g = g' -> continuous f -> continuous g' ->
+    ∫ (g a) (g b) f = ∫ a b ((f ∘ g) ∙ g').
+Proof.
+  intros f g g' a b H1 H2 H3. assert (H4 : continuous g).
+  { intros x. apply theorem_9_1_a. specialize (H1 x). apply derivative_at_imp_differentiable_at with (f' := g'). auto. }
+  
+  - subst. repeat rewrite integral_n_n. reflexivity.
+  - assert (g a = g b \/ g a < g b \/ g b < g a) as [H5 | [H5 | H5]] by lra.
+    -- assert (a = g a \/ a < g a \/ g a < a) as [H6 | [H6 | H6]] by lra.
+       * pose proof (theorem_7_3 g a b H4).
+        set (E := fun )
+        set (F := fun x => ∫ a x f). rewrite FTC2 with (a := a) (g := F ∘ g); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R.
+         admit. admit. apply continuous_imp_continuous_on; auto. apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
+       * set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); auto. rewrite FTC2 with (g := F ∘ g); auto. admit. admit.
+         apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := a) (b := g b); try lra; auto. apply FTC1; solve_R.
+         apply continuous_imp_continuous_on; auto.
+       * set (F := fun x => ∫ (g a) x f). rewrite FTC2 with (g := F); auto. rewrite FTC2 with (g := F ∘ g); auto. admit.
+         apply derivative_on_sub_interval with (a := g a) (b := b); solve_R. admit. apply continuous_imp_continuous_on; auto. apply FTC1; solve_R.
+         apply continuous_imp_continuous_on; auto.
+    -- assert (a = g a \/ a < g a \/ g a < a) as [H6 | [H6 | H6]] by lra.
+       * rewrite <- H6. set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); auto. rewrite <- H6. lra.
+         admit. admit. apply continuous_imp_continuous_on; auto. apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
+       * set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); auto. rewrite FTC2 with (g := F ∘ g); auto. admit. admit. 
+         apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := a) (b := g b); try lra; auto. apply FTC1; solve_R.
+         apply continuous_imp_continuous_on; auto.
+       * set (F := fun x => ∫ (g a) x f). rewrite FTC2 with (g := F); auto. rewrite FTC2 with (g := F ∘ g); auto. admit.
+         apply derivative_on_sub_interval with (a := g a) (b := b); solve_R. admit. apply continuous_imp_continuous_on; auto. apply FTC1; solve_R.
+         apply continuous_imp_continuous_on; auto.
+    -- assert (a = g b \/ a < g b \/ g b < a) as [H6 | [H6 | H6]]; solve_R.
+       * rewrite integral_neg. set (F := fun x => ∫ (g b) x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R. admit.
+         admit. apply continuous_imp_continuous_on; auto. apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
+       * rewrite integral_neg. set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R. admit.
+         admit. apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := a) (b := g a); solve_R.
+         apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
+       * rewrite integral_neg. set (F := fun x => ∫ (g b) x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R. admit.
+         admit. apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := g b) (b := g a); solve_R.
+         apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
+  - rewrite integral_neg with (a := a). assert (g a = g b \/ g a < g b \/ g b < g a) as [H5 | [H5 | H5]] by lra.
+    -- set (F := fun x => ∫ b x f). rewrite FTC2 with (f := (λ x : ℝ, f (g x) * g' x)) (g := F ∘ g); auto. rewrite H5. rewrite integral_n_n. rewrite Rminus_diag. lra.
+       admit. admit.
+    -- assert (a = g a \/ a < g a \/ g a < a) as [H6 | [H6 | H6]] by lra.
+       * rewrite <- H6. set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); auto. rewrite <- H6. lra.
+         admit. admit. apply continuous_imp_continuous_on; auto. apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
+       * set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); auto. rewrite FTC2 with (g := F ∘ g); auto. lra. admit. admit.
+         apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := a) (b := g b); try lra; auto. apply FTC1; solve_R.
+         apply continuous_imp_continuous_on; auto.
+       * set (F := fun x => ∫ (g a) x f). rewrite FTC2 with (g := F); auto. rewrite FTC2 with (g := F ∘ g); auto. lra. admit. admit.
+         apply continuous_imp_continuous_on; auto. apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
+    -- rewrite integral_neg. assert (a = g b \/ a < g b \/ g b < a) as [H6 | [H6 | H6]]; solve_R.
+       * set (F := fun x => ∫ (g b) x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R. admit. admit.
+         apply continuous_imp_continuous_on; auto. apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
+       * set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R. admit.
+         admit. apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := a) (b := g a); solve_R.
+         apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
+       * set (F := fun x => ∫ (g b) x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R. admit.
+         admit. apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := g b) (b := g a); solve_R.
+         apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
+Admitted.
+
 Definition π := 2 * ∫ (-1) 1 (λ x, √(1 - x^2)).
+
