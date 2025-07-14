@@ -516,7 +516,7 @@ Proof.
   intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
 Qed.
 
-Lemma limit_sandwich : forall f1 f2 f3 a b c L,
+Lemma squeeze_theorem : forall f1 f2 f3 a b c L,
   a < b -> c ∈ (a, b) -> ⟦ lim c ⟧ f1 = L -> ⟦ lim c ⟧ f3 = L -> (forall x, x ∈ ((a, c) ⋃ (c, b)) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c ⟧ f2 = L.
 Proof.
   intros f1 f2 f3 a b c L H1 H2 H3 H4 H5 ε H6. specialize (H3 ε H6) as [δ1 [H7 H8]].
@@ -531,7 +531,7 @@ Proof.
   specialize (H5 x H13). assert (f1 x <= f2 x <= f3 x) as H15 by auto. solve_R.
 Qed.
 
-Lemma limit_sandwich_right : forall f1 f2 f3 c b L,
+Lemma squeeze_theorem_right : forall f1 f2 f3 c b L,
   c < b -> ⟦ lim c⁺ ⟧ f1 = L -> ⟦ lim c⁺ ⟧ f3 = L -> (forall x, x ∈ (c, b) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c⁺ ⟧ f2 = L.
 Proof.
   intros f1 f2 f3 b c L H1 H2 H3 H4 ε H5. specialize (H3 ε H5) as [δ1 [H6 H7]].
@@ -542,7 +542,7 @@ Proof.
   solve_R.
 Qed.
 
-Lemma limit_sandwich_left : forall f1 f2 f3 a c L,
+Lemma squeeze_theorem_left : forall f1 f2 f3 a c L,
   a < c -> ⟦ lim c⁻ ⟧ f1 = L -> ⟦ lim c⁻ ⟧ f3 = L -> (forall x, x ∈ (a, c) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c⁻ ⟧ f2 = L.
 Proof.
   intros f1 f2 f3 a c L H1 H2 H3 H4 ε H5. specialize (H3 ε H5) as [δ1 [H6 H7]].
