@@ -1060,12 +1060,14 @@ Proof.
 Qed.
 
 (* L'hopitals rule *)
+(*
 Theorem theorem_11_9 : forall f f' g g' a L,
   ⟦ lim a ⟧ f = 0 -> ⟦ lim a ⟧ g = 0 -> ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = g' -> ⟦ lim a ⟧ (f' / g') = L ->
     ⟦ lim a ⟧ (f / g) = L.
 Proof.
   intros f f' g g' a L H1 H2 H3 H4 H5.
-Admitted.
+Qed.
+*)
 
 Lemma derivative_on_all_imp_derivative : forall f f',
   (forall a b, a < b -> ⟦ der ⟧ f [a, b] = f') -> ⟦ der ⟧ f = f'.
