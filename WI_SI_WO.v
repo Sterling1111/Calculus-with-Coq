@@ -9,15 +9,14 @@ Definition strong_induction_nat := ∀ P : ℕ → Prop, (∀ m, (∀ k, k < m �
 
 Definition well_ordering_nat := ∀ E, E ≠ ∅ → (∃ n, n ∈ E ∧ ∀ m, m ∈ E → (n ≤ m)).
 
-Definition well_ordering_principle_contrapositive_nat := forall E : nat -> Prop,
-  (~(exists m, E m /\ forall k, E k -> m <= k)) -> (~(exists n, E n)).
+Definition well_ordering_principle_contrapositive_nat := ∀ E : nat -> Prop,
+  (~(∃ m, E m /\ ∀ k, E k -> m <= k)) -> (~(∃ n, E n)).
 
 Lemma induction_imp_induction_nat : induction_nat.
 Proof.
-  unfold induction_nat. intros P [H_base H_ind] n.
-  induction n as [| k IH].
-  - apply H_base.
-  - apply H_ind. apply IH.
+  unfold induction_nat. intros P [H1 H2] n. induction n as [| k IH].
+  - apply H1.
+  - apply H2. apply IH.
 Qed.
 
 Lemma lemma_2_10 : well_ordering_nat -> induction_nat.
