@@ -124,9 +124,9 @@ Proof.
     [exists 0 | exists 1 | exists 1 |]; try (simpl; lia).
   set (E t := t * (t + 1) / 2 > n). assert (exists t, E t) as H2.
   { exists n. unfold E. pose proof sum_n_divisible n as [j H3]. rewrite H3. rewrite Nat.div_mul; nia. }
-  pose proof WI_SI_WO as [_ [_ WO]]. apply WO in H2 as [t [H2 H3]].
+  pose proof WI_SI_WO as [_ [_ WO]]. apply not_Empty_In in H2. apply WO in H2 as [t [H2 H3]].
   exists (t - 1). assert (t = 0 \/ t > 0) as [H4 | H4] by lia.
-  - rewrite H4 in H2. unfold E in H2. simpl in H2. lia.
+  - unfold Ensembles.In in H2. rewrite H4 in H2. unfold E in H2. simpl in H2. lia.
   - split.
     -- unfold E in H2. pose proof classic ((t - 1) * (t - 1 + 1) / 2 <= n) as [H5 | H5]; auto.
        apply not_le in H5. specialize (H3 (t - 1) H5); lia.
