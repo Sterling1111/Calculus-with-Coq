@@ -32,6 +32,10 @@ Notation "⟦ 'lim' a ⟧ f D '=' L" :=
   (limit_on f D a L)
     (at level 70, f at level 0, D at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  D  '='  L").
 
+Definition circle (a b r : ℝ) : Ensemble (ℝ * ℝ) :=
+  fun p => let (x, y) := p in
+  (x - a)^2 + (y - b)^2 = r^2.
+
 Lemma limit_imp_limit_on : forall f L D a,
   ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ f D = L.
 Proof.
