@@ -2162,4 +2162,12 @@ Proof.
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
 
-Definition π := 2 * ∫ (-1) 1 (λ x, √(1 - x^2)).
+Theorem theorem_19_2 : forall f g g' a b,
+  ⟦ der ⟧ g = g' -> continuous f -> continuous g' ->
+    ∫ (g a) (g b) f = ∫ a b ((f ∘ g') ∙ g').
+Proof.
+  intros f g g' a b H1 H2 H3. assert (a = b \/ a < b \/ a > b) as [H4 | [H4 | H4]] by lra.
+  - subst. repeat rewrite integral_n_n. reflexivity.
+  - pose proof theorem_13_3 f a b ltac:(lra) ltac:(apply (continuous_imp_continuous_on f [a, b] H2)) as H5.
+    pose proof FTC2.
+Admitted.
