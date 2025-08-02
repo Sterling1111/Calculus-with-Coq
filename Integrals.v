@@ -2042,11 +2042,52 @@ Proof.
     apply integrable_on_sub_interval_right with (a := a) (c := c); try lra. right. exists bf, sup, inf; auto.
 Qed.
 
+Lemma integral_bound : forall a b bf P,
+  let f := bounded_f a b bf in
+    a < b -> integrable_on a b f -> L(bf, P) <= ∫ a b f <= U(bf, P).
+Proof.
+  intros a b bf P f H1 H2. pose proof integral_eq' a b f H1 H2 as [bf' [sup [H3 [H4 [H5 H6]]]]].
+  replace bf' with bf in * by (destruct bf, bf'; simpl in *; subst; f_equal; apply proof_irrelevance).
+  subst. split.
+  - apply lub_ge_all_In with (E := λ x : ℝ, ∃ p : partition a b, x = (L(bf, p))); auto. exists P; reflexivity.
+  - apply glb_le_all_In with (E := λ x : ℝ, ∃ p : partition a b, x = (U(bf, p))); auto. exists P; reflexivity.
+Qed.
+
 Lemma integral_plus : forall f a b c,
   a < c < b -> integrable_on a b f -> ∫ a b f = ∫ a c f + ∫ c b f.
 Proof.
   intros f a b c H1 H2. pose proof integrable_on_sub_interval f a b c b ltac:(solve_R) H2 as H3.
   pose proof integrable_on_sub_interval f a b a c ltac:(solve_R) H2 as H4.
+  assert (a <= b /\ a <= c /\ c <= b) as [H5 [H6 H7]] by (split; lra).
+  pose proof integrable_imp_bounded f a b ltac:(lra) H2 as H8.
+  pose proof integrable_imp_bounded f a c ltac:(lra) H4 as H9.
+  pose proof integrable_imp_bounded f c b ltac:(lra) H3 as H10. 
+  set (bf := mkbounded_function_R a b f H5 H8).
+  set (bf' := mkbounded_function_R a c f H6 H9).
+  set (bf'' := mkbounded_function_R c b f H7 H10).
+  pose proof theorem_13_2_a a c bf' ltac:(lra) as H11. replace (bounded_f a c bf') with f in H11 by auto. pose proof H4 as H4'. rewrite H11 in H4.
+  pose proof theorem_13_2_a c b bf'' ltac:(lra) as H12. replace (bounded_f c b bf'') with f in H12 by auto. pose proof H3 as H3'. rewrite H12 in H3.
+  assert (H19 : forall ε, 0 < ε -> |∫ a b f - (∫ a c f + ∫ c b f)| < ε).
+  {
+    intros ε H19.
+    specialize (H4 (ε/2) ltac:(lra)) as [P' H20]. specialize (H3 (ε/2) ltac:(lra)) as [P'' H21]. set (l' := P'.(points a c)).
+    set (l'' := P''.(points c b)). set (l := firstn (length l' - 1) l' ++ [c] ++ skipn 1 l'').
+    assert (H22 : a < b) by lra.
+    assert (H23 : Sorted Rlt l) by admit.
+    assert (H24 : List.In a l) by admit.
+    assert (H25 : List.In b l) by admit.
+    assert (H26 : forall x, List.In x l -> a <= x <= b) by admit.
+    set (P := mkpartition a b l H22 H23 H24 H25 H26).
+    assert (H27 : points a c P' = firstn (length l' - 1) l' ++ [c]) by admit.
+    assert (H28 : points c b P'' = [c] ++ skipn 1 l'') by admit.
+    pose proof upper_sum_plus f a b c P P' P'' bf bf' bf'' (firstn (length l' - 1) l') (skipn 1 l'') H1 ltac:(repeat split; auto) as H29.
+    pose proof lower_sum_plus f a b c P P' P'' bf bf' bf'' (firstn (length l' - 1) l') (skipn 1 l'') H1 ltac:(repeat split; auto) as H30.
+    assert (H31 : L(bf', P') <= ∫ a c f <= U(bf', P')) by (apply integral_bound; solve_R).
+    assert (H32 : L(bf'', P'') <= ∫ c b f <= U(bf'', P'')) by (apply integral_bound; solve_R).
+    assert (H33 : L(bf, P) <= ∫ a b f <= U(bf, P)) by (apply integral_bound; solve_R).
+    solve_R.
+  }
+  apply (cond_eq (∫ a b f) (∫ a c f + ∫ c b f) H19).
 Admitted.
 
 Lemma integral_plus' : forall f a b c,
