@@ -559,12 +559,6 @@ Proof.
   destruct (theorem_7_8 x H2) as [y H3]. auto.
 Qed.
 
-Lemma sqrt_ge_0 : forall x, 
-  sqrt x >= 0.
-Proof.
-  intros x. 
-Qed.
-
 Lemma continuous_on_subset : forall A1 A2 f,
   A1 ⊆ A2 -> continuous_on f A2 -> continuous_on f A1.
 Proof.
