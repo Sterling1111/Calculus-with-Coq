@@ -1889,6 +1889,14 @@ Proof.
   intros l x H1. apply in_split; auto.
 Qed.
 
+Lemma list_in_first_app : forall a l1 l2,
+  nth 0 (l1 ++ l2) 0 = a -> l1 <> [] -> List.In a l1.
+Proof.
+  intros a l1 l2 H1 H2. destruct l1 as [| h t].
+  - exfalso. apply H2. reflexivity.
+  - simpl in H1. left. auto.
+Qed.
+
 Lemma integrable_on_sub_interval_left : forall f a b c,
   a < c < b -> integrable_on a b f -> integrable_on a c f.
 Proof.
@@ -1911,10 +1919,18 @@ Proof.
        - unfold l1; pose proof (Sorted_Rlt_app (l' ++ [c]) l'' H18) as [H19 H20]; auto.
        - rewrite <- app_assoc in H18. unfold l2; pose proof (Sorted_Rlt_app l' ([c] ++ l'') H18) as [H19 H20]; auto.
     }
-    assert (List.In a l1) as H21 by admit.
-    assert (List.In c l1) as H22 by admit.
+    assert (List.In a l1) as H21. 
+    {
+      assert (H20 : List.In a l). { destruct P; auto. }
+      assert (H21 : l' <> []). { intros H21. subst. simpl in H15. pose proof partition_first a b P as H21.
+        replace (points a b P) with (c :: l'') in * by auto. simpl in H21. lra. }
+        unfold l1. apply in_or_app. left. 
+      apply list_in_first_app with (l2 := l'); auto. 
+      subst. 
+    } subst.
+    assert (List.In c l1) as H22. { apply in_or_app. right. left; auto. }
     assert (forall x, List.In x l1 -> a <= x <= c) as H23 by admit.
-    assert (List.In c l2) as H24 by admit.
+    assert (List.In c l2) as H24. { left; auto. }
     assert (List.In b l2) as H25 by admit.
     assert (forall x, List.In x l2 -> c <= x <= b) as H26 by admit.
     set (P' := mkpartition a c l1 H16 H18 H21 H22 H23).
@@ -2200,8 +2216,6 @@ Theorem FTC1 : ∀ f a b,
   a < b -> continuous_on f [a, b] -> ⟦ der ⟧ (λ x, ∫ a x f) [a, b] = f.
 Proof.
   intros f a b H1 H3 c H4. set (F := λ x, ∫ a x f).
-  assert (H2 : (∀ x, x ∈ [a, b] -> ∫ a x f = (F x))).
-  { intros x H5. reflexivity. }
   assert (exists m, forall h, (h ∈ (0, b - c) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c, c + h] /\ y = f x) (m h)) /\ 
                          (h ∈ (a - c, 0) -> is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) (m h))) as [m H5].
   {
@@ -2286,43 +2300,43 @@ Proof.
   }
   assert (H9 : forall h, h ∈ (0, b - c) -> m h <= (F (c + h) - F c) / h <= M h).
   {
-    intros h' H9. unfold Ensembles.In in *. repeat rewrite <- H2; solve_R. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in *.
+    intros h' H9. unfold F in *. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in *.
     2 : {
-       assert (a = c \/ a < c) as [H10 | H10] by lra; clear H4; rename H10 into H4. subst. rewrite integral_n_n. auto. lra.
+       assert (a = c \/ a < c) as [H10 | H10] by solve_R; clear H4; rename H10 into H4. subst. rewrite integral_n_n. lra.
        rewrite integral_minus; auto. apply theorem_13_3; solve_R. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. solve_R. }
     assert (H10 : integrable_on c (c + h') f).
-    { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. solve_R. }
+    { apply theorem_13_3; solve_R. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H10. solve_R. }
     assert (H11 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c <= x0 <= c + h') → m h' <= f x <= M h').
     { 
-      intros x H11. unfold Ensembles.In in *. destruct H11 as [H11 H12]. specialize (H5 h') as [H5 _]. specialize (H5 ltac:(solve_R)).
+      intros x H11. destruct H11 as [H11 H12]. specialize (H5 h') as [H5 _]. specialize (H5 ltac:(solve_R)).
       specialize (H6 h') as [H6 _]. specialize (H6 ltac:(solve_R)). destruct H5 as [H5 _]. destruct H6 as [H6 _].
-      specialize (H5 (f x) ltac:(exists x; auto)). specialize (H6 (f x) ltac:(exists x; auto)). lra. 
+      specialize (H5 (f x) ltac:(exists x; solve_R)). specialize (H6 (f x) ltac:(exists x; solve_R)). lra. 
     }
-    pose proof theorem_13_7 c (c + h') f (m h') (M h') ltac:(lra) H10 H11 as H12. replace (c + h' - c) with h' in H12 by lra.
+    pose proof theorem_13_7 c (c + h') f (m h') (M h') ltac:(solve_R) H10 H11 as H12. replace (c + h' - c) with h' in H12 by lra.
     clear H10 H11. rename H12 into H10. assert (H11 : m h' <= ∫ c (c + h') f / h' <= M h').
     {
-      destruct H10 as [H10 H11]. apply Rmult_le_compat_l with (r := /h') in H10, H11; try (apply Rlt_le; apply Rinv_pos; lra).
-      field_simplify in H10; field_simplify in H11; lra.
-    } lra.
+      destruct H10 as [H10 H11]. apply Rmult_le_compat_l with (r := /h') in H10, H11; try (apply Rlt_le; apply Rinv_pos; solve_R).
+      field_simplify in H10; field_simplify in H11; solve_R.
+    } solve_R.
   }
   assert (H10 : forall h, h ∈ (a - c, 0) -> m h <= (F (c + h) - F c) / h <= M h).
   {
-    intros h' H10. unfold Ensembles.In in *. repeat rewrite <- H2; solve_R. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in *.
+    intros h' H10. unfold F in *. replace (∫ a (c + h') f - ∫ a c f) with (∫ c (c + h') f) in *.
     2 : { rewrite integral_minus; auto. apply theorem_13_3; solve_R. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. solve_R. }
     assert (H11 : integrable_on (c + h') c f).
-    { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. solve_R. }
+    { apply theorem_13_3; solve_R. apply continuous_on_subset with (A2 := [a, b]); auto. intros x H11. solve_R. }
     assert (H12 : ∀ x : ℝ, x ∈ (λ x0 : ℝ, c + h' <= x0 <= c) → m h' <= f x <= M h').
     { 
       intros x H12. unfold Ensembles.In in *. destruct H12 as [H12 H13]. specialize (H5 h') as [_ H5]. specialize (H6 h') as [_ H6].
       specialize (H5 ltac:(solve_R)). specialize (H6 ltac:(solve_R)). destruct H5 as [H5 _]. destruct H6 as [H6 _].
       specialize (H5 (f x) ltac:(exists x; auto)). specialize (H6 (f x) ltac:(exists x; auto)). lra. 
     }
-    pose proof theorem_13_7 (c + h') c f (m h') (M h') ltac:(lra) H11 H12 as H13. replace (c - (c + h')) with (-h') in H13 by lra.
+    pose proof theorem_13_7 (c + h') c f (m h') (M h') ltac:(solve_R) H11 H12 as H13. replace (c - (c + h')) with (-h') in H13 by lra.
     clear H11 H12. rename H13 into H11. assert (H12 : m h' <= ∫ c (c + h') f / h' <= M h').
     {
-      destruct H11 as [H11 H12]. apply Rmult_le_compat_neg_l with (r := /h') in H11, H12; try (apply Rlt_le; apply Rinv_neg; lra).
-      replace (∫ (c + h') c f) with (- ∫ c (c + h') f) in *. 2 : { apply eq_sym. apply integral_neg. } replace (/ h' * (m h' * - h')) with (- m h') in H11 by (field; lra).
-      replace (/ h' * (M h' * - h')) with (- M h') in H12 by (field; lra). lra.
+      destruct H11 as [H11 H12]. apply Rmult_le_compat_neg_l with (r := /h') in H11, H12; try (apply Rlt_le; apply Rinv_neg; solve_R).
+      replace (∫ (c + h') c f) with (- ∫ c (c + h') f) in *. 2 : { apply eq_sym. apply integral_neg. } replace (/ h' * (m h' * - h')) with (- m h') in H11 by (field; solve_R).
+      replace (/ h' * (M h' * - h')) with (- M h') in H12 by (field; solve_R). lra.
     } lra.
   }
   assert (c = a \/ c = b \/ a < c < b) as [H11 | [H11 | H11]] by solve_R; clear H4; rename H11 into H4.
@@ -2511,7 +2525,7 @@ Proof.
   intros f g g' a b H1 H2 H3. assert (H4 : continuous g).
   { intros x. apply theorem_9_1_a. specialize (H1 x). apply derivative_at_imp_differentiable_at with (f' := g'). auto. }
   
-  - subst. repeat rewrite integral_n_n. 
+  - subst. repeat rewrite integral_n_n.
   (*
   - assert (g a = g b \/ g a < g b \/ g b < g a) as [H5 | [H5 | H5]] by lra.
     -- assert (a = g a \/ a < g a \/ g a < a) as [H6 | [H6 | H6]] by lra.
