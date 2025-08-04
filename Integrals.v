@@ -1925,9 +1925,9 @@ Proof.
       assert (H21 : l' <> []). { intros H21. subst. simpl in H15. pose proof partition_first a b P as H21.
         replace (points a b P) with (c :: l'') in * by auto. simpl in H21. lra. }
         unfold l1. apply in_or_app. left. 
-      apply list_in_first_app with (l2 := l'); auto. 
-      subst. 
-    } subst.
+      apply list_in_first_app with (l2 := [c] ++ l''); auto. rewrite <- H15.
+      apply partition_first.
+    }
     assert (List.In c l1) as H22. { apply in_or_app. right. left; auto. }
     assert (forall x, List.In x l1 -> a <= x <= c) as H23 by admit.
     assert (List.In c l2) as H24. { left; auto. }
