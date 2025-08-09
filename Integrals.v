@@ -1897,6 +1897,18 @@ Proof.
   - simpl in H1. left. auto.
 Qed.
 
+Lemma sorted_first_last_in : forall l a b,
+  a < b -> Sorted Rlt l -> nth 0 l 0 = a -> nth (length l - 1) l 0 = b -> forall x, List.In x l -> a <= x <= b.
+Proof.
+  intros l a b H1 H2 H3 H4 x H5. apply In_nth with (d := 0) in H5 as [i [H6 H7]].
+  assert (i = 0 \/ i > 0)%nat as [H8 | H8] by lia.
+  - subst. lra.
+  - assert (i = length l - 1 \/ i < length l - 1)%nat as [H9 | H9] by lia.
+    -- subst. lra.
+    -- pose proof Sorted_Rlt_nth l i (length l - 1) 0 ltac:(destruct H2; auto) ltac:(lia) as H10.
+       pose proof Sorted_Rlt_nth l 0 i 0 ltac:(destruct H2; auto) ltac:(lia) as H11. lra.
+Qed.
+
 Lemma integrable_on_sub_interval_left : forall f a b c,
   a < c < b -> integrable_on a b f -> integrable_on a c f.
 Proof.
@@ -1929,10 +1941,33 @@ Proof.
       apply partition_first.
     }
     assert (List.In c l1) as H22. { apply in_or_app. right. left; auto. }
-    assert (forall x, List.In x l1 -> a <= x <= c) as H23 by admit.
+    assert (forall x, List.In x l1 -> a <= x <= c) as H23.
+    {
+      intros x H23. apply sorted_first_last_in with (l := l1); auto.
+      - pose proof partition_first a b P as H24. replace (points a b P) with l in H24 by auto. 
+        rewrite H15 in H24. unfold l1. destruct l'. simpl in H24. lra. rewrite app_nth1 in H24. simpl in *; auto.
+        simpl. lia.
+      - subst. unfold l1. rewrite length_app. simpl. replace (length l' + 1 - 1)%nat with (length l') by lia.
+        rewrite app_nth2; try lia. rewrite Nat.sub_diag. simpl. reflexivity.
+    }
     assert (List.In c l2) as H24. { left; auto. }
-    assert (List.In b l2) as H25 by admit.
-    assert (forall x, List.In x l2 -> c <= x <= b) as H26 by admit.
+    assert (List.In b l2) as H25.
+    {
+     admit. 
+    }
+    assert (forall x, List.In x l2 -> c <= x <= b) as H26.
+    {
+      intros x H26. apply sorted_first_last_in with (l := l2); auto.
+      pose proof partition_last a b P as H27. replace (points a b P) with l in H27 by auto.
+      rewrite H15 in H27. unfold l2. destruct l''. simpl in H27. rewrite length_app in H27. simpl in H27.
+      replace (length l' + 1 - 1)%nat with (length l') in H27 by lia. rewrite app_nth2 in H27; try lia.
+      rewrite Nat.sub_diag in H27. simpl in H27. lra.
+      replace (length (l' ++ [c] ++ r :: l'') - 1)%nat with (length l' + 1 + length l'')%nat in H27. 
+      2 : { rewrite length_app. simpl. lia. }
+      rewrite app_nth2 in H27; try lia. replace (length l' + 1 + length l'' - length l')%nat with (1 + length l'')%nat in H27 by lia.
+      replace (length ([c] ++ r :: l'') - 1)%nat with (1 + length l'')%nat. 
+      2 : { rewrite length_app. simpl. lia. } auto.
+    }
     set (P' := mkpartition a c l1 H16 H18 H21 H22 H23).
     set (P'' := mkpartition c b l2 H17 H19 H24 H25 H26).
     exists P'.
@@ -2094,8 +2129,14 @@ Proof.
     assert (H25 : List.In b l) by admit.
     assert (H26 : forall x, List.In x l -> a <= x <= b) by admit.
     set (P := mkpartition a b l H22 H23 H24 H25 H26).
-    assert (H27 : points a c P' = firstn (length l' - 1) l' ++ [c]) by admit.
-    assert (H28 : points c b P'' = [c] ++ skipn 1 l'') by admit.
+    assert (H27 : points a c P' = firstn (length l' - 1) l' ++ [c]).
+    {
+      replace (points a c P') with l' by auto. admit.
+    }
+    assert (H28 : points c b P'' = [c] ++ skipn 1 l'').
+    {
+      replace (points c b P'') with l'' in * by auto. admit.
+    }
     pose proof upper_sum_plus f a b c P P' P'' bf bf' bf'' (firstn (length l' - 1) l') (skipn 1 l'') H1 ltac:(repeat split; auto) as H29.
     pose proof lower_sum_plus f a b c P P' P'' bf bf' bf'' (firstn (length l' - 1) l') (skipn 1 l'') H1 ltac:(repeat split; auto) as H30.
     assert (H31 : L(bf', P') <= ∫ a c f <= U(bf', P')) by (apply integral_bound; solve_R).
@@ -2514,7 +2555,7 @@ Proof.
   }
   replace (1 / 3) with (g 1 - g 0) by (unfold g; lra).
   apply (FTC2 0 1 f g H1 H2 H3).
-Qed.
+Qed.jj
 
 Close Scope program_scope.
 
