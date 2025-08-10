@@ -1897,6 +1897,22 @@ Proof.
   - simpl in H1. left. auto.
 Qed.
 
+Lemma list_in_last_app : forall a l1 l2,
+  nth (length l1 + length l2 - 1) (l1 ++ l2) 0 = a -> l2 <> [] -> List.In a l2.
+Proof.
+  intros a l1 l2 H1 H2. generalize dependent l1. induction l2 as [| h t IH].
+  - intros l1 H1. exfalso. apply H2. reflexivity.
+  - intros l1 H1. destruct t.
+    -- rewrite app_nth2 in H1; [ | simpl; lia].
+       replace (length l1 + length [h] - 1 - length l1)%nat with 0%nat in H1 by (simpl; lia).
+       simpl in H1. subst. left. reflexivity.
+    -- assert (H3 : r :: t <> []). { intros H3. inversion H3. }
+       specialize (IH H3 (l1 ++ [h])). right. apply IH.
+       replace (length (l1 ++ [h]) + length (r :: t) - 1)%nat with (length l1 + length (h :: r :: t) - 1)%nat.
+       2 : { rewrite length_app. simpl. lia.  }
+       rewrite <- app_assoc. rewrite <- H1. reflexivity.
+Qed.
+
 Lemma sorted_first_last_in : forall l a b,
   a < b -> Sorted Rlt l -> nth 0 l 0 = a -> nth (length l - 1) l 0 = b -> forall x, List.In x l -> a <= x <= b.
 Proof.
@@ -1952,8 +1968,12 @@ Proof.
     }
     assert (List.In c l2) as H24. { left; auto. }
     assert (List.In b l2) as H25.
-    {
-     admit. 
+    { 
+      apply list_in_last_app with (l1 := l').
+      - replace (l' ++ l2) with l. replace (length l' + length l2 - 1)%nat with (length l - 1)%nat.
+        2 : { rewrite H15. unfold l2. repeat rewrite length_app. reflexivity. }
+        apply partition_last.
+      -intros H25. inversion H25.
     }
     assert (forall x, List.In x l2 -> c <= x <= b) as H26.
     {
@@ -2555,7 +2575,7 @@ Proof.
   }
   replace (1 / 3) with (g 1 - g 0) by (unfold g; lra).
   apply (FTC2 0 1 f g H1 H2 H3).
-Qed.jj
+Qed.
 
 Close Scope program_scope.
 
