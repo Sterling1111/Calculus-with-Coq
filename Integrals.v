@@ -419,6 +419,22 @@ Proof.
          destruct (insert_Sorted_Rlt r (r0 :: t)). apply HdRel_nil. apply HdRel_cons. simpl in H9. lra.
 Qed.
 
+Lemma insert_Sorted_Rlt_first' : forall (r : ℝ) (l : list ℝ),
+  Sorted Rlt l -> ~List.In r l -> l <> [] -> r > nth 0 l 0 -> nth 0 (insert_Sorted_Rlt r l) 0 = nth 0 l 0.
+Proof.
+  intros r l H1 H2 H3 H4. destruct l as [| h t].
+  - exfalso; auto.
+  - simpl. apply Sorted_inv in H1 as [H1 _]. destruct (Rlt_dec r h) as [H5 | H5].
+    -- simpl in H4. lra.
+    -- simpl. reflexivity.
+Qed.
+
+Lemma insert_Sorted_Rlt_last : forall (r : ℝ) (l : list ℝ),
+  Sorted Rlt l -> ~List.In r l -> l <> [] -> r < nth (length l - 1) l 0 -> nth (length l) (insert_Sorted_Rlt r l) 0 = nth (length l - 1) l 0.
+Proof.
+  intros r l H1 H2 H3 H4. 
+Admitted.
+
 Lemma In_l_In_insert_Sorted_Rlt : forall (l : list ℝ) (r a : ℝ),
   List.In a l -> List.In a (insert_Sorted_Rlt r l).
 Proof.
@@ -1925,6 +1941,12 @@ Proof.
        pose proof Sorted_Rlt_nth l 0 i 0 ltac:(destruct H2; auto) ltac:(lia) as H11. lra.
 Qed.
 
+Lemma not_empty_In_list : forall {T : Type} (l : list T) (x : T),
+  List.In x l -> l <> [].
+Proof.
+  intros T l x H1 H2. destruct l as [| h t]; [ exfalso; auto | discriminate H2].
+Qed.
+
 Lemma integrable_on_sub_interval_left : forall f a b c,
   a < c < b -> integrable_on a b f -> integrable_on a c f.
 Proof.
@@ -1940,7 +1962,7 @@ Proof.
   specialize (H0 ε H11) as [P H13].
   set (l := P.(points a b)). pose proof classic (List.In c l) as [H14 | H14].
   - pose proof in_split' l c H14 as [l' [l'' H15]]. set (l1 := l' ++ [c]). set (l2 := [c] ++ l'').
-    assert (a < c /\ c < b) as [H16 H17] by (split; lra). 
+    assert (a < c /\ c < b) as [H16 H17] by (split; lra).            
     assert (Sorted Rlt l1 /\ Sorted Rlt l2) as [H18 H19].
     {
        assert (H18 : Sorted Rlt ((l' ++ [c]) ++ l'')). { rewrite <- app_assoc, <- H15. destruct P; auto. } split.
@@ -1996,38 +2018,102 @@ Proof.
     pose proof lower_sum_le_upper_sum a c bf' P' as H29.
     pose proof lower_sum_le_upper_sum c b bf'' P'' as H30.
     lra.
-  - set (l0 := insert_Sorted_Rlt c l). assert (H15 : a < b) by lra.
-    assert (H16 : Sorted Rlt l0). { apply insert_Sorted_Rlt_sorted; auto. destruct P; auto. }
-    assert (H17 : List.In a l0). { apply In_l_In_insert_Sorted_Rlt; destruct P; auto. }
-    assert (H18 : List.In b l0). { apply In_l_In_insert_Sorted_Rlt; destruct P; auto. }
-    assert (H19 : forall x, List.In x l0 -> a <= x <= b). { intros x H19. admit. }
-    set (Q := mkpartition a b l0 H15 H16 H17 H18 H19). 
-    pose proof insert_Parition_R_lower_sum a b c bf P Q H14 ltac:(auto) as H20.
-    pose proof insert_Parition_R_upper_sum a b c bf P Q H14 ltac:(auto) as H21.
-    assert (H22 : List.In c l0). { unfold l0. apply insert_Sorted_Rlt_in. }
-    pose proof in_split' l0 c H22 as [l' [l'' H23]]. set (l1 := l' ++ [c]). set (l2 := [c] ++ l'').
-    assert (a < c /\ c < b) as [H24 H25] by (split; lra). 
-    assert (Sorted Rlt l1 /\ Sorted Rlt l2) as [H26 H27].
-    {
-       assert (H26 : Sorted Rlt ((l' ++ [c]) ++ l'')). { rewrite <- app_assoc, <- H23. destruct P; auto. } split.
-       - unfold l1; pose proof (Sorted_Rlt_app (l' ++ [c]) l'' H26) as [H28 H29]; auto.
-       - rewrite <- app_assoc in H26. unfold l2; pose proof (Sorted_Rlt_app l' ([c] ++ l'') H26) as [H28 H29]; auto.
+  - set (l0 := insert_Sorted_Rlt c l). assert (H15 : List.In c l0). { apply insert_Sorted_Rlt_in. }
+    pose proof in_split' l0 c H15 as [l' [l'' H16]]. set (l1 := l' ++ [c]). set (l2 := [c] ++ l'').
+    assert (H17 : a < b) by lra.
+    assert (H18 : Sorted Rlt l0). { apply insert_Sorted_Rlt_sorted; auto. destruct P; auto. }
+    assert (H19 : List.In a l0). { apply In_l_In_insert_Sorted_Rlt; destruct P; auto. }
+    assert (H20 : List.In b l0). { apply In_l_In_insert_Sorted_Rlt; destruct P; auto. }
+    assert (H21 : forall x, List.In x l0 -> a <= x <= b). 
+    { intros x H21. apply In_l_In_insert_Sorted_Rlt' in H21 as [H21 | H21]; try lra.
+      apply sorted_first_last_in with (l := l); auto. destruct P; auto. apply partition_first; auto.
+      apply partition_last; auto.
     }
-    assert (List.In a l1) as H28 by admit.
-    assert (List.In c l1) as H29 by admit.
-    assert (forall x, List.In x l1 -> a <= x <= c) as H30 by admit.
-    assert (List.In c l2) as H31 by admit.
-    assert (List.In b l2) as H32 by admit.
-    assert (forall x, List.In x l2 -> c <= x <= b) as H33 by admit.
-    set (P' := mkpartition a c l1 H24 H26 H28 H29 H30).
-    set (P'' := mkpartition c b l2 H25 H27 H31 H32 H33).
+    set (Q := mkpartition a b l0 H17 H18 H19 H20 H21). 
+    pose proof insert_Parition_R_lower_sum a b c bf P Q H14 ltac:(auto) as H22.
+    pose proof insert_Parition_R_upper_sum a b c bf P Q H14 ltac:(auto) as H23.
+    assert (H24 : List.In c l0). { unfold l0. apply insert_Sorted_Rlt_in. }
+    assert (a < c /\ c < b) as [H25 H26] by (split; lra). 
+    assert (Sorted Rlt l1 /\ Sorted Rlt l2) as [H27 H28].
+    {
+       assert (H27 : Sorted Rlt ((l' ++ [c]) ++ l'')). { rewrite <- app_assoc, <- H16. destruct P; auto. } split.
+       - unfold l1; pose proof (Sorted_Rlt_app (l' ++ [c]) l'' H27) as [H28 H29]; auto.
+       - rewrite <- app_assoc in H27. unfold l2; pose proof (Sorted_Rlt_app l' ([c] ++ l'') H27) as [H28 H29]; auto.
+    }
+    assert (List.In a l1) as H29.
+    {
+      assert (H29 : List.In a l). { destruct P; auto. }
+      assert (H30 : l' <> []).
+      {
+        intros H30. subst. simpl in H16.
+        assert (H30 : l <> []). { apply not_empty_In_list with (x := a); auto. }
+        assert (H31 : c > nth 0 l 0).
+        { pose proof partition_first a b P as H31. replace (points a b P) with l in * by auto. lra. }
+        pose proof insert_Sorted_Rlt_first' c l ltac:(destruct P; auto) H14 H30 H31 as H32.
+        replace (insert_Sorted_Rlt c l) with (c :: l'') in * by auto. simpl in H32. lra.
+      }
+      unfold l1. apply in_or_app. left.
+      apply list_in_first_app with (l2 := [c] ++ l''); auto. rewrite <- H16.
+      rewrite <- partition_first with (a := a) (b := b) (P := P); auto. apply insert_Sorted_Rlt_first'; auto.
+      - destruct P; auto.
+      - apply not_empty_In_list with (x := a); auto.
+      - pose proof partition_first a b P as H31. lra.
+    }
+    assert (List.In c l1) as H30. { apply in_or_app. right. left; auto. }
+    assert (forall x, List.In x l1 -> a <= x <= c) as H31.
+    {
+      intros x H31. apply sorted_first_last_in with (l := l1); auto.
+      - pose proof insert_Sorted_Rlt_first' c l ltac:(destruct P; auto) ltac:(auto) 
+        ltac:(apply not_empty_In_list with (x := a); destruct P; auto) ltac:(unfold l; rewrite partition_first; lra) as H32.
+        rewrite <- partition_first with (a := a) (b := b) (P := P); auto. unfold l1. fold l.
+        destruct l'. simpl. simpl in H29; lra. simpl. rewrite <- H32. fold l0. rewrite H16. simpl. reflexivity.
+      - unfold l1. rewrite app_nth2. 2 : { rewrite length_app. simpl. lia. }
+        replace (length (l' ++ [c]) - 1 - length l')%nat with 0%nat.
+        reflexivity.
+        rewrite length_app. simpl. lia.
+    }
+    assert (List.In c l2) as H32. { left. reflexivity. }
+    assert (List.In b l2) as H33.
+    { 
+      unfold l2. apply in_or_app. right. apply list_in_last_app with (l1 := l' ++ [c]).
+      rewrite <- app_assoc. rewrite <- H16. replace (length (l' ++ [c]) + length l'' - 1)%nat with (length l0 - 1)%nat.
+      2 : { rewrite H16. repeat rewrite length_app. simpl. lia. }
+      unfold l0. rewrite <- (partition_last a b P). rewrite insert_Sorted_Rlt_length. replace (S(length l) - 1)%nat with (length l) by lia.
+      apply insert_Sorted_Rlt_last. destruct P; auto. auto. apply not_empty_In_list with (x := a). destruct P; auto. 
+      rewrite partition_last; lra. intros H33. subst. simpl in H16.
+      pose proof insert_Sorted_Rlt_last c l ltac:(destruct P; auto) ltac:(auto) ltac:(apply not_empty_In_list with (x := a); destruct P; auto)
+      ltac:(unfold l; rewrite (partition_last a b P); auto) as H33. fold l0 in H33. rewrite H16 in H33.
+      replace (length l) with (length l')%nat in H33 at 1.
+      2 : { pose proof insert_Sorted_Rlt_length c l as H34. fold l0 in H34. rewrite H16 in H34. rewrite length_app in H34. simpl in H34. lia. }
+      rewrite app_nth2 in H33; auto. rewrite Nat.sub_diag in H33. simpl in H33. unfold l in H33. rewrite (partition_last a b P) in H33. lra.
+    }
+    assert (forall x, List.In x l2 -> c <= x <= b) as H34.
+    {
+      intros x H34. apply sorted_first_last_in with (l := l2); auto.
+      pose proof insert_Sorted_Rlt_last c l ltac:(destruct P; auto) ltac:(auto) 
+      ltac:(apply not_empty_In_list with (x := a); destruct P; auto) ltac:(unfold l; rewrite partition_last; lra) as H35.
+      rewrite <- (partition_last a b P). fold l. unfold l2.
+      fold l0 in H35. rewrite H16 in H35. rewrite <- H35. destruct l''.
+      simpl in H33. lra. 
+      rewrite app_nth2. 2 : { simpl. lia. } replace (length ([c] ++ r :: l'') - 1 - length [c])%nat with (length l'').
+      2 : { simpl. lia. } 
+      replace (length l) with (length (l' ++ [c]) + length (r :: l'') - 1)%nat.
+      2 : { rewrite length_app. simpl. pose proof insert_Sorted_Rlt_length c l as H36. fold l0 in H36. rewrite H16 in H36.
+            repeat rewrite length_app in H36. simpl in H36. lia. } 
+      rewrite app_nth2. rewrite app_nth2. 2 : { rewrite length_app. simpl. lia. }
+      2 : { rewrite length_app. simpl. lia. } 
+      replace (length (l' ++ [c]) + length (r :: l'') - 1 - length l' - length [c])%nat with (length l'').
+      2 : { rewrite length_app. simpl. lia. } reflexivity.
+    }
+    set (P' := mkpartition a c l1 H25 H27 H29 H30 H31).
+    set (P'' := mkpartition c b l2 H26 H28 H32 H33 H34).
     exists P'.
-    pose proof upper_sum_plus f a b c Q P' P'' bf bf' bf'' l' l'' H1 ltac:(repeat split; auto) as H34.
-    pose proof lower_sum_plus f a b c Q P' P'' bf bf' bf'' l' l'' H1 ltac:(repeat split; auto) as H35.
-    pose proof lower_sum_le_upper_sum a c bf' P' as H36.
-    pose proof lower_sum_le_upper_sum c b bf'' P'' as H37.
+    pose proof upper_sum_plus f a b c Q P' P'' bf bf' bf'' l' l'' H1 ltac:(repeat split; auto) as H35.
+    pose proof lower_sum_plus f a b c Q P' P'' bf bf' bf'' l' l'' H1 ltac:(repeat split; auto) as H36.
+    pose proof lower_sum_le_upper_sum a c bf' P' as H37.
+    pose proof lower_sum_le_upper_sum c b bf'' P'' as H38.
     lra.
-Admitted.
+Qed.
 
 Lemma integrable_on_sub_interval_right : forall f a b c,
   a < c < b -> integrable_on a b f -> integrable_on c b f.
@@ -2269,7 +2355,7 @@ Proof.
   pose proof not_Empty_In R ((λ x : ℝ, ∃ p : partition a b, x = (U(bf, p)))) as H16.
   apply H14 in H13 as [r' [P1 H17]]. apply H16 in H15 as [r'' [P2 H18]].
   destruct H7 as [H7 H7']. specialize (H7 r'). unfold Ensembles.In in H7. specialize (H7 ltac:(exists P1; auto)).
-  destruct H6 as [H6 H6']. specialize (H6 r'') as H19. specialize (H6 r'' ltac:(exists P2; auto)).
+  destruct H6 as [H6 H6']. specialize (H6 r'' ltac:(exists P2; auto)).
   specialize (H8 P1). specialize (H9 P2). lra.
 Qed.
 
@@ -2513,6 +2599,26 @@ Proof.
     pose proof squeeze_theorem m (fun h => (F (c + h) - F c) / h) M (a - c) (b - c) 0 (f c) ltac:(lra) ltac:(solve_R) H11 H12 ltac:(autoset) as H14.
     left. split; [ apply is_interior_point_closed | ]; auto.
 Qed.
+
+
+About FTC1.
+Print continuous_on.
+Print limit_on.
+Print Ensembles.In.
+Print definite_integral.
+Print smallest_upper_sum.
+About exists_smallest_upper_sum.
+Print integrable_dec.
+Print integrable_on.
+Print derivative_on.
+Print derivative_at.
+Print right_derivative_at.
+Print left_derivative_at.
+Print interior_point.
+Print left_endpoint.
+Print right_endpoint.
+Print left_limit.
+Print right_limit.
 
 Theorem FTC2 : ∀ a b f g,
     a < b -> continuous_on f [a, b] -> ⟦ der ⟧ g [a, b] = f -> ∫ a b f = g b - g a.
