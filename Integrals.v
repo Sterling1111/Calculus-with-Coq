@@ -429,12 +429,6 @@ Proof.
     -- simpl. reflexivity.
 Qed.
 
-Lemma insert_Sorted_Rlt_last : forall (r : ℝ) (l : list ℝ),
-  Sorted Rlt l -> ~List.In r l -> l <> [] -> r < nth (length l - 1) l 0 -> nth (length l) (insert_Sorted_Rlt r l) 0 = nth (length l - 1) l 0.
-Proof.
-  intros r l H1 H2 H3 H4. 
-Admitted.
-
 Lemma In_l_In_insert_Sorted_Rlt : forall (l : list ℝ) (r a : ℝ),
   List.In a l -> List.In a (insert_Sorted_Rlt r l).
 Proof.
@@ -577,6 +571,23 @@ Proof.
           2 : { destruct k; simpl; try lia. replace (k + 1)%nat with (S k) by lia. reflexivity. } replace k with ((k - 1) + 1)%nat at 1 by lia. apply IH; try lia.
           rewrite H3 in H5. simpl in H5. rewrite insert_Sorted_Rlt_length in *. lia.
           rewrite H3 in H6. destruct n. simpl in *. lra. simpl in *. rewrite Nat.sub_0_r. auto.
+Qed.
+
+Lemma insert_Sorted_Rlt_last : forall (r : ℝ) (l : list ℝ),
+  Sorted Rlt l -> ~List.In r l -> l <> [] -> r < nth (length l - 1) l 0 -> nth (length l) (insert_Sorted_Rlt r l) 0 = nth (length l - 1) l 0.
+Proof.
+  intros r l H1 H2 H3 H4.
+  pose proof insert_Sorted_Rlt_nth l (insert_Sorted_Rlt r l) r H1 H2 ltac:(reflexivity) 
+  as [i [H5 [H6 [H7 H8]]]]. assert (length l < i \/ i <= length l)%nat as [H9 | H9] by lia.
+  - pose proof insert_Sorted_Rlt_length r l. lia.
+  - assert (i = length l \/ i < length l)%nat as [H10 | H10] by lia.
+    -- assert (length l <> 0)%nat as H11. { intros H11. apply H3. apply length_zero_iff_nil. auto. }
+       specialize (H7 (length l - 1)%nat ltac:(lia)). subst.
+       pose proof insert_Sorted_Rlt_sorted r l H1 H2 as H12.
+       pose proof Sorted_Rlt_nth (insert_Sorted_Rlt r l) (length l - 1)%nat (length l) 0 H12 ltac:(lia) as H13.
+       lra.
+    -- specialize (H8 (length l - 1)%nat ltac:(lia)). 
+       replace (length l - 1 + 1)%nat with (length l) in H8 by lia. auto.
 Qed.
 
 Lemma partition_spec : forall (a b : ℝ) (P : partition a b),
