@@ -2339,6 +2339,138 @@ Proof.
   - apply glb_le_all_In with (E := λ x : ℝ, ∃ p : partition a b, x = (U(bf, p))); auto. exists P; reflexivity.
 Qed.
 
+Lemma Sorted_app' : forall (l1 l2 : list R),
+  Sorted Rlt l1 -> Sorted Rlt l2 -> (forall x, List.In x l2 -> forall y, List.In y l1 -> x > y) ->
+  Sorted Rlt (l1 ++ l2).
+Proof.
+  intros l1 l2 H1 H2 H3. induction l1 as [| h t IH].
+  - simpl. auto.
+  - simpl. destruct l2 as [| h' t'].
+    -- rewrite app_nil_r. auto.
+    -- simpl. assert (t = [] \/ t <> []) as [H4 | H4] by tauto. subst. simpl; auto.
+       * specialize (H3 h' ltac:(left; auto) h ltac:(left; auto)). apply Sorted_cons; auto.
+       * apply Sorted_cons. apply IH.
+      + apply Sorted_inv in H1; tauto.
+      + intros x H5 y H6. apply H3; auto. right. auto.
+      + apply Sorted_inv in H1 as [H6 H7]. destruct t; try contradiction.
+        apply HdRel_cons. apply HdRel_inv in H7. auto.
+Qed.
+
+Lemma join_partition : forall (a b c : R) (P1 : partition a c) (P2 : partition c b),
+  a < c < b ->
+  exists (P : partition a b),
+  let l1 := points a c P1 in
+  let l2 := points c b P2 in
+  let l' := firstn (length l1 - 1) l1 in
+  let l'' := skipn 1 l2 in
+  points a b P = l' ++ [c] ++ l'' /\ 
+  points a c P1 = l' ++ [c] /\
+  points c b P2 = [c] ++ l''.
+Proof.
+  intros a b c P1 P2 H1.
+  set (l1 := points a c P1). set (l2 := points c b P2).
+  set (l' := firstn (length l1 - 1) l1).
+  set (l'' := skipn 1 l2).
+  set (l := l' ++ [c] ++ l'').
+  assert (H2 : a < b) by lra.
+  assert (H3 : l1 = l' ++ [c]).
+  { pose proof last_concat l1 c (partition_last a c P1) (partition_not_empty a c P1) as [l3 H3].
+    unfold l'. rewrite H3. replace (length (l3 ++ [c]) - 1)%nat with (length l3) by (rewrite length_app; simpl; lia).
+    rewrite firstn_app, firstn_all, Nat.sub_diag. simpl. rewrite app_nil_r. auto.
+  }
+  assert (H4 : l2 = [c] ++ l'').
+  {
+    pose proof first_concat l2 c (partition_first c b P2) (partition_not_empty c b P2) as [l3 H4].
+    unfold l''. rewrite H4. simpl. reflexivity.
+  }
+  assert (H5: Sorted Rlt l1). { destruct P1; auto. }
+  assert (H6: Sorted Rlt l2). { destruct P2; auto. }
+  assert (H7 : Sorted Rlt l).
+  {
+    unfold l. rewrite <- H4.
+    apply Sorted_app'; auto.
+    - apply firstn_Sorted_Rlt. destruct P1; auto.
+    - intros x H7 y H8. assert (y < c) as H9.
+      {
+        assert (List.In y l1) as H9.
+        { rewrite H3. apply in_or_app. left. auto. }
+        apply In_nth with (d := 0) in H9 as [i [H9 H10]].
+        assert (nth (length l1 - 1)%nat l1 0 = c) as H11.
+        {
+          rewrite H3. rewrite app_nth2. 2 : { rewrite length_app. simpl. lia. }
+          replace (length (l' ++ [c]) - 1 - length l')%nat with 0%nat. 2 : { rewrite length_app. simpl. lia. }
+          reflexivity.
+        }
+        apply In_nth with (d := 0) in H8 as [j [H8 H12]]. pose proof app_nth1 l' [c] 0 as H13. specialize (H13 j H8).
+        rewrite <- H3 in H13. rewrite H12 in H13. pose proof Sorted_Rlt_NoDup l1 H5 as H14.
+        pose proof NoDup_nth l1 0 as H15. rewrite H15 in H14. specialize (H14 (length l1 - 1)%nat j ltac:(lia) ltac:(rewrite H3, length_app; simpl; lia)).
+        rewrite <- H10, <- H11. apply Sorted_Rlt_nth; auto. assert (i = length l1 - 1 \/ i < length l1 - 1)%nat as [H16 | H16] by lia.
+        - rewrite H16 in H10. specialize (H14 ltac:(lra)). rewrite H3 in *. rewrite length_app in *. simpl in *. lia.
+        - lia.
+      }
+      rewrite H4 in H7. destruct H7 as [H7 | H7]; try lra.
+      simpl in H7. assert (x > c) as H10.
+      {
+        assert (List.In x l2) as H10.
+        { rewrite H4. apply in_or_app. right. auto. }
+        apply In_nth with (d := 0) in H10 as [i [H10 H11]].
+        assert (nth 0 l2 0 = c) as H12.
+        {
+          rewrite H4. rewrite app_nth1. 2 : { simpl. lia. }
+          reflexivity.
+        }
+        apply In_nth with (d := 0) in H7 as [j [H7 H13]]. pose proof app_nth2 [c] l'' 0 as H14. specialize (H14 (j+1)%nat ltac:(simpl; lia)).
+        rewrite <- H4 in H14. replace (j + 1 - length [c])%nat with j in H14 by (simpl; lia). rewrite H13 in H14. pose proof Sorted_Rlt_NoDup l2 H6 as H15.
+        pose proof NoDup_nth l2 0 as H16. rewrite H16 in H15. clear H16. specialize (H15 0%nat (j + 1)%nat ltac:(simpl; lia) ltac:(rewrite H4, length_app; simpl; lia)).
+        rewrite <- H11, <- H12. apply Sorted_Rlt_nth; auto. assert (i = 0 \/ i > 0)%nat as [H17 | H17] by lia.
+        - rewrite H17 in H10. specialize (H15 ltac:(rewrite H17 in *; lra)). rewrite H4 in *. rewrite length_app in *. simpl in *. lia.
+        - lia.
+      }
+      lra.
+  }
+  assert (H8 : List.In a l).
+  {
+    unfold l. apply list_in_first_app with (l2 := [c] ++ l'').
+    - rewrite app_nth1. 2 : { rewrite length_app. simpl. lia. }
+      rewrite app_nth1. 2 : { unfold l'. rewrite length_firstn. pose proof partition_length a c P1 as H9. fold l1 in H9. lia. }
+      unfold l'.
+      rewrite <- (partition_first a c P1). fold l1. rewrite nth_firstn.
+      pose proof partition_length a c P1 as H9.
+      assert (0 <? length l1 - 1 = true) as H10. { apply Nat.ltb_lt. fold l1 in H9. lia. }
+      rewrite H10. reflexivity.
+    - intros H8. simpl in H8. destruct l'; inversion H8.
+  }
+  assert (H9 : List.In b l).
+  {
+    unfold l. apply list_in_last_app with (l1 := l' ++ [c]).
+    - rewrite <- app_assoc. rewrite <- H4.
+      rewrite app_nth2. 2 : { rewrite length_app. simpl. lia. }
+      rewrite app_nth2. 2 : { repeat rewrite length_app. simpl. pose proof partition_length c b P2 as H10. fold l2 in H10. lia. }
+      replace (length (l' ++ [c]) + length (l' ++ l2) - 1 - length l' - length [c])%nat with (length l' + length l2 - 1)%nat.
+      2 : { repeat rewrite length_app. simpl. lia. }
+      rewrite app_nth2. 2 : { pose proof partition_length c b P2 as H10. fold l2 in H10. lia. }
+      replace (length l' + length l2 - 1 - length l')%nat with (length l2 - 1)%nat by lia.
+      apply partition_last.
+    - intros H9. simpl in H9. destruct l'; inversion H9.
+  }
+  assert (H10 : forall x, List.In x l -> a <= x <= b).
+  {
+    intros x H10. apply sorted_first_last_in with (l := l); auto.
+    - unfold l. rewrite <- (partition_first a c P1). fold l1.
+      destruct l1. inversion H3. unfold l'. simpl. rewrite Nat.sub_0_r. destruct l1.
+      simpl. inversion H3. reflexivity. simpl. reflexivity.
+    - unfold l. rewrite <- (partition_last c b P2).
+      fold l2. rewrite <- H4. destruct l2. inversion H4.
+      destruct l2. simpl. replace (length (l' ++ [r]) - 1)%nat with (length l') by (rewrite length_app; simpl; lia).
+      rewrite app_nth2; auto. rewrite Nat.sub_diag. simpl. reflexivity.
+      rewrite app_nth2. 2 : { rewrite length_app. simpl. lia. }
+      replace (length (l' ++ r :: r0 :: l2) - 1 - length l')%nat with (length (r :: r0 :: l2) - 1)%nat.
+      2 : { rewrite length_app. simpl. lia. } reflexivity.
+  }
+  exists (mkpartition a b l H2 H7 H8 H9 H10).
+  unfold l. auto.
+Qed.
+
 Lemma integral_plus : forall f a b c,
   a < c < b -> integrable_on a b f -> ∫ a b f = ∫ a c f + ∫ c b f.
 Proof.
@@ -2356,31 +2488,18 @@ Proof.
   assert (H19 : forall ε, 0 < ε -> |∫ a b f - (∫ a c f + ∫ c b f)| < ε).
   {
     intros ε H19.
-    specialize (H4 (ε/2) ltac:(lra)) as [P' H20]. specialize (H3 (ε/2) ltac:(lra)) as [P'' H21]. set (l' := P'.(points a c)).
-    set (l'' := P''.(points c b)). set (l := firstn (length l' - 1) l' ++ [c] ++ skipn 1 l'').
-    assert (H22 : a < b) by lra.
-    assert (H23 : Sorted Rlt l) by admit.
-    assert (H24 : List.In a l) by admit.
-    assert (H25 : List.In b l) by admit.
-    assert (H26 : forall x, List.In x l -> a <= x <= b) by admit.
-    set (P := mkpartition a b l H22 H23 H24 H25 H26).
-    assert (H27 : points a c P' = firstn (length l' - 1) l' ++ [c]).
-    {
-      replace (points a c P') with l' by auto. admit.
-    }
-    assert (H28 : points c b P'' = [c] ++ skipn 1 l'').
-    {
-      replace (points c b P'') with l'' in * by auto. admit.
-    }
-    pose proof upper_sum_plus f a b c P P' P'' bf bf' bf'' (firstn (length l' - 1) l') (skipn 1 l'') H1 ltac:(repeat split; auto) as H29.
-    pose proof lower_sum_plus f a b c P P' P'' bf bf' bf'' (firstn (length l' - 1) l') (skipn 1 l'') H1 ltac:(repeat split; auto) as H30.
-    assert (H31 : L(bf', P') <= ∫ a c f <= U(bf', P')) by (apply integral_bound; solve_R).
-    assert (H32 : L(bf'', P'') <= ∫ c b f <= U(bf'', P'')) by (apply integral_bound; solve_R).
-    assert (H33 : L(bf, P) <= ∫ a b f <= U(bf, P)) by (apply integral_bound; solve_R).
+    specialize (H4 (ε/2) ltac:(lra)) as [P' H20]. specialize (H3 (ε/2) ltac:(lra)) as [P'' H21].
+    pose proof join_partition a b c P' P'' H1 as [P [H22 [H23 H24]]].
+    set (l' := P'.(points a c)). set (l'' := P''.(points c b)). set (l := firstn (length l' - 1) l' ++ [c] ++ skipn 1 l'').
+    pose proof upper_sum_plus f a b c P P' P'' bf bf' bf'' (firstn (length l' - 1) l') (skipn 1 l'') H1 ltac:(repeat split; auto) as H25.
+    pose proof lower_sum_plus f a b c P P' P'' bf bf' bf'' (firstn (length l' - 1) l') (skipn 1 l'') H1 ltac:(repeat split; auto) as H26.
+    assert (H27 : L(bf', P') <= ∫ a c f <= U(bf', P')) by (apply integral_bound; solve_R).
+    assert (H28 : L(bf'', P'') <= ∫ c b f <= U(bf'', P'')) by (apply integral_bound; solve_R).
+    assert (H29 : L(bf, P) <= ∫ a b f <= U(bf, P)) by (apply integral_bound; solve_R).
     solve_R.
   }
   apply (cond_eq (∫ a b f) (∫ a c f + ∫ c b f) H19).
-Admitted.
+Qed.
 
 Lemma integral_plus' : forall f a b c,
   integrable_on (Rmin a (Rmin b c)) (Rmax a (Rmax b c)) f -> ∫ a b f = ∫ a c f + ∫ c b f.
@@ -2729,26 +2848,6 @@ Proof.
     left. split; [ apply is_interior_point_closed | ]; auto.
 Qed.
 
-
-About FTC1.
-Print continuous_on.
-Print limit_on.
-Print Ensembles.In.
-Print definite_integral.
-Print smallest_upper_sum.
-About exists_smallest_upper_sum.
-Print integrable_dec.
-Print integrable_on.
-Print derivative_on.
-Print derivative_at.
-Print right_derivative_at.
-Print left_derivative_at.
-Print interior_point.
-Print left_endpoint.
-Print right_endpoint.
-Print left_limit.
-Print right_limit.
-
 Theorem FTC2 : ∀ a b f g,
     a < b -> continuous_on f [a, b] -> ⟦ der ⟧ g [a, b] = f -> ∫ a b f = g b - g a.
 Proof.
@@ -2811,69 +2910,3 @@ Proof.
   replace (1 / 3) with (g 1 - g 0) by (unfold g; lra).
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
-
-Close Scope program_scope.
-
-Theorem theorem_2_ : forall f g g' a b,
-  ⟦ der ⟧ g = g' -> continuous f -> continuous g' ->
-    ∫ (g a) (g b) f = ∫ a b ((f ∘ g) ∙ g').
-Proof.
-  intros f g g' a b H1 H2 H3. assert (H4 : continuous g).
-  { intros x. apply theorem_9_1_a. specialize (H1 x). apply derivative_at_imp_differentiable_at with (f' := g'). auto. }
-  
-  - subst. repeat rewrite integral_n_n.
-  (*
-  - assert (g a = g b \/ g a < g b \/ g b < g a) as [H5 | [H5 | H5]] by lra.
-    -- assert (a = g a \/ a < g a \/ g a < a) as [H6 | [H6 | H6]] by lra.
-       * pose proof (theorem_7_3 g a b H4).
-        set (E := fun )
-        set (F := fun x => ∫ a x f). rewrite FTC2 with (a := a) (g := F ∘ g); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R.
-         admit. admit. apply continuous_imp_continuous_on; auto. apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
-       * set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); auto. rewrite FTC2 with (g := F ∘ g); auto. admit. admit.
-         apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := a) (b := g b); try lra; auto. apply FTC1; solve_R.
-         apply continuous_imp_continuous_on; auto.
-       * set (F := fun x => ∫ (g a) x f). rewrite FTC2 with (g := F); auto. rewrite FTC2 with (g := F ∘ g); auto. admit.
-         apply derivative_on_sub_interval with (a := g a) (b := b); solve_R. admit. apply continuous_imp_continuous_on; auto. apply FTC1; solve_R.
-         apply continuous_imp_continuous_on; auto.
-    -- assert (a = g a \/ a < g a \/ g a < a) as [H6 | [H6 | H6]] by lra.
-       * rewrite <- H6. set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); auto. rewrite <- H6. lra.
-         admit. admit. apply continuous_imp_continuous_on; auto. apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
-       * set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); auto. rewrite FTC2 with (g := F ∘ g); auto. admit. admit. 
-         apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := a) (b := g b); try lra; auto. apply FTC1; solve_R.
-         apply continuous_imp_continuous_on; auto.
-       * set (F := fun x => ∫ (g a) x f). rewrite FTC2 with (g := F); auto. rewrite FTC2 with (g := F ∘ g); auto. admit.
-         apply derivative_on_sub_interval with (a := g a) (b := b); solve_R. admit. apply continuous_imp_continuous_on; auto. apply FTC1; solve_R.
-         apply continuous_imp_continuous_on; auto.
-    -- assert (a = g b \/ a < g b \/ g b < a) as [H6 | [H6 | H6]]; solve_R.
-       * rewrite integral_neg. set (F := fun x => ∫ (g b) x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R. admit.
-         admit. apply continuous_imp_continuous_on; auto. apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
-       * rewrite integral_neg. set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R. admit.
-         admit. apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := a) (b := g a); solve_R.
-         apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
-       * rewrite integral_neg. set (F := fun x => ∫ (g b) x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R. admit.
-         admit. apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := g b) (b := g a); solve_R.
-         apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
-  - rewrite integral_neg with (a := a). assert (g a = g b \/ g a < g b \/ g b < g a) as [H5 | [H5 | H5]] by lra.
-    -- set (F := fun x => ∫ b x f). rewrite FTC2 with (f := (λ x : ℝ, f (g x) * g' x)) (g := F ∘ g); auto. rewrite H5. rewrite integral_n_n. rewrite Rminus_diag. lra.
-       admit. admit.
-    -- assert (a = g a \/ a < g a \/ g a < a) as [H6 | [H6 | H6]] by lra.
-       * rewrite <- H6. set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); auto. rewrite <- H6. lra.
-         admit. admit. apply continuous_imp_continuous_on; auto. apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
-       * set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); auto. rewrite FTC2 with (g := F ∘ g); auto. lra. admit. admit.
-         apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := a) (b := g b); try lra; auto. apply FTC1; solve_R.
-         apply continuous_imp_continuous_on; auto.
-       * set (F := fun x => ∫ (g a) x f). rewrite FTC2 with (g := F); auto. rewrite FTC2 with (g := F ∘ g); auto. lra. admit. admit.
-         apply continuous_imp_continuous_on; auto. apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
-    -- rewrite integral_neg. assert (a = g b \/ a < g b \/ g b < a) as [H6 | [H6 | H6]]; solve_R.
-       * set (F := fun x => ∫ (g b) x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R. admit. admit.
-         apply continuous_imp_continuous_on; auto. apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
-       * set (F := fun x => ∫ a x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R. admit.
-         admit. apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := a) (b := g a); solve_R.
-         apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
-       * set (F := fun x => ∫ (g b) x f). rewrite FTC2 with (g := F); solve_R. rewrite FTC2 with (g := F ∘ g); solve_R. admit.
-         admit. apply continuous_imp_continuous_on; auto. apply derivative_on_sub_interval with (a := g b) (b := g a); solve_R.
-         apply FTC1; solve_R. apply continuous_imp_continuous_on; auto.
-         *)
-Admitted.
-
-Definition π := 2 * ∫ (-1) 1 (λ x, √(1 - x^2)).
