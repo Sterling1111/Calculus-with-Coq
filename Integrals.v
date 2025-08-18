@@ -138,13 +138,6 @@ Record bounded_function_R (a b : ℝ) : Type := mkbounded_function_R
   bounded_function_R_P2 : bounded_On bounded_f [a, b]
 }.
 
-Record continuous_function (a b : ℝ) : Type := mkcontinuous_function
-{
-  continuous_f : ℝ -> ℝ;
-  continuous_function_P1 : a < b;
-  continuous_function_P2 : continuous_on continuous_f [a, b]
-}.
-
 Lemma bounded_On_sub_interval : forall (f : ℝ -> ℝ) (a a' b b' : ℝ),
   bounded_On f [a, b] -> (a <= a' <= b' <= b) -> bounded_On f [a', b'].
 Proof.
