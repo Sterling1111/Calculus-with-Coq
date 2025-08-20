@@ -666,12 +666,12 @@ Proof.
     pose proof lemma_8_A_1 f a (b - δ'/2) b ε H15 H2' H3 H13 H12 as [δ3 [H16 H17]]. exists δ3. split; auto.
 Qed.
 
-Definition bounded_On (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
+Definition bounded_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
   has_lower_bound (fun y => exists x, x ∈ A /\ y = f x) /\
   has_upper_bound (fun y => exists x, x ∈ A /\ y = f x).
 
 Lemma continuous_imp_bounded : forall f a b,
-  a <= b -> continuous_on f [a, b] -> bounded_On f [a, b].
+  a <= b -> continuous_on f [a, b] -> bounded_on f [a, b].
 Proof.
   intros f a b H1 H2. assert (a = b \/ a < b) as [H3 | H3] by lra.
   - split.
