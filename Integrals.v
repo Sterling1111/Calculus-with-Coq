@@ -135,11 +135,11 @@ Record bounded_function_R (a b : ℝ) : Type := mkbounded_function_R
 {
   bounded_f : ℝ -> ℝ;
   bounded_function_R_P1 : a <= b;
-  bounded_function_R_P2 : bounded_On bounded_f [a, b]
+  bounded_function_R_P2 : bounded_on bounded_f [a, b]
 }.
 
-Lemma bounded_On_sub_interval : forall (f : ℝ -> ℝ) (a a' b b' : ℝ),
-  bounded_On f [a, b] -> (a <= a' <= b' <= b) -> bounded_On f [a', b'].
+Lemma bounded_on_sub_interval : forall (f : ℝ -> ℝ) (a a' b b' : ℝ),
+  bounded_on f [a, b] -> (a <= a' <= b' <= b) -> bounded_on f [a', b'].
 Proof.
   intros f a b a' b' [[lb H1] [ub H2]] H3. split.
   - exists lb. intros y [x [H4 H5]]. specialize (H1 y). apply H1. exists x. unfold Ensembles.In in *; split; lra.
@@ -148,7 +148,7 @@ Qed.
 
 Lemma interval_has_inf : forall (a b : ℝ) (f : ℝ -> ℝ),
   a <= b ->
-  bounded_On f [a, b] ->
+  bounded_on f [a, b] ->
   { inf | is_glb (fun y => exists x, x ∈ [a, b] /\ y = f x) inf }.
 Proof.
   intros a b f H1 [H2 H3]. set (A := fun y => exists x, x ∈ [a, b] /\ y = f x).
@@ -158,7 +158,7 @@ Qed.
 
 Lemma interval_has_sup : forall (a b : ℝ) (f : ℝ -> ℝ),
   a <= b ->
-  bounded_On f [a, b] ->
+  bounded_on f [a, b] ->
   { sup | is_lub (fun y => exists x, x ∈ [a, b] /\ y = f x) sup }.
 Proof.
   intros a b f H1 [H2 H3]. set (A := fun y => exists x, x ∈ [a, b] /\ y = f x).
@@ -168,7 +168,7 @@ Qed.
 
 Lemma partition_sublist_elem_has_inf :  forall (f : ℝ -> ℝ) (a b : ℝ) (p : partition a b),
   let l1 := p.(points a b) in
-  bounded_On f [a, b] ->
+  bounded_on f [a, b] ->
   { l2 : list ℝ | (length l2 = length l1 - 1)%nat /\ forall (i : ℕ), (i < length l2)%nat -> is_glb (fun y => exists x, x ∈ [nth i l1 0, nth (i+1)%nat l1 0] /\ y = f x) (nth i l2 0) }. 
 Proof.
   intros f a b p l1 H1. assert (Sorted Rlt l1) as H2 by (destruct p; auto).
@@ -180,7 +180,7 @@ Proof.
     -- intros x H4. apply H3. right. auto.
     -- destruct t as [| h' t']. exists []. split; simpl; lia. assert (h <= h') as H4. { apply Sorted_inv in H2 as [_ H2]. apply HdRel_inv in H2. lra. }
        assert (a <= h) as H5. { apply H3. left. auto. } assert (h' <= b) as H6. { apply H3. right. left. auto. }
-       assert (bounded_On f [h, h']) as H7. { apply bounded_On_sub_interval with (a := a) (b := b); auto. }
+       assert (bounded_on f [h, h']) as H7. { apply bounded_on_sub_interval with (a := a) (b := b); auto. }
        pose proof interval_has_inf h h' f H4 H7 as [inf H8]. exists (inf :: l2). split. simpl. rewrite IH1. simpl. lia. intros i H9.
        assert (i = 0 \/ i > 0)%nat as [H10 | H10] by lia.
        * subst. simpl. auto.
@@ -193,7 +193,7 @@ Qed.
 
 Lemma partition_sublist_elem_has_sup : forall (f : ℝ -> ℝ) (a b : ℝ) (p : partition a b),
   let l1 := p.(points a b) in
-  bounded_On f [a, b] ->
+  bounded_on f [a, b] ->
   { l2 : list ℝ | (length l2 = length l1 - 1)%nat /\ forall (i : ℕ), (i < length l2)%nat -> is_lub (fun y => exists x, x ∈ [nth i l1 0, nth (i+1)%nat l1 0] /\ y = f x) (nth i l2 0) }.
 Proof.
   intros f a b p l1 H1. assert (Sorted Rlt l1) as H2 by (destruct p; auto).
@@ -205,7 +205,7 @@ Proof.
     -- intros x H4. apply H3. right. auto.
     -- destruct t as [| h' t']. exists []. split; simpl; lia. assert (h <= h') as H4. { apply Sorted_inv in H2 as [_ H2]. apply HdRel_inv in H2. lra. }
        assert (a <= h) as H5. { apply H3. left. auto. } assert (h' <= b) as H6. { apply H3. right. left. auto. }
-       assert (bounded_On f [h, h']) as H7. { apply bounded_On_sub_interval with (a := a) (b := b); auto. }
+       assert (bounded_on f [h, h']) as H7. { apply bounded_on_sub_interval with (a := a) (b := b); auto. }
        pose proof interval_has_sup h h' f H4 H7 as [sup H8]. exists (sup :: l2). split. simpl. rewrite IH1. simpl. lia.
        intros i H9. assert (i = 0 \/ i > 0)%nat as [H10 | H10] by lia.
        * subst. simpl. auto.
@@ -263,14 +263,14 @@ Section lower_upper_sum_test.
 
   Let P : partition a b := mkpartition a b l1 a_lt_b l1_sorted a_In_l1 b_In_l1 x_In_l1.
 
-  Lemma f_bounded_On : bounded_On f [a, b].
+  Lemma f_bounded_on : bounded_on f [a, b].
   Proof.
-    unfold bounded_On, f, a, b. repeat split; try lra.
+    unfold bounded_on, f, a, b. repeat split; try lra.
     - exists 1. intros y [x [H1 H2]]. subst. unfold Ensembles.In in *. lra.
     - exists 3. intros y [x [H1 H2]]. subst. unfold Ensembles.In in *. lra.
   Qed.
 
-  Let bf : bounded_function_R a b := mkbounded_function_R a b f a_le_b f_bounded_On.
+  Let bf : bounded_function_R a b := mkbounded_function_R a b f a_le_b f_bounded_on.
 
   Lemma glb_f_1_2_is_1 : is_glb (fun y => exists x, x ∈ [1, 2] /\ y = f x) 1.
   Proof.
@@ -300,12 +300,12 @@ Section lower_upper_sum_test.
     - intros ub H1. apply H1. exists 3. unfold Ensembles.In. lra.
   Qed.
 
-  Let l2_lower : list ℝ := proj1_sig (partition_sublist_elem_has_inf f a b P f_bounded_On).
-  Let l2_upper : list ℝ := proj1_sig (partition_sublist_elem_has_sup f a b P f_bounded_On).
+  Let l2_lower : list ℝ := proj1_sig (partition_sublist_elem_has_inf f a b P f_bounded_on).
+  Let l2_upper : list ℝ := proj1_sig (partition_sublist_elem_has_sup f a b P f_bounded_on).
 
   Lemma l2_lower_eq : l2_lower = [1; 2].
   Proof.
-    unfold l2_lower, proj1_sig in *. destruct (partition_sublist_elem_has_inf f a b P f_bounded_On) as [l2 [H1 H2]].
+    unfold l2_lower, proj1_sig in *. destruct (partition_sublist_elem_has_inf f a b P f_bounded_on) as [l2 [H1 H2]].
     specialize (H2 0%nat) as H3. specialize (H2 1%nat) as H4. replace (points a b P) with l1 in H1, H3, H4 by auto.
     simpl in H3, H4. specialize (H3 ltac:(simpl in *; lia)). specialize (H4 ltac:(simpl in *; lia)).
     assert (nth 0 l2 0 = 1) as H5.
@@ -318,7 +318,7 @@ Section lower_upper_sum_test.
 
   Lemma l2_upper_eq : l2_upper = [2; 3].
   Proof.
-    unfold l2_upper, proj1_sig in *. destruct (partition_sublist_elem_has_sup f a b P f_bounded_On) as [l2 [H1 H2]].
+    unfold l2_upper, proj1_sig in *. destruct (partition_sublist_elem_has_sup f a b P f_bounded_on) as [l2 [H1 H2]].
     specialize (H2 0%nat) as H3. specialize (H2 1%nat) as H4. replace (points a b P) with l1 in H1, H3, H4 by auto.
     simpl in H3, H4. specialize (H3 ltac:(simpl in *; lia)). specialize (H4 ltac:(simpl in *; lia)).
     assert (nth 0 l2 0 = 2) as H5.
@@ -332,14 +332,14 @@ Section lower_upper_sum_test.
   Example test_lower_sum : L(bf, P) = 3.
   Proof. 
     unfold lower_sum, proj1_sig in *. simpl. pose proof l2_lower_eq as H1. unfold l2_lower in H1.
-    destruct (partition_sublist_elem_has_inf f a b P f_bounded_On) as [l2 [H2 H3]]. subst.
+    destruct (partition_sublist_elem_has_inf f a b P f_bounded_on) as [l2 [H2 H3]]. subst.
     simpl. sum_simpl. lra.
   Qed.
 
   Example test_upper_sum : U(bf, P) = 5.
   Proof.
     unfold upper_sum, proj1_sig in *. simpl. pose proof l2_upper_eq. unfold l2_upper in H.
-    destruct (partition_sublist_elem_has_sup f a b P f_bounded_On) as [l2 [H1 H2]]. subst.
+    destruct (partition_sublist_elem_has_sup f a b P f_bounded_on) as [l2 [H1 H2]]. subst.
     simpl. sum_simpl. lra.
   Qed.
 
@@ -1356,9 +1356,9 @@ Proof.
   assert (a < a -> False). lra. exfalso. auto.
 Qed.
 
-Lemma bounded_on_n_n : forall f a, bounded_On f [a, a].
+Lemma bounded_on_n_n : forall f a, bounded_on f [a, a].
 Proof.
-  intros f a. unfold bounded_On. split; exists (f a); intros x [y [H1 H2]]; replace a with y by solve_R; lra.
+  intros f a. unfold bounded_on. split; exists (f a); intros x [y [H1 H2]]; replace a with y by solve_R; lra.
 Qed.
 
 Definition integrable_on (a b : ℝ) (f : ℝ -> ℝ) : Prop :=
@@ -1369,7 +1369,7 @@ Definition integrable_on (a b : ℝ) (f : ℝ -> ℝ) : Prop :=
   is_lub LS sup /\ is_glb US inf /\ sup = inf.
 
   Lemma integrable_imp_bounded : forall f a b,
-  a <= b -> integrable_on a b f -> bounded_On f [a, b].
+  a <= b -> integrable_on a b f -> bounded_on f [a, b].
 Proof.
   intros f a b H0 [H1 | [bf [sup [inf [H2 [H3 [H4 H5]]]]]]].
   - subst. apply bounded_on_n_n.
@@ -1715,7 +1715,7 @@ Theorem theorem_13_3 : forall f a b,
 Proof.
   intros f a b H1 H2. assert (a = b \/ a < b) as [H3 | H3] by lra.
   subst. apply integrable_on_n_n. rename H3 into H1'.
-  assert (H3 : bounded_On f [a, b]). { apply continuous_imp_bounded; try lra; auto. }
+  assert (H3 : bounded_on f [a, b]). { apply continuous_imp_bounded; try lra; auto. }
   pose proof theorem_8_A_1 f a b H1 H2 as H4. set (bf := mkbounded_function_R a b f H1 H3).
   apply (theorem_13_2_a a b bf); try lra. 
   intros ε H5. specialize (H4 (ε / ((b - a))) ltac:(apply Rdiv_pos_pos; lra)) as [δ [H4 H6]].
@@ -2177,9 +2177,9 @@ Lemma integrable_on_sub_interval_left : forall f a b c,
   a < c < b -> integrable_on a b f -> integrable_on a c f.
 Proof.
   intros f a b c H1 H2. pose proof H2 as H0. destruct H2 as [H2 | [bf [sup [inf [H3 [H4 [H5 H6]]]]]]]; [ left; lra |].
-  assert (H7 : bounded_On f [a, b]). { destruct bf; subst; auto. }
-  pose proof bounded_On_sub_interval f a a b c H7 ltac:(lra) as H8.
-  pose proof bounded_On_sub_interval f a c b b H7 ltac:(lra) as H8'.
+  assert (H7 : bounded_on f [a, b]). { destruct bf; subst; auto. }
+  pose proof bounded_on_sub_interval f a a b c H7 ltac:(lra) as H8.
+  pose proof bounded_on_sub_interval f a c b b H7 ltac:(lra) as H8'.
   assert (H9 : a <= c) by lra. assert (H9' : c <= b) by lra.
   set (bf' := mkbounded_function_R a c f H9 H8).
   set (bf'' := mkbounded_function_R c b f H9' H8').
@@ -2245,9 +2245,9 @@ Lemma integrable_on_sub_interval_right : forall f a b c,
   a < c < b -> integrable_on a b f -> integrable_on c b f.
 Proof.
   intros f a b c H1 H2. pose proof H2 as H0. destruct H2 as [H2 | [bf [sup [inf [H3 [H4 [H5 H6]]]]]]]; [ left; lra |].
-  assert (H7 : bounded_On f [a, b]). { destruct bf; subst; auto. }
-  pose proof bounded_On_sub_interval f a a b c H7 ltac:(lra) as H8.
-  pose proof bounded_On_sub_interval f a c b b H7 ltac:(lra) as H8'.
+  assert (H7 : bounded_on f [a, b]). { destruct bf; subst; auto. }
+  pose proof bounded_on_sub_interval f a a b c H7 ltac:(lra) as H8.
+  pose proof bounded_on_sub_interval f a c b b H7 ltac:(lra) as H8'.
   assert (H9 : a <= c) by lra. assert (H9' : c <= b) by lra.
   set (bf' := mkbounded_function_R c b f H9' H8').
   set (bf'' := mkbounded_function_R a c f H9 H8).
@@ -2802,7 +2802,7 @@ Proof.
   - assert (H11 : ⟦ lim 0 ⟧ m = f c).
     {
       intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [H12 _].
-        specialize (H12 c ltac:(solve_R)) as H12. specialize (H12 ε H11) as [δ [H13 H14]].
+      specialize (H12 c ltac:(solve_R)) as H12. specialize (H12 ε H11) as [δ [H13 H14]].
       exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split. solve_R.
       intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
       - specialize (H5 ltac:(solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
@@ -2838,7 +2838,7 @@ Proof.
         apply H15. solve_R.
     }
     pose proof squeeze_theorem m (fun h => (F (c + h) - F c) / h) M (a - c) (b - c) 0 (f c) ltac:(lra) ltac:(solve_R) H11 H12 ltac:(autoset) as H14.
-    left. split; [ apply is_interior_point_closed | ]; auto.
+    left; split; [ apply is_interior_point_closed | ]; auto.
 Qed.
 
 Theorem FTC2 : ∀ a b f g,

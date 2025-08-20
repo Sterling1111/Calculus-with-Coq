@@ -933,7 +933,7 @@ Proof.
   - rewrite Union_Identity. simpl. auto.
   - assert (H5 : A ⋂ B = ∅). { rewrite <- H3. unfold Add in *. apply set_equal_def. intros y. split; intros H5; autoset. rewrite H3 in H5. contradiction. }
     specialize (IH H5). rewrite <- Add_Union_assoc. apply card_add; auto. intros H6. apply H4. unfold Add in *. apply In_Union_def in H6 as [H6 | H6]; autoset.
-    rewrite set_equal_def in H3. specialize (H3 x) as [H3 H7]. assert (x ∈ (A ⋃ ⦃x⦄) ⋂ B) as H8 by autoset. specialize (H3 H8). contradiction. 
+    rewrite set_equal_def in H3. specialize (H3 x) as [H3 H7]. assert (x ∈ (A ⋃ ⦃x⦄) ⋂ B) as H8 by autoset. specialize (H3 H8). contradiction.
 Qed.
 
 Lemma h_not_in_Power_set_A : forall (U : Type) (A : Ensemble U) (h : U),
