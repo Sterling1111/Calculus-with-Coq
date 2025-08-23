@@ -2841,6 +2841,47 @@ Proof.
     left; split; [ apply is_interior_point_closed | ]; auto.
 Qed.
 
+Lemma derivative_on_eq : forall a b f1 f2 f',
+  a < b -> (forall x, a <= x <= b -> f1 x = f2 x) -> ⟦ der ⟧ f1 [a, b] = f' -> ⟦ der ⟧ f2 [a, b] = f'.
+Proof.
+  intros a b f1 f2 f' H1 H2 H3 c H4. specialize (H3 c H4) as [[H3 H5] | [[H3 H5] | [H3 H5]]].
+  - left; split; auto. intros ε H6. specialize (H5 ε H6) as [δ [H7 H8]].
+    apply is_interior_point_closed in H3; auto.
+    exists (Rmin δ (Rmin (b - c) (c - a))). split. solve_R.
+    intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
+  - right; left; split; auto. apply is_left_endpoint_closed in H3; auto.
+    intros ε H6. specialize (H5 ε H6) as [δ [H7 H8]]. 
+    exists (Rmin δ (b - c)). split. solve_R.
+    intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
+  - right; right; split; auto. apply is_right_endpoint_closed in H3; auto.
+    intros ε H6. specialize (H5 ε H6) as [δ [H7 H8]].
+    exists (Rmin δ (c - a)). split. solve_R.
+    intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
+Qed.
+
+Lemma derivative_on_eq' : forall a b f f1' f2',
+  a < b -> (forall x, a <= x <= b -> f1' x = f2' x) -> ⟦ der ⟧ f [a, b] = f1' -> ⟦ der ⟧ f [a, b] = f2'.
+Proof.
+  intros a b f f1' f2' H1 H2 H3. replace f2' with f1'.
+Admitted.
+
+Theorem FTC1' : ∀ f a b,
+  a < b -> continuous_on f [a, b] -> ⟦ der ⟧ (λ x, ∫ x b f) [a, b] = - f.
+Proof.
+  intros f a b H1 H2.
+  set (g := (λ x : ℝ, ∫ a b f)).
+  set (h := (λ x : ℝ, ∫ a x f)).
+  apply derivative_on_eq with (f1 := (g - h)%function); auto.
+  - intros x H3. unfold g, h. pose proof Rtotal_order a x as [H4 | [H4 | H4]];
+    pose proof Rtotal_order x b as [H5 | [H5 | H5]]; try lra.
+    -- rewrite integral_plus with (c := x); try lra. apply theorem_13_3; solve_R.
+    -- subst. rewrite integral_eq with (a := b); lra.
+    -- subst. rewrite integral_eq with (b := x); lra.
+  - set (f1' := fun x : R => 0). replace (- f)%function with (f1' - f)%function.
+    2 : { extensionality x. unfold f1'. lra. }
+    admit.
+Admitted.
+
 Theorem FTC2 : ∀ a b f g,
     a < b -> continuous_on f [a, b] -> ⟦ der ⟧ g [a, b] = f -> ∫ a b f = g b - g a.
 Proof.
