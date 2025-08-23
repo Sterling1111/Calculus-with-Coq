@@ -250,7 +250,7 @@ Proof.
   - right; right; split; auto. intros ε H5. specialize (H4 ε H5) as [δ [H6 H7]]. exists δ. split; auto. intros h H8. specialize (H7 h H8).
     rewrite <- H2; auto.
 Qed.
-  
+
 Lemma lemma_9_1 : forall f a,
   ⟦ lim 0 ⟧ (fun h => (f (a + h) - f a)) = 0 <-> ⟦ lim a ⟧ f = f a.
 Proof.
@@ -499,6 +499,26 @@ Proof.
   - apply limit_mult; auto. solve_lim.
 Qed.
 
+Theorem theorem_10_4_a_right : forall f g f' g' a,
+  ⟦ der a⁺ ⟧ f = f' -> ⟦ der a⁺ ⟧ g = g' ->
+  ⟦ der a⁺ ⟧ (f ∙ g) = f' ∙ g + f ∙ g'.
+Proof.
+  intros f g f' g' a H1 H2. unfold right_derivative_at.
+  replace (fun h => (f (a + h) * g (a + h) - f a * g a) / h) with
+  (fun h => f (a + h) * ((g (a + h) - g a)/h) + ((f (a + h) - f a)/h * g a)) by (extensionality h; nra).
+  replace (f' a * g a + f a * g' a) with (f a * g' a + f' a * g a) by lra.
+  apply right_limit_plus.
+  - apply right_limit_mult; auto. assert (right_continuous_at (f ∘ Rplus a) 0) as H3.
+    {
+       apply theorem_9_1_b. unfold right_differentiable_at. exists (f' a).
+       replace ((λ h : ℝ, (f (a + (0 + h)) - f (a + 0)) / h)) with (λ h : ℝ, (f (a + h) - f a) / h).
+       2 : { extensionality h. rewrite Rplus_0_l. rewrite Rplus_0_r. reflexivity. }
+       auto.
+    }
+    unfold right_continuous_at in H3. rewrite Rplus_0_r in H3. auto.
+  - apply right_limit_mult; auto. apply right_limit_const.
+Qed.
+
 Theorem theorem_10_4_b : forall f g f' g',
   ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' ->
   ⟦ der ⟧ (f ∙ g) = f' ∙ g + f ∙ g'.
@@ -517,6 +537,18 @@ Proof.
   replace (c * f')%f with (h' ∙ f + h ∙ f')%f. 2 : { extensionality x. unfold h, h'. lra. }
   auto.
 Qed.
+
+Theorem theorem_10_5_right : forall f f' a c,
+  ⟦ der a⁺ ⟧ f = f' -> ⟦ der a⁺ ⟧ (c * f) = c * f'.
+Proof.
+  intros f f' a c H1. set (h := fun _ : ℝ => c). set (h' := fun _ : ℝ => 0).
+  assert ((c * f)%f = h ∙ f) as H3 by reflexivity. rewrite H3.
+  assert (⟦ der a⁺ ⟧ h = h') as H4 by admit.
+  assert (⟦ der a⁺ ⟧ (h ∙ f) = h' ∙ f + h ∙ f') as H5.
+  { apply theorem_10_4_a_right; auto. } 
+  replace (c * f')%f with (h' ∙ f + h ∙ f')%f. 2 : { extensionality x. unfold h, h'. lra. }
+  auto.
+Admitted.
 
 Theorem theorem_10_5' : forall f f' c,
   ⟦ der ⟧ f = f' -> ⟦ der ⟧ (fun x => c * f x) = (fun x => c * f' x).
@@ -950,6 +982,48 @@ Proof.
   - apply left_interval_endpoint_open in H3; tauto.
   - apply right_interval_endpoint_open in H3; tauto.
 Qed.
+
+Lemma derivative_on_closed_imp_open : forall a b f f',
+  ⟦ der ⟧ f [a, b] = f' ->  ⟦ der ⟧ f (a, b) = f'.
+Proof.
+  intros a b f f' H1 x H2. left. split.
+  - apply is_interior_point_open; solve_R.
+  - specialize (H1 x ltac:(solve_R)) as [[_ H1] | [[H1 _] | [H1 _]]]; auto.
+    -- pose proof not_left_endpoint a b x ltac:(solve_R) H2 as H3; tauto.
+    -- pose proof not_right_endpoint a b x ltac:(solve_R) H2 as H3; tauto.
+Qed.
+
+Lemma derivative_at_eq_f : forall f1 f2 f' c a b,
+  a < c < b -> (forall x, a <= x <= b -> f1 x = f2 x) ->  ⟦ der c ⟧ f1 = f' -> ⟦ der c ⟧ f2 = f'.
+Proof.
+  intros f1 f2 f' c a b H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ [H3 H5]].
+  exists (Rmin (Rmin δ (b - c)) (c - a)); split. solve_R. intros x H6. repeat rewrite <- H2; auto.
+  2 : { solve_R. } specialize (H5 x ltac:(solve_R)). auto. solve_R.
+Qed.
+
+Lemma derivative_at_eq_f' : forall f f1' f2' c,
+  (forall x, f1' x = f2' x) ->  ⟦ der c ⟧ f = f1' -> ⟦ der c ⟧ f = f2'.
+Proof.
+  intros f f1' f2' c H1 H2 ε H3. specialize (H2 ε H3) as [δ [H2 H4]].
+  exists δ; split; auto. intros x H5. specialize (H4 x H5). rewrite <- H1.
+  auto.
+Qed.
+
+Lemma right_derivative_at_eq : forall f f1' f2' c,
+  (forall x, f1' x = f2' x) ->  ⟦ der c⁺ ⟧ f = f1' -> ⟦ der c⁺ ⟧ f = f2'.
+Proof.
+  intros f f1' f2' c H1 H2 ε H3. specialize (H2 ε H3) as [δ [H2 H4]].
+  exists δ; split; auto. intros x H5. specialize (H4 x H5). rewrite <- H1.
+  auto.
+Qed.
+
+Lemma left_derivative_at_eq :  forall f f1' f2' c,
+  (forall x, f1' x = f2' x) ->  ⟦ der c⁻ ⟧ f = f1' -> ⟦ der c⁻ ⟧ f = f2'.
+Proof.
+  intros f f1' f2' c H1 H2 ε H3. specialize (H2 ε H3) as [δ [H2 H4]].
+  exists δ; split; auto. intros x H5. specialize (H4 x H5). rewrite <- H1.
+  auto.
+Qed.
   
 Corollary corollary_11_3_a : forall f f' a b, 
   a < b -> ⟦ der ⟧ f [a, b] = f' -> (forall x, x ∈ [a, b] -> f' x > 0) -> increasing_on f [a, b].
@@ -1002,6 +1076,39 @@ Proof.
   specialize (H3 x ltac:(unfold In in *; lra)). unfold h in H11. 
   unfold h in H11. assert (H12 : (f x2 - f x1) / (x2 - x1) < 0) by lra.
   apply Rmult_lt_compat_r with (r := (x2 - x1)) in H12; field_simplify in H12; lra.
+Qed.
+
+Corollary corollary_11_3_b' : forall f f' a b,
+  a < b -> continuous_on f [a, b] -> ⟦ der ⟧ f (a, b) = f' ->
+  (forall x, x ∈ (a, b) -> f' x < 0) ->
+  decreasing_on f [a, b].
+Proof.
+  intros f f' a b H1 H2 H3 H4 x1 x2 H5 H6 H7.
+  assert (H8 : differentiable_on f (x1, x2)).
+  {
+    intros x H8. left. split. apply is_interior_point_open; solve_R.
+    specialize (H3 x ltac:(solve_R)) as [[_ H3] | [[H3 _] | [H3 _]]].
+    - exists (f' x). auto.
+    - apply left_interval_endpoint_open in H3; solve_R.
+    - apply right_interval_endpoint_open in H3; solve_R.
+  }
+
+  assert (H9 : continuous_on f [x1, x2]).
+  { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H9. solve_R. }
+
+  pose proof (theorem_11_4 f x1 x2 H7 H9 H8) as [c [H10 H11]].
+  
+  specialize (H3 c).
+  set (h := fun _ : R => (f x2 - f x1) / (x2 - x1)). assert (h c = f' c) as H12.
+  {
+    apply derivative_of_function_at_x_unique with (f := f); auto. specialize (H3 ltac:(solve_R)) as [[_ H3] | [[H3 _] | [H3 _]]].
+    - apply H3.
+    - apply left_interval_endpoint_open in H3; solve_R.
+    - apply right_interval_endpoint_open in H3; solve_R.
+  }
+  specialize (H4 c ltac:(solve_R)). unfold h in H12.
+  assert (H13 : (f x2 - f x1) / (x2 - x1) < 0) by lra.
+  apply Rmult_lt_compat_r with (r := (x2 - x1)) in H13; field_simplify in H13; lra.
 Qed.
 
 Theorem theorem_11_8 : forall f f' g g' a b,

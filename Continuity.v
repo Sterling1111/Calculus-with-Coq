@@ -45,6 +45,12 @@ Proof.
   intros f A H1 a H2 ε H3. specialize (H1 a ε H3) as [δ [H1 H4]]. exists δ. split; auto.
 Qed.
 
+Lemma continuous_on_imp_continuous_at : forall f A a,
+  continuous_on f A -> a ∈ A -> continuous_at f a.
+Proof.
+  intros f A a H1 H2.
+Qed.
+
 Example example_37_2 : forall c d,
   continuous (fun x => c * x + d).
 Proof.
@@ -546,6 +552,7 @@ Proof.
     exists x. apply H5.
 Qed.
 
+(*
 Definition sqrt (x : ℝ) := 
   match (Rge_dec x 0) with
   | left H => proj1_sig (theorem_7_8 x H)
@@ -558,6 +565,7 @@ Proof.
   intros x H1. unfold sqrt. unfold proj1_sig. destruct (Rge_dec x 0) as [H2 | H2]; try lra.
   destruct (theorem_7_8 x H2) as [y H3]. auto.
 Qed.
+*)
 
 Lemma continuous_on_subset : forall A1 A2 f,
   A1 ⊆ A2 -> continuous_on f A2 -> continuous_on f A1.
@@ -580,6 +588,12 @@ Proof.
   - apply H7; solve_R.
   - specialize (H9 x ltac:(solve_R)) as H14. specialize (H9 y ltac:(solve_R)) as H15. solve_R.
   - specialize (H9 y ltac:(solve_R)) as H14. specialize (H9 x ltac:(solve_R)) as H15. solve_R.
+Qed.
+
+Lemma sqrt_f_continuous : forall f,
+  continuous f -> continuous (fun x => √(f x)).
+Proof.
+  intros f H1 a. apply theorem_6_2; auto. apply limit_sqrt_x.
 Qed.
 
 (* clearly this proof need major work. *)
