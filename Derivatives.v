@@ -368,6 +368,13 @@ Proof.
     -- apply theorem_9_1_c; tauto.
 Qed.
 
+Theorem theorem_9_1_d' : forall f a b,
+  a < b -> differentiable_on f (a, b) -> continuous_on f (a, b).
+Proof.
+  intros f a b H1 H2 x H3. specialize (H2 x H3) as [[H2 H4] | [[H2 _] | [H2 _]]].
+    -- apply continuous_at_imp
+  - apply 
+
 Lemma in_closed_interval_cases : forall x a b,
   a < b -> x ∈ [a, b] -> left_endpoint [a, b] x \/ right_endpoint [a, b] x \/ interior_point [a, b] x.
 Proof.

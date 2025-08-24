@@ -369,6 +369,14 @@ Proof.
   specialize (H7 x H11 H13). specialize (H9 x H11 H14). apply lemma_1_21; auto. solve_R.
 Qed.
 
+Lemma limit_on_eq_f : forall f1 f2 D L x,
+  ⟦ lim x ⟧ f1 D = L -> (forall x, x ∈ D -> f1 x = f2 x) -> ⟦ lim x ⟧ f2 D = L.
+Proof.
+  intros f1 f2 D L x H1 H2 ε H3. specialize (H1 ε H3) as [δ [H1 H4]].
+  exists δ; split; auto. intros x0 H5 H6. specialize (H4 x0 H5 H6).
+  rewrite <- H2; solve_R.
+Qed.
+
 Lemma left_limit_inv : forall f a L,
   ⟦ lim a⁻ ⟧ f = L -> L <> 0 -> ⟦ lim a⁻ ⟧ (∕ f) = / L.
 Proof.
