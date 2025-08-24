@@ -21,7 +21,7 @@ Definition uniformly_continuous_on (f : ℝ -> ℝ) (D : Ensemble ℝ) : Prop :=
 Definition continuous (f : ℝ -> ℝ) : Prop :=
   forall a, continuous_at f a.
 
-Lemma continuous_on_interval : forall f a b,
+Lemma continuous_on_interval_closed : forall f a b,
     a < b -> (continuous_on f [a, b] <-> ((forall x, x ∈ (a, b) -> ⟦ lim x ⟧ f = f x) /\ ⟦ lim a⁺ ⟧ f = f a /\ ⟦ lim b⁻ ⟧ f = f b)).
 Proof.
   intros f a b H1. split.
@@ -250,7 +250,7 @@ Proof.
   destruct (completeness_upper_bound A H7 H5) as [α H8].
   assert (H9 : α < b).
   {
-    apply continuous_on_interval in H2 as [_ [_ H2]]; auto.
+    apply continuous_on_interval_closed in H2 as [_ [_ H2]]; auto.
     pose proof lemma_6_16_b_1 f b H2 ltac:(lra) as [δ [H10 H11]]. set (x := Rmax a (b - δ/2)).
     assert (H12 : is_upper_bound A x).
     { 
@@ -262,7 +262,7 @@ Proof.
   }
   assert (H10 : a < α).
   {
-    apply continuous_on_interval in H2 as [_ [H2 _]]; auto.
+    apply continuous_on_interval_closed in H2 as [_ [H2 _]]; auto.
     pose proof lemma_6_16_a_2 f a H2 ltac:(lra) as [δ2 [H10 H11]]. set (x := Rmin b (a + δ2/2)).
     assert (H12 : x ∈ A).
     {
@@ -272,7 +272,7 @@ Proof.
   }
   pose proof Rtotal_order_dec (f α) 0 as [[H11 | H11] | H11]; [ exfalso | | exfalso].
   - assert (H12 : continuous_at f α). 
-    { apply continuous_on_interval in H2 as [H2 _]; auto. apply H2. unfold In; lra. }
+    { apply continuous_on_interval_closed in H2 as [H2 _]; auto. apply H2. unfold In; lra. }
     pose proof theorem_6_3_b f α H12 H11 as [δ [H13 H14]]. 
     assert (exists x0, x0 ∈ A /\ α - δ < x0 < α) as [x0 [H15 H16]].
     {
@@ -301,7 +301,7 @@ Proof.
     }
     assert (x > α) as H19. { unfold x. solve_R. } destruct H8 as [H8 _]. specialize (H8 x H18). lra.
   - exists α. unfold In. split; lra.
-  - assert (H12 : continuous_at f α). { apply continuous_on_interval in H2 as [H2 _]; auto. apply H2. unfold In; lra. }
+  - assert (H12 : continuous_at f α). { apply continuous_on_interval_closed in H2 as [H2 _]; auto. apply H2. unfold In; lra. }
     pose proof theorem_6_3_a f α H12 H11 as [δ [H13 H14]]. 
     assert (exists x0, x0 ∈ A /\ α - δ < x0 < α) as [x0 [H15 H16]].
     {
@@ -361,11 +361,11 @@ Proof.
   destruct (completeness_upper_bound A H6 H4) as [α H7].
   pose proof Rtotal_order α b as [H8 | [H8 | H8]]; pose proof Rtotal_order α a as [H9 | [H9 | H9]]; subst; try lra.
   - destruct H7 as [H7 _]. specialize (H7 a H3). lra.
-  - clear H8. assert (right_continuous_at f a) as H8. { apply continuous_on_interval in H2 as [_ [H2 _]]; auto. }
+  - clear H8. assert (right_continuous_at f a) as H8. { apply continuous_on_interval_closed in H2 as [_ [H2 _]]; auto. }
     pose proof lemma_8_1_a f a H8 as [δ [c [H9 H10]]]. assert ((Rmin b (a + δ/2)) ∈ A) as H11.
     { unfold A, In. split. solve_R. exists c. intros x H11. specialize (H10 x ltac:(solve_R)). solve_R. }
     destruct H7 as [H7 _]. specialize (H7 (Rmin b (a + δ/2)) H11). solve_R.
-  - assert (continuous_at f α) as H10. { apply continuous_on_interval in H2 as [H2 _]; auto. apply H2. unfold In; lra. }
+  - assert (continuous_at f α) as H10. { apply continuous_on_interval_closed in H2 as [H2 _]; auto. apply H2. unfold In; lra. }
     pose proof theorem_8_1 f α H10 as [δ [c [H11 H12]]]. assert (exists x0, x0 ∈ A /\ α - δ < x0 < α) as [x0 [H13 H14]].
     {
       assert (α ∈ A \/ α ∉ A) as [H13 | H13] by apply classic.
@@ -391,7 +391,7 @@ Proof.
       - specialize (H12 x ltac:(solve_R)). solve_R.
     }
     destruct H7 as [H7 _]. specialize (H7 (Rmin b (x0 + δ)) H16). solve_R.
-  - clear H9. assert (left_continuous_at f b) as H9. { apply continuous_on_interval in H2 as [_ [_ H2]]; auto. }
+  - clear H9. assert (left_continuous_at f b) as H9. { apply continuous_on_interval_closed in H2 as [_ [_ H2]]; auto. }
     pose proof lemma_8_1_b f b H9 as [δ [c [H10 H11]]]. assert (exists x0, x0 ∈ A /\ b - δ < x0 <= b) as [x0 [H12 H13]].
     {
       assert (b ∈ A \/ b ∉ A) as [H12 | H12] by apply classic.
@@ -432,16 +432,16 @@ Proof.
   - exfalso. assert (H9 : forall y, y ∈ [a, b] -> f y <> α). { intros y H9 H10. apply H8. exists y. split; auto. }
     set (g := fun x => 1 / (α - f x)). assert (H10 : continuous_on g [a, b]).
     {
-      apply continuous_on_interval; auto. repeat split.
+      apply continuous_on_interval_closed; auto. repeat split.
       - intros x H10. unfold g. apply limit_div.
         -- apply limit_const.
-        -- apply limit_minus. apply limit_const. apply continuous_on_interval in H2 as [H2 _]; auto.
+        -- apply limit_minus. apply limit_const. apply continuous_on_interval_closed in H2 as [H2 _]; auto.
         -- intros H11. specialize (H9 x). apply H9; unfold In in *; solve_R.
-      - apply continuous_on_interval in H2 as [_ [H2 _]]; auto. unfold g. apply right_limit_div.
+      - apply continuous_on_interval_closed in H2 as [_ [H2 _]]; auto. unfold g. apply right_limit_div.
         -- apply right_limit_const.
         -- apply right_limit_minus. apply right_limit_const. auto.
         -- specialize (H9 a ltac:(unfold In in *; lra)). lra.
-      - apply continuous_on_interval in H2 as [_ [_ H2]]; auto. unfold g. apply left_limit_div.
+      - apply continuous_on_interval_closed in H2 as [_ [_ H2]]; auto. unfold g. apply left_limit_div.
         -- apply left_limit_const.
         -- apply left_limit_minus. apply left_limit_const. auto.
         -- specialize (H9 b ltac:(unfold In in *; lra)). lra.
@@ -483,12 +483,12 @@ Lemma f_continuous_neg_f_continuous : forall f a b,
   a < b -> continuous_on f [a, b] -> continuous_on (fun x => -1 * f x) [a, b].
 Proof.
   intros f a b H1 H2. replace (fun x => -f x) with (fun x => -1 * f x). 2 : { extensionality x. lra. }
-  apply continuous_on_interval; auto. repeat split.
+  apply continuous_on_interval_closed; auto. repeat split.
   - intros x H3. apply limit_mult. apply limit_const.
-    apply continuous_on_interval in H2 as [H2 _]; auto.
-  - apply continuous_on_interval in H2 as [_ [H2 _]]; auto. apply right_limit_mult.
+    apply continuous_on_interval_closed in H2 as [H2 _]; auto.
+  - apply continuous_on_interval_closed in H2 as [_ [H2 _]]; auto. apply right_limit_mult.
     apply right_limit_const. auto.
-  - apply continuous_on_interval in H2 as [_ [_ H2]]; auto. apply left_limit_mult.
+  - apply continuous_on_interval_closed in H2 as [_ [_ H2]]; auto. apply left_limit_mult.
     apply left_limit_const. auto.
 Qed.
 
@@ -497,16 +497,16 @@ Theorem theorem_7_4 : forall f a b c,
 Proof.
   intros f a b c H1 H2 H3. (set (g := fun x => f x - c)). assert (H4 : continuous_on g [a, b]).
   {
-    apply continuous_on_interval; auto. repeat split.
-    - intros x H4. apply limit_minus; [| apply limit_const]. apply continuous_on_interval in H2 as [H2 _]; auto.
-    - apply continuous_on_interval in H2 as [_ [H2 _]]; auto. apply right_limit_minus; auto. apply right_limit_const.
-    - apply continuous_on_interval in H2 as [_ [_ H2]]; auto. apply left_limit_minus; auto. apply left_limit_const.
+    apply continuous_on_interval_closed; auto. repeat split.
+    - intros x H4. apply limit_minus; [| apply limit_const]. apply continuous_on_interval_closed in H2 as [H2 _]; auto.
+    - apply continuous_on_interval_closed in H2 as [_ [H2 _]]; auto. apply right_limit_minus; auto. apply right_limit_const.
+    - apply continuous_on_interval_closed in H2 as [_ [_ H2]]; auto. apply left_limit_minus; auto. apply left_limit_const.
   }
   apply theorem_7_1 in H4 as [x [H4 H5]]; unfold g in *; solve_R. exists x; split; solve_R.
 Qed.
 
 Theorem theorem_7_5 : forall f a b c,
-  a < b -> continuous_on f [a, b] -> f b < c < f a -> ∃ x, x ∈ [a, b] /\ f x = c.
+  a < b -> continuous_on f [a, b] -> f b < c < f a -> { x | x ∈ [a, b] /\ f x = c }.
 Proof.
   intros f a b c H1 H2 H3. pose proof f_continuous_neg_f_continuous f a b H1 H2 as H4.
   pose proof theorem_7_4 (fun x => -1 * f x) a b (-c) H1 H4 ltac:(solve_R) as [x [H5 H6]]. exists x; split; solve_R.

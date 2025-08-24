@@ -353,7 +353,7 @@ Qed.
 Theorem theorem_9_1_d : forall f a b,
   a < b -> differentiable_on f [a, b] -> continuous_on f [a, b].
 Proof.
-  intros f a b H1 H2. apply continuous_on_interval; auto. repeat split.
+  intros f a b H1 H2. apply continuous_on_interval_closed; auto. repeat split.
   - intros x H3. specialize (H2 x ltac:(unfold In in *; lra)) as [H2 | [H2 | H2]].
     -- apply theorem_9_1_a; tauto.
     -- exfalso. apply (not_left_endpoint a b x H1); tauto.
@@ -410,8 +410,8 @@ Qed.
 Lemma continuous_on_closed_interval_subset : forall f a b c d,
 a <= c < d <= b -> continuous_on f [a, b] -> continuous_on f [c, d].
 Proof.
-  intros f a b c d H1 H2. apply continuous_on_interval in H2 as [H3 [H5 H6]]; solve_R.
-  apply continuous_on_interval; solve_R. repeat split.
+  intros f a b c d H1 H2. apply continuous_on_interval_closed in H2 as [H3 [H5 H6]]; solve_R.
+  apply continuous_on_interval_closed; solve_R. repeat split.
   - intros x H7. apply H3. solve_R.
   - assert (a < c \/ a = c) as [H7 | H7] by solve_R.
     -- specialize (H3 c ltac:(solve_R)). apply left_right_iff in H3. tauto.
@@ -425,6 +425,13 @@ Theorem theorem_10_1 : forall c,
   ⟦ der ⟧ (fun _ => c) = (fun _ => 0).
 Proof.
   intros c. intros x. apply limit_to_0_equiv with (f1 := fun h => 0); solve_lim.
+Qed.
+
+Theorem theorem_10_1_right : forall c a,
+  ⟦ der a⁺ ⟧ (fun _ => c) = (fun _ => 0).
+Proof.
+  intros c a. intros x. apply right_limit_to_0_equiv with (f1 := fun h => 0). solve_R.
+  apply right_limit_const.
 Qed.
 
 Theorem theorem_10_2 : ⟦ der ⟧ (fun x => x) = (fun _ => 1).
@@ -553,12 +560,12 @@ Theorem theorem_10_5_right : forall f f' a c,
 Proof.
   intros f f' a c H1. set (h := fun _ : ℝ => c). set (h' := fun _ : ℝ => 0).
   assert ((c * f)%f = h ∙ f) as H3 by reflexivity. rewrite H3.
-  assert (⟦ der a⁺ ⟧ h = h') as H4 by admit.
+  assert (⟦ der a⁺ ⟧ h = h') as H4 by (apply theorem_10_1_right).
   assert (⟦ der a⁺ ⟧ (h ∙ f) = h' ∙ f + h ∙ f') as H5.
   { apply theorem_10_4_a_right; auto. } 
   replace (c * f')%f with (h' ∙ f + h ∙ f')%f. 2 : { extensionality x. unfold h, h'. lra. }
   auto.
-Admitted.
+Qed.
 
 Theorem theorem_10_5' : forall f f' c,
   ⟦ der ⟧ f = f' -> ⟦ der ⟧ (fun x => c * f x) = (fun x => c * f' x).
@@ -839,12 +846,12 @@ Proof.
   intros f a b H1 H2 H3. set (h := fun x => f x - ((f b - f a) / (b - a)) * (x - a)).
   assert (continuous_on h [a, b]) as H4. 
   { 
-    apply continuous_on_interval; auto; repeat split.
-    - intros x H4. apply continuous_on_interval in H2 as [H2 _]; auto. specialize (H2 x H4). unfold h. 
+    apply continuous_on_interval_closed; auto; repeat split.
+    - intros x H4. apply continuous_on_interval_closed in H2 as [H2 _]; auto. specialize (H2 x H4). unfold h. 
       apply limit_minus; solve_lim.
-    - apply continuous_on_interval in H2 as [_ [H2 _]]; auto. unfold h. apply right_limit_minus; auto.
+    - apply continuous_on_interval_closed in H2 as [_ [H2 _]]; auto. unfold h. apply right_limit_minus; auto.
       apply right_limit_mult. apply right_limit_const. apply right_limit_minus. apply right_limit_id. apply right_limit_const.
-    - apply continuous_on_interval in H2 as [_ [_ H2]]; auto. unfold h. apply left_limit_minus; auto.
+    - apply continuous_on_interval_closed in H2 as [_ [_ H2]]; auto. unfold h. apply left_limit_minus; auto.
       apply left_limit_mult. apply left_limit_const. apply left_limit_minus. apply left_limit_id. apply left_limit_const.
   }
   assert (differentiable_on h (a, b)) as H5.
@@ -870,7 +877,7 @@ Corollary corollary_11_1 : forall f a b,
 Proof.
   intros f a b H1 H2. exists (f a). intros x H3. pose proof classic (x = a) as [H4 | H4]; subst; auto. assert (a < x) as H5. { unfold In in *. lra. }
   assert (continuous_on f [a, x]) as H6. {
-    apply continuous_on_interval; auto; repeat split.
+    apply continuous_on_interval_closed; auto; repeat split.
     - intros x0 H6. apply theorem_9_1_a. unfold differentiable_at. specialize (H2 x0 ltac:(unfold In in *; lra)). destruct H2 as [H2 | [H2 | H2]].
       -- destruct H2 as [_ H2]. exists 0; auto.
       -- exfalso. pose proof not_left_endpoint a b x0 H1 ltac:(unfold In in *; lra) as H7. apply H7; tauto.
@@ -1221,6 +1228,21 @@ Proof.
     -- apply right_interval_enpoint_closed; lra.
     -- assumption.
 Qed.
+
+Lemma derivative_sqrt_x : forall x,
+  x > 0 ->
+  ⟦ der x ⟧ sqrt = (λ x, 1 / (2 * sqrt x)).
+Proof.
+  intros x H1. unfold derivative_at. apply limit_to_0_equiv with (f1 := fun h => 1 / (sqrt (x + h) + sqrt x)).
+  - intros h H2. admit.
+  - replace (1 / (2 * √x)) with (1 / (√x + √x)).
+    2 : { pose proof sqrt_lt_R0 x H1 as H2. solve_R. }
+    apply limit_div. apply limit_const. apply limit_plus.
+    2 : { apply limit_const. } pose proof sqrt_f_continuous (fun h => x + h) as H2.
+    assert (H3 : continuous (λ h : ℝ, x + h)). { intros a. unfold continuous_at. solve_lim. }
+    specialize (H2 H3). specialize (H2 0). unfold continuous_at in H2.
+    rewrite Rplus_0_r in H2. apply H2. pose proof sqrt_lt_R0 x H1 as H4. lra.
+Admitted.
 
 Parameter Derive : (R -> R) -> (R -> R).
 

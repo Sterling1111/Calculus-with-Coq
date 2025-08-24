@@ -2531,7 +2531,6 @@ Theorem theorem_13_7 : ∀ a b f m M,
 Proof.
   intros a b f m M H1 H2 H3. assert (a = b \/ a < b) as [H4 | H4] by lra.
   subst. rewrite integral_n_n. lra. rename H4 into H1'.
-  
   pose proof (integral_eq' a b f H1' H2) as [bf [r [H4 [H5 [H6 H7]]]]]. rewrite H5.
   assert (H8 : forall P, m * (b - a) <= L(bf, P)).
   {
@@ -2730,7 +2729,7 @@ Proof.
   assert (c = a \/ c = b \/ a < c < b) as [H11 | [H11 | H11]] by solve_R; clear H4; rename H11 into H4.
   - assert (H11 : ⟦ lim 0⁺ ⟧ m = f c).
     {
-      intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [_ [H12 _]].
+      intros ε H11. apply continuous_on_interval_closed in H3 as H12; auto. destruct H12 as [_ [H12 _]].
       specialize (H12 ε H11) as [δ [H13 H14]]. exists (Rmin (δ/2) (b-c)). split. solve_R. 
       intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
       - specialize (H5 ltac:(solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
@@ -2746,7 +2745,7 @@ Proof.
     }
     assert (H12 : ⟦ lim 0⁺ ⟧ M = f c).
     {
-      intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [_ [H13 _]].
+      intros ε H12. apply continuous_on_interval_closed in H3 as H13; auto. destruct H13 as [_ [H13 _]].
       specialize (H13 ε H12) as [δ [H14 H15]]. exists (Rmin (δ/2) (b-c)). split. solve_R.
       intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
       - specialize (H6 ltac:(solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
@@ -2765,7 +2764,7 @@ Proof.
     right; left; split; [ apply is_left_endpoint_closed |]; auto.
   - assert (H11 : ⟦ lim 0⁻ ⟧ m = f c).
     {
-      intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [_ [_ H12]].
+      intros ε H11. apply continuous_on_interval_closed in H3 as H12; auto. destruct H12 as [_ [_ H12]].
       specialize (H12 ε H11) as [δ [H13 H14]]. exists (Rmin (δ/2) (c-a)). split. solve_R.
       intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
       - specialize (H5 ltac:(solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
@@ -2782,7 +2781,7 @@ Proof.
     }
     assert (H12 : ⟦ lim 0⁻ ⟧ M = f c).
     {
-      intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [_ [_ H13]].
+      intros ε H12. apply continuous_on_interval_closed in H3 as H13; auto. destruct H13 as [_ [_ H13]].
       specialize (H13 ε H12) as [δ [H14 H15]]. exists (Rmin (δ/2) (c-a)). split. solve_R.
       intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
       - specialize (H6 ltac:(solve_R)). assert (H18 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
@@ -2801,7 +2800,7 @@ Proof.
     right; right; split; [ apply is_right_endpoint_closed | ]; auto.
   - assert (H11 : ⟦ lim 0 ⟧ m = f c).
     {
-      intros ε H11. apply continuous_on_interval in H3 as H12; auto. destruct H12 as [H12 _].
+      intros ε H11. apply continuous_on_interval_closed in H3 as H12; auto. destruct H12 as [H12 _].
       specialize (H12 c ltac:(solve_R)) as H12. specialize (H12 ε H11) as [δ [H13 H14]].
       exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split. solve_R.
       intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
@@ -2820,7 +2819,7 @@ Proof.
     }
     assert (H12 : ⟦ lim 0 ⟧ M = f c).
     {
-      intros ε H12. apply continuous_on_interval in H3 as H13; auto. destruct H13 as [H13 _].
+      intros ε H12. apply continuous_on_interval_closed in H3 as H13; auto. destruct H13 as [H13 _].
       specialize (H13 c ltac:(solve_R)). specialize (H13 ε H12) as [δ [H14 H15]].
       exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split; auto. solve_R.
       intros x H16. specialize (H6 x) as [H6 H6']. assert (x > 0 \/ x < 0) as [H17 | H17] by solve_R.
@@ -2858,12 +2857,6 @@ Proof.
     exists (Rmin δ (c - a)). split. solve_R.
     intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
 Qed.
-
-Lemma derivative_on_eq' : forall a b f f1' f2',
-  a < b -> (forall x, a <= x <= b -> f1' x = f2' x) -> ⟦ der ⟧ f [a, b] = f1' -> ⟦ der ⟧ f [a, b] = f2'.
-Proof.
-  intros a b f f1' f2' H1 H2 H3. replace f2' with f1'.
-Admitted.
 
 Theorem FTC1' : ∀ f a b,
   a < b -> continuous_on f [a, b] -> ⟦ der ⟧ (λ x, ∫ x b f) [a, b] = - f.
