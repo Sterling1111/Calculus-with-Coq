@@ -45,12 +45,6 @@ Proof.
   intros f A H1 a H2 ε H3. specialize (H1 a ε H3) as [δ [H1 H4]]. exists δ. split; auto.
 Qed.
 
-Lemma continuous_on_imp_continuous_at : forall f A a,
-  continuous_on f A -> a ∈ A -> continuous_at f a.
-Proof.
-  intros f A a H1 H2.
-Qed.
-
 Example example_37_2 : forall c d,
   continuous (fun x => c * x + d).
 Proof.

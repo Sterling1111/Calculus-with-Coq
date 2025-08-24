@@ -1,4 +1,4 @@
-Require Import Imports Notations Integrals Derivatives Functions Continuity Sets Reals_util.
+Require Import Imports Notations Integrals Derivatives Functions Continuity Limit Sets Reals_util.
 Import IntervalNotations SetNotations.
 
 Open Scope R_scope.
@@ -47,7 +47,17 @@ Admitted.
 Lemma A_decreases : decreasing_on A [-1, 1].
 Proof.
   apply corollary_11_3_b' with (f' := (fun x => -1 / (2 * √(1 - x ^ 2)))); try lra.
-  - apply continuous_on_imp_continuous_at.
+  - intros x H1. unfold limit_on. apply limit_on_eq_f with (f1 := fun x => x * √(1 - x ^ 2) / 2 + ∫ x 1 (λ t, √(1 - t^2))).
+    2 : { clear. intros x H1. rewrite A_spec; solve_R. }
+
+    -- unfold A.
+    + rewrite H2. unfold derivative_at. apply derivative_at_eq_f with (f := A) (f' := (fun x => -1 / (2 * √(1 - x ^ 2)))) (a := -1) (b := 1); try lra.
+      * intros y H3. rewrite A_spec; solve_R.
+      * apply lemma_15_0; lra.
+    + rewrite H2. unfold derivative_at. apply derivative_at_eq_f with (f := A) (f' := (fun x => -1 / (2 * √(1 - x ^ 2)))) (a := -1) (b := 1); try lra.
+      * intros y H3. rewrite A_spec; solve_R.
+      * apply lemma_15_0; lra.
+    + apply lemma_15_0; lra.
   - pose proof lemma_15_0 as H1. intros x. specialize (H1 x). unfold derivative_at in
   - intros x H1. pose proof sqrt_spec.
 Admitted.
