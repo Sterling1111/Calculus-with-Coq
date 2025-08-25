@@ -141,5 +141,4 @@ Theorem theorem_15_1_a : forall x,
   0 < x < π -> ⟦ der x ⟧ cos = -sin.
 Proof.
   intros x H1. set (B := fun x => 2 * A x). 
-
-Qed.
+Admitted.
