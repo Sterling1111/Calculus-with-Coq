@@ -2872,8 +2872,10 @@ Proof.
     -- subst. rewrite integral_eq with (b := x); lra.
   - set (f1' := fun x : R => 0). replace (- f)%function with (f1' - f)%function.
     2 : { extensionality x. unfold f1'. lra. }
-    admit.
-Admitted.
+    apply derivative_on_minus; auto.
+    -- apply derivative_imp_derivative_on; auto. apply theorem_10_1; auto.
+    -- apply FTC1; auto.
+Qed.
 
 Theorem FTC2 : ∀ a b f g,
     a < b -> continuous_on f [a, b] -> ⟦ der ⟧ g [a, b] = f -> ∫ a b f = g b - g a.

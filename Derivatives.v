@@ -121,19 +121,19 @@ Proof.
 Qed.
 
 Lemma not_left_endpoint : forall a b x,
-  a < b -> x ∈ (a, b) -> ~left_endpoint [a, b] x.
+  a < b -> x ∈ (a, b] -> ~left_endpoint [a, b] x.
 Proof.
   intros a b x H1 H2 [δ [H3 H4]]. unfold In in *.
-  assert (H5 : a < x < b). { apply H2. }
+  assert (H5 : a < x <= b). { apply H2. }
   set (ε := Rmin (x - a) δ). specialize (H4 (x - ε/2)) as [H6 H7].
   apply H6; unfold ε in *; solve_R.
 Qed.
 
 Lemma not_right_endpoint : forall a b x,
-  a < b -> x ∈ (a, b) -> ~right_endpoint [a, b] x.
+  a < b -> x ∈ [a, b) -> ~right_endpoint [a, b] x.
 Proof.
   intros a b x H1 H2 [δ [H3 H4]]. unfold In in *.
-  assert (H5 : a < x < b). { apply H2. }
+  assert (H5 : a <= x < b). { apply H2. }
   set (ε := Rmin (b - x) δ). specialize (H4 (x + ε/2)) as [H6 H7].
   apply H6; unfold ε in *; solve_R.
 Qed.
@@ -356,8 +356,8 @@ Proof.
   intros f a b H1 H2. apply continuous_on_interval_closed; auto. repeat split.
   - intros x H3. specialize (H2 x ltac:(unfold In in *; lra)) as [H2 | [H2 | H2]].
     -- apply theorem_9_1_a; tauto.
-    -- exfalso. apply (not_left_endpoint a b x H1); tauto.
-    -- exfalso. apply (not_right_endpoint a b x H1); tauto.
+    -- exfalso. apply (not_left_endpoint a b x H1); solve_R.
+    -- exfalso. apply (not_right_endpoint a b x H1); solve_R.
   - specialize (H2 a ltac:(unfold In in *; lra)) as [H2 | [H2 | H2]].
     -- exfalso. apply (not_interior_point_left a b H1); tauto.
     -- apply theorem_9_1_b; tauto.
@@ -588,6 +588,28 @@ Theorem theorem_10_3_d : forall f g f' g',
   ⟦ der ⟧ (f - g) = f' - g'.
 Proof.
   intros f g f' g' H1 H2 x. apply theorem_10_3_c; auto.
+Qed.
+
+Lemma derivative_on_minus : forall f g f' g' a b,
+  a < b -> ⟦ der ⟧ f [a, b] = f' -> ⟦ der ⟧ g [a, b] = g' ->
+  ⟦ der ⟧ (f - g) [a, b] = f' - g'.
+Proof.
+  intros f g f' g' a b H1 H2 H3 c H4. assert (c = a \/ c = b \/ (a < c < b)) as [H5 | [H5 | H5]] by solve_R.
+  - subst. right; left; split; [ apply left_interval_enpoint_closed; auto | ].
+    specialize (H2 a H4) as [[H2 _] | [[H2 H6] | [H2 _]]]; specialize (H3 a H4) as [[H3 _] | [[H3 H7] | [H3 _]]];
+    try (apply not_interior_point_left in H2; solve_R); try (apply not_interior_point_left in H3; solve_R);
+    try (apply not_right_endpoint_closed in H3; solve_R); try (apply not_right_endpoint_closed in H2; solve_R).
+    apply right_derivative_at_minus; auto.
+  - subst. right; right; split; [ apply right_interval_enpoint_closed; auto | ].
+    specialize (H2 b H4) as [[H2 _] | [[H2 _] | [H2 H6]]]; specialize (H3 b H4) as [[H3 _] | [[H3 _] | [H3 H7]]];
+    try (apply not_interior_point_right in H2; solve_R); try (apply not_interior_point_right in H3; solve_R);
+    try (apply not_left_endpoint_closed in H3; solve_R); try (apply not_left_endpoint_closed in H2; solve_R).
+    apply left_derivative_at_minus; auto.
+  - left; split; [ apply is_interior_point_closed; auto | ].
+    specialize (H2 c H4) as [[H2 H6] | [[H2 H6] | [H2 H6]]]; specialize (H3 c H4) as [[H3 H7] | [[H3 H7] | [H3 H7]]];
+    try (apply not_left_endpoint in H2; solve_R); try (apply not_left_endpoint in H3; solve_R);
+    try (apply not_right_endpoint in H2; solve_R); try (apply not_right_endpoint in H3; solve_R).
+    apply theorem_10_3_c; auto.
 Qed.
 
 Theorem theorem_10_6 : forall a n,
@@ -1006,8 +1028,8 @@ Proof.
   intros a b f f' H1 x H2. left. split.
   - apply is_interior_point_open; solve_R.
   - specialize (H1 x ltac:(solve_R)) as [[_ H1] | [[H1 _] | [H1 _]]]; auto.
-    -- pose proof not_left_endpoint a b x ltac:(solve_R) H2 as H3; tauto.
-    -- pose proof not_right_endpoint a b x ltac:(solve_R) H2 as H3; tauto.
+    -- pose proof not_left_endpoint a b x ltac:(solve_R) ltac:(solve_R) as H3; tauto.
+    -- pose proof not_right_endpoint a b x ltac:(solve_R) ltac:(solve_R) as H3; tauto.
 Qed.
 
 Lemma derivative_at_eq_f : forall f1 f2 f' c a b,
