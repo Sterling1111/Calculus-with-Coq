@@ -21,6 +21,8 @@ Limit.v
 Functions.v
 Continuity.v
 Derivatives.v
+Sorted_Rlt.v
+Partitions.v
 Integrals.v
 Chapter6.v
 Chapter7.v

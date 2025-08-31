@@ -221,3 +221,17 @@ Proof.
     }
     destruct H1 as [_ H1]. specialize (H1 (a - δ/2) H6). lra.
 Qed.
+
+Lemma glb_subset : forall (E1 E2 : Ensemble ℝ) r1 r2,
+  is_glb E1 r1 -> is_glb E2 r2 -> E1 ⊆ E2 -> r2 <= r1.
+Proof.
+  intros E1 E2 r1 r2 H1 H2 H3. unfold is_glb in H1, H2. destruct H1 as [H1 H4], H2 as [H2 H5].
+  specialize (H4 r2). apply Rge_le. apply H4. intros x H6. specialize (H3 x H6). specialize (H2 x). apply H2. auto.
+Qed.
+
+Lemma lub_subset : forall (E1 E2 : Ensemble ℝ) r1 r2,
+  is_lub E1 r1 -> is_lub E2 r2 -> E1 ⊆ E2 -> r1 <= r2.
+Proof.
+  intros E1 E2 r1 r2 H1 H2 H3. unfold is_lub in H1, H2. destruct H1 as [H1 H4], H2 as [H2 H5].
+  specialize (H4 r2). apply H4. intros x H6. specialize (H3 x H6). specialize (H2 x). apply H2. auto.
+Qed.
