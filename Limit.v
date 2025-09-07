@@ -16,21 +16,33 @@ Definition right_limit (f : ℝ -> ℝ) (a L : ℝ) : Prop :=
 Definition limit_on (f : ℝ -> ℝ) (D : Ensemble ℝ) (a L : ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ δ, δ > 0 /\ ∀ x, x ∈ D -> 0 < |x - a| < δ -> |f x - L| < ε.
 
-Notation "⟦ 'lim' a ⟧ f '=' L" := 
-  (limit f a L) 
-    (at level 70, f at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  '='  L").
+Module LimitNotations.
 
-Notation "⟦ 'lim' a ⁺ ⟧ f '=' L" := 
-  (right_limit f a L)
-    (at level 70, f at level 0, no associativity, format "⟦  'lim'  a ⁺  ⟧  f  '='  L").
+  Declare Scope limit_scope.
 
-Notation "⟦ 'lim' a ⁻ ⟧ f '=' L" :=
-  (left_limit f a L)
-    (at level 70, f at level 0, no associativity, format "⟦  'lim'  a ⁻  ⟧  f  '='  L").
+  Delimit Scope limit_scope with l. 
 
-Notation "⟦ 'lim' a ⟧ f D '=' L" :=
-  (limit_on f D a L)
-    (at level 70, f at level 0, D at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  D  '='  L").
+  Notation "⟦ 'lim' a ⟧ f '=' L" := 
+    (limit f a L) 
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  '='  L") : limit_scope.
+
+  Notation "⟦ 'lim' a ⁺ ⟧ f '=' L" := 
+    (right_limit f a L)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  a ⁺  ⟧  f  '='  L") : limit_scope.
+
+  Notation "⟦ 'lim' a ⁻ ⟧ f '=' L" :=
+    (left_limit f a L)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  a ⁻  ⟧  f  '='  L") : limit_scope.
+
+  Notation "⟦ 'lim' a ⟧ f D '=' L" :=
+    (limit_on f D a L)
+      (at level 70, f at level 0, D at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  D  '='  L") : limit_scope.
+
+End LimitNotations.
+
+Import LimitNotations.
+
+Open Scope limit_scope.
 
 Definition circle (a b r : ℝ) : Ensemble (ℝ * ℝ) :=
   fun p => let (x, y) := p in

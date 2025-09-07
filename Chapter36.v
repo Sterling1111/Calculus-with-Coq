@@ -1,6 +1,6 @@
 Require Import Imports Limit Sets Notations Functions Reals_util.
 Require Export Chapter35.
-Import SetNotations.
+Import SetNotations LimitNotations.
 
 Lemma lemma_36_1 : ⟦ lim 4 ⟧ (fun x => 2 * x + 3) = 11.
 Proof.

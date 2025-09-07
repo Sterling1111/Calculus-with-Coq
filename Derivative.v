@@ -1,5 +1,5 @@
 Require Import Imports Sets Notations Functions Limit Continuity Reals_util.
-Import SetNotations IntervalNotations Function_Notations.
+Import SetNotations IntervalNotations Function_Notations LimitNotations.
 
 Definition differentiable_at (f:R -> R) (a:R) :=
   exists L, ⟦ lim 0 ⟧ (fun h => (f (a + h) - f a) / h) = L.
@@ -48,23 +48,33 @@ Definition derivative_on (f f' : R -> R) (A : Ensemble R) :=
 Definition derivative (f f' : R -> R) :=
   forall x, derivative_at f f' x.
 
-Notation "⟦ 'der' ⟧ f = f'" := (derivative f f')
-  (at level 70, f at level 0, no associativity, format "⟦  'der'  ⟧  f  =  f'").
+Module DerivativeNotations.
+  Declare Scope derivative_scope.
+  Delimit Scope derivative_scope with d.
+  
+  Notation "⟦ 'der' ⟧ f = f'" := (derivative f f')
+    (at level 70, f at level 0, no associativity, format "⟦  'der'  ⟧  f  =  f'") : derivative_scope.
 
-Notation "'der' f = f'" := (derivative f f')
-  (at level 70, f at level 0, no associativity, only parsing).
+  Notation "'der' f = f'" := (derivative f f')
+    (at level 70, f at level 0, no associativity, only parsing) : derivative_scope.
 
-Notation "⟦ 'der' ⟧ f D = f'" := (derivative_on f f' D)
-  (at level 70, f at level 0, D at level 0, no associativity, format "⟦  'der'  ⟧  f  D  =  f'").
+  Notation "⟦ 'der' ⟧ f D = f'" := (derivative_on f f' D)
+    (at level 70, f at level 0, D at level 0, no associativity, format "⟦  'der'  ⟧  f  D  =  f'") : derivative_scope.
 
-Notation "⟦ 'der' a ⟧ f = f'" := (derivative_at f f' a)
-  (at level 70, f at level 0, no associativity, format "⟦  'der'  a  ⟧  f  =  f'").
+  Notation "⟦ 'der' a ⟧ f = f'" := (derivative_at f f' a)
+    (at level 70, f at level 0, no associativity, format "⟦  'der'  a  ⟧  f  =  f'") : derivative_scope.
 
-Notation "⟦ 'der' a ⁺ ⟧ f = f'" := (right_derivative_at f f' a)
-  (at level 70, f at level 0, no associativity, format "⟦  'der'  a ⁺  ⟧  f  =  f'").
+  Notation "⟦ 'der' a ⁺ ⟧ f = f'" := (right_derivative_at f f' a)
+    (at level 70, f at level 0, no associativity, format "⟦  'der'  a ⁺  ⟧  f  =  f'") : derivative_scope.
 
-Notation "⟦ 'der' a ⁻ ⟧ f = f'" := (left_derivative_at f f' a)
-  (at level 70, f at level 0, no associativity, format "⟦  'der'  a ⁻  ⟧  f  =  f'").
+  Notation "⟦ 'der' a ⁻ ⟧ f = f'" := (left_derivative_at f f' a)
+    (at level 70, f at level 0, no associativity, format "⟦  'der'  a ⁻  ⟧  f  =  f'") : derivative_scope.
+
+End DerivativeNotations.
+
+Import DerivativeNotations.
+
+Open Scope derivative_scope.
 
 Lemma interior_point_Full_set : forall a,
   interior_point (Full_set R) a.
