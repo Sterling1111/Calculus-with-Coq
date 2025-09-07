@@ -1,7 +1,7 @@
 Require Import Imports Notations Completeness Sets Functions Sums 
-               Reals_util Continuity Derivatives Limit Pigeonhole 
-               Partitions Sorted_Rlt.
-Import SetNotations IntervalNotations Function_Notations.
+               Reals_util Continuity Derivative Limit Pigeonhole 
+               Partition Sorted_Rlt.
+Import SetNotations IntervalNotations Function_Notations LimitNotations DerivativeNotations.
 
 Notation In := Ensembles.In (only parsing).
 

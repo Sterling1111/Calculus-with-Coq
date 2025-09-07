@@ -1,5 +1,5 @@
 Require Import Imports Limit Sums Reals_util Sets Notations Functions Completeness.
-Import SetNotations IntervalNotations Function_Notations.
+Import SetNotations IntervalNotations Function_Notations LimitNotations.
 
 Open Scope interval_scope.
 
