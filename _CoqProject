@@ -20,10 +20,10 @@ Series.v
 Limit.v
 Functions.v
 Continuity.v
-Derivatives.v
+Derivative.v
 Sorted_Rlt.v
-Partitions.v
-Integrals.v
+Partition.v
+Integral.v
 Chapter6.v
 Chapter7.v
 Chapter8.v
