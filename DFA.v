@@ -5,8 +5,12 @@ Notation Length := List.length.
 
 Set Implicit Arguments.
 
-Definition finite_type (T : Type) : Prop :=
-  exists l : list T, NoDup l /\ (forall x, List.In x l).
+Record Fin_Type (T : Type) : Type := {
+  Fin_Type_l : list T;
+  Fin_Type_P1 : forall x, List.In x Fin_Type_l;
+  Fin_Type_P2 : NoDup Fin_Type_l;
+  Fin_Type_P3 : forall x y : T, {x = y} + {x <> y};
+}.
 
 Module DFA_Theory.
 
@@ -16,8 +20,8 @@ Module DFA_Theory.
     δ : Q * Σ -> Q;
     q0 : Q;
     F : Ensemble Q;
-    DFA_P1 : finite_type Q;
-    DFA_P2 : finite_type Σ;
+    DFA_P1 : Fin_Type Q;
+    DFA_P2 : Fin_Type Σ;
   }.
 
   Fixpoint DFA_compute M l q :=
@@ -36,9 +40,9 @@ Module DFA_Theory.
   Definition DFA_recognizes_language M L :=
     forall l, l ∈ L <-> DFA_accepts M l.
 
-  Definition regular_language {Σ : Type} (L : Ensemble (list Σ)) :=
-    exists Q δ q0 F (H1 : finite_type Q) (H2 : finite_type Σ),
-      let M := mk_DFA δ q0 F H1 H2 in
+  Definition regular_language {Σ' : Type} (L : Ensemble (list Σ')) :=
+    exists Q' δ' q0' F' (H1 : Fin_Type Q') (H2 : Fin_Type Σ'),
+      let M := mk_DFA δ' q0' F' H1 H2 in
       DFA_recognizes_language M L.
 
   Fixpoint list_power {T : Type} (l : list T) (n : nat) :=
@@ -58,8 +62,9 @@ Module DFA_Theory.
                       forall i, (x ++ (y ^ i) ++ z) ∈ L.
   Proof.
     intros Σ L H1. destruct H1 as [Q [δ [q0 [F [H2 [H3 H4]]]]]]; simpl in *.
-    set (M := mk_DFA δ q0 F H2 H3). fold M in H4. destruct H2 as [l [H5 H6]].
-    exists (length l). intros s H7 H8.
+    set (M := mk_DFA δ q0 F H2 H3). fold M in H4.
+    set (l := H2.(Fin_Type_l)). exists (length l). intros s H5 H6.
+
   Admitted.
 
 End DFA_Theory.
