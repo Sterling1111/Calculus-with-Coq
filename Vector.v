@@ -162,3 +162,8 @@ Proof.
   destruct l1' as [|L11 [|L12 []]], l2' as [|L21 [|L22 []]]; simpl in *; try lia; clear Hl1' Hl2'.
   destruct H1 as [H1a H1b], H2 as [H2a H2b]. split; apply limit_plus; auto.
 Qed.
+
+Record Matrix (A : Type) (m n : nat) := mk_matrix {
+  mlist : list (vector A n);
+  mlist_length : length mlist = m
+}.

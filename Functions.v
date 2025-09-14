@@ -65,17 +65,6 @@ Coercion Type_to_Ensemble (A : Type) : Ensemble A :=
 Coercion Ensemble_to_Type (A : Type) (X : Ensemble A) : Type :=
   subType X.
 
-Lemma Type_Ensemble_Type : forall A : Type,
-  Ensemble_to_Type A (Type_to_Ensemble A) = A.
-Proof.
-  intros A. unfold Ensemble_to_Type. unfold Type_to_Ensemble. apply univalence.
-  set (f := fun x : (subType (Full_set A)) => val (Full_set A) x ).
-  set (g := fun x : A => mkSubType A (Full_set A) x ltac:(apply Full_intro)).
-  exists f, g. split; intros; unfold f, g.
-  - destruct x as [x H1]. simpl. destruct H1. reflexivity.
-  - unfold f, g. reflexivity.
-Qed.
-
 Lemma Ensemble_Type_Ensemble : forall A (X : Ensemble A),
   Type_to_Ensemble (Ensemble_to_Type A X) = X.
 Proof.
@@ -93,23 +82,6 @@ Lemma eq_cardinality_Type : forall A B : Type,
 Proof.
   intros A B [[[f H1] [a [b _]]] | [H1 H2]]; apply eq_cardinality_Full_set; auto. left. split. exists f. auto. exists a, b. auto.
 Qed.
-
-Lemma subType_Full_set : forall A : Type,
-  subType (Full_set A) = A.
-Proof.
-  intros A. apply univalence.
-  set (f := fun x : (subType (Full_set A)) => val (Full_set A) x ).
-  set (g := fun x : A => mkSubType A (Full_set A) x ltac:(apply Full_intro)).
-  exists f, g. split; intros; unfold f, g.
-  - destruct x as [x H1]. simpl. destruct H1. reflexivity.
-  - unfold f, g. reflexivity.
-Qed.
-
-Lemma image_card : forall A B (f : A -> B),
-  Finite_set A -> ‖ image f ‖ <= ‖ A ‖.
-Proof.
-  intros A B f [l H1]. unfold cardinal_le, image. rewrite subType_Full_set.
-Abort.
 
 Theorem theorem_28_1 : forall A B (f : A -> B),
   Finite_set (Full_set A) -> ‖ image f ‖ <= ‖ (Full_set A) ‖.

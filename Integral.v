@@ -11,7 +11,7 @@ Definition lower_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition a 
   let l1 := p.(points a b) in
   let l2 := proj1_sig (partition_sublist_elem_has_inf f a b p bounded) in
   let n : ℕ := length l2 in
-  sum_f 0 (n-1) (fun i => (nth i l2 0) * (nth (i+1) l1 0 - nth (i) l1 0)).
+  ∑ 0 (n-1) (fun i => (nth i l2 0) * (nth (i+1) l1 0 - nth (i) l1 0)).
 
 Definition upper_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition a b) : ℝ :=
   let f := bf.(bounded_f a b) in
@@ -19,7 +19,7 @@ Definition upper_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition a 
   let l1 := p.(points a b) in
   let l2 := proj1_sig (partition_sublist_elem_has_sup f a b p bounded) in
   let n : ℕ := length l2 in
-  sum_f 0 (n-1) (fun i => (nth i l2 0) * (nth (i+1) l1 0 - nth (i) l1 0)).
+  ∑ 0 (n-1) (fun i => (nth i l2 0) * (nth (i+1) l1 0 - nth (i) l1 0)).
 
 Notation "L( f , P )" := (lower_sum _ _ f P) (at level 70, f, P at level 0, format "L( f ,  P )").
 Notation "U( f , P )" := (upper_sum _ _ f P) (at level 70, f, P at level 0, format "U( f ,  P )").
@@ -540,7 +540,7 @@ Lemma lemma_13_1_b : forall (a b : ℝ) (bf : bounded_function_R a b) (Q P : par
 Proof.
   intros a b f Q P H1. destruct (exists_list_of_missing_elems a b P Q) as [l [H2 H3]]; auto.
   generalize dependent P. induction l as [| h t IH].
-  - intros P H1 H2 H3. simpl in H2. apply partition_eq in H2. subst. reflexivity.
+  - intros P H1 H2 H3. simpl in H2. apply partition_eq in H2. rewrite H2. apply Req_ge. reflexivity.
   - intros P H1 H2 H3. simpl in H2. assert (H4 : a < b). { pose proof partition_spec a b P; tauto. }
     set (l := insert_Sorted_Rlt h (points a b P)). assert (H5 : a < b). { pose proof partition_spec a b P; tauto. }
     assert (H6 : Sorted Rlt l). { unfold l. apply insert_Sorted_Rlt_sorted; auto. pose proof partition_spec a b P; tauto. apply H3. left. auto. }
@@ -558,7 +558,7 @@ Proof.
       intros r H12 H13. apply (H3 r). right. auto. pose proof add_points_Dup (points a b P') t r H12 H13 as H15. exfalso. apply H15.
       rewrite H11. apply (Sorted_Rlt_NoDup (points a b Q)). destruct Q as [l2]; auto.
     }
-    specialize (IH H10 H11 H12). assert (U(f, P) >= U(f, P')). { apply insert_Parition_R_upper_sum with (r := h). apply H3. left. auto. auto. }
+    specialize (IH H10 H11 H12). assert (U(f, P) >= U(f, P')) as H13. { apply insert_Parition_R_upper_sum with (r := h). apply H3. left. auto. auto. }
     lra.
 Qed.
 
@@ -595,7 +595,7 @@ Proof.
     assert (H5 : forall x, List.In x l -> a <= x <= b).
     { intros y H5. unfold l in H5. simpl in H5. destruct H5; try lra. }
     set (P := mkpartition a b l H1 H2 H3 H4 H5). 
-    set (x := L(f, P)). assert (H6 : x ∈ LS). { exists P. reflexivity. }
+    set (x := L(f, P)). assert (H6 : x ∈ LS). { unfold Ensembles.In. unfold LS. exists P. reflexivity. }
     apply not_Empty_In in H0. auto. exists x. auto.
 Qed.
 
@@ -1645,3 +1645,7 @@ Proof.
   replace (1 / 3) with (g 1 - g 0) by (unfold g; lra).
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
+
+From Stdlib Require Import Logic.ClassicalEpsilon.
+
+Print epsilon.
