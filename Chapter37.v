@@ -1,6 +1,6 @@
 Require Import Imports Limit Continuity Sets Reals_util Notations Functions Completeness.
 Require Export Chapter36.
-Import SetNotations Function_Notations.
+Import SetNotations Function_Notations LimitNotations.
 
 Lemma lemma_37_1 : continuous_at R_sqrt.sqrt 9.
 Proof.

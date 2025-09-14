@@ -21,17 +21,6 @@ Definition Transitive_On {A} (R : Relation A A) (E : Ensemble A) : Prop :=
 Definition Antisymmetric_On {A} (R : Relation A A) (E : Ensemble A) : Prop :=
   forall x y, x ∈ E -> y ∈ E -> R x y -> R y x -> x = y.
 
-Lemma Relation_is_Ensemble : forall A B, Relation A B = Ensemble (A * B).
-Proof.
-  intros A B.
-  apply univalence.
-  exists (fun (r : Relation A B) (p : A * B) => r (fst p) (snd p)),
-      (fun (e : Ensemble (A * B)) (x : A)(y : B) => e (x,y)).
-  split; intros x.
-  - constructor.
-  - apply functional_extensionality. intros p. destruct p. reflexivity. 
-Qed.
-
 Coercion rel_to_ens {A B} (R : Relation A B) : Ensemble (A * B) := 
   fun p => R (fst p) (snd p).
 Coercion ens_to_rel {A B} (E : Ensemble (A * B)) : Relation A B := 

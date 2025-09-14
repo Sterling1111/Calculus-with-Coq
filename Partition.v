@@ -6,7 +6,7 @@ Open Scope R_scope.
 Record partition (a b : ℝ) : Type := mkpartition
 {
   points : list ℝ; 
-  partition_P1 : a < b;
+  partition_P1 : a < b : Prop : Type;
   partition_P2 : Sorted Rlt points;
   partition_P3 : List.In a points;
   partition_P4 : List.In b points;
