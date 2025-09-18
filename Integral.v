@@ -666,8 +666,11 @@ Proof.
   - destruct bf; simpl in *; subst; auto. 
 Qed.
 
-Axiom integrable_dec : forall a b (f : ℝ -> ℝ),
+Lemma integrable_dec : forall a b (f : ℝ -> ℝ),
   {integrable_on a b f} + {~integrable_on a b f}.
+Proof.
+  intros a b f. apply excluded_middle_informative.
+Qed.
 
 Definition definite_integral a b (f : ℝ -> ℝ) : ℝ :=
   match (Rle_dec a b) with
@@ -1335,7 +1338,7 @@ Proof.
       pose proof interval_has_inf as H5. intros h H6.
       assert (continuous_on f [c, c + h]) as H7.
       { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H7. solve_R. }
-      pose proof continuous_imp_bounded f c (c + h) ltac:(unfold In in *; lra) H7 as H8.
+      pose proof continuous_imp_bounded f c (c + h) ltac:(solve_R) H7 as H8.
       specialize (H5 c (c + h) f ltac:(solve_R) H8) as [sup H9]. exists sup; auto. 
     }
     assert (forall h, h ∈ (a - c, 0) -> { inf | is_glb (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) inf }) as H6.
@@ -1375,16 +1378,16 @@ Proof.
       pose proof interval_has_sup as H6. intros h H7.
       assert (continuous_on f [c, c + h]) as H8.
       { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H8. solve_R. }
-      pose proof continuous_imp_bounded f c (c + h) ltac:(unfold In in *; lra) H8 as H9.
-      specialize (H6 c (c + h) f ltac:(unfold In in *; lra) H9) as [sup H10]. exists sup; auto. 
+      pose proof continuous_imp_bounded f c (c + h) ltac:(solve_R) H8 as H9.
+      specialize (H6 c (c + h) f ltac:(solve_R) H9) as [sup H10]. exists sup; auto. 
     }
     assert (forall h, h ∈ (a - c, 0) -> { sup | is_lub (λ y : ℝ, ∃ x : ℝ, x ∈ [c + h, c] /\ y = f x) sup }) as H7.
     {
       pose proof interval_has_sup as H7. intros h H8.
       assert (continuous_on f [c + h, c]) as H9.
       { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H9. solve_R. }
-      pose proof continuous_imp_bounded f (c + h) c ltac:(unfold In in *; lra) H9 as H10.
-      specialize (H7 (c + h) c f ltac:(unfold In in *; lra) H10) as [sup H11]. exists sup; auto. 
+      pose proof continuous_imp_bounded f (c + h) c ltac:(solve_R) H9 as H10.
+      specialize (H7 (c + h) c f ltac:(solve_R) H10) as [sup H11]. exists sup; auto. 
     }
     assert (H8 : forall h, ~h <= (a - c) /\ h < 0 -> h ∈ (λ x : ℝ, a - c < x < 0)). 
     { intros h H8. unfold In in *. lra. }
@@ -1645,7 +1648,3 @@ Proof.
   replace (1 / 3) with (g 1 - g 0) by (unfold g; lra).
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
-
-From Stdlib Require Import Logic.ClassicalEpsilon.
-
-Print epsilon.
