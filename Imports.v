@@ -28,6 +28,7 @@ From Coq Require Export
   Logic.Classical_Prop
   Logic.FunctionalExtensionality
   Logic.ClassicalChoice
+  Logic.ClassicalEpsilon
   
   (* Utilities *)
   String

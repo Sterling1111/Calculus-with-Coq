@@ -1,5 +1,5 @@
-Require Import Imports Notations Integrals Derivatives Functions Continuity Limit Sets Reals_util.
-Import IntervalNotations SetNotations Function_Notations.
+Require Import Imports Notations Integral Derivative Functions Continuity Limit Sets Reals_util.
+Import IntervalNotations SetNotations Function_Notations DerivativeNotations LimitNotations.
 
 Open Scope R_scope.
 
@@ -63,19 +63,6 @@ Proof.
   rewrite A_spec; try lra. rewrite integral_n_n.
   replace (1 - 1 ^ 2) with 0 by lra. rewrite sqrt_0. lra.
 Qed.
-
-Lemma A_at_0 : A 0 = π / 4.
-Proof.
-  rewrite A_spec; try lra. rewrite Rmult_0_l. rewrite Rdiv_0_l, Rplus_0_l.
-  unfold π. rewrite integral_plus with (a := -1)(c := 0); try lra.
-  - apply Rmult_eq_reg_r with (r := 4); try lra. field_simplify.
-    rewrite <- Rmult_plus_distr_l. apply Rmult_eq_reg_l with (r := 1/2); try lra. field_simplify.
-    replace (4 * ∫ 0 1 (λ t : ℝ, √(1 - t ^ 2)) / 2) with (∫ 0 1 (λ t : ℝ, √(1 - t ^ 2)) + ∫ 0 1 (λ t : ℝ, √(1 - t ^ 2))) by lra.
-    apply Rminus_eq_reg_r with (r := ∫ 0 1 (λ t : ℝ, √(1 - t ^ 2))); field_simplify. admit.
-  - apply theorem_13_3; try lra. apply continuous_imp_continuous_on.
-    apply sqrt_f_continuous. replace (λ x : ℝ, 1 - x ^2) with (polynomial [-1; 0; 1]).
-    2 : { extensionality y. compute. lra. } intros a. apply theorem_37_14.
-Admitted.
 
 Lemma A_at_neg_1 : A (-1) = π / 2.
 Proof.
