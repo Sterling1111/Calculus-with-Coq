@@ -69,7 +69,7 @@ Module DFA_Theory.
 
 End DFA_Theory.
 
-Section DFA_test.
+Module DFA_test.
   Inductive Σ : Type := w1 | w2 | w3.
   Inductive Q : Type := s1 | s2 | s3.
 
@@ -86,20 +86,6 @@ Section DFA_test.
     | (s3, w3) => s2
     end.
 
-    Definition δ' (i : nat * nat) : nat :=
-      match i with 
-      | (0, 0) => 1
-      | (0, 1) => 2
-      | (0, 2) => 0
-      | _ => 3
-    end.
-
-    Definition F' := ⦃0⦄.
-
-    Lemma DFA_P1' : Fin_Type nat.
-    Proof.
-    Admitted.
-
   Definition q0 : Q := s1.
   Definition F := ⦃s2⦄.
 
@@ -107,29 +93,29 @@ Section DFA_test.
   Proof.
     exists ([s1; s2; s3]).
     - intros x. destruct x; simpl; auto.
-    - repeat constructor; auto; admit.
+    - repeat constructor; auto.
+      -- intros H1. destruct H1 as [H1 | [H1 | H1]]; try (inversion H1); auto.
+      -- intros H1. destruct H1 as [H1 | H1]; try (inversion H1); auto.
     - intros x y. destruct x, y; auto; try (right; discriminate);
       try (left; reflexivity); try (left; reflexivity).
-  Admitted.
+  Qed.
 
   Lemma DFA_P2 : Fin_Type Σ.
   Proof.
     exists ([w1; w2; w3]).
     - intros x. destruct x; simpl; auto.
-    - repeat constructor; auto; admit.
+    - repeat constructor; auto.
+      -- intros H1. destruct H1 as [H1 | [H1 | H1]]; try (inversion H1); auto.
+      -- intros H1. destruct H1 as [H1 | H1]; try (inversion H1); auto.
     - intros x y. destruct x, y; auto; try (right; discriminate);
       try (left; reflexivity); try (left; reflexivity).
-  Admitted.
+  Qed.
 
   Import DFA_Theory.
 
-  Definition M' := mk_DFA δ' 0 F' DFA_P1' DFA_P1'.
   Definition M := mk_DFA DFA_test.δ DFA_test.q0 DFA_test.F DFA_test.DFA_P1 DFA_test.DFA_P2.
-  Definition l := [w1; w2; w3] ++ [w1; w2] ++ [w3; w1] ++ [w2; w3] ++ [w1; w2; w3].
-  Definition l' := [0; 1; 2; 3].
+  Definition l := [w1; w2; w3; w1; w1; w2; w1; w2; w2; w1; w1; w2; w1; w1; w1; w2; w2; w3; w3; w1; w1; w1; w2; w2; w3].
 
   Compute DFA_compute M l DFA_test.q0.
-  Compute DFA_compute M' l' 0.
-  
 
 End DFA_test.
