@@ -46,6 +46,13 @@ Proof.
   - pose proof Sorted_Rlt_nth l1 n (length l1 - 1) 0 H2 ltac:(lia) as H10. lra.
 Qed.
 
+Lemma partition_in : forall a b (P : partition a b) (x : ℝ) (l : list ℝ),
+  P.(points a b) = l ->
+  List.In x (points a b P) -> a <= x <= b.
+Proof.
+  intros a b P x l H1 H2. subst. destruct P. auto.
+Qed.
+
 Lemma not_empty_In_list : forall {T : Type} (l : list T) (x : T),
   List.In x l -> l <> [].
 Proof.
@@ -58,6 +65,17 @@ Lemma partition_not_empty : forall a b (P : partition a b),
 Proof.
   intros a b P l. apply not_empty_In_list with (x := a).
   destruct P; auto.
+Qed.
+
+Lemma exists_partition_a_b : forall a b : ℝ,
+  a < b -> { P : partition a b | P.(points a b) = [a; b] }.
+Proof.
+  intros a b H1.
+  assert (H2 : Sorted Rlt [a; b]). { apply Sorted_cons. apply Sorted_cons; constructor. constructor; lra. }
+  assert (H3 : List.In a [a; b]). { simpl; left; reflexivity. }
+  assert (H4 : List.In b [a; b]). { simpl; right; left; reflexivity. }
+  assert (H5 : forall x, List.In x [a; b] -> a <= x <= b). { intros x H5. simpl in H5. destruct H5 as [H5 | H5]; lra. }
+  exists (mkpartition a b [a; b] H1 H2 H3 H4 H5). simpl. reflexivity.
 Qed.
 
 Record bounded_function_R (a b : ℝ) : Type := mkbounded_function_R

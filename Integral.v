@@ -24,6 +24,78 @@ Definition upper_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition a 
 Notation "L( f , P )" := (lower_sum _ _ f P) (at level 70, f, P at level 0, format "L( f ,  P )").
 Notation "U( f , P )" := (upper_sum _ _ f P) (at level 70, f, P at level 0, format "U( f ,  P )").
 
+Lemma upper_sum_nonneg : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b),
+  let f := bf.(bounded_f a b) in
+  (forall x, x ∈ [a, b] -> 0 <= f x) ->
+  a < b -> U(bf, P) >= 0.
+Proof.
+  intros a b [f H1 H2] P bf H3 H4. unfold upper_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_sup f a b P H2) as [l2 [H5 H6]].
+  replace bf with f in * by auto.
+  assert (length l2 = 0 \/ length l2 > 0)%nat as [H7 | H7] by lia.
+  - rewrite length_zero_iff_nil in H7. rewrite H7 in *. rewrite sum_f_0_0. simpl. lra.
+  - apply Rle_ge. apply sum_f_nonneg; try lia. intros k H8.
+    specialize (H6 k ltac:(lia)). destruct H6 as [H6 _].
+    specialize (H6 (f (nth k (points a b P) 0))). specialize (H3 (nth k (points a b P) 0)).
+    pose proof partition_in a b P (nth k (points a b P) 0) (points a b P) eq_refl ltac:(apply nth_In; lia) as H9.
+    specialize (H3 ltac:(solve_R)). assert (H10 : f (nth k (points a b P) 0) <= nth k l2 0).
+    { apply H6. exists (nth k (points a b P) 0). split; auto. pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia). solve_R. }
+    pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia) as H11. nra.
+Qed.
+
+Lemma upper_sum_pos : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b),
+  let f := bf.(bounded_f a b) in
+  (forall x, x ∈ [a, b] -> 0 < f x) ->
+  a < b -> U(bf, P) > 0.
+Proof.
+  intros a b [f H1 H2] P bf H3 H4. unfold upper_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_sup f a b P H2) as [l2 [H5 H6]].
+  replace bf with f in * by auto.
+  assert (length l2 = 0 \/ length l2 > 0)%nat as [H7 | H7] by lia.
+  - rewrite length_zero_iff_nil in H7. rewrite H7 in *. pose proof partition_length a b P as H8. simpl in *; lia.
+  - apply Rlt_gt. apply sum_f_pos; try lia. intros k H8.
+    specialize (H6 k ltac:(lia)). destruct H6 as [H6 _].
+    specialize (H6 (f (nth k (points a b P) 0))). specialize (H3 (nth k (points a b P) 0)).
+    pose proof partition_in a b P (nth k (points a b P) 0) (points a b P) eq_refl ltac:(apply nth_In; lia) as H9.
+    specialize (H3 ltac:(solve_R)). assert (H10 : f (nth k (points a b P) 0) <= nth k l2 0).
+    { apply H6. exists (nth k (points a b P) 0). split; auto. pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia). solve_R. }
+    pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia) as H11. nra.
+Qed.
+
+Lemma lower_sum_nonneg : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b),
+  let f := bf.(bounded_f a b) in
+  (forall x, x ∈ [a, b] -> 0 <= f x) ->
+  a < b -> L(bf, P) >= 0.
+Proof.
+  intros a b [f H1 H2] P bf H3 H4. unfold lower_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_inf f a b P H2) as [l2 [H5 H6]].
+  replace bf with f in * by auto.
+  assert (length l2 = 0 \/ length l2 > 0)%nat as [H7 | H7] by lia.
+  - rewrite length_zero_iff_nil in H7. rewrite H7 in *. rewrite sum_f_0_0. simpl. lra.
+  - apply Rle_ge. apply sum_f_nonneg; try lia. intros k H8.
+    specialize (H6 k ltac:(lia)). destruct H6 as [_ H6]. specialize (H6 0). 
+    pose proof partition_in a b P (nth k (points a b P) 0) (points a b P) eq_refl ltac:(apply nth_In; lia) as H9.
+    pose proof partition_in a b P (nth (k + 1) (points a b P) 0) (points a b P) eq_refl ltac:(apply nth_In; lia) as H10.
+    assert (is_lower_bound (λ y : ℝ, ∃ x : ℝ, x ∈ [nth k (points a b P) 0, nth (k + 1) (points a b P) 0] ∧ y = f x) 0) as H11.
+    { intros y [x [H12 H13]]. rewrite H13. apply Rle_ge. apply H3. solve_R. }
+    specialize (H6 H11). 
+    pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia) as H12. nra.
+Qed.
+
+Lemma lower_sum_pos : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b),
+  let f := bf.(bounded_f a b) in
+  (forall x, x ∈ [a, b] -> 0 < f x) -> continuous_on f [a, b] ->
+  a < b -> L(bf, P) > 0.
+Proof.
+  intros a b [f H1 H2] P bf H3 H0 H4. unfold lower_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_inf f a b P H2) as [l2 [H5 H6]].
+  replace bf with f in * by auto.
+  assert (length l2 = 0 \/ length l2 > 0)%nat as [H7 | H7] by lia.
+  - rewrite length_zero_iff_nil in H7. rewrite H7 in *. pose proof partition_length a b P as H8. simpl in *; lia.
+  - apply Rlt_gt. apply sum_f_pos; try lia. intros k H8.
+    specialize (H6 k ltac:(lia)). unfold is_glb in H6. destruct H6 as [_ H6].
+Admitted.
+
 Section lower_upper_sum_test.
   Let f : ℝ → ℝ := λ x, x.
   Let a : ℝ := 1.
@@ -1600,6 +1672,7 @@ Proof.
   lra.
 Qed.
 
+
 Example FTC2_test : ∫ 0 1 (λ x : ℝ, 2 * x) = 1.
 Proof.
   set (f := λ x : ℝ, 2 * x).
@@ -1647,4 +1720,15 @@ Proof.
   }
   replace (1 / 3) with (g 1 - g 0) by (unfold g; lra).
   apply (FTC2 0 1 f g H1 H2 H3).
+Qed.
+
+Lemma integral_pos : forall a b f,
+    a < b -> (forall x, x ∈ [a, b] -> 0 <= f x) -> integrable_on a b f -> 0 <= ∫ a b f.  
+Proof.
+  intros a b f H1 H2 H3.
+  pose proof integral_eq' a b f H1 H3 as [bf [r [H5 [H6 [_ [H7 H8]]]]]].
+  pose proof lower_sum_pos a b bf as H9.
+  pose proof exists_partition_a_b a b H1 as [P _].
+  specialize (H9 P) as H10. specialize (H7 (L(bf, P)) ltac:(exists P; reflexivity)).
+  rewrite H5 in *. specialize (H10 H2 H1). nra.
 Qed.

@@ -669,7 +669,7 @@ Proof.
   apply limit_mult. replace ((λ x : ℝ, -1 * (f (a + x) - f a) / x)) with ((fun x => -1) ∙ (fun x => (f (a + x) - f a) / x)).
   2 : { extensionality x. lra. } apply limit_mult; auto. apply limit_const. apply limit_inv; solve_R.
   apply limit_mult. apply limit_const. rewrite Rmult_1_r. pose proof theorem_6_2 f (Rplus a) 0 as H6. unfold continuous_at in H6.
-  rewrite Rplus_0_r in H6. apply H6. solve_lim. auto.
+  rewrite Rplus_0_r in H6. apply H6; solve_lim.
 Qed.
 
 Theorem theorem_10_8 : forall f f' g g' a,
@@ -879,7 +879,7 @@ Proof.
   assert (continuous_on h [a, b]) as H4. 
   { 
     apply continuous_on_interval_closed; auto; repeat split.
-    - intros x H4. apply continuous_on_interval_closed in H2 as [H2 _]; auto. specialize (H2 x H4). unfold h. 
+    - intros x H4. apply continuous_on_interval_closed in H2 as [H2 _]; auto. specialize (H2 x H4). unfold h.
       apply limit_minus; solve_lim.
     - apply continuous_on_interval_closed in H2 as [_ [H2 _]]; auto. unfold h. apply right_limit_minus; auto.
       apply right_limit_mult. apply right_limit_const. apply right_limit_minus. apply right_limit_id. apply right_limit_const.
@@ -1294,7 +1294,66 @@ Proof.
     rewrite Rplus_0_r in H2. apply H2. pose proof sqrt_lt_R0 x H1 as H4. lra.
 Admitted.
 
-Parameter Derive : (R -> R) -> (R -> R).
+Fixpoint poly_deriv_from (n:nat) (l:list R) : list R :=
+  match l with
+  | [] => []
+  | a :: tl =>
+      match n with
+      | 0 => []
+      | S k => (INR n * a) :: poly_deriv_from k tl
+      end
+  end.
 
-Axiom Derive_def : forall f : R -> R,
-  differentiable f <-> ⟦ der ⟧ f = Derive f.
+Definition poly_deriv (l:list R) : list R :=
+  poly_deriv_from (length l - 1) l.
+
+Lemma poly_deriv_cons : forall a tl,
+  poly_deriv (a :: tl) = 
+    match tl with
+    | [] => []
+    | _ :: _ => (INR (length tl) * a) :: poly_deriv (tl)
+    end.
+Proof.
+  intros a tl. destruct tl.
+  - compute. reflexivity.
+  - simpl. destruct (length tl)%nat. unfold poly_deriv. simpl. destruct (length tl); auto. 
+    replace (S n - 0)%nat with (S n) by lia. 
+Qed.
+
+Lemma polynomial_derivative_correct :
+  forall l, ⟦ der ⟧ (polynomial l) = polynomial (poly_deriv l).
+Proof.
+  intros l x. induction l as [| a tl IH]; simpl.
+  - replace (polynomial []) with (λ _ : R, 0). 2 : { extensionality y; compute; lra. }
+    replace (poly_deriv []) with ([] : list R). 2 : { compute; reflexivity. }
+    replace (polynomial []) with (λ _ : R, 0). 2 : { extensionality y; compute; lra. }
+    apply theorem_10_1.
+  - replace (polynomial (a :: tl)) with (λ x : R, a * x ^ (length tl) + (polynomial tl) x).
+    2 : { extensionality y; simpl. rewrite poly_cons. lra. } 
+    replace (poly_deriv (a :: tl)) with ((INR (length tl + 1) * a) :: poly_deriv_from (length tl - 1) tl).
+    2 : { simpl. destruct (length tl); reflexivity. }
+    unfold derivative_at. apply limit_to_0_equiv with (f1 := fun h => a * (( (x + h) ^ (length tl) - x ^ (length tl)) / h) + 
+      ((polynomial tl (x + h) - polynomial tl x) / h)).
+    + intros h H1. solve_R.
+    + apply limit_plus.
+      * apply limit_mult. apply limit_const. apply power_rule; auto.
+      * apply IH.
+
+Lemma derivative_poly : forall 
+Proof.
+Qed.
+
+Fixpoint DerN (n:nat) (f fn : R -> R) : Prop :=
+  match n with
+  | 0   => fn = f
+  | S k => exists g, ⟦ der ⟧ f = g /\ DerN k g fn
+  end.
+
+Lemma DerN_test : DerN 2 (λ x : ℝ, x^3) (λ x : ℝ, 6 * x).
+Proof.
+  exists (λ x : ℝ, 3 * x^2). split.
+  - apply power_rule'; solve_R.
+  - exists (λ x : ℝ, 6 * x). split.
+    -- admit.
+    -- simpl. reflexivity.
+Qed.
