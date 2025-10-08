@@ -93,7 +93,16 @@ Proof.
   assert (length l2 = 0 \/ length l2 > 0)%nat as [H7 | H7] by lia.
   - rewrite length_zero_iff_nil in H7. rewrite H7 in *. pose proof partition_length a b P as H8. simpl in *; lia.
   - apply Rlt_gt. apply sum_f_pos; try lia. intros k H8.
-    specialize (H6 k ltac:(lia)). unfold is_glb in H6. destruct H6 as [_ H6].
+    pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia) as H9.
+    pose proof continuous_function_attains_glb_on_interval f a b H4 H0 as [x [H10 H11]].
+    specialize (H6 k ltac:(lia)).
+    assert (H12 : (λ y : ℝ, ∃ x : ℝ, x ∈ [nth k (points a b P) 0, nth (k + 1) (points a b P) 0] ∧ y = f x) ⊆
+                  ((λ y : ℝ, ∃ x : ℝ, x ∈ [a, b] ∧ y = f x))).
+    { intros y [x' [H12 H13]]. exists x'. split; solve_R. 
+    pose proof partition_in a b P x' (points a b P) ltac:(apply eq_refl) as H14. apply H14. admit. }
+    pose proof glb_subset (λ y : ℝ, ∃ x : ℝ, x ∈ [nth k (points a b P) 0, nth (k + 1) (points a b P) 0] ∧ y = f x)
+      ((λ y : ℝ, ∃ x : ℝ, x ∈ [a, b] ∧ y = f x)) (nth k l2 0) (f x) H6 H11 H12 as H13.
+    specialize (H3 x H10). nra.
 Admitted.
 
 Section lower_upper_sum_test.

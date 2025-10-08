@@ -1295,6 +1295,7 @@ Proof.
 Admitted.
 
 (*
+
 Fixpoint poly_deriv_from (n:nat) (l:list R) : list R :=
   match l with
   | [] => []
