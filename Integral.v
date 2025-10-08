@@ -1722,6 +1722,7 @@ Proof.
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
 
+(*
 Lemma integral_pos : forall a b f,
     a < b -> (forall x, x ∈ [a, b] -> 0 <= f x) -> integrable_on a b f -> 0 <= ∫ a b f.  
 Proof.
@@ -1732,3 +1733,4 @@ Proof.
   specialize (H9 P) as H10. specialize (H7 (L(bf, P)) ltac:(exists P; reflexivity)).
   rewrite H5 in *. specialize (H10 H2 H1). nra.
 Qed.
+*)

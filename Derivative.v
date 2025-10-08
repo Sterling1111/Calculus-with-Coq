@@ -1294,6 +1294,7 @@ Proof.
     rewrite Rplus_0_r in H2. apply H2. pose proof sqrt_lt_R0 x H1 as H4. lra.
 Admitted.
 
+(*
 Fixpoint poly_deriv_from (n:nat) (l:list R) : list R :=
   match l with
   | [] => []
@@ -1357,3 +1358,5 @@ Proof.
     -- admit.
     -- simpl. reflexivity.
 Qed.
+
+*)

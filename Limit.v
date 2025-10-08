@@ -540,6 +540,13 @@ Proof.
   intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
 Qed.
 
+Lemma limit_to_a_equiv : forall f1 f2 a L,
+  (forall x, x <> a -> f1 x = f2 x) -> ⟦ lim a ⟧ f1 = L -> ⟦ lim a ⟧ f2 = L.
+Proof.
+  intros f1 f2 a L H1 H2 ε H3. specialize (H2 ε H3) as [δ [H4 H5]]. exists δ. split; auto.
+  intros x H6. specialize (H5 x H6). rewrite <- H1; solve_R.
+Qed.
+
 Lemma squeeze_theorem : forall f1 f2 f3 a b c L,
   a < b -> c ∈ (a, b) -> ⟦ lim c ⟧ f1 = L -> ⟦ lim c ⟧ f3 = L -> (forall x, x ∈ ((a, c) ⋃ (c, b)) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c ⟧ f2 = L.
 Proof.
