@@ -23,3 +23,15 @@ Proof.
        2 : { pose proof tech_pow_Rmult y (k - 1) as H2. replace (S (k - 1))%nat with k in H2 by lia. solve_R. }
        auto.
 Qed.
+
+Lemma lemma_5_1_v : forall x n, ⟦ lim x ⟧ (λ y, (x^n - y^n) / (x - y)) = (INR n) * x^(n - 1).
+Proof.
+  intros x n. apply limit_to_a_equiv with (f1 := λ y : R, (y ^ n - x ^ n) / (y - x)).
+  - intros y Hy. field; lra.
+  - apply lemma_5_1_iv.
+Qed.
+
+Lemma lemma_5_vi : forall a, 
+  ⟦ lim a ⟧ (λ x, sqrt 
+Proof.
+Qed.
