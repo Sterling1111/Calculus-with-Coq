@@ -18,6 +18,6 @@ Proof.
     -- rewrite Rinv_l in H1.
        --- rewrite Rmult_1_r in H1. rewrite H1. reflexivity.
        --- apply H3.
-    -- (*we fail here because y is 0 so cant apply Rinv_l*) admit.
+    -- rewrite Rinv_l in H1; try lra. intros H4. (*we fail here because y is 0 so cant apply Rinv_l*) admit.
   - apply Rminus_diag_eq in H2. admit. (* we fail here again because x - y = 0*) 
-Abort.j
+Abort.

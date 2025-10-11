@@ -27,6 +27,7 @@ Makefile.d
 
 # Ignore all PDF files
 *.pdf
+*.PDF
 
 # Coq Makefile configuration
 CoqMakefile.conf
