@@ -16,6 +16,45 @@ Definition right_limit (f : ℝ -> ℝ) (a L : ℝ) : Prop :=
 Definition limit_on (f : ℝ -> ℝ) (D : Ensemble ℝ) (a L : ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ δ, δ > 0 /\ ∀ x, x ∈ D -> 0 < |x - a| < δ -> |f x - L| < ε.
 
+(* Infinite target at a finite point *)
+Definition limit_to_pinf (f : ℝ -> ℝ) (a : ℝ) : Prop :=
+  ∀ M : ℝ, ∃ δ, δ > 0 /\ ∀ x, 0 < |x - a| < δ -> f x > M.
+
+Definition limit_to_minf (f : ℝ -> ℝ) (a : ℝ) : Prop :=
+  ∀ M : ℝ, ∃ δ, δ > 0 /\ ∀ x, 0 < |x - a| < δ -> f x < M.
+
+Definition right_limit_to_pinf (f : ℝ -> ℝ) (a : ℝ) : Prop :=
+  ∀ M : ℝ, ∃ δ, δ > 0 /\ ∀ x, 0 < x - a < δ -> f x > M.
+
+Definition right_limit_to_minf (f : ℝ -> ℝ) (a : ℝ) : Prop :=
+  ∀ M : ℝ, ∃ δ, δ > 0 /\ ∀ x, 0 < x - a < δ -> f x < M.
+
+Definition left_limit_to_pinf (f : ℝ -> ℝ) (a : ℝ) : Prop :=
+  ∀ M : ℝ, ∃ δ, δ > 0 /\ ∀ x, 0 < a - x < δ -> f x > M.
+
+Definition left_limit_to_minf (f : ℝ -> ℝ) (a : ℝ) : Prop :=
+  ∀ M : ℝ, ∃ δ, δ > 0 /\ ∀ x, 0 < a - x < δ -> f x < M.
+
+(* Finite target at ±∞ *)
+Definition limit_pinf (f : ℝ -> ℝ) (L : ℝ) : Prop :=
+  ∀ ε, ε > 0 -> ∃ N, ∀ x, x > N -> |f x - L| < ε.
+
+Definition limit_minf (f : ℝ -> ℝ) (L : ℝ) : Prop :=
+  ∀ ε, ε > 0 -> ∃ N, ∀ x, x < N -> |f x - L| < ε.
+
+(* Infinite target at ±∞ *)
+Definition limit_pinf_to_pinf (f : ℝ -> ℝ) : Prop :=
+  ∀ M : ℝ, ∃ N, ∀ x, x > N -> f x > M.
+
+Definition limit_pinf_to_minf (f : ℝ -> ℝ) : Prop :=
+  ∀ M : ℝ, ∃ N, ∀ x, x > N -> f x < M.
+
+Definition limit_minf_to_pinf (f : ℝ -> ℝ) : Prop :=
+  ∀ M : ℝ, ∃ N, ∀ x, x < N -> f x > M.
+
+Definition limit_minf_to_minf (f : ℝ -> ℝ) : Prop :=
+  ∀ M : ℝ, ∃ N, ∀ x, x < N -> f x < M.
+
 Module LimitNotations.
 
   Declare Scope limit_scope.
@@ -37,6 +76,57 @@ Module LimitNotations.
   Notation "⟦ 'lim' a ⟧ f D '=' L" :=
     (limit_on f D a L)
       (at level 70, f at level 0, D at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  D  '='  L") : limit_scope.
+
+  (* x -> +∞, finite/infinite targets *)
+  Notation "⟦ 'lim' ∞ ⟧ f '=' L" :=
+    (limit_pinf f L)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  ∞  ⟧  f  '='  L") : limit_scope.
+
+  Notation "⟦ 'lim' ∞ ⟧ f '=' ∞" :=
+    (limit_pinf_to_pinf f)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  ∞  ⟧  f  '='  ∞") : limit_scope.
+
+  Notation "⟦ 'lim' ∞ ⟧ f '=' -∞" :=
+    (limit_pinf_to_minf f)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  ∞  ⟧  f  '='  -∞") : limit_scope.
+
+  (* x -> -∞, finite/infinite targets *)
+  Notation "⟦ 'lim' -∞ ⟧ f '=' L" :=
+    (limit_minf f L)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  -∞  ⟧  f  '='  L") : limit_scope.
+
+  Notation "⟦ 'lim' -∞ ⟧ f '=' ∞" :=
+    (limit_minf_to_pinf f)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  -∞  ⟧  f  '='  ∞") : limit_scope.
+
+  Notation "⟦ 'lim' -∞ ⟧ f '=' -∞" :=
+    (limit_minf_to_minf f)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  -∞  ⟧  f  '='  -∞") : limit_scope.
+
+  (* x -> a, infinite targets *)
+  Notation "⟦ 'lim' a ⟧ f '=' ∞" :=
+    (limit_to_pinf f a)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  '='  ∞") : limit_scope.
+
+  Notation "⟦ 'lim' a ⟧ f '=' -∞" :=
+    (limit_to_minf f a)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  '='  -∞") : limit_scope.
+
+  Notation "⟦ 'lim' a ⁺ ⟧ f '=' ∞" :=
+    (right_limit_to_pinf f a)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  a ⁺  ⟧  f  '='  ∞") : limit_scope.
+
+  Notation "⟦ 'lim' a ⁺ ⟧ f '=' -∞" :=
+    (right_limit_to_minf f a)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  a ⁺  ⟧  f  '='  -∞") : limit_scope.
+
+  Notation "⟦ 'lim' a ⁻ ⟧ f '=' ∞" :=
+    (left_limit_to_pinf f a)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  a ⁻  ⟧  f  '='  ∞") : limit_scope.
+
+  Notation "⟦ 'lim' a ⁻ ⟧ f '=' -∞" :=
+    (left_limit_to_minf f a)
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  a ⁻  ⟧  f  '='  -∞") : limit_scope.
 
 End LimitNotations.
 
@@ -545,6 +635,28 @@ Lemma limit_to_a_equiv : forall f1 f2 a L,
 Proof.
   intros f1 f2 a L H1 H2 ε H3. specialize (H2 ε H3) as [δ [H4 H5]]. exists δ. split; auto.
   intros x H6. specialize (H5 x H6). rewrite <- H1; solve_R.
+Qed.
+
+Lemma limit_to_a_equiv' : forall f1 f2 a L δ,
+  δ > 0 -> (forall x, (x <> a /\ |x - a| < δ) -> f1 x = f2 x) -> ⟦ lim a ⟧ f1 = L -> ⟦ lim a ⟧ f2 = L.
+Proof.
+  intros f1 f2 a L δ H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ1 [H5 H6]].
+  exists (Rmin δ1 δ). split; [solve_R |].
+  intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
+Qed.
+
+Lemma limit_continuous_comp :
+  forall (f g : R -> R) (a L : R),
+    ⟦ lim a ⟧ g = L ->
+    ⟦ lim L ⟧ f = f L ->
+    ⟦ lim a ⟧ (fun x => f (g x)) = f L.
+Proof.
+  intros f g a L H1 H2 ε H3. specialize (H2 ε H3) as [δ1 [H4 H5]].
+  specialize (H1 δ1 H4) as [δ2 [H6 H7]]. exists δ2. split; auto. intros x H8.
+  specialize (H7 x H8). specialize (H5 (g x)).
+  pose proof classic (g x = L) as [H9 | H9].
+  - rewrite H9. solve_R.
+  - specialize (H5 ltac:(solve_R)). auto.
 Qed.
 
 Lemma squeeze_theorem : forall f1 f2 f3 a b c L,
