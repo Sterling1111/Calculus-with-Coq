@@ -1,70 +1,94 @@
--Q . ""
+# =========================
+# Logical roots (recursive)
+# =========================
+-R Lib Lib
+-R Calculus Calculus
+-R ATTAM ATTAM
+
 -arg -w -arg "-uniform-inheritance,-ambiguous-paths"
 
-Imports.v
-Notations.v
-Reals_util.v
-Relations.v
-Complex.v
-Completeness.v
-Pigeonhole.v
-Sums.v
-WI_SI_WO.v
-QRT.v
-Fibonacci.v
-Sets.v
-Binomial.v
-Prime.v
-Sequence.v
-Series.v
-Limit.v
-Functions.v
-Continuity.v
-Derivative.v
-Sorted_Rlt.v
-Partition.v
-Integral.v
-Chapter6.v
-Chapter7.v
-Chapter8.v
-Chapter9.v
-Chapter10.v
-Chapter11.v
-Chapter12.v
-Chapter13.v
-Chapter14.v
-Chapter15.v
-Chapter16.v
-Chapter17.v
-Chapter18.v
-Chapter19.v
-Chapter20.v
-Chapter34.v
-Chapter35.v
-Chapter36.v
+# =========
+# Lib (API)
+# =========
+Lib/Imports.v
+Lib/Reals_util.v
+Lib/Relations.v
+Lib/Complex.v
+Lib/Completeness.v
+Lib/Pigeonhole.v
+Lib/Sums.v
+Lib/WI_SI_WO.v
+Lib/QRT.v
+Lib/Fibonacci.v
+Lib/Sets.v
+Lib/Binomial.v
+Lib/Prime.v
+Lib/Sequence.v
+Lib/Series.v
+Lib/Limit.v
+Lib/Functions.v
+Lib/Continuity.v
+Lib/Derivative.v
+Lib/Sorted_Rlt.v
+Lib/Partition.v
+Lib/Integral.v
+Lib/Notations.v
 
-Chapter_1/Problem_1_1.v
-Chapter_1/Problem_1_2.v
-Chapter_1/Problem_1_3.v
-Chapter_1/Problem_1_4.v
-Chapter_1/Problem_1_5.v
-Chapter_1/Problem_1_6.v
-Chapter_1/Problem_1_7.v
-Chapter_1/Problem_1_8.v
-Chapter_1/Problem_1_9.v
-Chapter_1/Problem_1_10.v
-Chapter_1/Problem_1_11.v
-Chapter_1/Problem_1_12.v
-Chapter_1/Problem_1_13.v
-Chapter_1/Problem_1_14.v
-Chapter_1/Problem_1_15.v
-Chapter_1/Problem_1_16.v
-Chapter_1/Problem_1_17.v
-Chapter_1/Problem_1_18.v
-Chapter_1/Problem_1_19.v
-Chapter_1/Problem_1_20.v
-Chapter_1/Problem_1_21.v
-Chapter_1/Problem_1_22.v
-Chapter_1/Problem_1_23.v
-Chapter_1/Problem_1_24.v
-Chapter_1/Problem_1_25.v
+# ==========================
+# ATTAM (depends on Lib only)
+# ==========================
+ATTAM/Chapter6.v
+ATTAM/Chapter7.v
+ATTAM/Chapter8.v
+ATTAM/Chapter9.v
+ATTAM/Chapter10.v
+ATTAM/Chapter11.v
+ATTAM/Chapter12.v
+ATTAM/Chapter13.v
+ATTAM/Chapter14.v
+ATTAM/Chapter15.v
+ATTAM/Chapter16.v
+ATTAM/Chapter17.v
+ATTAM/Chapter18.v
+ATTAM/Chapter19.v
+ATTAM/Chapter20.v
+ATTAM/Chapter34.v
+ATTAM/Chapter35.v
+ATTAM/Chapter36.v
+
+# =========================
+# Calculus (depends on Lib only)
+# =========================
+Calculus/Chapter1/Problem_1_1.v
+Calculus/Chapter1/Problem_1_2.v
+Calculus/Chapter1/Problem_1_3.v
+Calculus/Chapter1/Problem_1_4.v
+Calculus/Chapter1/Problem_1_5.v
+Calculus/Chapter1/Problem_1_6.v
+Calculus/Chapter1/Problem_1_7.v
+Calculus/Chapter1/Problem_1_8.v
+Calculus/Chapter1/Problem_1_9.v
+Calculus/Chapter1/Problem_1_10.v
+Calculus/Chapter1/Problem_1_11.v
+Calculus/Chapter1/Problem_1_12.v
+Calculus/Chapter1/Problem_1_13.v
+Calculus/Chapter1/Problem_1_14.v
+Calculus/Chapter1/Problem_1_15.v
+Calculus/Chapter1/Problem_1_16.v
+Calculus/Chapter1/Problem_1_17.v
+Calculus/Chapter1/Problem_1_18.v
+Calculus/Chapter1/Problem_1_19.v
+Calculus/Chapter1/Problem_1_20.v
+Calculus/Chapter1/Problem_1_21.v
+Calculus/Chapter1/Problem_1_22.v
+Calculus/Chapter1/Problem_1_23.v
+Calculus/Chapter1/Problem_1_24.v
+Calculus/Chapter1/Problem_1_25.v
+
+# Calculusulus Chapter 5 problems
+Calculus/Chapter5/Problem_5_1.v
+Calculus/Chapter5/Problem_5_2.v
+Calculus/Chapter5/Problem_5_10.v
+Calculus/Chapter5/Problem_5_12.v
+Calculus/Chapter5/Problem_5_16.v
+Calculus/Chapter5/Problem_5_17.v
