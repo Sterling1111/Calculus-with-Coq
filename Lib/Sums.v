@@ -576,3 +576,11 @@ Proof.
   - rewrite sum_f_i_Sn_f at 1; try lia. rewrite sum_f_Si with (i := 0%nat); try lia. field_simplify.
     replace (S (length l - 2))%nat with (length l - 1)%nat by lia. lra.
 Qed.
+
+Theorem sum_n_nat : forall n : nat,
+  (n >= 1)%nat -> sum_f 1 n (fun i => INR i) = (INR n * (INR n + 1)) / 2.
+Proof.
+  intros n H1. induction n as [| k IH]; try lia. assert (S k = 1 \/ k >= 1)%nat as [H2 | H2] by lia.
+  - rewrite H2. compute. lra.
+  - rewrite sum_f_i_Sn_f; try lia. rewrite IH; auto. rewrite S_INR. lra.
+Qed.

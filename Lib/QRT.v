@@ -96,7 +96,7 @@ Ltac zforms :=
   end.
 
 Lemma zforms_demo : forall n : Z,
-  exists k : Z, n = 3 * k \/ n = 3 * k + 1 \/ n = 3 * k + 2.
+  exists k : Z, n = 5 * k \/ n = 5 * k + 1 \/ n = 5 * k + 2 \/ n = 5 * k + 3 \/ n = 5 * k + 4.
 Proof.
   intros n. zforms. 
 Qed.
