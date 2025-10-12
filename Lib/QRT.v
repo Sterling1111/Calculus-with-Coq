@@ -95,10 +95,11 @@ Ltac zforms :=
   | _ => fail "Goal does not match expected pattern"
   end.
 
-Lemma poopyPants : forall n : Z,
+Lemma zforms_demo : forall n : Z,
   exists k : Z, n = 3 * k \/ n = 3 * k + 1 \/ n = 3 * k + 2.
 Proof.
-  intros n. zforms. Qed.
+  intros n. zforms. 
+Qed.
 
 Definition ZEven (n : Z) : Prop := exists k : Z, n = 2 * k.
 Definition ZOdd (n : Z) : Prop   := exists k : Z, n = 2 * k + 1.
