@@ -1,4 +1,4 @@
-From Lib Require Import Imports Sums.
+From Lib Require Import Imports Sums Reals_util.
 
 Definition is_natural (r : R) : Prop :=
     exists n : nat, r = INR n.
@@ -166,6 +166,12 @@ Module Binomial_R.
             exists (m+1)%nat. rewrite H4. rewrite plus_INR. reflexivity.
           * rewrite binomial_recursion_R_1; try lia. pose proof IH as IH2. specialize (IH n). specialize (IH2 (n-1)%nat). destruct IH as [m H4]; try lia.
             destruct IH2 as [m' H5]; try lia. exists (m + m')%nat. rewrite H4. rewrite H5. rewrite plus_INR. lra.
+  Qed.
+
+  Lemma choose_rational : forall (m n : nat),
+    rational (choose m n).
+  Proof.
+    intros m n. pose proof (choose_natural m n) as [q H1]. rewrite H1. exists (Z.of_nat q), (1%Z). field_simplify. apply INR_IZR_INZ.
   Qed.
 
   Lemma pow_equ : forall (r: R) (a : nat),

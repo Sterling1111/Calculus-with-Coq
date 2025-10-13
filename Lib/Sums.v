@@ -279,6 +279,16 @@ Proof.
            rewrite Rmult_1_r. apply Rplus_lt_le_compat. apply IH; try lia. intros j H8. apply H4; try lia. apply Req_le. apply H6.
 Qed.
 
+Lemma sum_f_l_n_0 : forall l n, (l <= n)%nat ->
+  sum_f l n (fun i => 0) = 0.
+Proof.
+  intros l n H1. induction n as [| k IH].
+  - destruct l. repeat rewrite sum_f_0_0. reflexivity. rewrite sum_f_Sn_n; try lia; try lra.
+  - assert (l = S k \/ l <= k)%nat as [H2 | H2] by lia.
+    -- rewrite <- H2. rewrite sum_f_n_n. reflexivity.
+    -- rewrite sum_f_i_Sn_f; try lia. rewrite IH; try lia. lra.
+Qed.
+
 Lemma sum_f_pos' : forall f i n,
   (i <= n)%nat ->
   (forall k, (i <= k <= n)%nat -> 0 <= f k) -> (exists k, (i <= k <= n)%nat /\ 0 < f k) -> 0 < sum_f i n f.
@@ -583,4 +593,24 @@ Proof.
   intros n H1. induction n as [| k IH]; try lia. assert (S k = 1 \/ k >= 1)%nat as [H2 | H2] by lia.
   - rewrite H2. compute. lra.
   - rewrite sum_f_i_Sn_f; try lia. rewrite IH; auto. rewrite S_INR. lra.
+Qed.
+
+Lemma sum_f_1_n_fSi_minus_fi : forall n (f : nat -> R),
+  (n >= 1)%nat -> sum_f 1 n (fun i => f (i+1)%nat - f i) = f (n+1)%nat - f 1%nat.
+Proof.
+  intros n f H1. induction n as [| n' IH]; try lia.
+  assert (S n' = 1 \/ n' >= 1)%nat as [H2 | H2] by lia.
+  - rewrite H2. compute. reflexivity.
+  - rewrite sum_f_i_Sn_f; try lia. rewrite IH; try lia. 
+    replace (S n') with (n' + 1)%nat by lia. lra.
+Qed.
+
+Lemma sum_f_1_n_fi_minus_fSi : forall n (f : nat -> R),
+  (n >= 1)%nat -> sum_f 1 n (fun i => f i - f (i+1)%nat) = f 1%nat - f (n+1)%nat.
+Proof.
+  intros n f H1. induction n as [| n' IH]; try lia.
+  assert (S n' = 1 \/ n' >= 1)%nat as [H2 | H2] by lia.
+  - rewrite H2. compute. reflexivity.
+  - rewrite sum_f_i_Sn_f; try lia. rewrite IH; try lia. 
+    replace (S n') with (n' + 1)%nat by lia. lra.
 Qed.
