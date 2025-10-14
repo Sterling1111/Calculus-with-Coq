@@ -12,6 +12,7 @@
 # =========
 Lib/Imports.v
 Lib/Reals_util.v
+Lib/Rational.v
 Lib/Relations.v
 Lib/Complex.v
 Lib/Completeness.v
@@ -89,6 +90,15 @@ Calculus/Chapter2/Problem_2_1.v
 Calculus/Chapter2/Problem_2_2.v
 Calculus/Chapter2/Problem_2_3.v
 Calculus/Chapter2/Problem_2_4.v
+Calculus/Chapter2/Problem_2_5.v
+Calculus/Chapter2/Problem_2_6.v
+Calculus/Chapter2/Problem_2_7.v
+Calculus/Chapter2/Problem_2_8.v
+Calculus/Chapter2/Problem_2_9.v
+Calculus/Chapter2/Problem_2_10.v
+Calculus/Chapter2/Problem_2_11.v
+Calculus/Chapter2/Problem_2_12.v
+Calculus/Chapter2/Problem_2_13.v
 
 # Calculusulus Chapter 5 problems
 Calculus/Chapter5/Problem_5_1.v

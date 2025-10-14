@@ -1,4 +1,5 @@
-From Lib Require Import Imports Sums Reals_util.
+From Lib Require Import Imports Sums Reals_util Rational.
+Open Scope nat_scope.
 
 Definition is_natural (r : R) : Prop :=
     exists n : nat, r = INR n.
@@ -357,6 +358,8 @@ Proof.
   Qed.
 
 End Binomial_R.
+
+Open Scope R_scope.
 
 Lemma Rdiv_natdiv : forall n1 n2 : nat,
   (n2 <> 0)%nat ->

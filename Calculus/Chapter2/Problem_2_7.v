@@ -1,4 +1,4 @@
-From Lib Require Import Imports Sums Reals_util WI_SI_WO Binomial.
+From Lib Require Import Imports Sums Reals_util WI_SI_WO Binomial Rational.
 From Calculus Require Import Problem_2_3.
 Import Binomial_R Choose_R_Notations.
 Open Scope R_scope.
@@ -21,7 +21,7 @@ Qed.
 
 Fixpoint build_list_for_lemma_2_7 (m i : nat) : list R :=
   match i with
-  | 0 => []
+  | O => []
   | S i' => build_list_for_lemma_2_7 m i' ++ [choose (m + 1) i]
   end.
 
@@ -184,7 +184,7 @@ Proof.
   - intros l2 H2. simpl. apply Forall_nil.
   - intros l2 H2. destruct l2 as [| h2 t2].
     -- apply Forall_nil.
-    -- rewrite add_lists_cons. apply Forall_cons. apply lemma_2_12_a; apply Forall_inv in H1, H2; auto. apply IH. apply Forall_inv_tail in H1. apply Forall_inv_tail in H2. auto.
+    -- rewrite add_lists_cons. apply Forall_cons. apply plus_rational; apply Forall_inv in H1, H2; auto. apply IH. apply Forall_inv_tail in H1. apply Forall_inv_tail in H2. auto.
        apply Forall_inv_tail in H2. auto.
 Qed.
 

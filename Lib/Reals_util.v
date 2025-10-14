@@ -44,56 +44,6 @@ Ltac solve_min :=
 Ltac solve_R :=
   unfold Ensembles.In in *; try solve_INR; try solve_abs; try solve_max; try solve_min; try tauto; auto.
 
-Definition rational (r : R) : Prop :=
-  exists z1 z2 : Z, (r = (IZR z1) / (IZR z2))%R.
-
-Definition irrational (r : R) : Prop :=
-  ~ rational r.
-
-Open Scope Z_scope.
-
-Lemma x_neq_0_IZR_den_neq_0 : forall x y z,
-  (x <> 0 /\ x = IZR y / IZR z)%R -> z <> 0. 
-Proof.
-  intros x y z [H1 H2]. assert (z <> 0 \/ z = 0) as [H3 | H3] by lia. auto. rewrite H3 in H2. rewrite Rdiv_0_r in H2. nra.
-Qed.
-
-Lemma x_neq_0_IZR_num_neq_0 : forall x y z,
-  (x <> 0 /\ x = IZR y / IZR z)%R -> y <> 0.
-Proof.
-  intros x y z [H1 H2]. assert (y <> 0 \/ y = 0) as [H3 | H3] by lia. auto. rewrite H3 in H2. rewrite Rdiv_0_l in H2. nra.
-Qed.
-
-  
-Lemma mult_rational : forall a b,
-  rational a -> rational b -> rational (a * b).
-Proof.
-  intros a b [z1 [z2 H1]] [z3 [z4 H2]].
-  assert (a = 0 \/ b = 0 \/ a <> 0 /\ b <> 0)%R as [H3 | [H3 | [H3 H4]]] by lra.
-  - exists 0, 1. nra.
-  - exists 0, 1. nra.
-  - exists (z1 * z3). exists (z2 * z4). rewrite H1. rewrite H2. repeat rewrite mult_IZR. field.
-    split; apply not_0_IZR.
-    -- apply x_neq_0_IZR_den_neq_0 with (x := b) (y := z3) (z := z4). auto.
-    -- apply x_neq_0_IZR_den_neq_0 with (x := a) (y := z1) (z := z2). auto.
-Qed.
-
-Lemma lemma_2_12_a : forall a b,
-  rational a -> rational b -> rational (a + b).
-Proof.
-  intros a b [z1 [z2 H1]] [z3 [z4 H2]].
-  assert ((a = 0 \/ b = 0 \/ a <> 0 /\ b <> 0)%R) as [H3 | [H3 | H3]] by lra.
-  - exists z3. exists z4. nra.
-  - exists z1. exists z2. nra.
-  - assert (H4 : forall x y z, (x <> 0 /\ x = IZR y / IZR z)%R -> z <> 0).
-    { intros x y z [H4 H5]. assert (z <> 0 \/ z = 0) as [H6 | H6] by lia. auto. rewrite H6 in H5. rewrite Rdiv_0_r in H5. nra. }
-    assert (H5 : z2 <> 0 /\ z4 <> 0). { split. apply H4 with (x := a) (y := z1). tauto. apply H4 with (x := b) (y := z3). tauto. }
-    unfold rational. exists (z1 * z4 + z3 * z2). exists (z2 * z4). rewrite H1. rewrite H2. rewrite plus_IZR.
-    repeat rewrite mult_IZR. field; split; apply not_0_IZR; lia.
-Qed.
-
-Close Scope Z_scope.
-
 Lemma pow2_gt_0 : forall r, r <> 0 -> r ^ 2 > 0.
 Proof.
   intros r H1. pose proof Rtotal_order r 0 as [H2 | [H2 | H2]]; try nra.
