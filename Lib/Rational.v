@@ -1,4 +1,4 @@
-From Lib Require Import Imports.
+From Lib Require Import Imports Reals_util.
 Open Scope Z_scope.
 
 Definition rational (r : R) : Prop :=
@@ -152,3 +152,11 @@ Proof.
        apply Rmult_eq_compat_r with (r := (IZR z4 / IZR z3)%R) in H2. replace ((IZR z3 / IZR z4 * b * (IZR z4 / IZR z3))%R) with b in H2 by (field; lra).
        rewrite H2. field; auto.
 Qed.
+
+Open Scope R_scope.
+
+Lemma exists_irrational_between : forall a b,
+  a < b -> exists c, (a < c < b)%R /\ irrational c.
+Proof.
+  intros a b H1.
+Admitted.
