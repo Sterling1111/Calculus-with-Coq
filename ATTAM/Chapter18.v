@@ -104,8 +104,10 @@ Definition gcd_Z (a b : Z) : Z :=
   let b' := Z.min (Z.abs a) (Z.abs b) in
   gcd_helper a' b' (Z.to_nat b' + 1).
 
+(*
 Compute gcd_Z 20 20.
 Compute Z.gcd 20 20.
+*)
   
 Lemma gcd_helper_correct : forall a b n,
   a >= b -> b >= 0 -> (n >= Z.to_nat (b + 1))%nat -> gcd_helper a b n = Z.gcd a b.
@@ -142,7 +144,7 @@ Definition compute_extgcd_text (pair : Z * Z) : string :=
     Z_to_string b ++ " * " ++ Z_to_string y in
   equation.
 
-Compute map compute_extgcd_text [(15, 27); (29, 23); (91, 133); (221, 377)].
+(*Compute map compute_extgcd_text [(15, 27); (29, 23); (91, 133); (221, 377)].*)
 
 Close Scope string_scope.
 

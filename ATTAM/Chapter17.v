@@ -15,7 +15,9 @@ Definition compute_quot_rem_text (pair : Z * Z) : string :=
     Z_to_string n ++ " = " ++ Z_to_string d ++ " * " ++ Z_to_string q ++ " + " ++ Z_to_string r in
   equation.
 
+(*
 Compute map compute_quot_rem_text [(17, 5); (17, -5); (-17, 5); (-17, -5); (256, 25); (256, -25); (-256, 25); (-256, -25)].
+*)
 
 Close Scope string_scope.
 
@@ -62,6 +64,7 @@ Definition gcd' (n m : Z) : Z :=
   let l := intersection (divisors1) (divisors2) in
   nth (List.length l - 1) l 0.
 
+(*
 Compute find_divisors 60.
 Compute find_divisors 42.
 
@@ -72,6 +75,7 @@ Compute Z.gcd 170 244.
 Compute (Z.rem 133 19).
 
 Compute (map (fun p => (Z.gcd (fst p) (snd p))) [(60, 42); (667, 851); (1855, 2345); (589, 437)]).
+*)
 
 Definition gcd_theory (a b gcd : Z) :=
   if (a =? 0) && (b =? 0) then gcd = 0 else

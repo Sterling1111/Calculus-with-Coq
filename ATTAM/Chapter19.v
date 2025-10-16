@@ -62,9 +62,11 @@ Section section19_1.
 
   Close Scope string_scope.
 
+  (*
   Compute canonical_prime_factorization_string 27.
   Compute canonical_prime_factorization_string 3072.
   Compute canonical_prime_factorization_string 60.
+  *)
 
 End section19_1.
 

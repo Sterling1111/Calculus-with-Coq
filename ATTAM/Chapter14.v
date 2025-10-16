@@ -62,7 +62,7 @@ Section section_14_6.
   Open Scope R_scope.
 
 (* run this command to print out the first 15 fib numbers*)
-Compute (map F_nat (seq 0 15)).
+(* Compute (map F_nat (seq 0 15)). *)
 
   Lemma lemma_14_6_b : forall n : nat,
     sum_f 0 n (fun i => F i) = F (S (S n)) - 1.
