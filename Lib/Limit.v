@@ -645,6 +645,36 @@ Proof.
   intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
 Qed.
 
+Lemma right_limit_to_a_equiv : forall f1 f2 a L,
+  (forall x, x <> a -> f1 x = f2 x) -> ⟦ lim a⁺ ⟧ f1 = L -> ⟦ lim a⁺ ⟧ f2 = L.  
+Proof.
+  intros f1 f2 a L H1 H2 ε H3. specialize (H2 ε H3) as [δ [H4 H5]]. exists δ. split; auto.
+  intros x H6. specialize (H5 x H6). rewrite <- H1; solve_R.
+Qed.
+
+Lemma left_limit_to_a_equiv : forall f1 f2 a L,
+  (forall x, x <> a -> f1 x = f2 x) -> ⟦ lim a⁻ ⟧ f1 = L -> ⟦ lim a⁻ ⟧ f2 = L.
+Proof.
+  intros f1 f2 a L H1 H2 ε H3. specialize (H2 ε H3) as [δ [H4 H5]]. exists δ. split; auto.
+  intros x H6. specialize (H5 x H6). rewrite <- H1; solve_R.
+Qed.
+
+Lemma right_limit_to_a_equiv' : forall f1 f2 a L δ,
+  δ > 0 -> (forall x, (x <> a /\ |a - x| < δ) -> f1 x = f2 x) -> ⟦ lim a⁺ ⟧ f1 = L -> ⟦ lim a⁺ ⟧ f2 = L.
+Proof.
+  intros f1 f2 a L δ H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ1 [H5 H6]].
+  exists (Rmin δ1 δ). split; [solve_R |].
+  intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
+Qed.
+
+Lemma left_limit_to_a_equiv' : forall f1 f2 a L δ,
+  δ > 0 -> (forall x, (x <> a /\ |a - x| < δ) -> f1 x = f2 x) -> ⟦ lim a⁻ ⟧ f1 = L -> ⟦ lim a⁻ ⟧ f2 = L.
+Proof.
+  intros f1 f2 a L δ H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ1 [H5 H6]].
+  exists (Rmin δ1 δ). split; [solve_R |].
+  intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
+Qed.
+
 Lemma limit_continuous_comp :
   forall (f g : R -> R) (a L : R),
     ⟦ lim a ⟧ g = L ->

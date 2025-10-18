@@ -54,7 +54,9 @@ Proof.
   apply continuous_on_interval_closed; try lra. repeat split.
   - intros x H1. apply theorem_9_1_a. apply derivative_at_imp_differentiable_at with (f' := (fun x => -1 / (2 * √(1 - x ^ 2)))).
     apply lemma_15_0; solve_R.
-  - rewrite A_spec; try lra. admit.
+  - rewrite A_spec; try lra. apply right_limit_to_a_equiv' with (f1 := (fun x => x * √(1 - x ^ 2) / 2 + ∫ x 1 (λ t, √(1 - t^2)))) (δ := 1); try lra.
+    -- intros x H1. rewrite A_spec; try lra. destruct H1 as [H1 H2]. solve_R. admit.
+    -- apply right_limit_plus. admit. admit.
   - rewrite A_spec; try lra. admit.
 Admitted.
 
@@ -103,7 +105,7 @@ Proof.
     -- apply (theorem_7_5 A (-1) 1); try lra; [ apply A_continuous | rewrite A_at_1, A_at_neg_1; lra ].
 Qed.
 
-Definition cos (x:R) : R :=
+Definition cos_0_π (x:R) : R :=
   match Rle_dec 0 x with
   | left H1 =>
     match Rle_dec x π with
@@ -114,18 +116,18 @@ Definition cos (x:R) : R :=
   | right _ => 0
   end.
 
-Lemma cos_spec : forall x, 0 <= x <= π -> A (cos x) = x / 2.
+Lemma cos_spec : forall x, 0 <= x <= π -> A (cos_0_π x) = x / 2.
 Proof.
-  intros x H1. unfold cos. destruct (Rle_dec 0 x) as [H2 | H2]; try lra.
+  intros x H1. unfold cos_0_π. destruct (Rle_dec 0 x) as [H2 | H2]; try lra.
   destruct (Rle_dec x π) as [H3 | H3]; try lra.
   pose proof (proj2_sig (cos_existence x (conj H2 H3))) as H4. lra.
 Qed.
 
-Definition sin (x:R) : R :=
-  √(1 - (cos x) ^ 2).
+Definition sin_0_π (x:R) : R :=
+  √(1 - (cos_0_π x) ^ 2).
 
 Theorem theorem_15_1_a : forall x,
-  0 < x < π -> ⟦ der x ⟧ cos = -sin.
+  0 < x < π -> ⟦ der x ⟧ cos_0_π = -sin_0_π.
 Proof.
   intros x H1. set (B := fun x => 2 * A x). 
 Admitted.
