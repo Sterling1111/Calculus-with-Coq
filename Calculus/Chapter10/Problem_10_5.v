@@ -31,3 +31,25 @@ Proof.
   rewrite (derivative_of_function_unique f f' (λ x, 2 * x) H2 H3), H1. field; auto.
 Qed.
 
+Lemma lemma_10_5_iii : ∀ f f',
+  f = (λ x, 17) -> ⟦ der ⟧ f = f' -> ∀ x, f (f'(x)) = 17.
+Proof.
+  intros f f' H1 H2 x.
+  assert (H3 : ⟦ der ⟧ f = (λ _ : ℝ, 0)).
+  { rewrite H1. apply theorem_10_1. }
+  rewrite (derivative_of_function_unique f f' (λ _ : ℝ, 0) H2 H3), H1. simpl. lra.
+Qed.
+
+Lemma lemma_10_5_iv : ∀ f f',
+  f = (λ x, 17 * x) -> ⟦ der ⟧ f = f' -> ∀ x, f (f'(x)) = 289.
+Proof.
+  intros f f' H1 H2 x.
+  assert (H3 : ⟦ der ⟧ f = (λ _ : ℝ, 17)).
+  {
+    rewrite H1.
+    replace (λ _ : ℝ, 17) with (λ x : ℝ, 17 * 1).
+    2 : { extensionality y. lra. }
+    apply theorem_10_5' with (f := (λ x, x)) (f' := (λ _ : ℝ, 1)) (c := 17). apply theorem_10_2.
+  }
+  rewrite (derivative_of_function_unique f f' (λ _ : ℝ, 17) H2 H3), H1. field; auto.
+Qed.
