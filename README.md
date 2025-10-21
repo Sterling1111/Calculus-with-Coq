@@ -1,6 +1,6 @@
 # Calculus with Coq
 
-A formal, textbook-style development of single-variable calculus and supporting real analysis in the Coq proof assistant. The repository includes a reusable library (`Lib/`) plus worked problems for the Calculus track (`Calculus/`) and companion materials (`ATTAM/`).
+A formal, textbook-style development of single-variable calculus and supporting real analysis in the Coq proof assistant. This formalization follows the presentation and problem sequence of Michael Spivak’s "Calculus". The repository includes a reusable library (`Lib/`) plus worked problems for the Calculus track (`Calculus/`) and companion materials (`ATTAM/`).
 
 ## Highlights
 
@@ -34,14 +34,6 @@ Theorem theorem_11_4 : forall f a b,
 Theorem cauchy_mvt : forall f f' g g' a b,
   a < b -> continuous_on f [a, b] -> continuous_on g [a, b] -> ⟦ der ⟧ f (a, b) = f' -> ⟦ der ⟧ g (a, b) = g' -> 
     (forall x, x ∈ (a, b) -> g' x <> 0) -> g b <> g a -> exists x, x ∈ (a, b) /\ (f b - f a) / (g b - g a) = f' x / g' x.
-```
-
-- Intermediate Value Theorem (file: `Lib/Continuity.v`)
-
-```coq
-(* One-sided sign-change version implying zero in the interval *)
-Theorem theorem_7_1 : forall f a b,
-  a < b -> continuous_on f [a, b] -> f a < 0 < f b -> { x | x ∈ [a, b] /\ f x = 0 }.
 ```
 
 - Completeness (Least Upper/Greatest Lower Bounds) toolkit (file: `Lib/Completeness.v`)
@@ -208,4 +200,4 @@ Issues and PRs are welcome — particularly for adding proofs to `Admitted` lemm
 
 ## License
 
-Add your preferred license (e.g., MIT/Apache-2.0) in a `LICENSE` file.
+This project is released under the MIT License. See the `LICENSE` file for details.
