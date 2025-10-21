@@ -2,7 +2,7 @@ From Lib Require Import Imports Sets Limit Continuity Derivative Notations Reals
 Import LimitNotations IntervalNotations SetNotations DerivativeNotations Function_Notations.
 Open Scope R_scope.
 
-Lemma lemma_11_47 : 1 / 9 < √66 - 8 < 1 / 8.
+Lemma lemma_11_47 : 1/9 < √66 - 8 < 1/8.
 Proof.
   assert (H1 : continuous_on (λ x, √x) [64, 66]).
   { apply continuous_imp_continuous_on. apply sqrt_continuous. }
