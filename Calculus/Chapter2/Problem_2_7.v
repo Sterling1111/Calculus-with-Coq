@@ -347,33 +347,42 @@ Proof.
     rewrite sum_swap; try lia. apply sum_f_equiv; try lia. intros i H5. rewrite <- r_mult_sum_f_i_n_f. apply Rmult_comm.
 Qed.
 
-Lemma lemma_2_7 : forall n p,
-  (n >= 1)%nat -> (p >= 1)%nat ->
+Lemma lemma_2_7 : forall p,
+  (p >= 1)%nat ->
     exists l : list R,
-      length l = p /\ Forall rational l /\ sum_f 1 n (fun i => INR i ^ p) = INR n ^ (p + 1) / INR (p + 1) + sum_f 0 (p-1) (fun i => nth i l 0 * INR n ^ (i + 1)).
+      forall n, (n >= 1)%nat ->
+        length l = p /\ Forall rational l /\
+        sum_f 1 n (fun i => INR i ^ p) = INR n ^ (p + 1) / INR (p + 1) + sum_f 0 (p-1) (fun i => nth i l 0 * INR n ^ (i + 1)).
 Proof.
-  intros n p H1 H2. apply strong_induction_N with (n := p).
-  intros m IH. assert (m = 0 \/ m = 1 \/ m >= 2)%nat as [H3 | [H3 | H3]] by lia.
-  - rewrite H3. simpl. rewrite sum_f_const. exists []. rewrite sum_f_0_0. simpl. rewrite plus_INR.
-    rewrite minus_INR; try lia. simpl. repeat split; try lra. apply Forall_nil.
-  - rewrite H3. replace ((fun i => INR i ^ 1)) with (fun i => INR i) by (apply functional_extensionality; intros; lra).
-    rewrite sum_n_nat; auto. exists [1/2]. rewrite sum_f_0_0. simpl. repeat split; try lra. apply Forall_cons; try apply Forall_nil. exists (1%Z), (2%Z). reflexivity.
-  - assert (H4 : forall k, (INR k + 1)^(m+1) - (INR k)^(m+1) = sum_f 2 (m+1) (fun i => choose (m+1) i * (INR k)^(m+1-i)) + INR (m + 1) * INR k ^ m).
+  intros p. apply strong_induction_N with (n := p). clear p. intros p IH H1.
+  assert (p = 1 \/ p >= 2)%nat as [H2 | H2] by lia.
+  - subst. exists [1/2]. intros n H2. repeat split; try lra. apply Forall_cons; try apply Forall_nil. exists (1%Z), (2%Z). reflexivity.
+    simpl. rewrite sum_f_0_0. simpl. field_simplify. replace (λ i : nat, INR i * 1) with (fun i => INR i) by (extensionality x; lra). rewrite sum_n_nat; solve_R.
+    replace 1 with (INR 1) in H2 by reflexivity. apply INR_le in H2. auto.
+  - assert (H4 : forall k, (INR k + 1)^(p+1) - (INR k)^(p+1) = sum_f 2 (p+1) (fun i => choose (p+1) i * (INR k)^(p+1-i)) + INR (p + 1) * INR k ^ p).
     {
       intros k. rewrite lemma_2_3_d. rewrite sum_f_Si; try lia. rewrite n_choose_0. simpl. rewrite Rmult_1_r. rewrite Rmult_1_l. 
-      replace (m+1-0)%nat with (m+1)%nat by lia. unfold Rminus. rewrite Rplus_assoc.
-      field_simplify. rewrite sum_f_Si; try lia. rewrite n_choose_1. replace (m + 1 - 1)%nat with m by lia. replace (INR (m + 1) * INR k ^ m * 1 ^ 1) with (INR (m + 1) * INR k ^ m) by (simpl; lra).
+      replace (p+1-0)%nat with (p+1)%nat by lia. unfold Rminus. rewrite Rplus_assoc.
+      field_simplify. rewrite sum_f_Si; try lia. rewrite n_choose_1. replace (p + 1 - 1)%nat with p by lia. replace (INR (p + 1) * INR k ^ p * 1 ^ 1) with (INR (p + 1) * INR k ^ p) by (simpl; lra).
         apply Rplus_eq_compat_r. apply sum_f_equiv; try lia. intros k2 H5. rewrite pow1. rewrite Rmult_1_r. reflexivity. 
     }
-    assert (H5 : sum_f 1 n (fun i => (INR i + 1) ^ (m + 1) - INR i ^ (m + 1)) = (INR n + 1)^(m+1) - 1).
+    assert (H5 : forall n, (n >= 1)%nat -> sum_f 1 n (fun i => (INR i + 1) ^ (p + 1) - INR i ^ (p + 1)) = (INR n + 1)^(p+1) - 1).
     {
-      set (f := fun x => INR x ^ (m+1)). replace ((INR n + 1) ^ (m + 1)) with (f (n+1)%nat).
+      intros n H5.
+      set (f := fun x => INR x ^ (p+1)). replace ((INR n + 1) ^ (p + 1)) with (f (n+1)%nat).
       2 : { unfold f. rewrite plus_INR. reflexivity. }
       replace 1 with (f 1%nat).
       2 : { unfold f. simpl. rewrite pow1. reflexivity. }
-      rewrite <- sum_f_1_n_fSi_minus_fi with (n := n) (f := f); try lia. apply sum_f_equiv; try lia. intros k H5.
+      rewrite <- sum_f_1_n_fSi_minus_fi with (n := n) (f := f); try lia. apply sum_f_equiv; try lia. intros k H6.
       unfold f. rewrite plus_INR. simpl. rewrite pow1. reflexivity.
     }
+    assert (H6 : forall n, (n >= 1)%nat -> sum_f 1 n (fun i => (INR i + 1)^(p+1) - (INR i)^(p+1)) = sum_f 1 n (fun i => sum_f 2 (p+1) (fun j => choose (p+1) j * (INR i)^(p+1-j)) + INR (p + 1) * INR i ^ p)).
+    { intros n H6. apply sum_f_equiv; try lia. intros k H7. specialize (H4 k). rewrite <- H4. lra. }
+Admitted.
+
+
+
+(*
     assert (H6 : sum_f 1 n (fun i => (INR i + 1)^(m+1) - (INR i)^(m+1)) = sum_f 1 n (fun i => sum_f 2 (m+1) (fun j => choose (m+1) j * (INR i)^(m+1-j)) + INR (m + 1) * INR i ^ m)).
     { apply sum_f_equiv; try lia. intros k H6. specialize (H4 k). rewrite <- H4. lra. } rewrite H5 in H6. rewrite <- sum_f_plus in H6; try lia. rewrite <- r_mult_sum_f_i_n_f_l in H6.
     rewrite Rplus_comm in H6. rewrite lemma_2_3_d in H6. replace ((fun i : nat => choose (m + 1) i * 1 ^ (m + 1 - i) * INR n ^ i)) with 
@@ -492,3 +501,5 @@ Proof.
     2 : { apply add_lists_rational; auto. }
     rewrite add_lists_length. rewrite H16. rewrite H12. lia.
 Qed.
+
+*)

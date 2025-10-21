@@ -12,6 +12,7 @@ From Coq Require Export
   Reals.SeqSeries
   Reals.Rtrigo
   Reals.Ranalysis
+  Reals.RIneq
   
   (* Arithmetic *)
   ZArith

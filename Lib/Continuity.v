@@ -536,7 +536,7 @@ Qed.
 Theorem theorem_7_8 : forall α,
   α >= 0 -> { x | x * x = α }.
 Proof.
-  intros α H1. destruct (Req_dec α 0) as [H2 | H2]; [ exists 0; lra | ]. assert (H3 : α > 0) by lra. clear H1 H2. rename H3 into H1.
+  intros α H1. destruct (Req_dec_T α 0) as [H2 | H2]; [ exists 0; lra | ]. assert (H3 : α > 0) by lra. clear H1 H2. rename H3 into H1.
    set (f := fun x => x * x). assert (H2 : continuous f). { intros a. unfold continuous_at. solve_lim. }
   pose proof Rtotal_order_dec α 1 as [[H3 | H3] | H3].
   - pose proof theorem_7_4 f 0 1 α ltac:(lra) ltac:(apply continuous_imp_continuous_on; auto) ltac:(unfold f; solve_R) as [x [H4 H5]].
@@ -588,6 +588,11 @@ Lemma sqrt_f_continuous : forall f,
   continuous f -> continuous (fun x => √(f x)).
 Proof.
   intros f H1 a. apply theorem_6_2; auto. apply limit_sqrt_x.
+Qed.
+
+Lemma sqrt_continuous : continuous (fun x => √x).
+Proof.
+  apply sqrt_f_continuous. intro a. unfold continuous_at. solve_lim.
 Qed.
 
 (* clearly this proof need major work. *)

@@ -777,7 +777,7 @@ Definition integral_helper (f : ℝ -> ℝ) (a b r : ℝ) : Prop :=
 Definition integral (f : ℝ -> ℝ) (a b r : ℝ) : Prop :=  
   match Rlt_dec a b with 
   | left _ => integral_helper f a b r
-  | right _ => match Req_dec a b with
+  | right _ => match Req_dec_T a b with
                | left _ => r = 0
                | right _ => integral_helper (-f) b a r
                end

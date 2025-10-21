@@ -208,7 +208,7 @@ Qed.
 Fixpoint find (l : list ℝ) (r : ℝ) : bool := 
   match l with 
   | [] => false
-  | h :: t => if (Req_dec h r) then true else find t r
+  | h :: t => if (Req_dec_T h r) then true else find t r
   end.
 
 Lemma find_iff : forall (l : list ℝ) (r : ℝ), find l r = true <-> List.In r l.
@@ -216,14 +216,14 @@ Proof.
   intros l r. split; intros H1.
   - induction l as [| h t IH].
     + simpl in H1. discriminate.
-    + simpl in H1. destruct (Req_dec h r) as [H2 | H2].
+    + simpl in H1. destruct (Req_dec_T h r) as [H2 | H2].
       * left. auto.
       * right. apply IH. auto.
   - induction l as [| h t IH].
     + simpl in H1. auto.
     + simpl in H1. destruct H1 as [H2 | H3].
-      * subst. simpl. destruct (Req_dec r r) as [H4 | H4]; lra.
-      * specialize (IH H3). simpl. destruct (Req_dec h r) as [H4 | H4]; auto.
+      * subst. simpl. destruct (Req_dec_T r r) as [H4 | H4]; lra.
+      * specialize (IH H3). simpl. destruct (Req_dec_T h r) as [H4 | H4]; auto.
 Qed.
 
 Lemma find_iff_false : forall (l : list ℝ) (r : ℝ), find l r = false <-> ~List.In r l.

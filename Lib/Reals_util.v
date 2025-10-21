@@ -147,6 +147,12 @@ Proof.
     apply Rlt_pow_base with (n := 2%nat); try lra; try lia. apply sqrt_lt_R0; lra. rewrite pow2_sqrt; lra.
 Qed.
 
+Lemma Rinv_lt_contravar_3 : forall a b c,
+  a > 0 -> b > 0 -> c > 0 -> a < b < c -> 1 / c < 1 / b < 1 / a.
+Proof.
+  intros a b c H1 H2 H3 [H4 H5]. split; repeat rewrite Rdiv_1_l; apply Rinv_lt_contravar; nra.
+Qed.
+
 Ltac compare_elems e1 e2 := 
   let e1' := eval simpl in e1 in
   let e2' := eval simpl in e2 in 

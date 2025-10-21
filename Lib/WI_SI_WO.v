@@ -193,9 +193,10 @@ Ltac strong_induction_Z_pos z :=
 
 Ltac strong_induction T :=
 match type of T with
-| nat => strong_induction_nat T
+| ℕ => strong_induction_nat T
 | Z => strong_induction_Z_pos T
-| _ => fail "unsupported type"
+| nat => strong_induction_nat T
+| _ => strong_induction_nat T
 end.
 
 Lemma well_ordering_principle_contrapositive_Z : forall E : Z -> Prop,

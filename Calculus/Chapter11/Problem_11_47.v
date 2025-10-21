@@ -4,5 +4,38 @@ Open Scope R_scope.
 
 Lemma lemma_11_47 : 1 / 9 < √66 - 8 < 1 / 8.
 Proof.
-  
-Admitted.
+  assert (H1 : continuous_on (λ x, √x) [64, 66]).
+  { apply continuous_imp_continuous_on. apply sqrt_continuous. }
+  assert (H2 : differentiable_on (λ x, √x) (64, 66)).
+  {
+    apply differentiable_on_open_interval_subset with (a := 64) (b := 66); try lra.
+    apply derivative_on_imp_differentiable_on with (f' := λ x, 1 / (2 * √ x)); try lra.
+    apply derivative_sqrt_x_on; lra. 
+  }
+  pose proof theorem_11_4 (λ x, √x) 64 66 ltac:(lra) H1 H2 as [c [H3 H4]].
+  pose proof derivative_sqrt_x_on 64 66 ltac:(lra) as H5. specialize (H5 c ltac:(solve_R)) as [[_ H5] | [[H5 _] | [H5 _]]].
+  - pose proof derivative_of_function_at_x_unique (λ x, √x) (λ x, 1 / (2 * √ x)) (λ _ : ℝ, (√66 - √64) / (66 - 64)) c H5 H4 as H6.
+    clear H1 H2 H4 H5. rename H3 into H1, H6 into H2.
+    simpl in H2. assert (H3 : 8 < √c < 9).
+    {
+      split.
+      - pose proof sqrt_lt_1 64 c ltac:(lra) ltac:(solve_R) ltac:(solve_R) as H3.
+        replace 64 with (8 * 8) in H3 by lra. rewrite sqrt_square in H3; lra.
+      - pose proof sqrt_lt_1 c 81 ltac:(solve_R) ltac:(lra) ltac:(solve_R) as H3.
+        replace 81 with (9 * 9) in H3 by lra. rewrite sqrt_square in H3; lra.
+    }
+    assert (√c = 1 / (√66 - 8)) as H4.
+    {
+      replace 64 with (8 * 8) in H2 at 1; try lra. rewrite sqrt_square in H2 at 1; try lra.
+      replace (66 - 64) with 2 in H2 by lra. apply Rmult_eq_compat_l with (r := 2 * √c) in H2.
+      field_simplify in H2; try lra.
+      rewrite Rmult_comm in H2. rewrite <- Rmult_minus_distr_r in H2.
+      assert (H4 : √66 - 8 <> 0). { pose proof Rmult_neq_0_reg ((√66 - 8)) (√c) ltac:(lra) as [H4 _]. auto. }
+      apply Rmult_eq_reg_l with (r := √66 - 8); auto. field_simplify; auto. lra.
+    }
+    rewrite H4 in H3. clear c H1 H2 H4. rename H3 into H1.
+    apply Rinv_lt_contravar_3 in H1; try lra. repeat rewrite Rdiv_1_l in *. 
+    rewrite Rinv_inv in H1. auto.
+  - apply not_left_endpoint in H5; solve_R.
+  - apply not_right_endpoint in H5; solve_R.
+Qed.

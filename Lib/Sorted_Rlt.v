@@ -286,7 +286,7 @@ Proof.
   intros l1 l2 r. split; intros H1.
   - generalize dependent l1. induction l2 as [| h t IH].
     -- intros l1 H1. simpl in H1. auto.
-    -- intros l1 H1. simpl in H1. destruct (Req_dec h r) as [H2 | H2]; subst. left; left; auto. 
+    -- intros l1 H1. simpl in H1. destruct (Req_dec_T h r) as [H2 | H2]; subst. left; left; auto. 
        specialize (IH (insert_Sorted_Rlt h l1) H1) as [H3 | H4]. left. right. auto. right.
        apply In_l_In_insert_Sorted_Rlt' in H4 as [H4 | H4]; try lra. auto.
   - generalize dependent l1. induction l2 as [| h t IH].
@@ -298,32 +298,32 @@ Proof.
 Qed.
 
 Lemma insert_Sorted_Rlt_count_occ : forall (l : list R) (r : R),
-  count_occ Req_dec (insert_Sorted_Rlt r l) r = S (count_occ Req_dec l r).
+  count_occ Req_dec_T(insert_Sorted_Rlt r l) r = S (count_occ Req_dec_T l r).
 Proof.
   intros l r. induction l as [| h t IH].
-  - simpl. destruct (Req_dec r r) as [H1 | H1]; [ reflexivity | exfalso; apply H1; reflexivity ].
+  - simpl. destruct (Req_dec_T r r) as [H1 | H1]; [ reflexivity | exfalso; apply H1; reflexivity ].
   - simpl. destruct (Rlt_dec r h) as [H1 | H1].
-    -- simpl. destruct (Req_dec r r) as [H2 | H2]; destruct (Req_dec h r) as [H3 | H3]; try nra. reflexivity.
-    -- simpl. destruct (Req_dec h r) as [H2 | H2]; auto.
+    -- simpl. destruct (Req_dec_T r r) as [H2 | H2]; destruct (Req_dec_T h r) as [H3 | H3]; try nra. reflexivity.
+    -- simpl. destruct (Req_dec_T h r) as [H2 | H2]; auto.
 Qed.
 
 Lemma insert_Sorted_Rlt_count_occ_neq : forall (l : list R) (r h : R),
-  r <> h -> count_occ Req_dec (insert_Sorted_Rlt r l) h = count_occ Req_dec l h.
+  r <> h -> count_occ Req_dec_T(insert_Sorted_Rlt r l) h = count_occ Req_dec_T l h.
 Proof.
   intros l r h H1. induction l as [| h' t IH].
-  - simpl. destruct (Req_dec r h) as [H2 | H2]; try nra. reflexivity.
+  - simpl. destruct (Req_dec_T r h) as [H2 | H2]; try nra. reflexivity.
   - simpl. destruct (Rlt_dec r h') as [H2 | H2].
-    -- simpl. destruct (Req_dec r h) as [H3 | H3]; try nra. destruct (Req_dec h' h) as [H4 | H4]; try lia.
-    -- simpl. destruct (Req_dec h' h) as [H3 | H3]; try lia.
+    -- simpl. destruct (Req_dec_T r h) as [H3 | H3]; try nra. destruct (Req_dec_T h' h) as [H4 | H4]; try lia.
+    -- simpl. destruct (Req_dec_T h' h) as [H3 | H3]; try lia.
 Qed.
 
 Lemma add_points_Sorted_Rlt_count_occ : forall (l1 l2 : list R) (r : R),
-  (count_occ Req_dec (add_points_Sorted_Rlt l1 l2) r = 
-  count_occ Req_dec l1 r + count_occ Req_dec l2 r)%nat.
+  (count_occ Req_dec_T(add_points_Sorted_Rlt l1 l2) r = 
+  count_occ Req_dec_T l1 r + count_occ Req_dec_T l2 r)%nat.
 Proof.
   intros l1 l2 r. generalize dependent l1. induction l2 as [| h t IH].
   - intros l1. simpl. lia.
-  - intros l1. simpl. destruct (Req_dec h r) as [H1 | H1].
+  - intros l1. simpl. destruct (Req_dec_T h r) as [H1 | H1].
     -- rewrite IH. rewrite H1. rewrite insert_Sorted_Rlt_count_occ. lia.
     -- rewrite IH. rewrite insert_Sorted_Rlt_count_occ_neq; try lia; auto.
 Qed.
@@ -331,9 +331,9 @@ Qed.
 Lemma add_points_Dup : forall (l1 l2 : list ℝ) (r : ℝ),
   List.In r l2 -> List.In r l1 -> ~NoDup (add_points_Sorted_Rlt l1 l2).
 Proof.
-  intros l1 l2 r H1 H2 H3. rewrite (NoDup_count_occ Req_dec) in H3. specialize (H3 r).
+  intros l1 l2 r H1 H2 H3. rewrite (NoDup_count_occ Req_dec_T) in H3. specialize (H3 r).
   pose proof add_points_Sorted_Rlt_count_occ l1 l2 r as H4.
-  rewrite (count_occ_In Req_dec) in H1, H2. lia.
+  rewrite (count_occ_In Req_dec_T) in H1, H2. lia.
 Qed.
 
 Lemma sorted_Rlt_seq : forall i j,

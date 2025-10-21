@@ -431,6 +431,24 @@ Proof.
     -- subst. tauto.
 Qed.
 
+Lemma differentiable_imp_differentiable_on : forall f a b,
+  a < b -> differentiable f -> differentiable_on f [a, b].
+Proof.
+  intros f  a b H1 H2 x H3. assert (x = a \/ x = b \/ (a < x < b)) as [H4 | [H4 | H4]] by solve_R.
+  - right; left. split. subst. apply left_interval_enpoint_closed; auto.
+    apply differentiable_at_iff. auto.
+  - right; right. split. subst. apply right_interval_enpoint_closed; auto.
+    apply differentiable_at_iff. auto.
+  - left. split. apply is_interior_point_closed; auto. apply H2.
+Qed.
+
+Lemma derivative_imp_differentiable : forall f f',
+  ⟦ der ⟧ f = f' -> differentiable f.
+Proof.
+  intros f f' H1 x. unfold differentiable_at. exists (f' x). intros ε H2.
+  specialize (H1 x ε) as [δ [H3 H4]]; auto. exists δ. split; auto.
+Qed.
+
 Theorem theorem_10_1 : forall c,
   ⟦ der ⟧ (fun _ => c) = (fun _ => 0).
 Proof.
@@ -692,7 +710,7 @@ Theorem theorem_10_9 : forall f g f' g' a,
   ⟦ der a ⟧ g = g' -> ⟦ der (g a) ⟧ f = f' -> ⟦ der a ⟧ (f ∘ g) = (f' ∘ g) ∙ g'.
 Proof.
   intros f g f' g' a H1 H2.
-  set ( φ := fun h : ℝ => match (Req_dec (g (a + h) - g a) 0) with 
+  set ( φ := fun h : ℝ => match (Req_dec_T (g (a + h) - g a) 0) with 
                           | left _ => f' (g a)
                           | right _ => (f (g (a + h)) - f (g a)) / (g (a + h) - g a)
                           end).
@@ -702,7 +720,7 @@ Proof.
     assert (H7 : continuous_at g a). 
     { apply theorem_9_1_a. unfold differentiable_at. unfold derivative_at in H1. exists (g' a). auto. }
     specialize (H7 δ' H5) as [δ [H8 H9]]. exists δ. split; auto. intros x H10.
-    destruct (Req_dec (g (a + x) - g a) 0) as [H11 | H11]; destruct (Req_dec 0 0) as [H12 | H12]; try lra; clear H12.
+    destruct (Req_dec_T (g (a + x) - g a) 0) as [H11 | H11]; destruct (Req_dec_T 0 0) as [H12 | H12]; try lra; clear H12.
      - solve_R.
      - specialize (H9 (a + x) ltac:(solve_R)). specialize (H6 (g (a + x) - g a) ltac:(solve_R)).
        replace (g a + (g (a + x) - g a)) with (g (a + x)) in H6 by lra. auto.
@@ -710,8 +728,8 @@ Proof.
   unfold continuous_at in H3. unfold derivative_at.
   apply limit_to_0_equiv with (f1 := fun h => φ h * ((g (a + h) - g a)/h)). 
   2 : { apply limit_mult; auto. unfold φ in H3 at 2. rewrite Rplus_0_r in H3. replace (g a - g a) with 0 in H3 by lra.
-         destruct (Req_dec 0 0); auto; lra. }
-  intros x H4. unfold φ. destruct (Req_dec (g (a + x) - g a) 0) as [H5 | H5].
+         destruct (Req_dec_T 0 0); auto; lra. }
+  intros x H4. unfold φ. destruct (Req_dec_T (g (a + x) - g a) 0) as [H5 | H5].
   - rewrite H5. field_simplify; auto. replace (0 / x) with 0 by nra. replace (g (a + x)) with (g a) by lra. lra.
   - field. auto.
 Qed.
@@ -1281,7 +1299,7 @@ Qed.
 
 Lemma derivative_sqrt_x : forall x,
   x > 0 ->
-  ⟦ der x ⟧ sqrt = (λ x, 1 / (2 * sqrt x)).
+  ⟦ der x ⟧ (λ x, √x) = (λ x, 1 / (2 * √ x)).
 Proof.
   intros x H1. unfold derivative_at. apply limit_to_0_equiv with (f1 := fun h => 1 / (sqrt (x + h) + sqrt x)).
   - intros h H2. admit.
@@ -1293,6 +1311,19 @@ Proof.
     specialize (H2 H3). specialize (H2 0). unfold continuous_at in H2.
     rewrite Rplus_0_r in H2. apply H2. pose proof sqrt_lt_R0 x H1 as H4. lra.
 Admitted.
+
+Lemma derivative_sqrt_x_on : forall a b,
+  0 < a < b ->
+  ⟦ der ⟧ (λ x, √x) [a, b] = (λ x, 1 / (2 * √ x)). 
+Proof.
+  intros a b H1 x H2. assert (x = a \/ x = b \/ (a < x < b)) as [H3 | [H3 | H3]] by solve_R.
+  - subst x. right; left; split. apply left_interval_enpoint_closed; lra.
+    apply derivative_at_iff. apply derivative_sqrt_x; lra.
+  - subst x. right; right; split. apply right_interval_enpoint_closed; lra.
+    apply derivative_at_iff. apply derivative_sqrt_x; lra.
+  - left; split. apply is_interior_point_closed; solve_R.
+    apply derivative_sqrt_x; lra.
+Qed.
 
 (*
 
