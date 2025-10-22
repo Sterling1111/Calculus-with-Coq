@@ -1333,6 +1333,28 @@ Proof.
   auto.
 Qed.
 
+Lemma theorem_13_6_a : forall f a b c,
+  a < b -> integrable_on a b f -> integrable_on a b (c * f).
+Proof.
+  intros f a b c H1 H2. destruct H2 as [H2 | [bf [sup [inf [H3 [H4 [H5 H6]]]]]]]; [ left; lra |].
+  assert (H7 : bounded_on (c * f) [a, b]) by admit.
+  assert (H8 : a <= b) by lra.
+  set (bf' := mkbounded_function_R a b (λ x, c * f x) H8 H7). 
+  right. exists bf', (c * sup), (c  * inf). repeat split; solve_R; admit.
+Admitted.
+
+Lemma theorem_13_6_b : forall f a b c,
+  a < b -> integrable_on a b f -> ∫ a b (c * f) = c * ∫ a b f.
+Proof.
+  intros f a b c H1 H2. pose proof theorem_13_6_a f a b c H1 H2 as H3.
+  destruct (integral_eq' a b f H1 H2) as [bf1 [sup1 [inf1 [H4 [H5 [H6 H7]]]]]].
+  destruct (integral_eq' a b (c * f) H1 H3) as [bf2 [sup2 [inf2 [H8 [H9 [H10 H11]]]]]].
+  rewrite H4, H8. pose proof Rtotal_order c 0 as [H12 | [H12 | H12]].
+  - admit.
+  - admit.
+  - admit.
+Admitted.
+
 Theorem theorem_13_7 : ∀ a b f m M,
   a <= b -> integrable_on a b f -> (∀ x, x ∈ [a, b] -> m <= f x <= M) ->
     m * (b - a) <= ∫ a b f <= M * (b - a).
