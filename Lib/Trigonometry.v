@@ -54,8 +54,8 @@ Proof.
   apply continuous_on_interval_closed; try lra. repeat split.
   - intros x H1. apply theorem_9_1_a. apply derivative_at_imp_differentiable_at with (f' := (fun x => -1 / (2 * √(1 - x ^ 2)))).
     apply lemma_15_0; solve_R.
-  - rewrite A_spec; try lra. apply right_limit_to_a_equiv' with (f1 := (fun x => x * √(1 - x ^ 2) / 2 + ∫ x 1 (λ t, √(1 - t^2)))) (δ := 1); try lra.
-    -- intros x H1. rewrite A_spec; try lra. destruct H1 as [H1 H2]. solve_R. admit.
+  - rewrite A_spec; try lra. apply right_limit_to_a_equiv' with (f1 := (fun x => x * √(1 - x ^ 2) / 2 + ∫ x 1 (λ t, √(1 - t^2)))) (δ := 0.5); try lra.
+    -- intros x [H1 H2]. rewrite A_spec; try lra. admit.
     -- apply right_limit_plus. admit. admit.
   - rewrite A_spec; try lra. admit.
 Admitted.

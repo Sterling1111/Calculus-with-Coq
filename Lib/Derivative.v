@@ -1325,6 +1325,23 @@ Proof.
     apply derivative_sqrt_x; lra.
 Qed.
 
+Fixpoint DerN (n:nat) (f fn : R -> R) : Prop :=
+  match n with
+  | 0   => fn = f
+  | S k => exists g, ⟦ der ⟧ f = g /\ DerN k g fn
+  end.
+
+Lemma DerN_test : DerN 2 (λ x : ℝ, x^3) (λ x : ℝ, 6 * x).
+Proof.
+  exists (λ x : ℝ, 3 * x^2). split.
+  - apply power_rule'; solve_R.
+  - exists (λ x : ℝ, 6 * x). split.
+    -- replace (λ x : ℝ, 6 * x) with (λ x : ℝ, 3 * (2 * x^(2-1))).
+       2 : { extensionality y. simpl. lra. }
+       apply theorem_10_5'. apply power_rule'; solve_R. 
+    -- simpl. reflexivity.
+Qed.
+
 (*
 
 Fixpoint poly_deriv_from (n:nat) (l:list R) : list R :=
@@ -1374,21 +1391,6 @@ Proof.
 
 Lemma derivative_poly : forall 
 Proof.
-Qed.
-
-Fixpoint DerN (n:nat) (f fn : R -> R) : Prop :=
-  match n with
-  | 0   => fn = f
-  | S k => exists g, ⟦ der ⟧ f = g /\ DerN k g fn
-  end.
-
-Lemma DerN_test : DerN 2 (λ x : ℝ, x^3) (λ x : ℝ, 6 * x).
-Proof.
-  exists (λ x : ℝ, 3 * x^2). split.
-  - apply power_rule'; solve_R.
-  - exists (λ x : ℝ, 6 * x). split.
-    -- admit.
-    -- simpl. reflexivity.
 Qed.
 
 *)
