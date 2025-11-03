@@ -55,9 +55,24 @@ Proof.
   - intros x H1. apply theorem_9_1_a. apply derivative_at_imp_differentiable_at with (f' := (fun x => -1 / (2 * √(1 - x ^ 2)))).
     apply lemma_15_0; solve_R.
   - rewrite A_spec; try lra. apply right_limit_to_a_equiv' with (f1 := (fun x => x * √(1 - x ^ 2) / 2 + ∫ x 1 (λ t, √(1 - t^2)))) (δ := 0.5); try lra.
-    -- intros x [H1 H2]. rewrite A_spec; try lra. admit.
-    -- apply right_limit_plus. admit. admit.
-  - rewrite A_spec; try lra. admit.
+    -- intros x H1. rewrite A_spec; solve_R.
+    -- apply right_limit_plus. admit. apply right_limit_integral_lower; solve_R.
+       apply theorem_13_3; try lra. apply continuous_imp_continuous_on. apply sqrt_f_continuous.
+       replace (λ x0 : ℝ, 1 - x0 * (x0 * 1)) with (polynomial [-1; 0; 1]).
+       2 : { extensionality y. compute. lra. } intros a. apply theorem_37_14.
+       apply continuous_imp_continuous_on. apply sqrt_f_continuous. 
+       replace (λ x0 : ℝ, 1 - x0 * (x0 * 1)) with (polynomial [-1; 0; 1]).
+       2 : { extensionality y. compute. lra. } intros a. apply theorem_37_14.
+  - rewrite A_spec; try lra.
+    apply left_limit_to_a_equiv' with (f1 := (fun x => x * √(1 - x ^ 2) / 2 + ∫ x 1 (λ t, √(1 - t^2)))) (δ := 0.5); try lra.
+    -- intros x H1. rewrite A_spec; solve_R.
+    -- apply left_limit_plus. admit. apply left_limit_integral_lower; solve_R.
+       apply theorem_13_3; try lra. apply continuous_imp_continuous_on. apply sqrt_f_continuous.
+       replace (λ x0 : ℝ, 1 - x0 * (x0 * 1)) with (polynomial [-1; 0; 1]).
+       2 : { extensionality y. compute. lra. } intros a. apply theorem_37_14.
+       apply continuous_imp_continuous_on. apply sqrt_f_continuous. 
+       replace (λ x0 : ℝ, 1 - x0 * (x0 * 1)) with (polynomial [-1; 0; 1]).
+       2 : { extensionality y. compute. lra. } intros a. apply theorem_37_14.
 Admitted.
 
 Lemma A_at_1 : A 1 = 0.
@@ -94,7 +109,7 @@ Proof.
   exists (-1). split; solve_R. rewrite A_at_neg_1. lra.
 Qed.
 
-Theorem cos_existence : forall x,
+Theorem cos_0_π_existence : forall x,
   0 <= x <= π -> { y | y ∈ [-1, 1] /\ A y = x / 2 }.
 Proof.
   intros x H1.
@@ -110,17 +125,17 @@ Definition cos_0_π (x:R) : R :=
   | left H1 =>
     match Rle_dec x π with
     | left H2 =>
-      proj1_sig (cos_existence x (conj H1 H2))
+      proj1_sig (cos_0_π_existence x (conj H1 H2))
     | right _ => 0
     end
   | right _ => 0
   end.
 
-Lemma cos_spec : forall x, 0 <= x <= π -> A (cos_0_π x) = x / 2.
+Lemma cos_0_π_spec : forall x, 0 <= x <= π -> A (cos_0_π x) = x / 2.
 Proof.
   intros x H1. unfold cos_0_π. destruct (Rle_dec 0 x) as [H2 | H2]; try lra.
   destruct (Rle_dec x π) as [H3 | H3]; try lra.
-  pose proof (proj2_sig (cos_existence x (conj H2 H3))) as H4. lra.
+  pose proof (proj2_sig (cos_0_π_existence x (conj H2 H3))) as H4. lra.
 Qed.
 
 Definition sin_0_π (x:R) : R :=

@@ -660,7 +660,7 @@ Proof.
 Qed.
 
 Lemma right_limit_to_a_equiv' : forall f1 f2 a L δ,
-  δ > 0 -> (forall x, (x <> a /\ |a - x| < δ) -> f1 x = f2 x) -> ⟦ lim a⁺ ⟧ f1 = L -> ⟦ lim a⁺ ⟧ f2 = L.
+  δ > 0 -> (forall x, x > a /\ |x - a| < δ -> f1 x = f2 x) -> ⟦ lim a⁺ ⟧ f1 = L -> ⟦ lim a⁺ ⟧ f2 = L.
 Proof.
   intros f1 f2 a L δ H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ1 [H5 H6]].
   exists (Rmin δ1 δ). split; [solve_R |].
@@ -668,7 +668,7 @@ Proof.
 Qed.
 
 Lemma left_limit_to_a_equiv' : forall f1 f2 a L δ,
-  δ > 0 -> (forall x, (x <> a /\ |a - x| < δ) -> f1 x = f2 x) -> ⟦ lim a⁻ ⟧ f1 = L -> ⟦ lim a⁻ ⟧ f2 = L.
+  δ > 0 -> (forall x, x < a /\ |x - a| < δ -> f1 x = f2 x) -> ⟦ lim a⁻ ⟧ f1 = L -> ⟦ lim a⁻ ⟧ f2 = L.
 Proof.
   intros f1 f2 a L δ H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ1 [H5 H6]].
   exists (Rmin δ1 δ). split; [solve_R |].

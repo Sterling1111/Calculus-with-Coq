@@ -1333,6 +1333,17 @@ Proof.
   auto.
 Qed.
 
+Lemma integral_minus' : forall f a b c,
+  integrable_on (Rmin a (Rmin b c)) (Rmax a (Rmax b c)) f -> ∫ a c f = ∫ a b f - ∫ c b f.
+Proof.
+  intros f a b c H1. pose proof Rtotal_order a c as [H2 | [H2 | H2]]; pose proof Rtotal_order b c as [H3 | [H3 | H3]];
+  pose proof Rtotal_order a b as [H4 | [H4 | H4]]; try (subst; rewrite integral_n_n; lra).
+  - rewrite integral_neg with (a := c). field_simplify. rewrite integral_plus with (b := c) (c := b); try lra.
+    apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
+  - subst. rewrite integral_n_n. rewrite integral_neg with (a := c). lra.
+  - rewrite integral_neg with (a := c). field_simplify.
+Admitted.
+
 Lemma theorem_13_6_a : forall f a b c,
   a < b -> integrable_on a b f -> integrable_on a b (c * f).
 Proof.
@@ -1752,6 +1763,28 @@ Proof.
   replace (1 / 3) with (g 1 - g 0) by (unfold g; lra).
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
+
+Lemma right_limit_integral_lower : forall a b f,
+    a < b -> integrable_on a b f ->
+    ⟦ lim a⁺ ⟧ (λ x, ∫ x b f) = ∫ a b f.
+Proof.
+  intros a b f H1 H2 ε H3. 
+  pose proof integrable_imp_bounded f a b ltac:(lra) H2 as [_ [M H4]].
+  set (δ := Rmin ((ε) / (|M| + 1)) (b - a)).
+  exists δ. split. assert (ε / (|M| + 1) > 0). { apply Rdiv_pos_pos; solve_R. }
+  unfold δ. solve_R. intros x H5. rewrite <- integral_minus'; auto.
+  2 : { apply integrable_on_sub_interval with (a := a) (b := b); auto. unfold δ in H5; solve_R. }
+  rewrite integral_neg, Rabs_Ropp. 
+  pose proof theorem_13_7 x a f.
+Admitted.
+
+Lemma left_limit_integral_lower : forall a b f,
+    a <= b -> integrable_on a b f -> continuous_on f [a, b] ->
+    ⟦ lim b⁻ ⟧ (λ x, ∫ x a f) = ∫ a b f.
+Proof.
+
+Admitted.
+
 
 (*
 Lemma integral_pos : forall a b f,
