@@ -1765,25 +1765,53 @@ Proof.
 Qed.
 
 Lemma right_limit_integral_lower : forall a b f,
-    a < b -> integrable_on a b f ->
-    ⟦ lim a⁺ ⟧ (λ x, ∫ x b f) = ∫ a b f.
+    a < b -> integrable_on a b f -> ⟦ lim a⁺ ⟧ (λ x, ∫ x b f) = ∫ a b f.
 Proof.
   intros a b f H1 H2 ε H3. 
-  pose proof integrable_imp_bounded f a b ltac:(lra) H2 as [_ [M H4]].
-  set (δ := Rmin ((ε) / (|M| + 1)) (b - a)).
-  exists δ. split. assert (ε / (|M| + 1) > 0). { apply Rdiv_pos_pos; solve_R. }
-  unfold δ. solve_R. intros x H5. rewrite <- integral_minus'; auto.
-  2 : { apply integrable_on_sub_interval with (a := a) (b := b); auto. unfold δ in H5; solve_R. }
+  pose proof integrable_imp_bounded f a b ltac:(lra) H2 as [[m H4] [M H5]].
+  assert (H6 : forall x, x ∈ [a, b] -> m <= f x <= M). 
+  { intros x H6. specialize (H4 (f x) ltac:(exists x; solve_R)). specialize (H5 (f x) ltac:(exists x; solve_R)). lra. }
+  set (C := Rmax (|m|) (|M|)). 
+  set (δ := Rmin ((ε) / (C + 1)) (b - a)).
+  exists δ. split. assert (ε / (C + 1) > 0) as H7. { unfold C. apply Rdiv_pos_pos; solve_R. }
+  unfold δ. solve_R. intros x H7. rewrite <- integral_minus'; auto.
+  2 : { apply integrable_on_sub_interval with (a := a) (b := b); auto. unfold δ in H7; solve_R. }
+  assert (H8 : integrable_on a x f).
+  { apply integrable_on_sub_interval with (a := a) (b := b); auto. unfold δ in H7; solve_R. }
   rewrite integral_neg, Rabs_Ropp. 
-  pose proof theorem_13_7 x a f.
-Admitted.
+  pose proof theorem_13_7 a x f m M ltac:(solve_R) H8 ltac:(intros y H9; apply H6; unfold δ in H7; solve_R) as [H10 H11].
+  assert (H12 : |∫ a x f| <= C * (x - a)) by (unfold C; solve_R).
+  assert (C = 0 \/ C > 0) as [H13 | H13] by (unfold C; solve_R); [solve_R | ].
+  assert (H14 : C * (x - a) < C * (ε / (C + 1))).
+  { apply Rmult_lt_compat_l; auto. unfold δ in H7; solve_R. }
+  assert (H15 : C * (ε / (C + 1)) < ε).
+  { pose proof Rdiv_lt_1 C (C + 1) ltac:(lra) ltac:(lra). nra. }
+  nra.
+Qed.
 
-Lemma left_limit_integral_lower : forall a b f,
-    a <= b -> integrable_on a b f -> continuous_on f [a, b] ->
-    ⟦ lim b⁻ ⟧ (λ x, ∫ x a f) = ∫ a b f.
+Lemma left_limit_integral_at_upper_zero  : forall a b f,
+  a < b -> integrable_on a b f -> ⟦ lim b⁻ ⟧ (λ x, ∫ x b f) = 0.
 Proof.
+  intros a b f H1 H2 ε H3.
+  pose proof integrable_imp_bounded f a b ltac:(lra) H2 as [[m H4] [M H5]].
+  assert (H6 : forall x, x ∈ [a, b] -> m <= f x <= M).
+  { intros x H6. specialize (H4 (f x) ltac:(exists x; solve_R)).
+    specialize (H5 (f x) ltac:(exists x; solve_R)). lra. }
+  set (C := Rmax (|m|) (|M|)).
+  set (δ := Rmin (ε / (C + 1)) (b - a)).
+  exists δ. split. assert (ε / (C + 1) > 0) as H7. { unfold C. apply Rdiv_pos_pos; solve_R. }
+  unfold δ. solve_R.
+  intros x H7.
+  assert (H8 : integrable_on x b f).
+  { apply integrable_on_sub_interval with (a := a) (b := b); auto. unfold δ in H7; solve_R. }
+  pose proof theorem_13_7 x b f m M ltac:(solve_R) H8 ltac:(intros y H9; apply H6; unfold δ in H7; solve_R) as [H10 H11].
+  assert (H12 : |∫ x b f| <= C * (b - x)) by (unfold C; solve_R).
+  assert (C = 0 \/ C > 0) as [H13 | H13] by (unfold C; solve_R); [solve_R | ].
+  assert (H14 : C * (b - x) < C * (ε / (C + 1))) by (apply Rmult_lt_compat_l; auto; unfold δ in H7; solve_R).
+  assert (H15 : C * (ε / (C + 1)) < ε) by (pose proof Rdiv_lt_1 C (C + 1) ltac:(lra) ltac:(lra); nra).
+  rewrite Rminus_0_r. nra.
+Qed.
 
-Admitted.
 
 
 (*

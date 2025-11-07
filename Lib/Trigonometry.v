@@ -60,17 +60,11 @@ Proof.
        apply theorem_13_3; try lra. apply continuous_imp_continuous_on. apply sqrt_f_continuous.
        replace (λ x0 : ℝ, 1 - x0 * (x0 * 1)) with (polynomial [-1; 0; 1]).
        2 : { extensionality y. compute. lra. } intros a. apply theorem_37_14.
-       apply continuous_imp_continuous_on. apply sqrt_f_continuous. 
-       replace (λ x0 : ℝ, 1 - x0 * (x0 * 1)) with (polynomial [-1; 0; 1]).
-       2 : { extensionality y. compute. lra. } intros a. apply theorem_37_14.
   - rewrite A_spec; try lra.
     apply left_limit_to_a_equiv' with (f1 := (fun x => x * √(1 - x ^ 2) / 2 + ∫ x 1 (λ t, √(1 - t^2)))) (δ := 0.5); try lra.
     -- intros x H1. rewrite A_spec; solve_R.
-    -- apply left_limit_plus. admit. apply left_limit_integral_lower; solve_R.
+    -- apply left_limit_plus. admit. rewrite integral_n_n. apply left_limit_integral_at_upper_zero with (a := 0); solve_R.
        apply theorem_13_3; try lra. apply continuous_imp_continuous_on. apply sqrt_f_continuous.
-       replace (λ x0 : ℝ, 1 - x0 * (x0 * 1)) with (polynomial [-1; 0; 1]).
-       2 : { extensionality y. compute. lra. } intros a. apply theorem_37_14.
-       apply continuous_imp_continuous_on. apply sqrt_f_continuous. 
        replace (λ x0 : ℝ, 1 - x0 * (x0 * 1)) with (polynomial [-1; 0; 1]).
        2 : { extensionality y. compute. lra. } intros a. apply theorem_37_14.
 Admitted.
@@ -144,5 +138,5 @@ Definition sin_0_π (x:R) : R :=
 Theorem theorem_15_1_a : forall x,
   0 < x < π -> ⟦ der x ⟧ cos_0_π = -sin_0_π.
 Proof.
-  intros x H1. set (B := fun x => 2 * A x). 
+  intros x H1. set (B := fun x => 2 * A x).
 Admitted.
