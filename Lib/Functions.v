@@ -10,17 +10,17 @@ Proof.
   rewrite H3. reflexivity.
 Qed.
 
-Definition injective_On {A B : Type} (f : A -> B) (X : Ensemble A) : Prop :=
+Definition injective_on {A B : Type} (f : A -> B) (X : Ensemble A) : Prop :=
   forall x y : A, x ∈ X -> y ∈ X -> f x = f y -> x = y.
 
-Definition surjective_On {A B : Type} (f : A -> B) (E : Ensemble B) : Prop :=
+Definition surjective_on {A B : Type} (f : A -> B) (E : Ensemble B) : Prop :=
   forall y : B, y ∈ E -> exists x : A, f x = y.
 
-Definition bijective_On {A B : Type} (f : A -> B) (X : Ensemble A) (Y : Ensemble B) : Prop :=
-  injective_On f X /\ surjective_On f Y.
+Definition bijective_on {A B : Type} (f : A -> B) (X : Ensemble A) (Y : Ensemble B) : Prop :=
+  injective_on f X /\ surjective_on f Y.
 
 Lemma injective_subType : forall U V (A : Ensemble U) (f : U -> V),
-  injective_On f A -> injective (fun x : subType A => f (val A x)).
+  injective_on f A -> injective (fun x : subType A => f (val A x)).
 Proof.
   intros U V A f H1. unfold injective. intros x y H2. destruct x as [x H3], y as [y H4]. simpl in *.
   specialize (H1 x y H3 H4 H2). subst. replace H3 with H4. 2 : { apply proof_irrelevance. } reflexivity.

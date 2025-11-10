@@ -1682,7 +1682,7 @@ Proof.
 Qed.
 
 Theorem FTC1' : ∀ f a b,
-  a < b -> continuous_on f [a, b] -> ⟦ der ⟧ (λ x, ∫ x b f) [a, b] = - f.
+  a < b -> continuous_on f [a, b] -> ⟦ der ⟧ (λ x, ∫ x b f) [a, b] = -f.
 Proof.
   intros f a b H1 H2.
   set (g := (λ x : ℝ, ∫ a b f)).

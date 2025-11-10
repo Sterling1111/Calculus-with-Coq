@@ -583,6 +583,12 @@ Proof.
   auto.
 Qed.
 
+Theorem theorem_10_5'' : forall f f' a c,
+  ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ (fun x => c * f x) = (fun x => c * f' x).
+Proof.
+  intros f f' a c H1. apply theorem_10_5; auto.
+Qed.
+
 Theorem theorem_10_5_right : forall f f' a c,
   ⟦ der a⁺ ⟧ f = f' -> ⟦ der a⁺ ⟧ (c * f) = c * f'.
 Proof.
@@ -1061,11 +1067,11 @@ Proof.
 Qed.
 
 Lemma derivative_at_eq_f : forall f1 f2 f' c a b,
-  a < c < b -> (forall x, a <= x <= b -> f1 x = f2 x) ->  ⟦ der c ⟧ f1 = f' -> ⟦ der c ⟧ f2 = f'.
+  a < c < b -> (forall x, a < x < b -> f1 x = f2 x) ->  ⟦ der c ⟧ f1 = f' -> ⟦ der c ⟧ f2 = f'.
 Proof.
   intros f1 f2 f' c a b H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ [H3 H5]].
   exists (Rmin (Rmin δ (b - c)) (c - a)); split. solve_R. intros x H6. repeat rewrite <- H2; auto.
-  2 : { solve_R. } specialize (H5 x ltac:(solve_R)). auto. solve_R.
+  2 : { solve_R. } specialize (H5 x ltac:(solve_R)). auto.
 Qed.
 
 Lemma derivative_at_eq_f' : forall f f1' f2' c,
@@ -1074,6 +1080,14 @@ Proof.
   intros f f1' f2' c H1 H2 ε H3. specialize (H2 ε H3) as [δ [H2 H4]].
   exists δ; split; auto. intros x H5. specialize (H4 x H5). rewrite <- H1.
   auto.
+Qed.
+
+Lemma derivative_at_eq_f'' : forall f f1' f2' a b c,
+  a < c < b -> (forall x, a < x < b -> f1' x = f2' x) -> ⟦ der c ⟧ f = f1' -> ⟦ der c ⟧ f = f2'.
+Proof.
+  intros f f1' f2' a b c H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ [H3 H5]].
+  exists (Rmin (Rmin δ (b - c)) (c - a)); split. solve_R. intros x H6. repeat rewrite <- H2; auto.
+  specialize (H5 x ltac:(solve_R)). auto.
 Qed.
 
 Lemma right_derivative_at_eq : forall f f1' f2' c,
@@ -1301,8 +1315,11 @@ Lemma derivative_sqrt_x : forall x,
   x > 0 ->
   ⟦ der x ⟧ (λ x, √x) = (λ x, 1 / (2 * √ x)).
 Proof.
-  intros x H1. unfold derivative_at. apply limit_to_0_equiv with (f1 := fun h => 1 / (sqrt (x + h) + sqrt x)).
-  - intros h H2. admit.
+  intros x H1. unfold derivative_at. apply limit_to_0_equiv' with (f1 := fun h => 1 / (sqrt (x + h) + sqrt x)).
+  - exists x; split; auto. intros h H2 H3. assert (√(x+h) > 0) as H4 by (apply sqrt_lt_R0; solve_R).
+    assert (√x > 0) as H5 by (apply sqrt_lt_R0; auto).
+    apply Rmult_eq_reg_r with (r := √(x+h) + √x); try lra. field_simplify; try lra.
+    repeat rewrite pow2_sqrt; solve_R.
   - replace (1 / (2 * √x)) with (1 / (√x + √x)).
     2 : { pose proof sqrt_lt_R0 x H1 as H2. solve_R. }
     apply limit_div. apply limit_const. apply limit_plus.
@@ -1310,7 +1327,7 @@ Proof.
     assert (H3 : continuous (λ h : ℝ, x + h)). { intros a. unfold continuous_at. solve_lim. }
     specialize (H2 H3). specialize (H2 0). unfold continuous_at in H2.
     rewrite Rplus_0_r in H2. apply H2. pose proof sqrt_lt_R0 x H1 as H4. lra.
-Admitted.
+Qed.
 
 Lemma derivative_sqrt_x_on : forall a b,
   0 < a < b ->
@@ -1323,6 +1340,19 @@ Proof.
     apply derivative_at_iff. apply derivative_sqrt_x; lra.
   - left; split. apply is_interior_point_closed; solve_R.
     apply derivative_sqrt_x; lra.
+Qed.
+
+Lemma derivative_sqrt_f : forall f f' x,
+  f x > 0 ->
+  ⟦ der x ⟧ f = f' ->
+  ⟦ der x ⟧ (λ x, √(f x)) = (λ x, (f' x) / (2 * √(f x))).
+Proof.
+  intros f f' x H1 H2. set (g := sqrt). set (g' := λ x, 1 / (2 * √ x)).
+  assert (H3 : forall x, x > 0 -> ⟦ der x ⟧ g = g'). { unfold g, g'. intros y H3. apply derivative_sqrt_x; auto. }
+  replace (λ x0 : ℝ, f' x0 / (2 * g (f x0))) with (g' ∘ f ∙ f').
+  2 : { extensionality y. unfold g, g'. simpl. lra. }
+  assert (H4 : ⟦ der f x ⟧ g = g'). { apply H3. apply H1. }
+  apply (theorem_10_9 g f g' f' x H2 H4).
 Qed.
 
 Fixpoint DerN (n:nat) (f fn : R -> R) : Prop :=

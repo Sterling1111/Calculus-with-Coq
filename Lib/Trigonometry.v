@@ -5,11 +5,6 @@ Open Scope R_scope.
 
 Definition π := 2 * ∫ (-1) 1 (λ x, √(1 - x^2)).
 
-Lemma π_pos : π > 0.
-Proof.
-  unfold π. apply Rmult_gt_0_compat; try lra.
-Admitted.
-
 Definition A x :=
   match Rlt_dec x (-1) with
   | left _ => 0
@@ -40,14 +35,40 @@ Proof.
       field_simplify; auto. rewrite pow2_sqrt; nra.
   }
   apply theorem_10_3_a.
-  - admit.
+  - replace (λ x0 : ℝ, x0 * √(1 - x0 ^ 2) / 2) with (λ x0 : ℝ, 1/2 * (x0 * √(1 - x0 ^ 2))) by (extensionality y; lra).
+    replace (λ x0 : ℝ, (1 - 2 * x0 ^ 2) / (2 * √(1 - x0 ^ 2))) with (λ x0 : ℝ, (1 / 2) * ((1 - 2 * x0 ^ 2) / √(1 - x0 ^ 2))).
+    2 : { 
+      extensionality y. assert (y^2 >= 1 \/ y^2 < 1) as [H2 | H2] by lra.
+      - pose proof sqrt_neg_0 (1 - y^2) ltac:(lra) as H3.
+        rewrite H3, Rmult_0_r, Rdiv_0_r, Rmult_0_r. lra.
+      - solve_R. intros H3. pose proof sqrt_lt_R0 (1 - y^2) ltac:(lra) as H4. simpl in *. lra.
+    }
+    apply theorem_10_5. 
+    set (f := (λ x0 : R, x0)). set (h := (λ x0, 1 - x0^2)). set (g := (λ x0 : R, √(h x0))).
+     replace ((λ x0 : ℝ, x0 * √(1 - x0 ^ 2))) with (f ∙ g).
+    2 : { extensionality y. unfold f, g, h. lra. }
+    set (f' := (λ x0 : R, 1)). assert ( ⟦ der x ⟧ f = f') as H2. { unfold f, f'. apply theorem_10_2. }
+    set (h' := (λ x0, -2 * x0)). assert ( ⟦ der x ⟧ h = h') as H3.
+    {
+      unfold h, h'. replace ((λ x0, -2 * x0)) with (λ x0, 0 - (INR 2 * (x0^(2-1)))) by (extensionality y; solve_R).
+      apply theorem_10_3_c. apply theorem_10_1. apply power_rule.
+    }
+    set (g' := (λ x0, (h' x0) / (2 * √(h x0)))). assert ( ⟦ der x ⟧ g = g') as H4.
+    { apply derivative_sqrt_f; auto. unfold h. solve_R. }
+    assert ( ⟦ der x ⟧ (f ∙ g) = f' ∙ g + f ∙ g') as H5.
+    { apply theorem_10_4_a; auto. }
+    apply derivative_at_eq_f'' with (f1' := (f' ∙ g + f ∙ g')%f) (a := -1)(b := 1); auto.
+    intros x0 H6. unfold f, g, f', g', h, h'. assert (H7 : √(1 - x0^2) > 0).
+    { apply sqrt_lt_R0. solve_R. }
+    apply Rmult_eq_reg_r with (r := √(1 - x0^2)); try lra. field_simplify; try lra.
+    rewrite pow2_sqrt; try lra. nra.
   - apply derivative_on_imp_derivative_at with (a := -1)(b := 1); solve_R.
     apply derivative_on_closed_imp_open. apply FTC1'; try lra.
     apply continuous_imp_continuous_on. apply sqrt_f_continuous.
     replace (λ x0 : ℝ, 1 - x0 * (x0 * 1)) with (polynomial [-1; 0; 1]).
     2 : { extensionality y. compute. lra. } intros a.
     apply theorem_37_14.
-Admitted.
+Qed.
 
 Lemma A_continuous : continuous_on A [-1, 1].
 Proof.
@@ -56,18 +77,32 @@ Proof.
     apply lemma_15_0; solve_R.
   - rewrite A_spec; try lra. apply right_limit_to_a_equiv' with (f1 := (fun x => x * √(1 - x ^ 2) / 2 + ∫ x 1 (λ t, √(1 - t^2)))) (δ := 0.5); try lra.
     -- intros x H1. rewrite A_spec; solve_R.
-    -- apply right_limit_plus. admit. apply right_limit_integral_lower; solve_R.
-       apply theorem_13_3; try lra. apply continuous_imp_continuous_on. apply sqrt_f_continuous.
-       replace (λ x0 : ℝ, 1 - x0 * (x0 * 1)) with (polynomial [-1; 0; 1]).
-       2 : { extensionality y. compute. lra. } intros a. apply theorem_37_14.
+    -- apply right_limit_plus.
+       * replace ((1 - (-1) ^ 2)) with 0 by lra. replace (-1 * √(0) / 2) with ((-1 / 2) * √(0)). 2 : { rewrite sqrt_0. lra. }
+         apply right_limit_to_a_equiv with (f1 := (λ x, (x / 2) * √(1 - x ^ 2))).
+         { intros x H1. lra. }
+         apply right_limit_mult. apply right_limit_div; try lra. apply right_limit_id. apply right_limit_const.
+         pose proof limit_sqrt_f_x ((λ x, 1 - x^2)) (-1) 0 as H1. apply left_right_iff in H1 as [_ H1]; auto; try lra.
+         replace 0 with (1 - (-1)^2) by lra. apply limit_minus; solve_lim.
+       * apply right_limit_integral_lower; solve_R.
+         apply theorem_13_3; try lra. apply continuous_imp_continuous_on. apply sqrt_f_continuous.
+         replace (λ x0 : ℝ, 1 - x0 * (x0 * 1)) with (polynomial [-1; 0; 1]).
+         2 : { extensionality y. compute. lra. } intros a. apply theorem_37_14.
   - rewrite A_spec; try lra.
     apply left_limit_to_a_equiv' with (f1 := (fun x => x * √(1 - x ^ 2) / 2 + ∫ x 1 (λ t, √(1 - t^2)))) (δ := 0.5); try lra.
     -- intros x H1. rewrite A_spec; solve_R.
-    -- apply left_limit_plus. admit. rewrite integral_n_n. apply left_limit_integral_at_upper_zero with (a := 0); solve_R.
+    -- apply left_limit_plus.
+       * replace ((1 - 1 ^ 2)) with 0 by lra. replace (1 * √(0) / 2) with ((1 / 2) * √(0)). 2 : { rewrite sqrt_0. lra. }
+         apply left_limit_to_a_equiv with (f1 := (λ x, (x / 2) * √(1 - x ^ 2))).
+         { intros x H1. lra. }
+         apply left_limit_mult. apply left_limit_div; try lra. apply left_limit_id. apply left_limit_const.
+         pose proof limit_sqrt_f_x ((λ x, 1 - x^2)) 1 0 as H1. apply left_right_iff in H1 as [H1 _]; auto; try lra.
+         replace 0 with (1 - 1^2) by lra. apply limit_minus; solve_lim.
+       * rewrite integral_n_n. apply left_limit_integral_at_upper_zero with (a := 0); solve_R.
        apply theorem_13_3; try lra. apply continuous_imp_continuous_on. apply sqrt_f_continuous.
        replace (λ x0 : ℝ, 1 - x0 * (x0 * 1)) with (polynomial [-1; 0; 1]).
        2 : { extensionality y. compute. lra. } intros a. apply theorem_37_14.
-Admitted.
+Qed.
 
 Lemma A_at_1 : A 1 = 0.
 Proof.
@@ -139,4 +174,8 @@ Theorem theorem_15_1_a : forall x,
   0 < x < π -> ⟦ der x ⟧ cos_0_π = -sin_0_π.
 Proof.
   intros x H1. set (B := fun x => 2 * A x).
+  assert (H2 : B (cos_0_π x) = x).
+  { unfold B. rewrite cos_0_π_spec; try lra. }
+  pose proof lemma_15_0 as H3.
+  assert (⟦ der x ⟧ B = (λ x0, -1 / (√(1 - x0^2)))). { admit. }
 Admitted.

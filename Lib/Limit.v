@@ -601,6 +601,26 @@ Proof.
          field_simplify; nra.
 Qed.
 
+Lemma limit_continuous_comp :
+  forall (f g : R -> R) (a L : R),
+    ⟦ lim a ⟧ g = L ->
+    ⟦ lim L ⟧ f = f L ->
+    ⟦ lim a ⟧ (fun x => f (g x)) = f L.
+Proof.
+  intros f g a L H1 H2 ε H3. specialize (H2 ε H3) as [δ1 [H4 H5]].
+  specialize (H1 δ1 H4) as [δ2 [H6 H7]]. exists δ2. split; auto. intros x H8.
+  specialize (H7 x H8). specialize (H5 (g x)).
+  pose proof classic (g x = L) as [H9 | H9].
+  - rewrite H9. solve_R.
+  - specialize (H5 ltac:(solve_R)). auto.
+Qed.
+
+Lemma limit_sqrt_f_x : forall f a L,
+  ⟦ lim a ⟧ f = L -> L >= 0 -> ⟦ lim a ⟧ (fun x => √(f x)) = √L.
+Proof.
+  intros f a L H1 H2. apply limit_continuous_comp; auto. apply limit_sqrt_x.
+Qed.
+
 Lemma limit_to_0_equiv : forall f1 f2 L,
   (forall x, x <> 0 -> f1 x = f2 x) -> ⟦ lim 0 ⟧ f1 = L -> ⟦ lim 0 ⟧ f2 = L.
 Proof.
@@ -673,20 +693,6 @@ Proof.
   intros f1 f2 a L δ H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ1 [H5 H6]].
   exists (Rmin δ1 δ). split; [solve_R |].
   intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
-Qed.
-
-Lemma limit_continuous_comp :
-  forall (f g : R -> R) (a L : R),
-    ⟦ lim a ⟧ g = L ->
-    ⟦ lim L ⟧ f = f L ->
-    ⟦ lim a ⟧ (fun x => f (g x)) = f L.
-Proof.
-  intros f g a L H1 H2 ε H3. specialize (H2 ε H3) as [δ1 [H4 H5]].
-  specialize (H1 δ1 H4) as [δ2 [H6 H7]]. exists δ2. split; auto. intros x H8.
-  specialize (H7 x H8). specialize (H5 (g x)).
-  pose proof classic (g x = L) as [H9 | H9].
-  - rewrite H9. solve_R.
-  - specialize (H5 ltac:(solve_R)). auto.
 Qed.
 
 Lemma squeeze_theorem : forall f1 f2 f3 a b c L,
