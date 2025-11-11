@@ -75,4 +75,17 @@ Proof.
       exfalso. apply (H4 w z ltac:(solve_R) H10).
   }
   pose proof Rtotal_order (f a) (f b) as [H6 | [H6 | H6]].
-Admitted.
+  - left. intros x y H7 H8 H9. pose proof Rtotal_order x a as [H10 | [H10 | H10]]; 
+    pose proof Rtotal_order y b as [H11 | [H11 | H11]]; solve_R.
+    -- specialize (H5 x y b ltac:(lra)) as H12. subst. lra.
+    -- subst. lra.
+    -- specialize (H5 a x y ltac:(lra)) as H12. specialize (H5 x y b ltac:(lra)) as H13. lra.
+    -- specialize (H5 a x b ltac:(lra)) as H12. subst. lra.
+  - specialize (H4 a b ltac:(lra)). tauto.
+  - right. intros x y H7 H8 H9. pose proof Rtotal_order x a as [H10 | [H10 | H10]]; 
+    pose proof Rtotal_order y b as [H11 | [H11 | H11]]; solve_R.
+    -- specialize (H5 x y b ltac:(lra)) as H12. subst. lra.
+    -- subst. lra.
+    -- specialize (H5 a x y ltac:(lra)) as H12. specialize (H5 x y b ltac:(lra)) as H13. lra.
+    -- specialize (H5 a x b ltac:(lra)) as H12. subst. lra.
+Qed.
