@@ -89,3 +89,25 @@ Proof.
     -- specialize (H5 a x y ltac:(lra)) as H12. specialize (H5 x y b ltac:(lra)) as H13. lra.
     -- specialize (H5 a x b ltac:(lra)) as H12. subst. lra.
 Qed.
+
+Theorem theorem_12_3 : forall f f_inv a b,
+  a < b -> continuous_on f [a, b] -> one_to_one_on f [a, b] -> 
+    inverse_on f f_inv [a, b] [Rmin (f a) (f b), Rmax (f a) (f b)] ->
+      continuous_on f_inv [Rmin (f a) (f b), Rmax (f a) (f b)].
+Proof.
+  intros f f_inv a b H1 H2 H3 H4.
+  assert (H5 : increasing_on f [a, b] -> continuous_on f_inv [f a, f b]).
+  {
+    intros H5. replace ( [Rmin (f a) (f b), Rmax (f a) (f b)] ) with ( [f a, f b] ) in H4.
+    2 : { specialize (H5 a b ltac:(solve_R) ltac:(solve_R) ltac:(lra)). solve_R. }  
+    intros x H6 ε H7. admit.
+  }
+  pose proof theorem_12_2 f a b H1 H2 H3 as [H6 | H6].
+  - replace ( [Rmin (f a) (f b), Rmax (f a) (f b)] ) with ( [f a, f b] ) in *.
+    2 : { specialize (H6 a b ltac:(solve_R) ltac:(solve_R) ltac:(lra)). solve_R. }  
+    apply H5; auto.
+  - pose proof theorem_12_2 (-f)%f a b H1. H2 H3 as [H7 | H7].
+    + exfalso. apply H6; auto.
+    + replace ( [Rmin (f a) (f b), Rmax (f a) (f b)] ) with ( [f b, f a] ) in *.
+      2 : { specialize (H7 a b ltac:(solve_R) ltac:(solve_R) ltac:(lra)). solve_R. }  
+      admit.

@@ -160,6 +160,11 @@ Proof.
   - specialize (H5 ltac:(solve_R)). auto.
 Qed.
 
+Theorem continuous_neg_f : forall f,
+  continuous f -> continuous (-f).
+Proof.
+  intros f H1.
+
 Theorem theorem_6_3_a : ∀ f a,
   continuous_at f a -> f a > 0 -> ∃ δ, δ > 0 /\ ∀ x, |x - a| < δ -> f x > 0.
 Proof.
