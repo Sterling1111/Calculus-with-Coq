@@ -34,6 +34,7 @@ Lib/Sorted_Rlt.v
 Lib/Partition.v
 Lib/Integral.v
 Lib/Notations.v
+Lib/Inverse.v
 
 # ==========================
 # ATTAM (depends on Lib only)

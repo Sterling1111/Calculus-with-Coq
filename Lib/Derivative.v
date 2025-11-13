@@ -1012,6 +1012,18 @@ Definition increasing (f: ℝ -> ℝ) :=
 Definition decreasing (f: ℝ -> ℝ) :=
   decreasing_on f ℝ.
 
+Lemma increasing_on_neg : forall f A,
+  increasing_on f A -> decreasing_on (-f) A.
+Proof.
+  intros f A H1 a b H2 H3 H4. specialize (H1 a b H2 H3 H4). lra.
+Qed.
+
+Lemma decreasing_on_neg : forall f A,
+  decreasing_on f A -> increasing_on (-f) A.
+Proof.
+  intros f A H1 a b H2 H3 H4. specialize (H1 a b H2 H3 H4). lra.
+Qed.
+
 Lemma derivative_at_imp_differentiable_at : forall a f f',
   ⟦ der a ⟧ f = f' -> differentiable_at f a.
 Proof.

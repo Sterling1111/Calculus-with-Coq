@@ -23,6 +23,13 @@ Definition inverse_on (f f_inv : ℝ -> ℝ) (D1 D2 : Ensemble ℝ) :=
 Definition inverse (f f_inv : ℝ -> ℝ) :=
   inverse_on f f_inv ℝ ℝ.
 
+Lemma one_to_one_on_neg : forall f D,
+  one_to_one_on f D -> one_to_one_on (-f)%f D.
+Proof.
+  intros f D H1 x y H2 H3 H4.
+  specialize (H1 x y H2 H3). solve_R.
+Qed.
+
 Theorem theorem_12_1_a : forall f f_inv,
   inverse f f_inv -> one_to_one f.
 Proof.
@@ -95,19 +102,6 @@ Theorem theorem_12_3 : forall f f_inv a b,
     inverse_on f f_inv [a, b] [Rmin (f a) (f b), Rmax (f a) (f b)] ->
       continuous_on f_inv [Rmin (f a) (f b), Rmax (f a) (f b)].
 Proof.
-  intros f f_inv a b H1 H2 H3 H4.
-  assert (H5 : increasing_on f [a, b] -> continuous_on f_inv [f a, f b]).
-  {
-    intros H5. replace ( [Rmin (f a) (f b), Rmax (f a) (f b)] ) with ( [f a, f b] ) in H4.
-    2 : { specialize (H5 a b ltac:(solve_R) ltac:(solve_R) ltac:(lra)). solve_R. }  
-    intros x H6 ε H7. admit.
-  }
-  pose proof theorem_12_2 f a b H1 H2 H3 as [H6 | H6].
-  - replace ( [Rmin (f a) (f b), Rmax (f a) (f b)] ) with ( [f a, f b] ) in *.
-    2 : { specialize (H6 a b ltac:(solve_R) ltac:(solve_R) ltac:(lra)). solve_R. }  
-    apply H5; auto.
-  - pose proof theorem_12_2 (-f)%f a b H1. H2 H3 as [H7 | H7].
-    + exfalso. apply H6; auto.
-    + replace ( [Rmin (f a) (f b), Rmax (f a) (f b)] ) with ( [f b, f a] ) in *.
-      2 : { specialize (H7 a b ltac:(solve_R) ltac:(solve_R) ltac:(lra)). solve_R. }  
-      admit.
+  
+Admitted.
+

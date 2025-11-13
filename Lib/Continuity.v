@@ -160,10 +160,19 @@ Proof.
   - specialize (H5 ltac:(solve_R)). auto.
 Qed.
 
-Theorem continuous_neg_f : forall f,
+Theorem continuous_neg : forall f,
   continuous f -> continuous (-f).
 Proof.
-  intros f H1.
+  intros f H1 a ε H2. specialize (H1 a ε H2) as [δ [H3 H4]]. exists δ. split; auto.
+  intros x H5. specialize (H4 x H5). solve_R.
+Qed.
+
+Lemma continuous_on_neg : forall f D,
+  continuous_on f D -> continuous_on (-f)%f D.
+Proof.
+  intros f D H1 a H2 ε H3. specialize (H1 a H2 ε H3) as [δ [H4 H5]].
+  exists δ. split; auto. intros x H6 H7. specialize (H5 x ltac:(solve_R)). solve_R.
+Qed.
 
 Theorem theorem_6_3_a : ∀ f a,
   continuous_at f a -> f a > 0 -> ∃ δ, δ > 0 /\ ∀ x, |x - a| < δ -> f x > 0.
