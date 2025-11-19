@@ -1,5 +1,4 @@
-From Lib Require Import Imports Limit Reals_util Notations.
-Import LimitNotations.
+From Calculus.Chapter5 Require Import Prelude.
 
 Lemma lemma_5_12_a : ∀ f g a L1 L2,
   (∀ x, f x <= g x) -> ⟦ lim a ⟧ f = L1 -> ⟦ lim a ⟧ g = L2 -> L1 <= L2.

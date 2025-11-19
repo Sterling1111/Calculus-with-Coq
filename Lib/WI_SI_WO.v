@@ -1,6 +1,7 @@
 From Lib Require Import Imports Notations Sets.
 Import SetNotations.
 
+Close Scope R_scope.
 Open Scope nat_scope.
 
 Definition induction_nat := ∀ P : ℕ → Prop, (P 0 ∧ ∀ k, P k → P (S k)) → ∀ n, P n.

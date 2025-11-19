@@ -1,5 +1,4 @@
-Require Import Limit Imports Notations Reals_util.
-Import LimitNotations.
+From Calculus.Chapter5 Require Import Prelude.
 
 Lemma lemma_5_17_a : forall l, 
   ~ ⟦ lim 0 ⟧ (λ x, 1 / x) = l.

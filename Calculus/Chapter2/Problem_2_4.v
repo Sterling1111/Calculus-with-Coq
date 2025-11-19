@@ -1,4 +1,4 @@
-From Lib Require Import Imports Sums Binomial.
+From Lib Require Import Imports Sums Binomial Notations.
 From Calculus Require Import Problem_2_3.
 Import Binomial_R Choose_R_Notations.
 Open Scope R_scope.

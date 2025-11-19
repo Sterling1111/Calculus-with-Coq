@@ -1,5 +1,4 @@
-From Lib Require Import Imports Limit Reals_util Notations.
-Import LimitNotations.
+From Calculus.Chapter5 Require Import Prelude.
 
 Lemma lemma_5_1_i : ⟦ lim 1 ⟧ (λ x, (x^2 - 1) / (x + 1)) = 0.
 Proof. solve_lim. Qed.

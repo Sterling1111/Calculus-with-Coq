@@ -1,5 +1,4 @@
-From Lib Require Import Limit Imports Notations Reals_util.
-Import LimitNotations.
+From Calculus.Chapter5 Require Import Prelude.
 
 Lemma lemma_5_10_a : forall a f l,
 	⟦ lim a ⟧ f = l <-> ⟦ lim a ⟧ (λ x, f x - l) = 0.

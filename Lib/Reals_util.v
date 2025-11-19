@@ -2,6 +2,8 @@ From Lib Require Import Imports.
 
 Open Scope R_scope.
 
+Coercion INR : nat >-> R.
+
 Ltac break_INR :=
   repeat match goal with
   | [ |- context[INR (?n + ?m)] ] =>
