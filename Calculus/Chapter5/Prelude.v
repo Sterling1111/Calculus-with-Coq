@@ -1,4 +1,3 @@
-From Lib Require Export Imports Limit Reals_util Notations.
-Export LimitNotations.
-
+From Lib Require Export Imports Limit Reals_util Notations Rational Sets.
+Export LimitNotations SetNotations IntervalNotations Function_Notations.
 Open Scope R_scope.

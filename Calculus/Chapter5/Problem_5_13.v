@@ -1,5 +1,4 @@
 From Calculus.Chapter5 Require Import Prelude.
-Open Scope R_scope.
 
 Lemma lemma_5_13 : ∀ f g h a L,
   (∀ x, f x ≤ g x ≤ h x) →

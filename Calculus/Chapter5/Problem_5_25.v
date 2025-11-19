@@ -1,5 +1,4 @@
 From Calculus.Chapter5 Require Import Prelude.
-Open Scope R_scope.
 
 Definition def_5_25_i (f : R → R) (a l : R) : Prop :=
   ∀ δ, δ > 0 → ∃ ε, ε > 0 /\ ∀ x, 0 < |x - a| < ε → |f x - l| < δ.
