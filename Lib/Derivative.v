@@ -1365,6 +1365,7 @@ Proof.
   2 : { extensionality y. unfold g, g'. simpl. lra. }
   assert (H4 : ⟦ der f x ⟧ g = g'). { apply H3. apply H1. }
   apply (theorem_10_9 g f g' f' x H2 H4).
+  Show Proof.
 Qed.
 
 Fixpoint DerN (n:nat) (f fn : R -> R) : Prop :=

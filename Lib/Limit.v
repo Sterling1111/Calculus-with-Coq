@@ -761,3 +761,82 @@ Ltac solve_lim :=
          ])); apply (lim_equality_substitution f a L2 rhs);
       solve_R; auto
   end.
+
+Inductive expr :=
+| EVar
+| EConst (c : R)
+| EAdd (e1 e2 : expr)
+| ESub (e1 e2 : expr)
+| EMul (e1 e2 : expr).
+
+Fixpoint eval (e : expr) (x : R) : R :=
+  match e with
+  | EVar => x
+  | EConst c => c
+  | EAdd e1 e2 => eval e1 x + eval e2 x
+  | ESub e1 e2 => eval e1 x - eval e2 x
+  | EMul e1 e2 => eval e1 x * eval e2 x
+  end.
+
+Fixpoint plug (e : expr) (a : R) : R :=
+  match e with
+  | EVar        => a
+  | EConst c    => c
+  | EAdd e1 e2  => plug e1 a + plug e2 a
+  | ESub e1 e2  => plug e1 a - plug e2 a
+  | EMul e1 e2  => plug e1 a * plug e2 a
+  end.
+
+
+Ltac reify_expr x t :=
+  lazymatch t with
+  | x                 => constr:(EVar)
+  | ?u * ?v           => let e1 := reify_expr x u in
+                         let e2 := reify_expr x v in
+                         constr:(EMul e1 e2)
+  | ?u + ?v           => let e1 := reify_expr x u in
+                         let e2 := reify_expr x v in
+                         constr:(EAdd e1 e2)
+  | ?u - ?v           => let e1 := reify_expr x u in
+                         let e2 := reify_expr x v in
+                         constr:(ESub e1 e2)
+  | - ?u              => let e := reify_expr x u in
+                         constr:(ESub (EConst 0) e)
+  | ?c                => constr:(EConst c)
+  end.
+
+Ltac change_fun_to_expr :=
+  lazymatch goal with
+  | |- ⟦ lim ?a ⟧ ?f = ?L =>
+      eapply limit_to_a_equiv;
+      [
+        intros x _; 
+        let fx := (eval cbv beta in (f x)) in
+        let ex := reify_expr x fx in
+        instantiate (1 := fun y => eval ex y);
+        reflexivity
+      |
+      ]
+  | _ => fail "No matching goal found"
+  end.
+
+Lemma limit_eval_expr : forall e a,
+  ⟦ lim a ⟧ (fun x => eval e x) = plug e a.
+Proof.
+  induction e; simpl; try solve_lim.
+  intros a. apply limit_minus; auto.
+Qed.
+  
+Ltac finish_with_plug :=
+  lazymatch goal with
+  | |- ⟦ lim ?a ⟧ (fun _ => eval ?e _) = ?L =>
+      eapply (lim_equality_substitution (fun _ => eval e _) a (plug e a) L);
+      [ solve_R | apply limit_eval_expr ]
+  | _ => fail "No matching goal found"
+  end.
+
+
+Ltac auto_limit :=
+  intros;
+  change_fun_to_expr;
+  finish_with_plug.

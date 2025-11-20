@@ -1,9 +1,7 @@
 From Calculus.Chapter5 Require Import Prelude.
 
 Lemma lemma_5_21_b : ∀ g h M,
-  (∀ x, |h x| <= M) →
-  ⟦ lim 0 ⟧ g = 0 →
-  ⟦ lim 0 ⟧ (g ∙ h) = 0.
+  (∀ x, |h x| <= M) → ⟦ lim 0 ⟧ g = 0 → ⟦ lim 0 ⟧ (g ∙ h) = 0.
 Proof.
   intros g h M H1 H2 ε H3.
   specialize (H2 (ε / (|M| + 1)) ltac:(apply Rdiv_pos_pos; solve_R)) as [δ [H4 H5]].
