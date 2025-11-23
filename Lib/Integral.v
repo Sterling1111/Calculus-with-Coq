@@ -3,7 +3,7 @@ From Lib Require Import Imports Notations Completeness Sets Functions Sums
                Partition Sorted_Rlt.
 Import SetNotations IntervalNotations Function_Notations LimitNotations DerivativeNotations.
 
-Notation In := Ensembles.In (only parsing).
+Local Notation In := Ensembles.In.
 
 Definition lower_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition a b) : ℝ :=
   let f := bf.(bounded_f a b) in
