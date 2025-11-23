@@ -1,5 +1,5 @@
 From Lib Require Import Imports Sets Notations Functions Limit Continuity Derivative Reals_util.
-Import SetNotations IntervalNotations Function_Notations LimitNotations.
+Import SetNotations IntervalNotations Function_Notations LimitNotations DerivativeNotations.
 
 Definition one_to_one_on (f : ℝ -> ℝ) (D : Ensemble ℝ) :=
   injective_on f D.
@@ -102,6 +102,122 @@ Theorem theorem_12_3 : forall f f_inv a b,
     inverse_on f f_inv [a, b] [Rmin (f a) (f b), Rmax (f a) (f b)] ->
       continuous_on f_inv [Rmin (f a) (f b), Rmax (f a) (f b)].
 Proof.
-  
-Admitted.
+  intros f f_inv a b H1 H2 H3 [_ [_ [H4 _]]].
+  assert (increasing_on f [a, b] \/ decreasing_on f [a, b]) as [H5 | H5] by (apply theorem_12_2; auto).
+  - intros x H6 ε H7. assert (∃ y, y ∈ [a, b] /\ f y = x) as [y [H8 H9]].
+    {
+      specialize (H5 a b ltac:(solve_R) ltac:(solve_R) H1).
+      assert (x = f a \/ x = f b \/ x ∈ (f a, f b)) as [H10 | [H10 | H10]] by solve_R.
+      - exists a. split; solve_R.
+      - exists b. split; solve_R.
+      - pose proof theorem_7_4 f a b x H1 H2 ltac:(solve_R) as [y Hy]. exists y. auto.
+    }
+    assert (y = a \/ y = b \/ y ∈ (a, b)) as [H10 | [H10 | H10]] by solve_R.
+    + subst. set (η := Rmin ((b - a) / 2) (ε /2)). set (δ := f (a + η) - f a).
+      exists δ. assert (δ > 0) as H9.
+      { specialize (H5 a (a + η) ltac:(solve_R) ltac:(unfold η; solve_R) ltac:(unfold η; solve_R)). unfold δ. solve_R. }
+      split; auto. intros x H10 H11. assert (H12 : a ∈ [a, b]) by solve_R. rewrite (H4 a H12).
+      assert (H13 : f a < f b) by (apply (H5 a b ltac:(solve_R) ltac:(solve_R) H1)).
+      assert (f a < x < f (a + η)) as H14 by (unfold δ in *; solve_R).
+      assert (continuous_on f [a, a + η]) as H15.
+      { unfold η in *. apply continuous_on_subset with (A2 := [a, b]); auto. intros y z. solve_R. }
+      pose proof theorem_7_4 f a (a + η) x ltac:(unfold η; solve_R) H15 H14 as [y [H16 H17]].
+      rewrite <- H17, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
+    + subst. set (η := Rmin ((b - a) / 2) (ε /2)). set (δ := f b - f (b - η)).
+      exists δ. assert (δ > 0) as H9.
+      { specialize (H5 (b - η) b ltac:(unfold η; solve_R) ltac:(solve_R) ltac:(unfold η; solve_R)). unfold δ. solve_R. }
+      split; auto. intros x H10 H11. assert (H12 : b ∈ [a, b]) by solve_R. rewrite (H4 b H12).
+      assert (H13 : f a < f b) by (apply (H5 a b ltac:(solve_R) ltac:(solve_R) H1)).
+      assert (f (b - η) < x < f b) as H14 by (unfold δ in *; solve_R).
+      assert (continuous_on f [b - η, b]) as H15.
+      { unfold η in *. apply continuous_on_subset with (A2 := [a, b]); auto. intros y z. solve_R. }
+      pose proof theorem_7_4 f (b - η) b x ltac:(unfold η; solve_R) H15 H14 as [y [H16 H17]].
+      rewrite <- H17, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
+    + subst. set (η := Rmin ((Rmin (y - a) (b - y)) / 2) (ε / 2)).
+      set (δ := Rmin (f (y + η) - f y) (f y - f (y - η))).
+      exists δ. assert (δ > 0) as H12.
+      {
+        specialize (H5 y (y + η) H8 ltac:(unfold η; solve_R) ltac:(unfold η; solve_R)) as H9.
+        specialize (H5 (y - η) y ltac:(unfold η; solve_R) ltac:(unfold η; solve_R) ltac:(unfold η; solve_R)).
+        unfold δ. solve_R.
+      }
+      split; auto. intros x0 H11 H13. rewrite (H4 y H8).
+      assert (H14 : f a < f b) by (apply (H5 a b ltac:(solve_R) ltac:(solve_R) H1)).
+      assert (f (y - η) < x0 < f (y + η)) as H15 by (unfold δ in *; solve_R).
+      assert (continuous_on f [y - η, y + η]) as H16.
+      { unfold η in *. apply continuous_on_subset with (A2 := [a, b]); auto. intros z Hz. solve_R. }
+      pose proof theorem_7_4 f (y - η) (y + η) x0 ltac:(unfold η; solve_R) H16 H15 as [z [H17 H18]].
+      rewrite <- H18, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
+  - intros x H6 ε H7. assert (∃ y, y ∈ [a, b] /\ f y = x) as [y [H8 H9]].
+    {
+      specialize (H5 a b ltac:(solve_R) ltac:(solve_R) H1).
+      assert (x = f a \/ x = f b \/ x ∈ (f b, f a)) as [H10 | [H10 | H10]] by solve_R.
+      - exists a. split; solve_R.
+      - exists b. split; solve_R.
+      - pose proof theorem_7_5 f a b x H1 H2 ltac:(solve_R) as [y Hy]. exists y. auto.
+    }
+    assert (y = a \/ y = b \/ y ∈ (a, b)) as [H10 | [H10 | H10]] by solve_R.
+    + subst. set (η := Rmin ((b - a) / 2) (ε / 2)). set (δ := f a - f (a + η)).
+      exists δ. assert (δ > 0) as H9.
+      { specialize (H5 a (a + η) ltac:(solve_R) ltac:(unfold η; solve_R) ltac:(unfold η; solve_R)). unfold δ. solve_R. }
+      split; auto. intros x H10 H11. assert (H12 : a ∈ [a, b]) by solve_R. rewrite (H4 a H12).
+      assert (H13 : f b < f a) by (apply (H5 a b ltac:(solve_R) ltac:(solve_R) H1)).
+      assert (f (a + η) < x < f a) as H14 by (unfold δ in *; solve_R).
+      assert (continuous_on f [a, a + η]) as H15.
+      { unfold η in *. apply continuous_on_subset with (A2 := [a, b]); auto. intros y z. solve_R. }
+      pose proof theorem_7_5 f a (a + η) x ltac:(unfold η; solve_R) H15 H14 as [y [H16 H17]].
+      rewrite <- H17, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
+    + subst. set (η := Rmin ((b - a) / 2) (ε / 2)). set (δ := f (b - η) - f b).
+      exists δ. assert (δ > 0) as H9.
+      { specialize (H5 (b - η) b ltac:(unfold η; solve_R) ltac:(solve_R) ltac:(unfold η; solve_R)). unfold δ. solve_R. }
+      split; auto. intros x H10 H11. assert (H12 : b ∈ [a, b]) by solve_R. rewrite (H4 b H12).
+      assert (H13 : f b < f a) by (apply (H5 a b ltac:(solve_R) ltac:(solve_R) H1)).
+      assert (f b < x < f (b - η)) as H14 by (unfold δ in *; solve_R).
+      assert (continuous_on f [b - η, b]) as H15.
+      { unfold η in *. apply continuous_on_subset with (A2 := [a, b]); auto. intros y z. solve_R. }
+      pose proof theorem_7_5 f (b - η) b x ltac:(unfold η; solve_R) H15 H14 as [y [H16 H17]].
+      rewrite <- H17, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
+    + subst. set (η := Rmin ((Rmin (y - a) (b - y)) / 2) (ε / 2)).
+      set (δ := Rmin (f y - f (y + η)) (f (y - η) - f y)).
+      exists δ. assert (δ > 0) as H12.
+      {
+        specialize (H5 y (y + η) H8 ltac:(unfold η; solve_R) ltac:(unfold η; solve_R)) as H9.
+        specialize (H5 (y - η) y ltac:(unfold η; solve_R) ltac:(unfold η; solve_R) ltac:(unfold η; solve_R)).
+        unfold δ. solve_R.
+      }
+      split; auto. intros x0 H11 H13. rewrite (H4 y H8).
+      assert (H14 : f b < f a) by (apply (H5 a b ltac:(solve_R) ltac:(solve_R) H1)).
+      assert (f (y + η) < x0 < f (y - η)) as H15 by (unfold δ in *; solve_R).
+      assert (continuous_on f [y - η, y + η]) as H16.
+      { unfold η in *. apply continuous_on_subset with (A2 := [a, b]); auto. intros z Hz. solve_R. }
+      pose proof theorem_7_5 f (y - η) (y + η) x0 ltac:(unfold η; solve_R) H16 H15 as [z [H17 H18]].
+      rewrite <- H18, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
+Qed.
 
+Theorem theorem_12_4 : forall f f_inv f' a b y,
+  a < b -> continuous_on f [a, b] -> one_to_one_on f [a, b] -> 
+    inverse_on f f_inv [a, b] [Rmin (f a) (f b), Rmax (f a) (f b)] -> 
+      y ∈ (Rmin (f a) (f b), Rmax (f a) (f b)) ->
+        ⟦ der ⟧ f [a, b] = f' -> f' (f_inv y) = 0 ->
+          ¬ differentiable_at f_inv y.
+Proof.
+  intros f f_inv f' a b y H1 H2 H3 H4 H5 H6 H7 H8.
+  assert (f (f_inv y) = y) as H9.
+  { destruct H4 as [_ [_ [_ H4]]]. apply H4;  solve_R. }
+  pose proof differentiable_at_exists_f' f_inv y H8 as [f_inv' H10].
+  specialize (H6 (f_inv y)). assert (⟦ der (f_inv y) ⟧ f = f') as H11.
+  {
+    admit.
+  }
+  pose proof theorem_10_9 f f_inv f' f_inv' y H10 H11 as H12.
+  assert (H13 : ⟦ der y ⟧ (f ∘ f_inv) = (λ _ : ℝ, 1)).
+  {
+    apply (derivative_at_eq_eventually (fun x => x) (f ∘ f_inv) (fun _ => 1) y).
+    2 : { apply theorem_10_2. }
+    set (δ := Rmin (y - Rmin (f a) (f b)) (Rmax (f a) (f b) - y)).
+    assert (δ > 0) as H13 by (unfold δ; solve_R).
+    exists δ; split; auto. intros x H14. unfold δ in *. destruct H4 as [_ [_ [_ H4]]]. rewrite H4; solve_R.
+  }
+  pose proof derivative_of_function_at_x_unique (f ∘ f_inv) (f' ∘ f_inv ∙ f_inv') (λ _ : ℝ, 1) y H12 H13 as H14.
+  simpl in H14. rewrite H7 in H14. lra.
+Admitted.

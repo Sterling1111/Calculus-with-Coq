@@ -177,13 +177,15 @@ Proof.
   assert (H2 : B (cos_0_π x) = x).
   { unfold B. rewrite cos_0_π_spec; try lra. }
   pose proof lemma_15_0 as H3.
-  assert (⟦ der x ⟧ B = (λ x0, -1 / (√(1 - x0^2)))).
-  { unfold B. replace (λ x0 : ℝ, -1 / √(1 - x0 ^ 2)) with (λ x0 : ℝ, 2 * (-1 / (2 * √(1 - x0 ^ 2)))).
-    2 : { extensionality y. assert (√(1 - y ^ 2) = 0 \/ √(1 - y ^ 2) <> 0) as [H4 | H4] by lra.
-          - rewrite H4. rewrite Rdiv_0_r, Rmult_0_r, Rdiv_0_r. lra.
+  assert (∀ x, x ∈ (-1, 1) -> ⟦ der x ⟧ B = (λ x0, -1 / (√(1 - x0^2)))) as H4.
+  {
+    intros y H4. unfold B. replace (λ x0 : ℝ, -1 / √(1 - x0 ^ 2)) with (λ x0 : ℝ, 2 * (-1 / (2 * √(1 - x0 ^ 2)))).
+    2 : { extensionality z. assert (√(1 - z ^ 2) = 0 \/ √(1 - z ^ 2) <> 0) as [H5 | H5] by lra.
+          - rewrite H5. rewrite Rdiv_0_r, Rmult_0_r, Rdiv_0_r. lra.
           - field; auto.
-    } apply theorem_10_5. apply lemma_15_0. assert
-          - field_simplify; try lra. }
+    }
+    apply theorem_10_5. apply lemma_15_0; solve_R.
+  }
     apply theorem_10_5.
     - replace (λ x0 : ℝ, 2 * A x0) with (λ x0 : ℝ, 2 * (x0 * √(1 - x0 ^ 2) / 2 + ∫ x0 1 (λ t, √(1 - t^2)))).
       2 : { extensionality y. unfold A. destruct (Rlt_dec y (-1)); try lra.

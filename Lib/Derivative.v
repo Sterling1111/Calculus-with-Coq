@@ -317,6 +317,14 @@ Proof.
     intros x H5. specialize (H4 x ltac:(solve_R)). auto.
 Qed.
 
+Lemma differentiable_at_exists_f' : forall f a,
+  differentiable_at f a -> exists f', ⟦ der a ⟧ f = f'.
+Proof.
+  intros f a [L H1]. set (f' := (λ _ : ℝ, L)).
+  exists f'. intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]].
+  exists δ; auto.
+Qed.
+
 Lemma derivative_imp_derivative_on : forall f f' a b,
   a < b -> ⟦ der ⟧ f = f' -> ⟦ der ⟧ f [a, b] = f'.
 Proof.
@@ -715,7 +723,7 @@ Proof.
 Qed.
 
 Theorem theorem_10_9 : forall f g f' g' a,
-  ⟦ der a ⟧ g = g' -> ⟦ der (g a) ⟧ f = f' -> ⟦ der a ⟧ (f ∘ g) = (f' ∘ g) ∙ g'.
+  ⟦ der a ⟧ g = g' -> ⟦ der (g a) ⟧ f = f' -> ⟦ der a ⟧ ((f ∘ g)%f) = (f' ∘ g)%f ∙ g'.
 Proof.
   intros f g f' g' a H1 H2.
   set ( φ := fun h : ℝ => match (Req_dec_T (g (a + h) - g a) 0) with 
@@ -1085,6 +1093,17 @@ Proof.
   intros f1 f2 f' c a b H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ [H3 H5]].
   exists (Rmin (Rmin δ (b - c)) (c - a)); split. solve_R. intros x H6. repeat rewrite <- H2; auto.
   2 : { solve_R. } specialize (H5 x ltac:(solve_R)). auto.
+Qed.
+
+Lemma derivative_at_eq_eventually : forall f1 f2 f' c,
+  (exists δ, δ > 0 /\ forall x, |x - c| < δ -> f1 x = f2 x) ->
+    ⟦ der c ⟧ f1 = f' -> ⟦ der c ⟧ f2 = f'.
+Proof.
+  intros f1 f2 f' c [δ [H1 H2]] H3.
+  apply derivative_at_eq_f with (a := c - δ) (b := c + δ) (f1 := f1).
+  - solve_R.
+  - intros x H4. apply H2; solve_R.
+  - solve_R.
 Qed.
 
 Lemma derivative_at_eq_f' : forall f f1' f2' c,

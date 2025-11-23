@@ -5,8 +5,8 @@ Notation ℤ := Z.
 Notation ℚ := Q.
 Notation ℝ := R.
 
-Notation "| x |" := (Rabs x) 
-  (at level 200, x at level 0, format "| x |", no associativity) : R_scope.
+Notation "| x |" := (Rabs x)
+  (at level 35, x at level 0, format "| x |", no associativity) : R_scope.
 
 Notation "√ x" := (sqrt x) (format "√ x", at level 20).
 
