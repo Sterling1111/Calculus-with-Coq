@@ -155,6 +155,19 @@ Proof.
   intros a b c H1 H2 H3 [H4 H5]. split; repeat rewrite Rdiv_1_l; apply Rinv_lt_contravar; nra.
 Qed.
 
+Lemma nat_pos_Rpos_iff : ∀ n : nat,
+  n > 0 <-> (n > 0)%nat.
+Proof.
+  intros n; split; intros H1; solve_R.
+  apply INR_lt. solve_R.
+Qed.
+
+Lemma nat_gt_Rgt_iff : ∀ n m : nat,
+  INR n > INR m <-> (n > INR m).
+Proof.
+  intros n m. solve_R.
+Qed.
+
 Ltac compare_elems e1 e2 := 
   let e1' := eval simpl in e1 in
   let e2' := eval simpl in e2 in 
@@ -179,3 +192,57 @@ Ltac auto_list :=
   intros; compute;
   try solve [reflexivity];
   compare_lists_step.
+
+Definition is_natural (r : R) : Prop :=
+    exists n : nat, r = INR n.
+
+Lemma is_natural_plus : forall r1 r2 : R,
+  is_natural r1 -> is_natural r2 -> is_natural (r1 + r2).
+Proof.
+  intros r1 r2 H1 H2. destruct H1 as [n1 H1]. destruct H2 as [n2 H2]. exists (n1 + n2)%nat. rewrite H1, H2. rewrite plus_INR. reflexivity.
+Qed.
+
+Lemma is_natural_mult : forall r1 r2 : R,
+  is_natural r1 -> is_natural r2 -> is_natural (r1 * r2).
+Proof.
+  intros r1 r2 H1 H2. destruct H1 as [n1 H1]. destruct H2 as [n2 H2]. exists (n1 * n2)%nat. rewrite H1, H2. rewrite mult_INR. reflexivity.
+Qed. 
+
+Lemma nltb_gt : forall a b : nat, (a > b)%nat <-> (a <=? b) = false.
+Proof.
+  intros a b. split.
+  - intros H1. apply leb_correct_conv; lia.
+  - intros H1. destruct (Nat.leb_spec a b); try lia. 
+Qed.
+
+Lemma nltb_ge : forall a b : nat, (a >= b)%nat <-> (a <? b) = false.
+Proof.
+  intros a b. split.
+  - intros H1. apply leb_correct_conv; lia.
+  - intros H1. destruct (Nat.ltb_spec a b); try lia.
+Qed.
+
+Lemma Rmult_gt_reg_neg_r : forall r r1 r2,
+  r < 0 -> r1 * r > r2 * r -> r1 < r2.
+Proof.
+  intros. nra.
+Qed.
+
+Lemma cross_multiply_lt : forall r1 r2 r3 r4,
+  r1 > 0 -> r2 > 0 -> r3 > 0 -> r4 > 0 ->
+  r1 * r4 < r2 * r3 -> r1 / r2 < r3 / r4.
+Proof.
+  intros r1 r2 r3 r4 H1 H2 H3 H4 H5. apply Rmult_lt_reg_r with (r := r2); 
+  apply Rmult_lt_reg_r with (r := r4); field_simplify; nra.
+Qed.
+
+Lemma gte_1_INR : forall n : nat,
+  0 < n -> 1 <= n.
+Proof.
+  intros n H1. assert ((INR n = 1) \/ (INR n > 1)) as [H2 | H2]; try lra.
+  {
+    replace 0 with (INR 0) in * by auto. replace 1 with (INR 1) in * by auto. destruct n.
+    - apply INR_lt in H1; lia.
+    - apply INR_lt in H1. destruct n; [left; reflexivity | right; apply lt_INR; lia ].
+  }
+Qed.

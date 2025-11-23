@@ -1,7 +1,4 @@
-From Lib Require Import Imports Sums Binomial Notations.
-From Calculus Require Import Problem_2_3.
-Import Binomial_R Choose_R_Notations.
-Open Scope R_scope.
+From Calculus.Chapter2 Require Import Prelude Problem_2_3.
 
 Lemma lemma_2_4_a : forall l m n,
   ∑ 0 l (fun i => n ∁ i * m ∁ (l - i)) = (n + m) ∁ l.

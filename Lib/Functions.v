@@ -1,6 +1,8 @@
 From Lib Require Import Imports Sets.
 Import SetNotations.
 
+Local Notation In := Ensembles.In.
+
 Open Scope set_scope.
 
 Lemma f_subtype_independent {U V} (P : Ensemble U) (f : subType P -> V) (x : U) (H1 H2 : In _ P x) :

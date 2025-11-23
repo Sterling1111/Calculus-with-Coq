@@ -1,6 +1,9 @@
 From Lib Require Import Imports Notations Sorted_Rlt Completeness Continuity Sets Reals_util.
 Import IntervalNotations SetNotations.
 
+Local Notation length := List.length.
+Local Notation In := List.In.
+
 Open Scope R_scope.
 
 Record partition (a b : ℝ) : Type := mkpartition
@@ -23,24 +26,24 @@ Proof.
 Qed.
 
 Lemma partition_first : forall a b (P : partition a b),
-  nth 0 (points a b P) 0 = a.
+  (points a b P).[0] = a.
 Proof.
   intros a b P. pose proof partition_length a b P as H0. destruct P as [l1 H1 H2 H3 H4 H5]. simpl in *.
-  pose proof Rtotal_order (nth 0 l1 0) a as [H6 | [H6 | H6]]; auto.
-  - assert (List.In (nth 0 l1 0) l1) as H7. { apply nth_In; lia. } 
-    specialize (H5 (nth 0 l1 0) H7). simpl in H5. lra.
+  pose proof Rtotal_order (l1.[0]) a as [H6 | [H6 | H6]]; auto.
+  - assert (List.In (l1.[0]) l1) as H7. { apply nth_In; lia. } 
+    specialize (H5 (l1.[0]) H7). simpl in H5. lra.
   - pose proof In_nth l1 a 0 H3 as [n [H7 H8]]. assert (n = 0 \/ n > 0)%nat as [H9 | H9] by lia.
     -- subst. simpl in H6. lra.
     -- pose proof Sorted_Rlt_nth l1 0 n 0 H2 ltac:(lia) as H10. lra.
 Qed.
 
 Lemma partition_last : forall a b (P : partition a b),
-  nth (length (points a b P) - 1) (points a b P) 0 = b.
+  (points a b P).[length (points a b P) - 1] = b.
 Proof.
   intros a b P. pose proof partition_length a b P as H0. destruct P as [l1 H1 H2 H3 H4 H5]. simpl in *.
-  pose proof Rtotal_order (nth (length l1 - 1) l1 0) b as [H6 | [H6 | H6]]; auto.
-  2 : { assert (List.In (nth (length l1 - 1) l1 0) l1) as H7. { apply nth_In; lia. } 
-    specialize (H5 (nth (length l1 - 1) l1 0) H7). simpl in H5. lra. }
+  pose proof Rtotal_order (l1.[(length l1 - 1)]) b as [H6 | [H6 | H6]]; auto.
+  2 : { assert (List.In (l1.[(length l1 - 1)]) l1) as H7. { apply nth_In; lia. } 
+    specialize (H5 (l1.[(length l1 - 1)]) H7). simpl in H5. lra. }
   pose proof In_nth l1 b 0 H4 as [n [H7 H8]]. assert (n = length l1 - 1 \/ n < length l1 - 1)%nat as [H9 | H9] by lia.
   - subst. simpl in H6. lra.
   - pose proof Sorted_Rlt_nth l1 n (length l1 - 1) 0 H2 ltac:(lia) as H10. lra.
@@ -116,7 +119,7 @@ Qed.
 Lemma partition_sublist_elem_has_inf :  forall (f : ℝ -> ℝ) (a b : ℝ) (p : partition a b),
   let l1 := p.(points a b) in
   bounded_on f [a, b] ->
-  { l2 : list ℝ | (length l2 = length l1 - 1)%nat /\ forall (i : ℕ), (i < length l2)%nat -> is_glb (fun y => exists x, x ∈ [nth i l1 0, nth (i+1)%nat l1 0] /\ y = f x) (nth i l2 0) }. 
+  { l2 : list ℝ | (length l2 = length l1 - 1)%nat /\ forall (i : ℕ), (i < length l2)%nat -> is_glb (fun y => exists x, x ∈ [l1.[i], l1.[i+1]] /\ y = f x) (l2.[i]) }. 
 Proof.
   intros f a b p l1 H1. assert (Sorted Rlt l1) as H2 by (destruct p; auto).
   assert (H3 : forall x, List.In x l1 -> a <= x <= b). { intros x H3. destruct p; auto. }
@@ -133,15 +136,15 @@ Proof.
        * subst. simpl. auto.
        * specialize (IH2 (i-1)%nat). assert (i - 1 < length l2)%nat as H11 by (simpl in *; lia).
          specialize (IH2 H11). replace (i-1+1)%nat with i in IH2 by lia.
-         replace (nth i (h :: h' :: t') 0) with (nth (i-1)%nat (h' :: t') 0). 2 : { destruct i. simpl; lia. replace (S i - 1)%nat with i by lia. reflexivity. }
-         replace (nth (i + 1) (h :: h' :: t') 0) with (nth i (h' :: t') 0). 2 : { destruct i. simpl; lia. replace (S i + 1)%nat with (S (S i)) by lia. reflexivity. }
-         replace (nth i (inf :: l2) 0) with (nth (i-1)%nat l2 0). 2 : { destruct i. simpl; lia. replace (S i - 1)%nat with i by lia. reflexivity. } auto.
+         replace ((h :: h' :: t').[i]) with ((h' :: t').[(i-1)%nat]). 2 : { destruct i. simpl; lia. replace (S i - 1)%nat with i by lia. reflexivity. }
+         replace ((h :: h' :: t').[(i + 1)]) with ((h' :: t').[i]). 2 : { destruct i. simpl; lia. replace (S i + 1)%nat with (S (S i)) by lia. reflexivity. }
+         replace ((inf :: l2).[i]) with (l2.[(i-1)%nat]). 2 : { destruct i. simpl; lia. replace (S i - 1)%nat with i by lia. reflexivity. } auto.
 Qed.
 
 Lemma partition_sublist_elem_has_sup : forall (f : ℝ -> ℝ) (a b : ℝ) (p : partition a b),
   let l1 := p.(points a b) in
   bounded_on f [a, b] ->
-  { l2 : list ℝ | (length l2 = length l1 - 1)%nat /\ forall (i : ℕ), (i < length l2)%nat -> is_lub (fun y => exists x, x ∈ [nth i l1 0, nth (i+1)%nat l1 0] /\ y = f x) (nth i l2 0) }.
+  { l2 : list ℝ | (length l2 = length l1 - 1)%nat /\ forall (i : ℕ), (i < length l2)%nat -> is_lub (fun y => exists x, x ∈ [l1.[i], l1.[i+1]] /\ y = f x) (l2.[i]) }. 
 Proof.
   intros f a b p l1 H1. assert (Sorted Rlt l1) as H2 by (destruct p; auto).
   assert (H3 : forall x, List.In x l1 -> a <= x <= b). { intros x H3. destruct p; auto. }
@@ -158,15 +161,15 @@ Proof.
        * subst. simpl. auto.
        * specialize (IH2 (i-1)%nat). assert (i - 1 < length l2)%nat as H11 by (simpl in *; lia).
          specialize (IH2 H11). replace (i-1+1)%nat with i in IH2 by lia.
-         replace (nth i (h :: h' :: t') 0) with (nth (i-1)%nat (h' :: t') 0). 2 : { destruct i. simpl; lia. replace (S i - 1)%nat with i by lia. reflexivity. }
-         replace (nth (i + 1) (h :: h' :: t') 0) with (nth i (h' :: t') 0). 2 : { destruct i. simpl; lia. replace (S i + 1)%nat with (S (S i)) by lia. reflexivity. }
-         replace (nth i (sup :: l2) 0) with (nth (i-1)%nat l2 0). 2 : { destruct i. simpl; lia. replace (S i - 1)%nat with i by lia. reflexivity. } auto.
+         replace ((h :: h' :: t').[i]) with ((h' :: t').[(i-1)%nat]). 2 : { destruct i. simpl; lia. replace (S i - 1)%nat with i by lia. reflexivity. }
+         replace ((h :: h' :: t').[(i + 1)]) with ((h' :: t').[i]). 2 : { destruct i. simpl; lia. replace (S i + 1)%nat with (S (S i)) by lia. reflexivity. }
+         replace ((sup :: l2).[i]) with (l2.[(i-1)%nat]). 2 : { destruct i. simpl; lia. replace (S i - 1)%nat with i by lia. reflexivity. } auto.
 Qed.
 
 Lemma partition_spec : forall (a b : ℝ) (P : partition a b),
   Sorted Rlt (P.(points a b)) /\ a < b /\ List.In a (P.(points a b)) /\ List.In b (P.(points a b)) /\
     (forall x, List.In x (P.(points a b)) -> a <= x <= b) /\ (length (P.(points a b)) >= 2)%nat /\ NoDup (P.(points a b)) /\
-      nth 0 (P.(points a b)) 0 = a /\ nth (length (P.(points a b)) - 1) (P.(points a b)) 0 = b.
+      (P.(points a b)).[0] = a /\ (P.(points a b)).[(length (P.(points a b)) - 1)] = b.
 Proof.
   intros a b [l1 H1 H2 H3 H4 H5]; simpl. repeat (split; auto).
   - destruct l1 as [| h t]. inversion H3. destruct t as [| h' t']; simpl in *; try lra; try lia.
@@ -177,14 +180,14 @@ Proof.
        specialize (H5 h). simpl in H5. lra.
   - pose proof In_nth l1 b 0 H4 as [n [H6 H7]]. assert (n = (length l1 - 1) \/ n < length l1 - 1)%nat as [H8 | H8] by lia.
     -- subst. reflexivity.
-    -- pose proof Sorted_Rlt_nth l1 n (length l1 - 1) 0 H2 ltac:(lia) as H9. specialize (H5 (nth (length l1 - 1) l1 0)).
-       assert (List.In (nth (length l1 - 1) l1 0) l1) as H10. { apply nth_In. lia. } specialize (H5 H10). rewrite H7 in H9. lra.
+    -- pose proof Sorted_Rlt_nth l1 n (length l1 - 1) 0 H2 ltac:(lia) as H9. specialize (H5 (l1.[(length l1 - 1)])).
+       assert (List.In (l1.[(length l1 - 1)]) l1) as H10. { apply nth_In. lia. } specialize (H5 H10). rewrite H7 in H9. lra.
 Qed.
 
 Lemma insert_Partition_R_not_first_or_last : forall (a b r : ℝ) (P Q : partition a b) (i : ℕ),
   let l1 := P.(points a b) in
   let l2 := Q.(points a b) in
-  (i < length l2)%nat -> ~List.In r l1 -> l2 = insert_Sorted_Rlt r l1 -> nth i l2 0 = r -> (i > 0 /\ i < length l2 - 1)%nat.
+  (i < length l2)%nat -> ~List.In r l1 -> l2 = insert_Sorted_Rlt r l1 -> l2.[i] = r -> (i > 0 /\ i < length l2 - 1)%nat.
 Proof.
   intros a b r P Q i l1 l2 H0 H1 H2 H3.
   pose proof partition_spec a b P as H4. pose proof partition_spec a b Q as H5.
@@ -386,24 +389,24 @@ Qed.
 
 Lemma list_delta_lt : forall a b i n ε,
   let l := map (fun x => ((b - a) / INR n) * x + a) (map INR (seq 0 (n+1))) in
-    (i < length l - 1)%nat -> (n <> 0)%nat -> (b - a) / (INR n) < ε -> nth (i+1) l 0 - nth i l 0 < ε.
+    (i < length l - 1)%nat -> (n <> 0)%nat -> (b - a) / (INR n) < ε -> l.[(i+1)] - l.[i] < ε.
 Proof.
   intros a b i n ε l H1 H2 H3. set (f := fun x => ((b - a) / INR n) * x + a).
   assert (H4 : (length l = n + 1)%nat). {
     unfold l. repeat rewrite length_map. rewrite length_seq. lia.
   }
   unfold l. repeat rewrite map_nth_in_bounds with (d := 0); try (rewrite length_map; rewrite length_seq; lia).
-  replace (nth (i + 1) (map INR (seq 0 (n + 1))) 0) with (INR (i + 1)).
+  replace ((map INR (seq 0 (n + 1))).[(i + 1)]) with (INR (i + 1)).
   2 : { rewrite map_nth_in_bounds with (d := 0%nat). 2 : { rewrite length_seq; lia. }
     rewrite seq_nth; try lia. reflexivity. }
-  replace (nth i (map INR (seq 0 (n + 1))) 0) with (INR i).
+  replace ((map INR (seq 0 (n + 1))).[i]) with (INR i).
   2 : { rewrite map_nth_in_bounds with (d := 0%nat). 2 : { rewrite length_seq; lia. }
     rewrite seq_nth; try lia. reflexivity. } solve_R.
 Qed.
 
 Lemma exists_partition_delta_lt : forall a b ε,
   a < b -> ε > 0 -> exists (P : partition a b), forall i, (i < length (P.(points a b)) - 1)%nat -> 
-    (nth (i + 1) (P.(points a b)) 0 - nth i (P.(points a b)) 0) < ε.
+    ((P.(points a b)).[(i + 1)] - (P.(points a b)).[i]) < ε.
 Proof.
   intros a b ε H1 H2. pose proof exists_nat_gt_inv_scale a b ε H1 H2 as [n [H3 H4]].
   set (l := map (fun x => ((b - a) / INR n) * x + a) (map INR (seq 0 (n+1)))).
@@ -446,7 +449,7 @@ Proof.
 Qed.
 
 Lemma list_in_first_app : forall a l1 l2,
-  nth 0 (l1 ++ l2) 0 = a -> l1 <> [] -> List.In a l1.
+  (l1 ++ l2).[0] = a -> l1 <> [] -> List.In a l1.
 Proof.
   intros a l1 l2 H1 H2. destruct l1 as [| h t].
   - exfalso. apply H2. reflexivity.
@@ -454,7 +457,7 @@ Proof.
 Qed.
 
 Lemma list_in_last_app : forall a l1 l2,
-  nth (length l1 + length l2 - 1) (l1 ++ l2) 0 = a -> l2 <> [] -> List.In a l2.
+  (l1 ++ l2).[(length l1 + length l2 - 1)] = a -> l2 <> [] -> List.In a l2.
 Proof.
   intros a l1 l2 H1 H2. generalize dependent l1. induction l2 as [| h t IH].
   - intros l1 H1. exfalso. apply H2. reflexivity.
@@ -570,7 +573,7 @@ Proof.
     {
       intros H10. subst. simpl in H4.
       assert (H10 : l <> []). { apply not_empty_In_list with (x := a); auto. }
-      assert (H11 : c > nth 0 l 0).
+      assert (H11 : c > l.[0]).
       { pose proof partition_first a b P as H11. replace (points a b P) with l in * by auto. lra. }
       pose proof insert_Sorted_Rlt_first' c l ltac:(destruct P; auto) H2 H10 H11 as H12.
       replace (insert_Sorted_Rlt c l) with (c :: l'') in * by (rewrite <- H4; auto). simpl in H12. lra.
@@ -667,7 +670,7 @@ Proof.
 Qed.
 
 Lemma last_concat : forall l c,
-  nth (length l - 1) l 0 = c -> l <> [] -> exists l', l = l' ++ [c].
+  l.[(length l - 1)] = c -> l <> [] -> exists l', l = l' ++ [c].
 Proof.
   intros l c H1 H2. pose proof exists_last H2 as [l' [x H4]].
   exists l'. rewrite H4 in H1. rewrite app_nth2 in H1.
@@ -677,7 +680,7 @@ Proof.
 Qed.
 
 Lemma first_concat : forall l c,
-  nth 0 l 0 = c -> l <> [] -> exists l', l = [c] ++ l'.
+  l.[0] = c -> l <> [] -> exists l', l = [c] ++ l'.
 Proof.
   intros l c H1 H2. destruct l as [| h t].
   - exfalso. apply H2. reflexivity.
@@ -742,7 +745,7 @@ Proof.
         assert (List.In x l2) as H10.
         { rewrite H4. apply in_or_app. right. auto. }
         apply In_nth with (d := 0) in H10 as [i [H10 H11]].
-        assert (nth 0 l2 0 = c) as H12.
+        assert (l2.[0] = c) as H12.
         {
           rewrite H4. rewrite app_nth1. 2 : { simpl. lia. }
           reflexivity.

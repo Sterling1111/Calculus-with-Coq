@@ -31,6 +31,13 @@ Module DFA_Theory.
     | h :: t => DFA_compute M t (δ (q, h))
     end.
 
+  Fixpoint DFA_compute_list M l q :=
+    match l with
+    | [] => [q]
+    | h :: t => let q' := M.(δ) (q, h) in
+                q :: DFA_compute_list M t q'
+    end.
+
   Definition DFA_accepts M l : Prop :=
     let q0 := M.(q0) in
     let F := M.(F) in

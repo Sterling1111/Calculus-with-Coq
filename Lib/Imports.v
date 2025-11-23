@@ -42,12 +42,12 @@ From Coq Require Export
   Classes.Morphisms
 
   (* Sets and Lists *)
-  Lists.List
   Sets.Ensembles
   Sets.Classical_sets
   Sets.Powerset
   Sets.Finite_sets
-  Sets.Image.
+  Sets.Image
+  Lists.List.
   
 
 (* Common notations *)

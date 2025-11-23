@@ -11,7 +11,7 @@ Definition lower_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition a 
   let l1 := p.(points a b) in
   let l2 := proj1_sig (partition_sublist_elem_has_inf f a b p bounded) in
   let n : ℕ := length l2 in
-  ∑ 0 (n-1) (fun i => (nth i l2 0) * (nth (i+1) l1 0 - nth (i) l1 0)).
+  ∑ 0 (n-1) (fun i => (l2.[i]) * (l1.[(i+1)] - l1.[(i)])).
 
 Definition upper_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition a b) : ℝ :=
   let f := bf.(bounded_f a b) in
@@ -19,7 +19,7 @@ Definition upper_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition a 
   let l1 := p.(points a b) in
   let l2 := proj1_sig (partition_sublist_elem_has_sup f a b p bounded) in
   let n : ℕ := length l2 in
-  ∑ 0 (n-1) (fun i => (nth i l2 0) * (nth (i+1) l1 0 - nth (i) l1 0)).
+  ∑ 0 (n-1) (fun i => (l2.[i]) * (l1.[(i+1)] - l1.[(i)])).
 
 Notation "L( f , P )" := (lower_sum _ _ f P) (at level 70, f, P at level 0, format "L( f ,  P )").
 Notation "U( f , P )" := (upper_sum _ _ f P) (at level 70, f, P at level 0, format "U( f ,  P )").
@@ -36,10 +36,10 @@ Proof.
   - rewrite length_zero_iff_nil in H7. rewrite H7 in *. rewrite sum_f_0_0. simpl. lra.
   - apply Rle_ge. apply sum_f_nonneg; try lia. intros k H8.
     specialize (H6 k ltac:(lia)). destruct H6 as [H6 _].
-    specialize (H6 (f (nth k (points a b P) 0))). specialize (H3 (nth k (points a b P) 0)).
-    pose proof partition_in a b P (nth k (points a b P) 0) (points a b P) eq_refl ltac:(apply nth_In; lia) as H9.
-    specialize (H3 ltac:(solve_R)). assert (H10 : f (nth k (points a b P) 0) <= nth k l2 0).
-    { apply H6. exists (nth k (points a b P) 0). split; auto. pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia). solve_R. }
+    specialize (H6 (f ((points a b P).[k]))). specialize (H3 ((points a b P).[k])).
+    pose proof partition_in a b P ((points a b P).[k]) (points a b P) eq_refl ltac:(apply nth_In; lia) as H9.
+    specialize (H3 ltac:(solve_R)). assert (H10 : f ((points a b P).[k]) <= l2.[k]).
+    { apply H6. exists ((points a b P).[k]). split; auto. pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia). solve_R. }
     pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia) as H11. nra.
 Qed.
 
@@ -55,10 +55,10 @@ Proof.
   - rewrite length_zero_iff_nil in H7. rewrite H7 in *. pose proof partition_length a b P as H8. simpl in *; lia.
   - apply Rlt_gt. apply sum_f_pos; try lia. intros k H8.
     specialize (H6 k ltac:(lia)). destruct H6 as [H6 _].
-    specialize (H6 (f (nth k (points a b P) 0))). specialize (H3 (nth k (points a b P) 0)).
-    pose proof partition_in a b P (nth k (points a b P) 0) (points a b P) eq_refl ltac:(apply nth_In; lia) as H9.
-    specialize (H3 ltac:(solve_R)). assert (H10 : f (nth k (points a b P) 0) <= nth k l2 0).
-    { apply H6. exists (nth k (points a b P) 0). split; auto. pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia). solve_R. }
+    specialize (H6 (f ((points a b P).[k]))). specialize (H3 ((points a b P).[k])).
+    pose proof partition_in a b P ((points a b P).[k]) (points a b P) eq_refl ltac:(apply nth_In; lia) as H9.
+    specialize (H3 ltac:(solve_R)). assert (H10 : f ((points a b P).[k]) <= l2.[k]).
+    { apply H6. exists ((points a b P).[k]). split; auto. pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia). solve_R. }
     pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia) as H11. nra.
 Qed.
 
@@ -74,9 +74,9 @@ Proof.
   - rewrite length_zero_iff_nil in H7. rewrite H7 in *. rewrite sum_f_0_0. simpl. lra.
   - apply Rle_ge. apply sum_f_nonneg; try lia. intros k H8.
     specialize (H6 k ltac:(lia)). destruct H6 as [_ H6]. specialize (H6 0). 
-    pose proof partition_in a b P (nth k (points a b P) 0) (points a b P) eq_refl ltac:(apply nth_In; lia) as H9.
-    pose proof partition_in a b P (nth (k + 1) (points a b P) 0) (points a b P) eq_refl ltac:(apply nth_In; lia) as H10.
-    assert (is_lower_bound (λ y : ℝ, ∃ x : ℝ, x ∈ [nth k (points a b P) 0, nth (k + 1) (points a b P) 0] ∧ y = f x) 0) as H11.
+    pose proof partition_in a b P ((points a b P).[k]) (points a b P) eq_refl ltac:(apply nth_In; lia) as H9.
+    pose proof partition_in a b P ((points a b P).[(k + 1)]) (points a b P) eq_refl ltac:(apply nth_In; lia) as H10.
+    assert (is_lower_bound (λ y : ℝ, ∃ x : ℝ, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] ∧ y = f x) 0) as H11.
     { intros y [x [H12 H13]]. rewrite H13. apply Rle_ge. apply H3. solve_R. }
     specialize (H6 H11). 
     pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia) as H12. nra.
@@ -96,12 +96,12 @@ Proof.
     pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia) as H9.
     pose proof continuous_function_attains_glb_on_interval f a b H4 H0 as [x [H10 H11]].
     specialize (H6 k ltac:(lia)).
-    assert (H12 : (λ y : ℝ, ∃ x : ℝ, x ∈ [nth k (points a b P) 0, nth (k + 1) (points a b P) 0] ∧ y = f x) ⊆
+    assert (H12 : (λ y : ℝ, ∃ x : ℝ, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] ∧ y = f x) ⊆
                   ((λ y : ℝ, ∃ x : ℝ, x ∈ [a, b] ∧ y = f x))).
     { intros y [x' [H12 H13]]. exists x'. split; solve_R. 
     pose proof partition_in a b P x' (points a b P) ltac:(apply eq_refl) as H14. apply H14. admit. }
-    pose proof glb_subset (λ y : ℝ, ∃ x : ℝ, x ∈ [nth k (points a b P) 0, nth (k + 1) (points a b P) 0] ∧ y = f x)
-      ((λ y : ℝ, ∃ x : ℝ, x ∈ [a, b] ∧ y = f x)) (nth k l2 0) (f x) H6 H11 H12 as H13.
+    pose proof glb_subset (λ y : ℝ, ∃ x : ℝ, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] ∧ y = f x)
+      ((λ y : ℝ, ∃ x : ℝ, x ∈ [a, b] ∧ y = f x)) (l2.[k]) (f x) H6 H11 H12 as H13.
     specialize (H3 x H10). nra.
 Admitted.
 
@@ -178,9 +178,9 @@ Section lower_upper_sum_test.
     unfold l2_lower, proj1_sig in *. destruct (partition_sublist_elem_has_inf f a b P f_bounded_on) as [l2 [H1 H2]].
     specialize (H2 0%nat) as H3. specialize (H2 1%nat) as H4. replace (points a b P) with l1 in H1, H3, H4 by auto.
     simpl in H3, H4. specialize (H3 ltac:(simpl in *; lia)). specialize (H4 ltac:(simpl in *; lia)).
-    assert (nth 0 l2 0 = 1) as H5.
+    assert (l2.[0] = 1) as H5.
     { apply glb_unique with (E := fun y => exists x, x ∈ [1, 2] /\ y = f x); auto. apply glb_f_1_2_is_1. }
-    assert (nth 1 l2 0 = 2) as H6.
+    assert (l2.[1] = 2) as H6.
     { apply glb_unique with (E := fun y => exists x, x ∈ [2, 3] /\ y = f x); auto. apply glb_f_2_3_is_2. }
     destruct l2 as [| h1 [| h2 t]]; simpl in H1; try lia. simpl in H5. simpl in H6.
     assert (t = []). { apply length_zero_iff_nil; lia. } subst. auto.
@@ -191,9 +191,9 @@ Section lower_upper_sum_test.
     unfold l2_upper, proj1_sig in *. destruct (partition_sublist_elem_has_sup f a b P f_bounded_on) as [l2 [H1 H2]].
     specialize (H2 0%nat) as H3. specialize (H2 1%nat) as H4. replace (points a b P) with l1 in H1, H3, H4 by auto.
     simpl in H3, H4. specialize (H3 ltac:(simpl in *; lia)). specialize (H4 ltac:(simpl in *; lia)).
-    assert (nth 0 l2 0 = 2) as H5.
+    assert (l2.[0] = 2) as H5.
     { apply lub_unique with (E := fun y => exists x, x ∈ [1, 2] /\ y = f x); auto. apply lub_f_1_2_is_2. }
-    assert (nth 1 l2 0 = 3) as H6.
+    assert (l2.[1] = 3) as H6.
     { apply lub_unique with (E := fun y => exists x, x ∈ [2, 3] /\ y = f x); auto. apply lub_f_2_3_is_3. }
     destruct l2 as [| h1 [| h2 t]]; simpl in H1; try lia. simpl in H5. simpl in H6.
     assert (t = []). { apply length_zero_iff_nil; lia. } subst. auto.
@@ -220,24 +220,24 @@ Theorem lower_sum_le_upper_sum : forall (a b : ℝ) (bf : bounded_function_R a b
 Proof.
   intros a b [f H0 H1] P. unfold lower_sum, upper_sum, proj1_sig; simpl.
   destruct (partition_sublist_elem_has_inf f a b P H1) as [l2 [H2 H3]]. destruct (partition_sublist_elem_has_sup f a b P H1) as [l3 [H4 H5]].
-  destruct P as [l1]; simpl in *. assert (H6 : forall i, (i < length l1 - 1)%nat -> nth i l2 0 <= nth i l3 0).
+  destruct P as [l1]; simpl in *. assert (H6 : forall i, (i < length l1 - 1)%nat -> l2.[i] <= l3.[i]).
   {
     intros i H6. specialize (H3 i ltac:(lia)). specialize (H5 i ltac:(lia)).
-    destruct H3 as [H3 _], H5 as [H5 _]. unfold is_lower_bound in H3. specialize (H3 (f (nth i l1 0))). specialize (H5 (f(nth i l1 0))).
+    destruct H3 as [H3 _], H5 as [H5 _]. unfold is_lower_bound in H3. specialize (H3 (f (l1.[i]))). specialize (H5 (f(l1.[i]))).
     pose proof Sorted_Rlt_nth l1 i (i+1) 0 ltac:(auto) ltac:(lia) as H7.
-    assert (f (nth i l1 0) ∈ (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth i l1 0 <= x0 <= nth (i + 1) l1 0) ∧ y = f x)) as H8.
-    { exists (nth i l1 0). split. unfold Ensembles.In. lra. auto. }
+    assert (f (l1.[i]) ∈ (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, l1.[i] <= x0 <= l1.[(i + 1)]) ∧ y = f x)) as H8.
+    { exists (l1.[i]). split. unfold Ensembles.In. lra. auto. }
     specialize (H3 H8). specialize (H5 H8). lra. 
   }
   replace (length l3) with (length l2) by lia. apply sum_f_congruence_le; try lia. intros k H7.
   assert (length l2 = 0 \/ length l2 > 0)%nat as [H8 | H8] by lia.
   - rewrite length_zero_iff_nil in H8. rewrite H8 in H2. simpl in H2. rewrite <- H2 in H4.
     apply length_zero_iff_nil in H4. subst. replace k with 0%nat. 2 : { simpl in H7. lia. } lra.
-  - specialize (H6 k ltac:(lia)). assert (forall i, (i < length l1 - 1)%nat -> nth i l1 0 < nth (i+1) l1 0) as H9.
+  - specialize (H6 k ltac:(lia)). assert (forall i, (i < length l1 - 1)%nat -> l1.[i] < l1.[(i+1)]) as H9.
     { intros i H9. apply Sorted_Rlt_nth; auto; lia. } specialize (H9 k ltac:(lia)). nra.
 Qed.
 
-Lemma insert_Parition_R_lower_sum : forall (a b r : ℝ) (bf : bounded_function_R a b) (P Q : partition a b),
+Lemma insert_Partition_R_lower_sum : forall (a b r : ℝ) (bf : bounded_function_R a b) (P Q : partition a b),
   let l1 := P.(points a b) in
   let l2 := Q.(points a b) in
   ~List.In r l1 -> l2 = insert_Sorted_Rlt r l1 -> L(bf, P) <= L(bf, Q).
@@ -251,111 +251,111 @@ Proof.
   assert (H15 : length l2 = S (length l1)). { rewrite H8. apply insert_Sorted_Rlt_length. } replace (points a b Q) with l2 in * by auto.
   assert (i = 1%nat \/ i > 1)%nat as [H16 | H16] by lia.
   - assert (length l3 = 1 \/ length l3 > 1)%nat as [H17 | H17] by lia.
-    -- rewrite H17. replace (length l4 - 1)%nat with 1%nat by lia. repeat sum_simpl. assert (nth 0 l3 0 <= nth 0 l4 0) as H18.
+    -- rewrite H17. replace (length l4 - 1)%nat with 1%nat by lia. repeat sum_simpl. assert (l3.[0] <= l4.[0]) as H18.
        {
          specialize (H3 0%nat ltac:(lia)). specialize (H5 0%nat ltac:(lia)).
-         apply glb_subset with (E1 := (fun y => exists x, x ∈ [nth 0 l2 0, nth 1 l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth 0 l1 0, nth 1 l1 0] /\ y = f x)); auto. 
+         apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[0], l2.[1]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto. 
          intros x H18. rewrite H12 in H18; try lia. rewrite <- H13 with (k := 1%nat); try lia. destruct H18 as [x2 [H18 H19]]. exists x2. split; auto. unfold In in *.
          assert (Sorted Rlt l2). { rewrite H8. apply insert_Sorted_Rlt_sorted; auto. unfold l1. pose proof partition_spec a b P; tauto. }
          pose proof Sorted_Rlt_nth l2 1 2  0ltac:(auto) ltac:(lia). simpl. lra.
        }
-       assert (nth 0 l3 0 <= nth 1 l4 0) as H19.
+       assert (l3.[0] <= l4.[1]) as H19.
        {
          specialize (H3 0%nat ltac:(lia)). specialize (H5 1%nat ltac:(simpl in *; lia)).
-         apply glb_subset with (E1 := (fun y => exists x, x ∈ [nth 1 l2 0, nth 2 l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth 0 l1 0, nth 1 l1 0] /\ y = f x)); auto.
+         apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[1], l2.[2]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
          intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. replace 2%nat with (1 + 1)%nat in H19 by lia. rewrite H13 in H19; try lia. rewrite <- H12; try lia.
          assert (Sorted Rlt l2). { rewrite H8. apply insert_Sorted_Rlt_sorted; auto. unfold l1. pose proof partition_spec a b P; tauto. }
          pose proof Sorted_Rlt_nth l2 0 1 0 ltac:(auto) ltac:(lia). simpl. lra.
        }
-       assert (nth 0 l1 0 < nth 1 l2 0) as H20.
+       assert (l1.[0] < l2.[1]) as H20.
        {
           assert (Sorted Rlt l1) as H20. { pose proof partition_spec a b P; tauto. } assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. }
           pose proof Sorted_Rlt_nth l1 0 1 0 ltac:(auto) ltac:(lia) as H22. pose proof Sorted_Rlt_nth l2 0 1 0 ltac:(auto) ltac:(lia) as H23. rewrite H12 in H23; try lia. lra.
        }
-       replace (nth 2 l2 0) with (nth 1 l1 0). 2 : { replace 2%nat with (1 + 1)%nat by lia. rewrite H13; try lia. reflexivity. }
-       replace (nth 0 l2 0) with (nth 0 l1 0). 2 : { rewrite H12; try lia. reflexivity. } assert (H21 : nth 0 l1 0 < nth 1 l1 0).
+       replace (l2.[2]) with (l1.[1]). 2 : { replace 2%nat with (1 + 1)%nat by lia. rewrite H13; try lia. reflexivity. }
+       replace (l2.[0]) with (l1.[0]). 2 : { rewrite H12; try lia. reflexivity. } assert (H21 : l1.[0] < l1.[1]).
        { assert (Sorted Rlt l1) as H21. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 0 1 0 ltac:(auto) ltac:(lia) as H22. lra. }
-       assert (nth 1 l2 0 < nth 1 l1 0) as H22.
+       assert (l2.[1] < l1.[1]) as H22.
        {
           assert (Sorted Rlt l1) as H22. { pose proof partition_spec a b P; tauto. } assert (Sorted Rlt l2) as H23. { pose proof partition_spec a b Q; tauto. }
           pose proof Sorted_Rlt_nth l2 1 (1+1) 0 ltac:(auto) ltac:(lia) as H24. rewrite H13 in H24; try lia. lra.
        } nra.
     --  rewrite sum_f_Si with (n := (length l4 - 1)%nat); try lia. rewrite sum_f_Si with (n := (length l4 - 1)%nat); try lia.
         rewrite H16 in H11. simpl. rewrite sum_f_Si; try lia. simpl. 
-        assert (∑ 1 (length l3 - 1) (λ i0 : ℕ, nth i0 l3 0 * (nth (i0 + 1) l1 0 - nth i0 l1 0)) <= ∑ 2 (length l4 - 1) (λ i0 : ℕ, nth i0 l4 0 * (nth (i0 + 1) l2 0 - nth i0 l2 0))) as H18.
+        assert (∑ 1 (length l3 - 1) (λ i0 : ℕ, l3.[i0] * (l1.[(i0 + 1)] - l1.[i0])) <= ∑ 2 (length l4 - 1) (λ i0 : ℕ, l4.[i0] * (l2.[(i0 + 1)] - l2.[i0]))) as H18.
         {
           rewrite sum_f_reindex' with (s := 1%nat). simpl. replace (length l3 - 1 + 1)%nat with (length l4 - 1)%nat by lia.
           apply sum_f_congruence_le; try lia. intros k H18. replace (k - 1 + 1)%nat with k by lia. 
-          assert (nth (k-1) l3 0 <= nth k l4 0) as H19.
+          assert (l3.[(k-1)] <= l4.[k]) as H19.
           {
             specialize (H3 (k-1)%nat ltac:(lia)). specialize (H5 k ltac:(lia)). replace (k-1+1)%nat with k in H3 by lia.
-            apply glb_subset with (E1 := (fun y => exists x, x ∈ [nth k l2 0, nth (k+1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (k-1) l1 0, nth k l1 0] /\ y = f x)); auto.
+            apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[k], l2.[(k+1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(k-1)], l1.[k]] /\ y = f x)); auto.
             intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite H13 in H19; try lia.
             assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } rewrite <- H13; try lia. replace (k - 1 + 1)%nat with k by lia. lra.
           }
-          rewrite H13; try lia. replace (nth k l2 0) with (nth (k-1) l1 0). 2 : { replace k with (k - 1 + 1)%nat at 2 by lia. rewrite H13; try lia. reflexivity. }
+          rewrite H13; try lia. replace (l2.[k]) with (l1.[(k-1)]). 2 : { replace k with (k - 1 + 1)%nat at 2 by lia. rewrite H13; try lia. reflexivity. }
           assert (Sorted Rlt l1) as H20. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 (k-1) k 0 ltac:(auto) ltac:(lia) as H21. nra.
         } 
-        assert (nth 0 l3 0 * (nth 1 l1 0 - nth 0 l1 0) <= nth 1 l4 0 * (nth 2 l2 0 - nth 1 l2 0) + nth 0 l4 0 * (nth 1 l2 0 - nth 0 l2 0)) as H19.
+        assert (l3.[0] * (l1.[1] - l1.[0]) <= l4.[1] * (l2.[2] - l2.[1]) + l4.[0] * (l2.[1] - l2.[0])) as H19.
         {
-          assert (nth 0 l1 0 < nth 1 l2 0 < nth 1 l1 0) as H19.
+          assert (l1.[0] < l2.[1] < l1.[1]) as H19.
           {
             assert (Sorted Rlt l1) as H19. { pose proof partition_spec a b P; tauto. } assert (Sorted Rlt l2) as H20. { pose proof partition_spec a b Q; tauto. }
             pose proof Sorted_Rlt_nth l1 0 1 0 ltac:(auto) ltac:(lia) as H21. pose proof Sorted_Rlt_nth l1 1 2 0 ltac:(auto) ltac:(lia) as H22.
             pose proof Sorted_Rlt_nth l2 0 1 0 ltac:(auto) ltac:(lia) as H23. pose proof Sorted_Rlt_nth l2 1 2 0 ltac:(auto) ltac:(lia) as H24.
             rewrite H12 in H23; try lia. replace 2%nat with (1+1)%nat in H24 by lia. rewrite H13 in H24; try lia. lra.
           }
-          assert (nth 0 l3 0 <= nth 1 l4 0) as H20.
+          assert (l3.[0] <= l4.[1]) as H20.
           {
             specialize (H3 0%nat ltac:(lia)). specialize (H5 1%nat ltac:(lia)).
-            apply glb_subset with (E1 := (fun y => exists x, x ∈ [nth 1 l2 0, nth 2 l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth 0 l1 0, nth 1 l1 0] /\ y = f x)); auto.
+            apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[1], l2.[2]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
             intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *.  rewrite <- H13 with (k := 1%nat); try lia. simpl. lra.
           }
-          assert (nth 0 l3 0 <= nth 0 l4 0) as H21.
+          assert (l3.[0] <= l4.[0]) as H21.
           {
             specialize (H3 0%nat ltac:(lia)). specialize (H5 0%nat ltac:(lia)).
-            apply glb_subset with (E1 := (fun y => exists x, x ∈ [nth 0 l2 0, nth 1 l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth 0 l1 0, nth 1 l1 0] /\ y = f x)); auto.
+            apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[0], l2.[1]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
             intros x [x2 [H21 H22]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. lra.
           }
-          replace (nth 0 l2 0) with (nth 0 l1 0). 2 : { rewrite H12; try lia. reflexivity. } replace (nth 2 l2 0) with (nth 1 l1 0). 2 : { rewrite <- H13; try lia. reflexivity. } nra.
+          replace (l2.[0]) with (l1.[0]). 2 : { rewrite H12; try lia. reflexivity. } replace (l2.[2]) with (l1.[1]). 2 : { rewrite <- H13; try lia. reflexivity. } nra.
         } nra.
   - rewrite sum_f_split with (i := 0%nat) (j := (i-2)%nat) (n := (length l4 - 1)%nat); try lia. replace (S (i - 2)) with (i-1)%nat by lia.
     rewrite sum_f_Si with (i := (i-1)%nat); try lia. assert (S (i-1) = length l4 - 1 \/ S (i-1) < length l4 - 1)%nat as [H17 | H17] by lia.
     -- rewrite <- H17. rewrite sum_f_n_n. replace (S (i-1)) with i by lia. replace (i-1+1)%nat with i by lia. replace (length l3 - 1)%nat with (S (i-2))%nat by lia.
        rewrite sum_f_i_Sn_f; try lia. replace (S (i-2)) with (i-1)%nat by lia. 
-       assert (∑ 0 (i - 2) (λ i0 : ℕ, nth i0 l3 0 * (nth (i0 + 1) l1 0 - nth i0 l1 0)) <= ∑ 0 (i - 2) (λ i0 : ℕ, nth i0 l4 0 * (nth (i0 + 1) l2 0 - nth i0 l2 0))) as H18.
+       assert (∑ 0 (i - 2) (λ i0 : ℕ, l3.[i0] * (l1.[(i0 + 1)] - l1.[i0])) <= ∑ 0 (i - 2) (λ i0 : ℕ, l4.[i0] * (l2.[(i0 + 1)] - l2.[i0]))) as H18.
        {
         apply sum_f_congruence_le; try lia. intros k H18. rewrite H12; try lia. rewrite H12; try lia. specialize (H3 k ltac:(lia)). specialize (H5 k ltac:(lia)).
-        assert (nth k l3 0 <= nth k l4 0) as H19.
+        assert (l3.[k] <= l4.[k]) as H19.
         {
-          apply glb_subset with (E1 := (fun y => exists x, x ∈ [nth k l2 0, nth (k + 1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth k l1 0, nth (k + 1) l1 0] /\ y = f x)); auto.
+          apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[k], l2.[(k + 1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[k], l1.[(k + 1)]] /\ y = f x)); auto.
           intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite H12 in H19; try lia. rewrite H12 in H19; try lia. lra.
         } 
         assert (Sorted Rlt l1) as H20. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 k (k+1) 0 ltac:(auto) ltac:(lia) as H21. nra.
        }
        replace (i-1+1)%nat with i by lia.
-       assert (nth (i - 1) l3 0 * (nth i l1 0 - nth (i - 1) l1 0) <= (nth i l4 0 * (nth (i + 1) l2 0 - nth i l2 0) + nth (i - 1) l4 0 * (nth i l2 0 - nth (i - 1) l2 0))) as H19.
+       assert (l3.[(i - 1)] * (l1.[i] - l1.[(i - 1)]) <= (l4.[i] * (l2.[(i + 1)] - l2.[i]) + l4.[(i - 1)] * (l2.[i] - l2.[(i - 1)]))) as H19.
        {
-         assert (nth (i - 1) l3 0 <= nth i l4 0) as H19.
+         assert (l3.[(i - 1)] <= l4.[i]) as H19.
          {
             specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 i ltac:(lia)). replace (i-1+1)%nat with i in H3 by lia.
-            apply glb_subset with (E1 := (fun y => exists x, x ∈ [nth i l2 0, nth (i+1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (i-1) l1 0, nth i l1 0] /\ y = f x)); auto.
+            apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[i], l2.[(i+1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
             intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia. 
             assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H22. lra.
          }
-         assert (nth (i-1) l3 0 <= nth (i-1) l4 0) as H20.
+         assert (l3.[(i-1)] <= l4.[(i-1)]) as H20.
          {
           specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 (i-1)%nat ltac:(lia)). replace (i-1+1)%nat with i in H3, H5 by lia.
-          apply glb_subset with (E1 := (fun y => exists x, x ∈ [nth (i-1) l2 0, nth i l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (i-1) l1 0, nth i l1 0] /\ y = f x)); auto.
+          apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[(i-1)], l2.[i]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
           intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia. 
           assert (Sorted Rlt l2) as H22. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0  ltac:(auto) ltac:(lia) as H23. lra.
          }
-         assert (nth (i-1) l1 0 < nth i l2 0 < nth i l1 0) as H21.
+         assert (l1.[(i-1)] < l2.[i] < l1.[i]) as H21.
          {
            assert (Sorted Rlt l2) as H22. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0 ltac:(auto) ltac:(lia) as H24.
            pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H25. rewrite H13 in H24; try lia. rewrite <- H12; try lia. lra.
          }
-         replace (nth (i - 1) l2 0) with (nth (i-1) l1 0). 2 : { rewrite <- H12; try lia. reflexivity. } rewrite H13; try lia. nra.
+         replace (l2.[(i - 1)]) with (l1.[(i-1)]). 2 : { rewrite <- H12; try lia. reflexivity. } rewrite H13; try lia. nra.
        } nra.
     -- rewrite sum_f_split with (i := 0%nat)(j := (i-2)%nat) (n := (length l3 - 1)%nat); try lia.
        rewrite sum_f_Si with (i := S (i-2)); try lia. replace (S (S (i-2))) with i by lia.
@@ -364,46 +364,46 @@ Proof.
        rewrite sum_f_reindex with (s := 1%nat) (i := (i + 1)%nat); try lia. replace (i+1-1)%nat with i by lia.
        replace (length l4 - 1 - 1)%nat with (length l3 - 1)%nat by lia.
        replace (S (i-1)) with i by lia.
-       assert (nth (i - 1) l3 0 * (nth i l1 0 - nth (i - 1) l1 0) <= nth i l4 0 * (nth (i + 1) l2 0 - nth i l2 0) + nth (i - 1) l4 0 * (nth i l2 0 - nth (i - 1) l2 0)) as H18.
+       assert (l3.[(i - 1)] * (l1.[i] - l1.[(i - 1)]) <= l4.[i] * (l2.[(i + 1)] - l2.[i]) + l4.[(i - 1)] * (l2.[i] - l2.[(i - 1)])) as H18.
        {
-          assert (nth (i - 1) l3 0 <= nth i l4 0) as H18.
+          assert (l3.[(i - 1)] <= l4.[i]) as H18.
           {
             specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 i ltac:(lia)). replace (i-1+1)%nat with i in H3 by lia.
-            apply glb_subset with (E1 := (fun y => exists x, x ∈ [nth i l2 0, nth (i+1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (i-1) l1 0, nth i l1 0] /\ y = f x)); auto.
+            apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[i], l2.[(i+1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
             intros x [x2 [H18 H19]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
             assert (Sorted Rlt l2) as H20. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H21. lra.
           }
-          assert (nth (i-1) l3 0 <= nth (i-1) l4 0) as H19.
+          assert (l3.[(i-1)] <= l4.[(i-1)]) as H19.
           {
             specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 (i-1)%nat ltac:(lia)). replace (i-1+1)%nat with i in H3, H5 by lia.
-            apply glb_subset with (E1 := (fun y => exists x, x ∈ [nth (i-1) l2 0, nth i l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (i-1) l1 0, nth i l1 0] /\ y = f x)); auto.
+            apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[(i-1)], l2.[i]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
             intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
             assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0 ltac:(auto) ltac:(lia) as H22. lra.
           }
-          assert (nth (i-1) l1 0 < nth i l2 0 < nth i l1 0) as H21.
+          assert (l1.[(i-1)] < l2.[i] < l1.[i]) as H21.
           {
             assert (Sorted Rlt l2) as H22. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0 ltac:(auto) ltac:(lia) as H24.
             pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H25. rewrite H13 in H24; try lia. rewrite <- H12; try lia. lra.
           }
-          replace (nth (i - 1) l2 0) with (nth (i-1) l1 0). 2 : { rewrite <- H12; try lia. reflexivity. } rewrite H13; try lia. nra.
+          replace (l2.[(i - 1)]) with (l1.[(i-1)]). 2 : { rewrite <- H12; try lia. reflexivity. } rewrite H13; try lia. nra.
        }
-       assert (∑ 0 (i - 2) (λ i0 : ℕ, nth i0 l3 0 * (nth (i0 + 1) l1 0 - nth i0 l1 0)) <= ∑ 0 (i - 2) (λ i0 : ℕ, nth i0 l4 0 * (nth (i0 + 1) l2 0 - nth i0 l2 0))) as H19.
+       assert (∑ 0 (i - 2) (λ i0 : ℕ, l3.[i0] * (l1.[(i0 + 1)] - l1.[i0])) <= ∑ 0 (i - 2) (λ i0 : ℕ, l4.[i0] * (l2.[(i0 + 1)] - l2.[i0]))) as H19.
        {
           apply sum_f_congruence_le; try lia. intros k H19. rewrite H12; try lia. rewrite H12; try lia. specialize (H3 k ltac:(lia)). specialize (H5 k ltac:(lia)).
-          assert (nth k l3 0 <= nth k l4 0) as H20.
+          assert (l3.[k] <= l4.[k]) as H20.
           {
-            apply glb_subset with (E1 := (fun y => exists x, x ∈ [nth k l2 0, nth (k + 1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth k l1 0, nth (k + 1) l1 0] /\ y = f x)); auto.
+            apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[k], l2.[(k + 1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[k], l1.[(k + 1)]] /\ y = f x)); auto.
             intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *. rewrite H12 in H20; try lia. rewrite H12 in H20; try lia. lra.
           }
           assert (Sorted Rlt l1) as H21. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 k (k+1) 0 ltac:(auto) ltac:(lia) as H22. nra.
        }
-       assert (∑ i (length l3 - 1) (λ i0 : ℕ, nth i0 l3 0 * (nth (i0 + 1) l1 0 - nth i0 l1 0)) <= (∑ i (length l3 - 1) (λ x : ℕ, nth (x + 1) l4 0 * (nth (x + 1 + 1) l2 0 - nth (x + 1) l2 0)))) as H20.
+       assert (∑ i (length l3 - 1) (λ i0 : ℕ, l3.[i0] * (l1.[(i0 + 1)] - l1.[i0])) <= (∑ i (length l3 - 1) (λ x : ℕ, l4.[(x + 1)] * (l2.[(x + 1 + 1)] - l2.[(x + 1)])))) as H20.
        {
           apply sum_f_congruence_le; try lia. intros k H20. replace (k + 1 + 1)%nat with (k + 2)%nat by lia.
-          assert (nth k l3 0 <= nth (k+1) l4 0) as H21.
+          assert (l3.[k] <= l4.[(k+1)]) as H21.
           {
             specialize (H3 k ltac:(lia)). specialize (H5 (k+1)%nat ltac:(lia)). replace (k + 1 + 1)%nat with (k + 2)%nat in H5 by lia.
-            apply glb_subset with (E1 := (fun y => exists x, x ∈ [nth (k+1) l2 0, nth (k+2) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth k l1 0, nth (k+1) l1 0] /\ y = f x)); auto.
+            apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[(k+1)], l2.[(k+2)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[k], l1.[(k+1)]] /\ y = f x)); auto.
             intros x [x2 [H21 H22]]. exists x2. split; auto. unfold In in *. rewrite <- H13; try lia. replace (k + 2)%nat with (k + 1 + 1)%nat in H21 by lia.
             rewrite (H13 (k + 1)%nat) in H21; try lia. lra.
           }
@@ -413,7 +413,7 @@ Proof.
        lra.
 Qed.
 
-Lemma insert_Parition_R_upper_sum : forall (a b r : ℝ) (bf : bounded_function_R a b) (P Q : partition a b),
+Lemma insert_Partition_R_upper_sum : forall (a b r : ℝ) (bf : bounded_function_R a b) (P Q : partition a b),
   let l1 := P.(points a b) in
   let l2 := Q.(points a b) in
   ~List.In r l1 -> l2 = insert_Sorted_Rlt r l1 -> U(bf, P) >= U(bf, Q).
@@ -427,111 +427,111 @@ Proof.
   assert (H15 : length l2 = S (length l1)). { rewrite H8. apply insert_Sorted_Rlt_length. } replace (points a b Q) with l2 in * by auto.
   assert (i = 1%nat \/ i > 1)%nat as [H16 | H16] by lia.
   - assert (length l3 = 1 \/ length l3 > 1)%nat as [H17 | H17] by lia.
-    -- rewrite H17. replace (length l4 - 1)%nat with 1%nat by lia. repeat sum_simpl. assert (nth 0 l3 0 >= nth 0 l4 0) as H18.
+    -- rewrite H17. replace (length l4 - 1)%nat with 1%nat by lia. repeat sum_simpl. assert (l3.[0] >= l4.[0]) as H18.
        {
          specialize (H3 0%nat ltac:(lia)). specialize (H5 0%nat ltac:(lia)). apply Rle_ge.
-         apply lub_subset with (E1 := (fun y => exists x, x ∈ [nth 0 l2 0, nth 1 l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth 0 l1 0, nth 1 l1 0] /\ y = f x)); auto.
+         apply lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[0], l2.[1]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
          intros x H18. rewrite H12 in H18; try lia. rewrite <- H13 with (k := 1%nat); try lia. destruct H18 as [x2 [H18 H19]]. exists x2. split; auto. unfold In in *.
          assert (Sorted Rlt l2). { rewrite H8. apply insert_Sorted_Rlt_sorted; auto. unfold l1. pose proof partition_spec a b P; tauto. }
          pose proof Sorted_Rlt_nth l2 1 2 0 ltac:(auto) ltac:(lia). simpl. lra.
        }
-       assert (nth 0 l3 0 >= nth 1 l4 0) as H19.
+       assert (l3.[0] >= l4.[1]) as H19.
        {
          specialize (H3 0%nat ltac:(lia)). specialize (H5 1%nat ltac:(simpl in *; lia)). 
-         apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth 1 l2 0, nth 2 l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth 0 l1 0, nth 1 l1 0] /\ y = f x)); auto.
+         apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[1], l2.[2]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
          intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. replace 2%nat with (1 + 1)%nat in H19 by lia. rewrite H13 in H19; try lia. rewrite <- H12; try lia.
          assert (Sorted Rlt l2). { rewrite H8. apply insert_Sorted_Rlt_sorted; auto. unfold l1. pose proof partition_spec a b P; tauto. }
          pose proof Sorted_Rlt_nth l2 0 1 0 ltac:(auto) ltac:(lia). simpl. lra.
        }
-       assert (nth 0 l1 0 < nth 1 l2 0) as H20.
+       assert (l1.[0] < l2.[1]) as H20.
        {
          assert (Sorted Rlt l1) as H20. { pose proof partition_spec a b P; tauto. } assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. }
          pose proof Sorted_Rlt_nth l1 0 1 0 ltac:(auto) ltac:(lia) as H22. pose proof Sorted_Rlt_nth l2 0 1 0 ltac:(auto) ltac:(lia) as H23. rewrite H12 in H23; try lia. lra.
        }
-       replace (nth 2 l2 0) with (nth 1 l1 0). 2 : { replace 2%nat with (1 + 1)%nat by lia. rewrite H13; try lia. reflexivity. }
-       replace (nth 0 l2 0) with (nth 0 l1 0). 2 : { rewrite H12; try lia. reflexivity. } assert (H21 : nth 0 l1 0 < nth 1 l1 0).
+       replace (l2.[2]) with (l1.[1]). 2 : { replace 2%nat with (1 + 1)%nat by lia. rewrite H13; try lia. reflexivity. }
+       replace (l2.[0]) with (l1.[0]). 2 : { rewrite H12; try lia. reflexivity. } assert (H21 : l1.[0] < l1.[1]).
        { assert (Sorted Rlt l1) as H21. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 0 1 0 ltac:(auto) ltac:(lia) as H22. lra. }
-       assert (nth 1 l2 0 < nth 1 l1 0) as H22.
+       assert (l2.[1] < l1.[1]) as H22.
        {
          assert (Sorted Rlt l1) as H22. { pose proof partition_spec a b P; tauto. } assert (Sorted Rlt l2) as H23. { pose proof partition_spec a b Q; tauto. }
          pose proof Sorted_Rlt_nth l2 1 (1+1) 0 ltac:(auto) ltac:(lia) as H24. rewrite H13 in H24; try lia. lra.
        } nra.
     -- rewrite sum_f_Si with (n := (length l4 - 1)%nat); try lia. rewrite sum_f_Si with (n := (length l4 - 1)%nat); try lia.
        rewrite H16 in H11. simpl. rewrite sum_f_Si; try lia. simpl.
-       assert (∑ 1 (length l3 - 1) (λ i0 : ℕ, nth i0 l3 0 * (nth (i0 + 1) l1 0 - nth i0 l1 0)) >= ∑ 2 (length l4 - 1) (λ i0 : ℕ, nth i0 l4 0 * (nth (i0 + 1) l2 0 - nth i0 l2 0))) as H18.
+       assert (∑ 1 (length l3 - 1) (λ i0 : ℕ, l3.[i0] * (l1.[(i0 + 1)] - l1.[i0])) >= ∑ 2 (length l4 - 1) (λ i0 : ℕ, l4.[i0] * (l2.[(i0 + 1)] - l2.[i0]))) as H18.
        {
          rewrite sum_f_reindex' with (s := 1%nat). simpl. replace (length l3 - 1 + 1)%nat with (length l4 - 1)%nat by lia. apply Rle_ge.
          apply sum_f_congruence_le; try lia. intros k H18. replace (k - 1 + 1)%nat with k by lia.
-         assert (nth (k-1) l3 0 >= nth k l4 0) as H19.
+         assert (l3.[(k-1)] >= l4.[k]) as H19.
          {
            specialize (H3 (k-1)%nat ltac:(lia)). specialize (H5 k ltac:(lia)). replace (k-1+1)%nat with k in H3 by lia.
-           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth k l2 0, nth (k+1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (k-1) l1 0, nth k l1 0] /\ y = f x)); auto.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[k], l2.[(k+1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(k-1)], l1.[k]] /\ y = f x)); auto.
            intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite H13 in H19; try lia.
            assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } rewrite <- H13; try lia. replace (k - 1 + 1)%nat with k by lia. lra.
          }
-         rewrite H13; try lia. replace (nth k l2 0) with (nth (k-1) l1 0). 2 : { replace k with (k - 1 + 1)%nat at 2 by lia. rewrite H13; try lia. reflexivity. }
+         rewrite H13; try lia. replace (l2.[k]) with (l1.[(k-1)]). 2 : { replace k with (k - 1 + 1)%nat at 2 by lia. rewrite H13; try lia. reflexivity. }
          assert (Sorted Rlt l1) as H20. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 (k-1) k 0 ltac:(auto) ltac:(lia) as H21. nra.
        }
-       assert (nth 0 l3 0 * (nth 1 l1 0 - nth 0 l1 0) >= nth 1 l4 0 * (nth 2 l2 0 - nth 1 l2 0) + nth 0 l4 0 * (nth 1 l2 0 - nth 0 l2 0)) as H19.
+       assert (l3.[0] * (l1.[1] - l1.[0]) >= l4.[1] * (l2.[2] - l2.[1]) + l4.[0] * (l2.[1] - l2.[0])) as H19.
        {
-         assert (nth 0 l1 0 < nth 1 l2 0 < nth 1 l1 0) as H19.
+         assert (l1.[0] < l2.[1] < l1.[1]) as H19.
          {
            assert (Sorted Rlt l1) as H19. { pose proof partition_spec a b P; tauto. } assert (Sorted Rlt l2) as H20. { pose proof partition_spec a b Q; tauto. }
            pose proof Sorted_Rlt_nth l1 0 1 0 ltac:(auto) ltac:(lia) as H21. pose proof Sorted_Rlt_nth l1 1 2 0 ltac:(auto) ltac:(lia) as H22.
            pose proof Sorted_Rlt_nth l2 0 1 0 ltac:(auto) ltac:(lia) as H23. pose proof Sorted_Rlt_nth l2 1 2 0 ltac:(auto) ltac:(lia) as H24.
            rewrite H12 in H23; try lia. replace 2%nat with (1+1)%nat in H24 by lia. rewrite H13 in H24; try lia. lra.
          }
-         assert (nth 0 l3 0 >= nth 1 l4 0) as H20.
+         assert (l3.[0] >= l4.[1]) as H20.
          {
            specialize (H3 0%nat ltac:(lia)). specialize (H5 1%nat ltac:(lia)).
-           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth 1 l2 0, nth 2 l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth 0 l1 0, nth 1 l1 0] /\ y = f x)); auto.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[1], l2.[2]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
            intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *.  rewrite <- H13 with (k := 1%nat); try lia. simpl. lra.
          }
-         assert (nth 0 l3 0 >= nth 0 l4 0) as H21.
+         assert (l3.[0] >= l4.[0]) as H21.
          {
            specialize (H3 0%nat ltac:(lia)). specialize (H5 0%nat ltac:(lia)).
-           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth 0 l2 0, nth 1 l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth 0 l1 0, nth 1 l1 0] /\ y = f x)); auto.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[0], l2.[1]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
            intros x [x2 [H21 H22]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. lra.
          }
-         replace (nth 0 l2 0) with (nth 0 l1 0). 2 : { rewrite H12; try lia. reflexivity. } replace (nth 2 l2 0) with (nth 1 l1 0). 2 : { rewrite <- H13; try lia. reflexivity. } nra.
+         replace (l2.[0]) with (l1.[0]). 2 : { rewrite H12; try lia. reflexivity. } replace (l2.[2]) with (l1.[1]). 2 : { rewrite <- H13; try lia. reflexivity. } nra.
        } nra.
   - rewrite sum_f_split with (i := 0%nat) (j := (i-2)%nat) (n := (length l4 - 1)%nat); try lia. replace (S (i - 2)) with (i-1)%nat by lia.
     rewrite sum_f_Si with (i := (i-1)%nat); try lia. assert (S (i-1) = length l4 - 1 \/ S (i-1) < length l4 - 1)%nat as [H17 | H17] by lia.
     -- rewrite <- H17. rewrite sum_f_n_n. replace (S (i-1)) with i by lia. replace (i-1+1)%nat with i by lia. replace (length l3 - 1)%nat with (S (i-2))%nat by lia.
        rewrite sum_f_i_Sn_f; try lia. replace (S (i-2)) with (i-1)%nat by lia.
-       assert (∑ 0 (i - 2) (λ i0 : ℕ, nth i0 l3 0 * (nth (i0 + 1) l1 0 - nth i0 l1 0)) >= ∑ 0 (i - 2) (λ i0 : ℕ, nth i0 l4 0 * (nth (i0 + 1) l2 0 - nth i0 l2 0))) as H18.
+       assert (∑ 0 (i - 2) (λ i0 : ℕ, l3.[i0] * (l1.[(i0 + 1)] - l1.[i0])) >= ∑ 0 (i - 2) (λ i0 : ℕ, l4.[i0] * (l2.[(i0 + 1)] - l2.[i0]))) as H18.
        {
         apply Rle_ge, sum_f_congruence_le; try lia. intros k H18. rewrite H12; try lia. rewrite H12; try lia. specialize (H3 k ltac:(lia)). specialize (H5 k ltac:(lia)).
-        assert (nth k l3 0 >= nth k l4 0) as H19.
+        assert (l3.[k] >= l4.[k]) as H19.
         {
-          apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth k l2 0, nth (k + 1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth k l1 0, nth (k + 1) l1 0] /\ y = f x)); auto.
+          apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[k], l2.[(k + 1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[k], l1.[(k + 1)]] /\ y = f x)); auto.
           intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite H12 in H19; try lia. rewrite H12 in H19; try lia. lra.
         }
         assert (Sorted Rlt l1) as H20. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 k (k+1) 0 ltac:(auto) ltac:(lia) as H21. nra.
        }
        replace (i-1+1)%nat with i by lia.
-       assert (nth (i - 1) l3 0 * (nth i l1 0 - nth (i - 1) l1 0) >= (nth i l4 0 * (nth (i + 1) l2 0 - nth i l2 0) + nth (i - 1) l4 0 * (nth i l2 0 - nth (i - 1) l2 0))) as H19.
+       assert (l3.[(i - 1)] * (l1.[i] - l1.[(i - 1)]) >= (l4.[i] * (l2.[(i + 1)] - l2.[i]) + l4.[(i - 1)] * (l2.[i] - l2.[(i - 1)]))) as H19.
        {
-         assert (nth (i - 1) l3 0 >= nth i l4 0) as H19.
+         assert (l3.[(i - 1)] >= l4.[i]) as H19.
          {
            specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 i ltac:(lia)). replace (i-1+1)%nat with i in H3 by lia.
-           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth i l2 0, nth (i+1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (i-1) l1 0, nth i l1 0] /\ y = f x)); auto.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[i], l2.[(i+1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
            intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
            assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H22. lra.
          }
-         assert (nth (i-1) l3 0 >= nth (i-1) l4 0) as H20.
+         assert (l3.[(i-1)] >= l4.[(i-1)]) as H20.
          {
           specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 (i-1)%nat ltac:(lia)). replace (i-1+1)%nat with i in H3, H5 by lia.
-          apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth (i-1) l2 0, nth i l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (i-1) l1 0, nth i l1 0] /\ y = f x)); auto.
+          apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[(i-1)], l2.[i]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
           intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
           assert (Sorted Rlt l2) as H22. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0  ltac:(auto) ltac:(lia) as H23. lra.
          }
-         assert (nth (i-1) l1 0 < nth i l2 0 < nth i l1 0) as H21.
+         assert (l1.[(i-1)] < l2.[i] < l1.[i]) as H21.
          {
            assert (Sorted Rlt l2) as H22. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0 ltac:(auto) ltac:(lia) as H24.
            pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H25. rewrite H13 in H24; try lia. rewrite <- H12; try lia. lra.
          }
-         replace (nth (i - 1) l2 0) with (nth (i-1) l1 0). 2 : { rewrite <- H12; try lia. reflexivity. } rewrite H13; try lia. nra.
+         replace (l2.[(i - 1)]) with (l1.[(i-1)]). 2 : { rewrite <- H12; try lia. reflexivity. } rewrite H13; try lia. nra.
        } nra.
     -- rewrite sum_f_split with (i := 0%nat)(j := (i-2)%nat) (n := (length l3 - 1)%nat); try lia.
        rewrite sum_f_Si with (i := S (i-2)); try lia. replace (S (S (i-2))) with i by lia.
@@ -540,46 +540,46 @@ Proof.
        rewrite sum_f_reindex with (s := 1%nat) (i := (i + 1)%nat); try lia. replace (i+1-1)%nat with i by lia.
        replace (length l4 - 1 - 1)%nat with (length l3 - 1)%nat by lia.
        replace (S (i-1)) with i by lia.
-       assert (nth (i - 1) l3 0 * (nth i l1 0 - nth (i - 1) l1 0) >= nth i l4 0 * (nth (i + 1) l2 0 - nth i l2 0) + nth (i - 1) l4 0 * (nth i l2 0 - nth (i - 1) l2 0)) as H18.
+       assert (l3.[(i - 1)] * (l1.[i] - l1.[(i - 1)]) >= l4.[i] * (l2.[(i + 1)] - l2.[i]) + l4.[(i - 1)] * (l2.[i] - l2.[(i - 1)])) as H18.
        {
-         assert (nth (i - 1) l3 0 >= nth i l4 0) as H18.
+         assert (l3.[(i - 1)] >= l4.[i]) as H18.
          {
            specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 i ltac:(lia)). replace (i-1+1)%nat with i in H3 by lia.
-           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth i l2 0, nth (i+1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (i-1) l1 0, nth i l1 0] /\ y = f x)); auto.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[i], l2.[(i+1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
            intros x [x2 [H18 H19]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
            assert (Sorted Rlt l2) as H20. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H21. lra.
          }
-         assert (nth (i-1) l3 0 >= nth (i-1) l4 0) as H19.
+         assert (l3.[(i-1)] >= l4.[(i-1)]) as H19.
          {
            specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 (i-1)%nat ltac:(lia)). replace (i-1+1)%nat with i in H3, H5 by lia.
-           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth (i-1) l2 0, nth i l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth (i-1) l1 0, nth i l1 0] /\ y = f x)); auto.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[(i-1)], l2.[i]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
            intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
            assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0 ltac:(auto) ltac:(lia) as H22. lra.
          }
-         assert (nth (i-1) l1 0 < nth i l2 0 < nth i l1 0) as H21.
+         assert (l1.[(i-1)] < l2.[i] < l1.[i]) as H21.
          {
            assert (Sorted Rlt l2) as H22. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0 ltac:(auto) ltac:(lia) as H24.
            pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H25. rewrite H13 in H24; try lia. rewrite <- H12; try lia. lra.
          }
-         replace (nth (i - 1) l2 0) with (nth (i-1) l1 0). 2 : { rewrite <- H12; try lia. reflexivity. } rewrite H13; try lia. nra.
+         replace (l2.[(i - 1)]) with (l1.[(i-1)]). 2 : { rewrite <- H12; try lia. reflexivity. } rewrite H13; try lia. nra.
        }
-       assert (∑ 0 (i - 2) (λ i0 : ℕ, nth i0 l3 0 * (nth (i0 + 1) l1 0 - nth i0 l1 0)) >= ∑ 0 (i - 2) (λ i0 : ℕ, nth i0 l4 0 * (nth (i0 + 1) l2 0 - nth i0 l2 0))) as H19.
+       assert (∑ 0 (i - 2) (λ i0 : ℕ, l3.[i0] * (l1.[(i0 + 1)] - l1.[i0])) >= ∑ 0 (i - 2) (λ i0 : ℕ, l4.[i0] * (l2.[(i0 + 1)] - l2.[i0]))) as H19.
        {
          apply Rle_ge, sum_f_congruence_le; try lia. intros k H19. rewrite H12; try lia. rewrite H12; try lia. specialize (H3 k ltac:(lia)). specialize (H5 k ltac:(lia)).
-         assert (nth k l3 0 >= nth k l4 0) as H20.
+         assert (l3.[k] >= l4.[k]) as H20.
          {
-           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth k l2 0, nth (k + 1) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth k l1 0, nth (k + 1) l1 0] /\ y = f x)); auto.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[k], l2.[(k + 1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[k], l1.[(k + 1)]] /\ y = f x)); auto.
            intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *. rewrite H12 in H20; try lia. rewrite H12 in H20; try lia. lra.
          }
          assert (Sorted Rlt l1) as H21. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 k (k+1) 0 ltac:(auto) ltac:(lia) as H22. nra.
        }
-       assert (∑ i (length l3 - 1) (λ i0 : ℕ, nth i0 l3 0 * (nth (i0 + 1) l1 0 - nth i0 l1 0)) >= (∑ i (length l3 - 1) (λ x : ℕ, nth (x + 1) l4 0 * (nth (x + 1 + 1) l2 0 - nth (x + 1) l2 0)))) as H20.
+       assert (∑ i (length l3 - 1) (λ i0 : ℕ, l3.[i0] * (l1.[(i0 + 1)] - l1.[i0])) >= (∑ i (length l3 - 1) (λ x : ℕ, l4.[(x + 1)] * (l2.[(x + 1 + 1)] - l2.[(x + 1)])))) as H20.
        {
          apply Rle_ge, sum_f_congruence_le; try lia. intros k H20. replace (k + 1 + 1)%nat with (k + 2)%nat by lia.
-         assert (nth k l3 0 >= nth (k+1) l4 0) as H21.
+         assert (l3.[k] >= l4.[(k+1)]) as H21.
          {
            specialize (H3 k ltac:(lia)). specialize (H5 (k+1)%nat ltac:(lia)). replace (k + 1 + 1)%nat with (k + 2)%nat in H5 by lia.
-           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [nth (k+1) l2 0, nth (k+2) l2 0] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [nth k l1 0, nth (k+1) l1 0] /\ y = f x)); auto.
+           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[(k+1)], l2.[(k+2)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[k], l1.[(k+1)]] /\ y = f x)); auto.
            intros x [x2 [H21 H22]]. exists x2. split; auto. unfold In in *. rewrite <- H13; try lia. replace (k + 2)%nat with (k + 1 + 1)%nat in H21 by lia.
            rewrite (H13 (k + 1)%nat) in H21; try lia. lra.
          }
@@ -612,7 +612,7 @@ Proof.
       intros r H12 H13. apply (H3 r). right. auto. pose proof add_points_Dup (points a b P') t r H12 H13 as H15. exfalso. apply H15.
       rewrite H11. apply (Sorted_Rlt_NoDup (points a b Q)). destruct Q as [l2]; auto.
     }
-    specialize (IH H10 H11 H12). assert (L(f, P) <= L(f, P')). { apply insert_Parition_R_lower_sum with (r := h). apply H3. left. auto. auto. }
+    specialize (IH H10 H11 H12). assert (L(f, P) <= L(f, P')). { apply insert_Partition_R_lower_sum with (r := h). apply H3. left. auto. auto. }
     lra. 
 Qed.
 
@@ -639,7 +639,7 @@ Proof.
       intros r H12 H13. apply (H3 r). right. auto. pose proof add_points_Dup (points a b P') t r H12 H13 as H15. exfalso. apply H15.
       rewrite H11. apply (Sorted_Rlt_NoDup (points a b Q)). destruct Q as [l2]; auto.
     }
-    specialize (IH H10 H11 H12). assert (U(f, P) >= U(f, P')) as H13. { apply insert_Parition_R_upper_sum with (r := h). apply H3. left. auto. auto. }
+    specialize (IH H10 H11 H12). assert (U(f, P) >= U(f, P')) as H13. { apply insert_Partition_R_upper_sum with (r := h). apply H3. left. auto. auto. }
     lra.
 Qed.
 
@@ -920,51 +920,51 @@ Proof.
   exists P. unfold upper_sum, lower_sum, proj1_sig; simpl.
   destruct (partition_sublist_elem_has_inf f a b P H3) as [l1 [H8 H9]]; 
   destruct (partition_sublist_elem_has_sup f a b P H3) as [l2 [H10 H11]].
-  assert (H12 : forall i, (i < length (points a b P) - 1)%nat -> (nth i l1 0 ∈ (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth i (points a b P) 0 <= x0 <= nth (i + 1) (points a b P) 0) ∧ y = f x))).
+  assert (H12 : forall i, (i < length (points a b P) - 1)%nat -> (l1.[i] ∈ (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, (points a b P).[i] <= x0 <= (points a b P).[(i + 1)]) ∧ y = f x))).
   { 
-    intros i H12. assert (H13 : nth i (points a b P) 0 < nth (i + 1) (points a b P) 0). { apply Sorted_Rlt_nth; try lia. destruct P; auto. }
-    assert (H14 : continuous_on f [nth i (points a b P) 0, nth (i + 1) (points a b P) 0]).
+    intros i H12. assert (H13 : (points a b P).[i] < (points a b P).[(i + 1)]). { apply Sorted_Rlt_nth; try lia. destruct P; auto. }
+    assert (H14 : continuous_on f [(points a b P).[i], (points a b P).[(i + 1)]]).
     { apply continuous_on_subset with (A2 := [a, b]). intros x H14. unfold In in *. destruct P as [l]; simpl in *.
-      assert (H15 : List.In (nth i l 0) l). { apply nth_In; lia. }
-      assert (H16 : List.In (nth (i + 1) l 0) l). { apply nth_In; lia. }
-      specialize (partition_P5 (nth i l 0) H15) as H17. specialize (partition_P5 (nth (i + 1) l 0) H16) as H18. lra. auto.
+      assert (H15 : List.In (l.[i]) l). { apply nth_In; lia. }
+      assert (H16 : List.In (l.[(i + 1)]) l). { apply nth_In; lia. }
+      specialize (partition_P5 (l.[i]) H15) as H17. specialize (partition_P5 (l.[(i + 1)]) H16) as H18. lra. auto.
     }
-    pose proof continuous_function_attains_glb_on_interval f (nth i (points a b P) 0) (nth (i + 1) (points a b P) 0) H13 H14 as [x [H15 H16]].
-    specialize (H9 i ltac:(lia)). pose proof glb_unique (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth i (points a b P) 0 <= x0 <= nth (i + 1) (points a b P) 0) ∧ y = f x) (nth i l1 0) (f x) H9 H16 as H17.
+    pose proof continuous_function_attains_glb_on_interval f ((points a b P).[i]) ((points a b P).[(i + 1)]) H13 H14 as [x [H15 H16]].
+    specialize (H9 i ltac:(lia)). pose proof glb_unique (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, (points a b P).[i] <= x0 <= (points a b P).[(i + 1)]) ∧ y = f x) (l1.[i]) (f x) H9 H16 as H17.
     rewrite H17. exists x. split; auto.
   }
-  assert (H13 : forall i, (i < length (points a b P) - 1)%nat -> (nth i l2 0 ∈ (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth i (points a b P) 0 <= x0 <= nth (i + 1) (points a b P) 0) ∧ y = f x))).
+  assert (H13 : forall i, (i < length (points a b P) - 1)%nat -> (l2.[i] ∈ (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, (points a b P).[i] <= x0 <= (points a b P).[(i + 1)]) ∧ y = f x))).
   { 
-    intros i H13. assert (H14 : nth i (points a b P) 0 < nth (i + 1) (points a b P) 0). { apply Sorted_Rlt_nth; try lia. destruct P; auto. }
-    assert (H15 : continuous_on f [nth i (points a b P) 0, nth (i + 1) (points a b P) 0]).
+    intros i H13. assert (H14 : (points a b P).[i] < (points a b P).[(i + 1)]). { apply Sorted_Rlt_nth; try lia. destruct P; auto. }
+    assert (H15 : continuous_on f [(points a b P).[i], (points a b P).[(i + 1)]]).
     { apply continuous_on_subset with (A2 := [a, b]). intros x H15. unfold In in *. destruct P as [l]; simpl in *.
-      assert (H16 : List.In (nth i l 0) l). { apply nth_In; lia. }
-      assert (H17 : List.In (nth (i + 1) l 0) l). { apply nth_In; lia. }
-      specialize (partition_P5 (nth i l 0) H16) as H18. specialize (partition_P5 (nth (i + 1) l 0) H17) as H19. lra. auto.
+      assert (H16 : List.In (l.[i]) l). { apply nth_In; lia. }
+      assert (H17 : List.In (l.[(i + 1)]) l). { apply nth_In; lia. }
+      specialize (partition_P5 (l.[i]) H16) as H18. specialize (partition_P5 (l.[(i + 1)]) H17) as H19. lra. auto.
     }
-    pose proof continuous_function_attains_lub_on_interval f (nth i (points a b P) 0) (nth (i + 1) (points a b P) 0) H14 H15 as [x [H16 H17]].
-    specialize (H11 i ltac:(lia)). pose proof lub_unique (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth i (points a b P) 0 <= x0 <= nth (i + 1) (points a b P) 0) ∧ y = f x) (nth i l2 0) (f x) H11 H17 as H18.
+    pose proof continuous_function_attains_lub_on_interval f ((points a b P).[i]) ((points a b P).[(i + 1)]) H14 H15 as [x [H16 H17]].
+    specialize (H11 i ltac:(lia)). pose proof lub_unique (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, (points a b P).[i] <= x0 <= (points a b P).[(i + 1)]) ∧ y = f x) (l2.[i]) (f x) H11 H17 as H18.
     rewrite H18. exists x. split; auto.
   }
-  assert (H14 : forall i, (i < length (points a b P) - 1)%nat -> nth i l2 0 - nth i l1 0 < ε / (b - a)).
+  assert (H14 : forall i, (i < length (points a b P) - 1)%nat -> l2.[i] - l1.[i] < ε / (b - a)).
   {
     intros i H14. specialize (H12 i H14) as [y [H12 H15]]. specialize (H13 i H14) as [x [H13 H16]].
     rewrite H15, H16. assert (f y <= f x) as H17.
     { 
-      apply inf_le_sup with (E := (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth i (points a b P) 0 <= x0 <= nth (i + 1) (points a b P) 0) ∧ y = f x)).
+      apply inf_le_sup with (E := (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, (points a b P).[i] <= x0 <= (points a b P).[(i + 1)]) ∧ y = f x)).
       specialize (H9 i ltac:(lia)). rewrite <- H15. auto.
       specialize (H11 i ltac:(lia)). rewrite <- H16. auto. 
     }
     destruct P as [l]; simpl in *.
-    assert (H18 : List.In (nth i l 0) l). { apply nth_In; lia. }
-    assert (H19 : List.In (nth (i+1) l 0) l). { apply nth_In; lia. }
-    specialize (partition_P5 (nth i l 0) H18) as H20. specialize (partition_P5 (nth (i+1) l 0) H19) as H21.
+    assert (H18 : List.In (l.[i]) l). { apply nth_In; lia. }
+    assert (H19 : List.In (l.[(i+1)]) l). { apply nth_In; lia. }
+    specialize (partition_P5 (l.[i]) H18) as H20. specialize (partition_P5 (l.[(i+1)]) H19) as H21.
     unfold In in *. specialize (H7 i ltac:(lia)). specialize (H6 x y ltac:(lra) ltac:(lra) ltac:(solve_R)). solve_R.
   }
   replace (length l1) with (length l2) by lia. rewrite sum_f_minus; try lia.
-  assert (∑ 0 (length l2 - 1) (λ i : ℕ, nth i l2 0 * (nth (i + 1) (points a b P) 0 - nth i (points a b P) 0) -
-  nth i l1 0 * (nth (i + 1) (points a b P) 0 - nth i (points a b P) 0)) < 
-  ∑ 0 (length l2 - 1) (λ i : ℕ, (ε / (b-a)) * (nth (i + 1) (points a b P) 0 - nth i (points a b P) 0))) as H15.
+  assert (∑ 0 (length l2 - 1) (λ i : ℕ, l2.[i] * ((points a b P).[(i + 1)] - (points a b P).[i]) -
+  l1.[i] * ((points a b P).[(i + 1)] - (points a b P).[i])) < 
+  ∑ 0 (length l2 - 1) (λ i : ℕ, (ε / (b-a)) * ((points a b P).[(i + 1)] - (points a b P).[i]))) as H15.
   {
     apply sum_f_congruence_lt; try lia. intros i H15.
     assert (i < length (points a b P) - 1)%nat as H16. { rewrite <- H10. pose proof partition_length a b P; lia. } 
@@ -998,13 +998,13 @@ Proof.
   apply H14.
   - apply sum_f_equiv; try lia. intros k H15. replace (l1 ++ c :: l2) with ((l1 ++ [c]) ++ l2).
     2 : { rewrite <- app_assoc. reflexivity. } rewrite app_nth1. 2 : { rewrite length_app in *. simpl in *; lia. }
-    replace (nth k ((l1 ++ [c]) ++ l2) 0) with (nth k (l1 ++ [c]) 0).
+    replace (nth k ((l1 ++ [c]) ++ l2) 0) with ((l1 ++ [c]).[k]).
     2 : { rewrite app_nth1 with (l := l1 ++ [c]). 2 : { rewrite length_app in *. simpl in *; lia. } reflexivity. }
     apply Rmult_eq_compat_r. 
     specialize (H3 k ltac:(rewrite length_app in *; simpl in *; lia)).
     specialize (H6 k ltac:(rewrite length_app in *; simpl in *; lia)).
-    set (E1 := λ y : ℝ, ∃ x : ℝ, x ∈ [nth k (l1 ++ c :: l2) 0, nth (k + 1) (l1 ++ c :: l2) 0] ∧ y = f x).
-    set (E2 := λ y : ℝ, ∃ x : ℝ, x ∈ [nth k (l1 ++ [c]) 0, nth (k + 1) (l1 ++ [c]) 0] ∧ y = f x).
+    set (E1 := λ y : ℝ, ∃ x : ℝ, x ∈ [(l1 ++ c :: l2).[k], (l1 ++ c :: l2).[(k + 1)]] ∧ y = f x).
+    set (E2 := λ y : ℝ, ∃ x : ℝ, x ∈ [(l1 ++ [c]).[k], (l1 ++ [c]).[(k + 1)]] ∧ y = f x).
     assert (E1 = E2) as H16.
     {
       unfold E1, E2. apply set_equal_def. intros x. split; intros [y [H16 H17]]; exists y; split; auto.
@@ -1020,15 +1020,15 @@ Proof.
   - rewrite sum_f_reindex with (s := length l1). 2 : {  rewrite length_app in *. simpl in *; lia. } 
     rewrite Nat.sub_diag. replace (length l3 - 1 - length l1)%nat with (length l5 - 1)%nat. 2 : { rewrite length_app in *. simpl in *; lia. }
     apply sum_f_equiv; try lia. intros k H15. 
-    replace (nth (k + length l1 + 1) (l1 ++ c :: l2) 0) with (nth (k + 1) (c :: l2) 0).
+    replace ((l1 ++ c :: l2).[(k + length l1 + 1)]) with ((c :: l2).[(k + 1)]).
     2 : { rewrite app_nth2; try lia. replace (k + length l1 + 1 - length l1)%nat with (k + 1)%nat by lia. reflexivity. }
-    replace (nth (k + length l1) (l1 ++ c :: l2) 0) with (nth k (c :: l2) 0).
+    replace ((l1 ++ c :: l2).[(k + length l1)]) with ((c :: l2).[k]).
     2 : { rewrite app_nth2; try lia. replace (k + length l1 - length l1)%nat with k by lia. reflexivity. }
     apply Rmult_eq_compat_r.
     specialize (H3 (k + length l1)%nat ltac:(rewrite length_app in *; simpl in *; lia)).
     specialize (H10 k ltac:(rewrite length_app in *; simpl in *; lia)).
-    set (E1 := λ y : ℝ, ∃ x : ℝ, x ∈ [nth (k + length l1) (l1 ++ c :: l2) 0, nth (k + length l1 + 1) (l1 ++ c :: l2) 0] ∧ y = f x).
-    set (E2 := λ y : ℝ, ∃ x : ℝ, x ∈ [nth k (c :: l2) 0, nth (k + 1) (c :: l2) 0] ∧ y = f x).
+    set (E1 := λ y : ℝ, ∃ x : ℝ, x ∈ [(l1 ++ c :: l2).[(k + length l1)], (l1 ++ c :: l2).[(k + length l1 + 1)]] ∧ y = f x).
+    set (E2 := λ y : ℝ, ∃ x : ℝ, x ∈ [(c :: l2).[k], (c :: l2).[(k + 1)]] ∧ y = f x).
     assert (E1 = E2) as H16.
     {
       unfold E1, E2. apply set_equal_def. intros x. split; intros [y [H16 H17]]; exists y; split; auto.
@@ -1067,13 +1067,13 @@ Proof.
   apply H14.
   - apply sum_f_equiv; try lia. intros k H15. replace (l1 ++ c :: l2) with ((l1 ++ [c]) ++ l2).
     2 : { rewrite <- app_assoc. reflexivity. } rewrite app_nth1. 2 : { rewrite length_app in *. simpl in *; lia. }
-    replace (nth k ((l1 ++ [c]) ++ l2) 0) with (nth k (l1 ++ [c]) 0).
+    replace (nth k ((l1 ++ [c]) ++ l2) 0) with ((l1 ++ [c]).[k]).
     2 : { rewrite app_nth1 with (l := l1 ++ [c]). 2 : { rewrite length_app in *. simpl in *; lia. } reflexivity. }
     apply Rmult_eq_compat_r.
     specialize (H3 k ltac:(rewrite length_app in *; simpl in *; lia)).
     specialize (H6 k ltac:(rewrite length_app in *; simpl in *; lia)).
-    set (E1 := λ y : ℝ, ∃ x : ℝ, x ∈ [nth k (l1 ++ c :: l2) 0 , nth (k + 1) (l1 ++ c :: l2) 0] ∧ y = f x).
-    set (E2 := λ y : ℝ, ∃ x : ℝ, x ∈ [nth k (l1 ++ [c]) 0, nth (k + 1) (l1 ++ [c]) 0] ∧ y = f x).
+    set (E1 := λ y : ℝ, ∃ x : ℝ, x ∈ [(l1 ++ c :: l2).[k] , (l1 ++ c :: l2).[(k + 1)]] ∧ y = f x).
+    set (E2 := λ y : ℝ, ∃ x : ℝ, x ∈ [(l1 ++ [c]).[k], (l1 ++ [c]).[(k + 1)]] ∧ y = f x).
     assert (E1 = E2) as H16.
     {
       unfold E1, E2. apply set_equal_def. intros x. split; intros [y [H16 H17]]; exists y; split; auto.
@@ -1089,15 +1089,15 @@ Proof.
   - rewrite sum_f_reindex with (s := length l1). 2 : { rewrite length_app in *. simpl in *; lia. }
     rewrite Nat.sub_diag. replace (length l3 - 1 - length l1)%nat with (length l5 - 1)%nat. 2 : { rewrite length_app in *. simpl in *; lia. }
     apply sum_f_equiv; try lia. intros k H15.
-    replace (nth (k + length l1 + 1) (l1 ++ c :: l2) 0) with (nth (k + 1) (c :: l2) 0).
+    replace ((l1 ++ c :: l2).[(k + length l1 + 1)]) with ((c :: l2).[(k + 1)]).
     2 : { rewrite app_nth2; try lia. replace (k + length l1 + 1 - length l1)%nat with (k + 1)%nat by lia. reflexivity. }
-    replace (nth (k + length l1) (l1 ++ c :: l2) 0) with (nth k (c :: l2) 0).
+    replace ((l1 ++ c :: l2).[(k + length l1)]) with ((c :: l2).[k]).
     2 : { rewrite app_nth2; try lia. replace (k + length l1 - length l1)%nat with k by lia. reflexivity. }
     apply Rmult_eq_compat_r.
     specialize (H3 (k + length l1)%nat ltac:(rewrite length_app in *; simpl in *; lia)).
     specialize (H10 k ltac:(rewrite length_app in *; simpl in *; lia)).
-    set (E1 := λ y : ℝ, ∃ x : ℝ, x ∈ [nth (k + length l1) (l1 ++ c :: l2) 0, nth (k + length l1 + 1) (l1 ++ c :: l2) 0] ∧ y = f x).
-    set (E2 := λ y : ℝ, ∃ x : ℝ, x ∈ [nth k (c :: l2) 0, nth (k + 1) (c :: l2) 0] ∧ y = f x).
+    set (E1 := λ y : ℝ, ∃ x : ℝ, x ∈ [(l1 ++ c :: l2).[(k + length l1)], (l1 ++ c :: l2).[(k + length l1 + 1)]] ∧ y = f x).
+    set (E2 := λ y : ℝ, ∃ x : ℝ, x ∈ [(c :: l2).[k], (c :: l2).[(k + 1)]] ∧ y = f x).
     assert (E1 = E2) as H16.
     {
       unfold E1, E2. apply set_equal_def. intros x. split; intros [y [H16 H17]]; exists y; split; auto.
@@ -1170,8 +1170,8 @@ Proof.
       rewrite H18. simpl. reflexivity.
     }
     pose proof exists_partition_insert a b c P H1 H14 as [Q H19].
-    pose proof insert_Parition_R_lower_sum a b c bf P Q H14 H19 as H20.
-    pose proof insert_Parition_R_upper_sum a b c bf P Q H14 H19 as H21.
+    pose proof insert_Partition_R_lower_sum a b c bf P Q H14 H19 as H20.
+    pose proof insert_Partition_R_upper_sum a b c bf P Q H14 H19 as H21.
     
     rewrite <- H19 in *.
 
@@ -1237,8 +1237,8 @@ Proof.
       rewrite H18. simpl. reflexivity.
     }
     pose proof exists_partition_insert a b c P H1 H14 as [Q H19].
-    pose proof insert_Parition_R_lower_sum a b c bf P Q H14 H19 as H20.
-    pose proof insert_Parition_R_upper_sum a b c bf P Q H14 H19 as H21.
+    pose proof insert_Partition_R_lower_sum a b c bf P Q H14 H19 as H20.
+    pose proof insert_Partition_R_upper_sum a b c bf P Q H14 H19 as H21.
     rewrite <- H19 in *.
     pose proof upper_sum_plus f a b c Q P' P'' bf bf'' bf' l' l'' H1 ltac:(repeat split; auto) as H22.
     pose proof lower_sum_plus f a b c Q P' P'' bf bf'' bf' l' l'' H1 ltac:(repeat split; auto) as H23.
@@ -1378,21 +1378,21 @@ Proof.
     intros P. pose proof integrable_imp_bounded f a b H1 H2 as H8. rewrite <- H4 in H8.
     unfold lower_sum, proj1_sig; destruct (partition_sublist_elem_has_inf (bounded_f a b bf) a b P) as [l1 [H9 H10]].
     rewrite H4 in *.
-    replace (b - a) with (∑ 0 (length (points a b P) - 2) (λ i : ℕ, (nth (i+1) (points a b P) 0 - nth i (points a b P) 0))).
+    replace (b - a) with (∑ 0 (length (points a b P) - 2) (λ i : ℕ, ((points a b P).[(i+1)] - (points a b P).[i]))).
     2 : { 
       rewrite sum_f_list_sub_alt. 2 : { apply partition_length. }
       rewrite partition_last, partition_first. reflexivity.
     }
     rewrite r_mult_sum_f_i_n_f_l. replace (length (points a b P) - 2)%nat with (length l1 - 1)%nat by lia.
     apply sum_f_congruence_le; try lia. intros k H11. pose proof partition_length a b P as H12.
-    specialize (H10 k ltac:(lia)). assert (H13 : m <= nth k l1 0).
+    specialize (H10 k ltac:(lia)). assert (H13 : m <= l1.[k]).
     {
-      assert (is_lower_bound (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth k (points a b P) 0 <= x0 <= nth (k + 1) (points a b P) 0) ∧ y = f x) m) as H13.
+      assert (is_lower_bound (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, (points a b P).[k] <= x0 <= (points a b P).[(k + 1)]) ∧ y = f x) m) as H13.
       { 
         intros x [y [H13 H14]]. specialize (H3 y). replace f with (bounded_f a b bf) in H14 by auto. rewrite H14.
-        destruct P as [l]; simpl in *. assert (List.In (nth k l 0) l) as H15. { apply nth_In; lia. }
-        assert (H16 : List.In (nth (k + 1) l 0) l). { apply nth_In; lia. }
-        specialize (partition_P5 (nth k l 0) H15) as H17. specialize (partition_P5 (nth (k + 1) l 0) H16) as H18.
+        destruct P as [l]; simpl in *. assert (List.In (l.[k]) l) as H15. { apply nth_In; lia. }
+        assert (H16 : List.In (l.[(k + 1)]) l). { apply nth_In; lia. }
+        specialize (partition_P5 (l.[k]) H15) as H17. specialize (partition_P5 (l.[(k + 1)]) H16) as H18.
         unfold Ensembles.In in *. specialize (H3 ltac:(lra)). rewrite H4 in *. lra.
       }
       destruct H10 as [_ H10]. specialize (H10 m ltac:(auto)). lra.
@@ -1404,7 +1404,7 @@ Proof.
     intros P. pose proof integrable_imp_bounded f a b H1 H2 as H9. rewrite <- H4 in H9.
     unfold upper_sum, proj1_sig; destruct (partition_sublist_elem_has_sup (bounded_f a b bf) a b P) as [l2 [H10 H11]].
     rewrite H4 in *.
-    replace (b - a) with (∑ 0 (length (points a b P) - 2) (λ i : ℕ, (nth (i+1) (points a b P) 0 - nth i (points a b P) 0))).
+    replace (b - a) with (∑ 0 (length (points a b P) - 2) (λ i : ℕ, ((points a b P).[(i+1)] - (points a b P).[i]))).
     2 : { 
       rewrite sum_f_list_sub_alt. 2 : { apply partition_length. }
       rewrite partition_last, partition_first. reflexivity.
@@ -1412,14 +1412,14 @@ Proof.
     rewrite r_mult_sum_f_i_n_f_l. replace (length (points a b P) - 2)%nat with (length l2 - 1)%nat by lia.
     apply Rle_ge.
     apply sum_f_congruence_le; try lia. intros k H12. pose proof partition_length a b P as H13.
-    specialize (H11 k ltac:(lia)). assert (H14 : M >= nth k l2 0).
+    specialize (H11 k ltac:(lia)). assert (H14 : M >= l2.[k]).
     {
-      assert (is_upper_bound (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, nth k (points a b P) 0 <= x0 <= nth (k + 1) (points a b P) 0) ∧ y = f x) M) as H14.
+      assert (is_upper_bound (λ y : ℝ, ∃ x : ℝ, x ∈ (λ x0 : ℝ, (points a b P).[k] <= x0 <= (points a b P).[(k + 1)]) ∧ y = f x) M) as H14.
       { 
         intros x [y [H14 H15]]. specialize (H3 y). replace f with (bounded_f a b bf) in H15 by auto. rewrite H15.
-        destruct P as [l]; simpl in *. assert (List.In (nth k l 0) l) as H16. { apply nth_In; lia. }
-        assert (H17 : List.In (nth (k + 1) l 0) l). { apply nth_In; lia. }
-        specialize (partition_P5 (nth k l 0) H16) as H18. specialize (partition_P5 (nth (k + 1) l 0) H17) as H19.
+        destruct P as [l]; simpl in *. assert (List.In (l.[k]) l) as H16. { apply nth_In; lia. }
+        assert (H17 : List.In (l.[(k + 1)]) l). { apply nth_In; lia. }
+        specialize (partition_P5 (l.[k]) H16) as H18. specialize (partition_P5 (l.[(k + 1)]) H17) as H19.
         unfold Ensembles.In in *. specialize (H3 ltac:(lra)). rewrite H4 in *. lra.
       }
       destruct H11 as [_ H11]. specialize (H11 M ltac:(auto)). lra.

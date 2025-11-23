@@ -12,7 +12,8 @@ Notation "√ x" := (sqrt x) (format "√ x", at level 20).
 
 Open Scope R_scope.
 
-(* === Real inequality notations (ASCII + Unicode), including mixed chains === *)
+Notation "l .[ i ]" := (nth i l 0)
+  (at level 10, format "l .[ i ]").
 
 (* Single-term Unicode (keep ASCII <=, >= as already provided by Coq/Reals) *)
 Notation "x ≤ y" := (Rle x y) : R_scope.

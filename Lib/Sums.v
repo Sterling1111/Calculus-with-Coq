@@ -3,8 +3,6 @@ From Stdlib Require Import List.
 Import ListNotations.
 Open Scope R_scope.
 
-Notation length := Datatypes.length.
-
 Notation "'∑' i n f" := (sum_f i n f)
   (at level 45, i at level 0, n at level 0,
    format "'∑'  i  n  f").
@@ -588,7 +586,7 @@ Proof.
 Qed.
 
 Theorem sum_n_nat : forall n : nat,
-  (n >= 1)%nat -> sum_f 1 n (fun i => INR i) = (INR n * (INR n + 1)) / 2.
+  (n >= 1)%nat -> ∑ 1 n (λ i, i) = n * (n + 1) / 2.
 Proof.
   intros n H1. induction n as [| k IH]; try lia. assert (S k = 1 \/ k >= 1)%nat as [H2 | H2] by lia.
   - rewrite H2. compute. lra.

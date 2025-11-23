@@ -29,8 +29,8 @@ Proof.
   intros E H1 H2. set (E' := fun x => -x ∈ E). assert (H3 : forall x, x ∈ E <-> -x ∈ E').
   {
     intros x. split; intros H3.
-    - unfold In, E' in *. rewrite Ropp_involutive. apply H3.
-    - unfold In, E' in *. rewrite Ropp_involutive in H3. apply H3.
+    - unfold Ensembles.In, E' in *. rewrite Ropp_involutive. apply H3.
+    - unfold Ensembles.In, E' in *. rewrite Ropp_involutive in H3. apply H3.
   }
   assert (H4 : has_upper_bound E').
   { destruct H1 as [lb H1]. exists (-lb). intros x H4. specialize (H1 (-x) H4). lra. }

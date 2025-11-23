@@ -1,5 +1,4 @@
-From Lib Require Import Imports Sums.
-Open Scope R_scope.
+From Calculus.Chapter2 Require Import Prelude.
 
 Lemma lemma_2_5_a : forall n r,
   r <> 1 -> ∑ 0 n (fun i => r ^ i) = (1 - r ^ (n+1)) / (1 - r).

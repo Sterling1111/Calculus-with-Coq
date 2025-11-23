@@ -1,6 +1,8 @@
 From Lib Require Import Imports Limit Sums Reals_util Sets Notations Functions Completeness.
 Import SetNotations IntervalNotations Function_Notations LimitNotations.
 
+Local Notation In := Ensembles.In.
+
 Open Scope interval_scope.
 
 Definition continuous_at (f : ℝ -> ℝ) (a : ℝ) : Prop :=
@@ -95,7 +97,7 @@ Qed.
 Definition polynomial (l : list R) : R -> R :=
   fun x => sum_f 0 (length l - 1) (fun i => nth i l 0 * x^(length l - 1 - i)).
 
-Lemma poly_nil : forall x, polynomial [] x = 0.
+Lemma poly_nil : forall x, polynomial ([] : list R) x = 0.
 Proof.
   intro; compute. rewrite Rmult_1_r. reflexivity.
 Qed.
@@ -114,7 +116,7 @@ Theorem theorem_37_14 : forall l a,
   continuous_at (polynomial l) a.
 Proof.
   intros l a. induction l as [| h t IH].
-  - unfold continuous_at. rewrite poly_nil. replace (polynomial []) with (fun _ : ℝ => 0).
+  - unfold continuous_at. rewrite poly_nil. replace (polynomial ([] : list R)) with (fun _ : ℝ => 0).
     2 : { extensionality x. rewrite poly_nil. reflexivity. } solve_lim.
   - replace (polynomial (h :: t)) with (fun x : ℝ => h * x^(length t) + polynomial t x).
     2 : { extensionality x. rewrite poly_cons. reflexivity. } unfold continuous_at. solve_lim. 

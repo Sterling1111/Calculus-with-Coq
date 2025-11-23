@@ -1,5 +1,4 @@
-From Lib Require Import Imports Rational Notations.
-From Calculus Require Import Problem_2_13.
+From Calculus.Chapter2 Require Import Prelude Problem_2_13.
 Open Scope Z_scope.
 
 Lemma lemma_2_14_a : irrational (√2 + √6).

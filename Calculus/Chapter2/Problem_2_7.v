@@ -1,7 +1,4 @@
-From Lib Require Import Imports Sums Reals_util WI_SI_WO Binomial Rational.
-From Calculus Require Import Problem_2_3.
-Import Binomial_R Choose_R_Notations.
-Open Scope R_scope.
+From Calculus.Chapter2 Require Import Prelude Problem_2_3.
 
 Lemma exist_R_plus_eq_l : forall (r r1 : R) (f : list R -> R) (s : nat),
   (exists l, length l = s /\ Forall (fun r : R => rational r) l /\ r1 = (f l)) -> (exists l, length l = s /\ Forall (fun r : R => rational r) l /\ r + r1 = r + f l).
@@ -347,12 +344,10 @@ Proof.
     rewrite sum_swap; try lia. apply sum_f_equiv; try lia. intros i H5. rewrite <- r_mult_sum_f_i_n_f. apply Rmult_comm.
 Qed.
 
-Lemma lemma_2_7 : forall p,
-  (p >= 1)%nat ->
-    exists l : list R,
-      forall n, (n >= 1)%nat ->
-        length l = p /\ Forall rational l /\
-        sum_f 1 n (fun i => INR i ^ p) = INR n ^ (p + 1) / INR (p + 1) + sum_f 0 (p-1) (fun i => nth i l 0 * INR n ^ (i + 1)).
+Lemma lemma_2_7 : ∀ p,
+  (p >= 1)%nat -> ∃ l : list R,
+      ∀ n, (n >= 1)%nat -> length l = p /\ Forall rational l /\
+        ∑ 1 n (λ i, i^p) = n^(p + 1) / (p + 1) + ∑ 0 (p-1) (λ i, l.[0] * n ^ (i + 1)).
 Proof.
   intros p. apply strong_induction_N with (n := p). clear p. intros p IH H1.
   assert (p = 1 \/ p >= 2)%nat as [H2 | H2] by lia.

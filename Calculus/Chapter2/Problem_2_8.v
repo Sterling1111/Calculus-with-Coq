@@ -1,4 +1,4 @@
-From Lib Require Import Imports.
+From Calculus.Chapter2 Require Import Prelude.
 Open Scope nat_scope.
 
 Lemma lemma_2_8 : forall n : nat,

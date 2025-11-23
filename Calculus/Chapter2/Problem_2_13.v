@@ -1,4 +1,4 @@
-From Lib Require Import Imports Rational QRT.
+From Calculus.Chapter2 Require Import Prelude.
 Open Scope Z_scope.
 
 Lemma ksqr_div_3_k_div_3 : forall k,

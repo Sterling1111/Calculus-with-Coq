@@ -1,5 +1,4 @@
-From Lib Require Import Imports Rational Notations.
-From Calculus Require Import Problem_2_12.
+From Calculus.Chapter2 Require Import Prelude Problem_2_12.
 Open Scope R_scope.
 
 Lemma lemma_2_15_a : forall x p q m,

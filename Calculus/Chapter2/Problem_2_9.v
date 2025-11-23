@@ -1,4 +1,4 @@
-From Lib Require Import Imports WI_SI_WO.
+From Calculus.Chapter2 Require Import Prelude.
 Open Scope nat_scope.
 
 Lemma lemma_2_9 : forall (A : nat -> Prop) (n0 : nat),

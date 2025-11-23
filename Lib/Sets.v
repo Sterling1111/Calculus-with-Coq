@@ -1,6 +1,7 @@
 From Lib Require Import Imports Binomial Reals_util.
-
 Import ListNotations Binomial.Choose_Notations.
+
+Local Notation In := Ensembles.In.
 
 Open Scope nat_scope.
 
@@ -516,7 +517,7 @@ Ltac find_sets_in_expr E acc :=
       let is_in := in_list A acc in
       match is_in with
       | true => acc (* Do nothing, A is already in the list *)
-      | false => constr:(A :: acc) (* Add A to the accumulator *)
+      | false => constr:(A :: acc) (* Ensembles.Add A to the accumulator *)
       end
   end.
 
@@ -729,11 +730,11 @@ Proof.
            apply In_Union_def in H3 as [H3 | H3]; auto. apply In_singleton_def in H3. rewrite H3. apply H2.
         }
         rewrite H3 in H1. rewrite H3. specialize (IH A). rewrite <- H1 in IH at 2. specialize (IH H1). auto.
-      + replace (⦃h⦄ ⋃ list_to_ensemble t) with (Add _ (list_to_ensemble t) h). 2 : { unfold Add; autoset. }
+      + replace (⦃h⦄ ⋃ list_to_ensemble t) with (Ensembles.Add _ (list_to_ensemble t) h). 2 : { unfold Ensembles.Add; autoset. }
         apply Union_is_finite; auto.
   - intros H1. induction H1 as [| A H1 IH].
     -- exists []. rewrite list_to_ensemble_nil. reflexivity.
-    -- destruct IH as [l H2]. unfold Finite_set. exists (x :: l). unfold Add. rewrite <- H2. autoset.
+    -- destruct IH as [l H2]. unfold Finite_set. exists (x :: l). unfold Ensembles.Add. rewrite <- H2. autoset.
 Qed.
 
 Lemma not_in_minus_eq : forall (U : Type) (A : Ensemble U) (x : U),
@@ -860,7 +861,7 @@ Lemma cardinal_Empty_2 : forall (U : Type) (n : nat),
   ‖(∅ : Ensemble U)‖ = n -> n = 0.
 Proof.
   intros U n H1. destruct n as [| n]; auto. exfalso. apply cardinal_invert in H1 as [A [x [H1 [H2 H3]]]].
-  rewrite set_equal_def in H1. specialize (H1 x) as [H1 H4]. unfold Add in H4. assert (x ∈ A ⋃ ⦃x⦄) as H5.
+  rewrite set_equal_def in H1. specialize (H1 x) as [H1 H4]. unfold Ensembles.Add in H4. assert (x ∈ A ⋃ ⦃x⦄) as H5.
   { apply In_Union_def. right. apply In_singleton_def. auto. } specialize (H4 H5). contradiction.
 Qed.
 
@@ -899,31 +900,31 @@ Qed.
 
 Lemma Power_set_Add :
   forall (U : Type) (A : Ensemble U) (h : U),
-    Power_set (Add U A h) =
+    Power_set (Ensembles.Add U A h) =
     Union (Ensemble U)
       (Power_set A)
-      (Im (Ensemble U) (Ensemble U) (Power_set A) (fun S => Add U S h)).
+      (Im (Ensemble U) (Ensemble U) (Power_set A) (fun S => Ensembles.Add U S h)).
 Proof.
   intros U A h. apply set_equal_def. intros x. split; intros H1.
   - rewrite In_Power_set_def in H1. rewrite In_Union_def. destruct (classic (h ∈ x)) as [H2 | H2].
     -- right. rewrite In_Im_def. exists (x − ⦃h⦄). split.
-       * unfold Add in H1. apply In_Power_set_def. apply Subset_def. intros y H3. apply In_Setminus_def in H3 as [H3 H4].
+       * unfold Ensembles.Add in H1. apply In_Power_set_def. apply Subset_def. intros y H3. apply In_Setminus_def in H3 as [H3 H4].
          rewrite Subset_def in H1. specialize (H1 y H3). autoset.
-       * unfold Add in *. rewrite Subset_def in H1. apply set_equal_def. intros y. split; intros H3.
+       * unfold Ensembles.Add in *. rewrite Subset_def in H1. apply set_equal_def. intros y. split; intros H3.
          + specialize (H1 y). apply In_Union_def in H3 as [H3 | H3]; try autoset. apply In_singleton_def in H3. autoset.
          + apply In_Union_def. destruct (classic (y = h)) as [H4 | H4]. right. apply In_singleton_def; auto. left. apply In_Setminus_def. split; autoset.
-    -- left. apply In_Power_set_def. apply Subset_def. intros y H3. rewrite Subset_def in H1. specialize (H1 y H3). unfold Add in H1. 
+    -- left. apply In_Power_set_def. apply Subset_def. intros y H3. rewrite Subset_def in H1. specialize (H1 y H3). unfold Ensembles.Add in H1. 
        apply In_Union_def in H1 as [H1 | H1]; autoset. apply In_singleton_def in H1. subst. contradiction.
   - rewrite In_Power_set_def. apply In_Union_def in H1 as [H1 | H1].
-    -- unfold Add. apply Subset_def. intros y H2. rewrite In_Power_set_def in H1. autoset.
-    -- rewrite In_Im_def in H1. destruct H1 as [S [H1 H2]]. unfold Add in *. rewrite In_Power_set_def in H1. rewrite set_equal_def in H2. 
+    -- unfold Ensembles.Add. apply Subset_def. intros y H2. rewrite In_Power_set_def in H1. autoset.
+    -- rewrite In_Im_def in H1. destruct H1 as [S [H1 H2]]. unfold Ensembles.Add in *. rewrite In_Power_set_def in H1. rewrite set_equal_def in H2. 
        apply Subset_def. intros y H3. specialize (H2 y). destruct H2 as [H2 H4]. specialize (H4 H3). autoset.
 Qed.
 
 Lemma Add_Union_assoc : forall (U : Type) (A B : Ensemble U) (h : U),
-  Add U (A ⋃ B) h = (Add U A h) ⋃ B.
+  Ensembles.Add U (A ⋃ B) h = (Ensembles.Add U A h) ⋃ B.
 Proof.
-  unfold Add. autoset.
+  unfold Ensembles.Add. autoset.
 Qed.
 
 Lemma cardinal_Union : forall (U : Type) (A B : Ensemble U) (n m : nat),
@@ -931,8 +932,8 @@ Lemma cardinal_Union : forall (U : Type) (A B : Ensemble U) (n m : nat),
 Proof.
   intros U A B n m H1 H2 H3. induction H1 as [| A n H1 IH x H4].
   - rewrite Union_Identity. simpl. auto.
-  - assert (H5 : A ⋂ B = ∅). { rewrite <- H3. unfold Add in *. apply set_equal_def. intros y. split; intros H5; autoset. rewrite H3 in H5. contradiction. }
-    specialize (IH H5). rewrite <- Add_Union_assoc. apply card_add; auto. intros H6. apply H4. unfold Add in *. apply In_Union_def in H6 as [H6 | H6]; autoset.
+  - assert (H5 : A ⋂ B = ∅). { rewrite <- H3. unfold Ensembles.Add in *. apply set_equal_def. intros y. split; intros H5; autoset. rewrite H3 in H5. contradiction. }
+    specialize (IH H5). rewrite <- Add_Union_assoc. apply card_add; auto. intros H6. apply H4. unfold Ensembles.Add in *. apply In_Union_def in H6 as [H6 | H6]; autoset.
     rewrite set_equal_def in H3. specialize (H3 x) as [H3 H7]. assert (x ∈ (A ⋃ ⦃x⦄) ⋂ B) as H8 by autoset. specialize (H3 H8). contradiction.
 Qed.
 
@@ -943,36 +944,36 @@ Proof.
 Qed.
 
 Lemma Add_not_in_preserves_cardinality : forall (U : Type) (A : Ensemble (Ensemble U)) (h : U) (n : nat),
-  (forall x, x ∈ A -> h ∉ x) -> ‖A‖ = n -> ‖(Im (Ensemble U) (Ensemble U) A (fun S : Ensemble U => Add U S h))‖ = n.
+  (forall x, x ∈ A -> h ∉ x) -> ‖A‖ = n -> ‖(Im (Ensemble U) (Ensemble U) A (fun S : Ensemble U => Ensembles.Add U S h))‖ = n.
 Proof.
   intros U A h n H1 H2. induction H2 as [| A n H2 IH x H3].
   - rewrite image_empty. apply card_empty.
-  - rewrite Im_add. apply card_add; auto. apply IH. intros y H4. apply H1. unfold Add. autoset.
-    intros H4. apply In_Im_def in H4 as [S [H4 H5]]. specialize (H1 S) as H6. assert (S ∈ Add (Ensemble U) A x) as H7. { unfold Add. autoset. }
-    specialize (H6 H7). clear H7. specialize (H1 x). assert (x ∈ Add (Ensemble U) A x) as H7. { unfold Add. autoset. }
+  - rewrite Im_add. apply card_add; auto. apply IH. intros y H4. apply H1. unfold Ensembles.Add. autoset.
+    intros H4. apply In_Im_def in H4 as [S [H4 H5]]. specialize (H1 S) as H6. assert (S ∈ Ensembles.Add (Ensemble U) A x) as H7. { unfold Ensembles.Add. autoset. }
+    specialize (H6 H7). clear H7. specialize (H1 x). assert (x ∈ Ensembles.Add (Ensemble U) A x) as H7. { unfold Ensembles.Add. autoset. }
     specialize (H1 H7). clear H7. destruct Empty_or_exists_In with (U := U) (A := S) as [H7 | [y H7]]; destruct Empty_or_exists_In with (U := U) (A := x) as [H8 | [z H8]]; autoset.
-    -- rewrite set_equal_def in H5. specialize (H5 z) as [H5 H9]. assert (H10 : z ∈ Add U x h) by (unfold Add; autoset). specialize (H9 H10). unfold Add in H9.
+    -- rewrite set_equal_def in H5. specialize (H5 z) as [H5 H9]. assert (H10 : z ∈ Ensembles.Add U x h) by (unfold Ensembles.Add; autoset). specialize (H9 H10). unfold Ensembles.Add in H9.
        rewrite Union_Identity in H9. apply In_singleton_def in H9. autoset.
-    -- rewrite set_equal_def in H5. specialize (H5 y) as [H5 H9]. assert (H10 : y ∈ Add U S h) by (unfold Add; autoset). specialize (H5 H10). unfold Add in H5.
+    -- rewrite set_equal_def in H5. specialize (H5 y) as [H5 H9]. assert (H10 : y ∈ Ensembles.Add U S h) by (unfold Ensembles.Add; autoset). specialize (H5 H10). unfold Ensembles.Add in H5.
        rewrite Union_Identity in H5. apply In_singleton_def in H5. autoset.
-    -- destruct (classic (x = S)) as [H9 | H9]; autoset. apply H9. unfold Add in H5. rewrite set_equal_def in H5. apply set_equal_def. intros w; split; intros H10.
-       specialize (H5 w) as [H5 H11].  assert (H12 : w ∈ Add U x h) by (unfold Add; autoset). specialize (H11 H12). apply In_Union_def in H11 as [H11 | H11]; autoset.
-       apply In_singleton_def in H11. subst. contradiction. specialize (H5 w) as [H5 H11]. assert (H12 : w ∈ Add U S h) by (unfold Add; autoset). specialize (H5 H12).
+    -- destruct (classic (x = S)) as [H9 | H9]; autoset. apply H9. unfold Ensembles.Add in H5. rewrite set_equal_def in H5. apply set_equal_def. intros w; split; intros H10.
+       specialize (H5 w) as [H5 H11].  assert (H12 : w ∈ Ensembles.Add U x h) by (unfold Ensembles.Add; autoset). specialize (H11 H12). apply In_Union_def in H11 as [H11 | H11]; autoset.
+       apply In_singleton_def in H11. subst. contradiction. specialize (H5 w) as [H5 H11]. assert (H12 : w ∈ Ensembles.Add U S h) by (unfold Ensembles.Add; autoset). specialize (H5 H12).
        apply In_Union_def in H5 as [H5 | H5]; autoset. apply In_singleton_def in H5. subst. contradiction. 
 Qed.
 
 Lemma Power_set_Image_Add_preserves_cardinality : forall (U : Type) (A : Ensemble U) (n : nat) (h : U),
-  h ∉ A -> ‖ℙ(A)‖ = n -> ‖Im (Ensemble U) (Ensemble U) (ℙ(A)) (fun S : Ensemble U => Add U S h)‖ = n.
+  h ∉ A -> ‖ℙ(A)‖ = n -> ‖Im (Ensemble U) (Ensemble U) (ℙ(A)) (fun S : Ensemble U => Ensembles.Add U S h)‖ = n.
 Proof.
   intros U A n h H1 H2. apply Add_not_in_preserves_cardinality. apply h_not_in_Power_set_A; auto. auto.
 Qed.
 
 Lemma cardinal_Power_set_add : forall (U : Type) (A : Ensemble U) (h : U) (n : nat),
-  ‖ℙ(A)‖ = n -> h ∉ A -> ‖ℙ(Add U A h)‖ = 2 * n.
+  ‖ℙ(A)‖ = n -> h ∉ A -> ‖ℙ(Ensembles.Add U A h)‖ = 2 * n.
 Proof.
   intros U A h n H1 H2. rewrite Power_set_Add. apply cardinal_Union; auto. rewrite Nat.add_0_r. apply Power_set_Image_Add_preserves_cardinality; auto.
   apply set_equal_def. intros x. split; intros H3; autoset. apply In_Intersection_def in H3 as [H3 H4]; autoset. rewrite In_Power_set_def in H3.
-  apply In_Im_def in H4 as [S [H4 H5]]. rewrite In_Power_set_def in H4. unfold Add in H5. autoset. rewrite Subset_def in H4, H3. specialize (H4 h). specialize (H3 h).
+  apply In_Im_def in H4 as [S [H4 H5]]. rewrite In_Power_set_def in H4. unfold Ensembles.Add in H5. autoset. rewrite Subset_def in H4, H3. specialize (H4 h). specialize (H3 h).
   assert (H5 : h ∈ S ⋃ ⦃h⦄) by autoset. specialize (H3 H5). contradiction.
 Qed.
 
@@ -984,12 +985,12 @@ Proof.
     apply cardinal_Empty in H2. subst. simpl. rewrite Power_set_Empty_1. apply cardinal_Singleton.
   - intros n A H1 H2. rewrite list_to_ensemble_cons in H1. rewrite <- H1 in H2.
     destruct (classic (h ∈ list_to_ensemble t)) as [H3 | H3].
-    -- assert (Add _ (list_to_ensemble t) h = list_to_ensemble t) as H4.
+    -- assert (Ensembles.Add _ (list_to_ensemble t) h = list_to_ensemble t) as H4.
        {
-          apply set_equal_def. intros x. unfold Add. split; intros H4; try autoset.
+          apply set_equal_def. intros x. unfold Ensembles.Add. split; intros H4; try autoset.
           apply In_Union_def in H4 as [H4 | H4]; auto. apply In_singleton_def in H4. autoset.
        }
-       rewrite H1 in H2. apply IH; auto. rewrite <- H1. unfold Add in H4. rewrite Union_comm in H4. autoset.
+       rewrite H1 in H2. apply IH; auto. rewrite <- H1. unfold Ensembles.Add in H4. rewrite Union_comm in H4. autoset.
     -- assert (cardinal (Ensemble U) (Power_set (list_to_ensemble t)) (2 ^ (n-1))) as H4.
        {
           apply IH; auto. replace (list_to_ensemble t) with (A − ⦃h⦄). 
@@ -998,12 +999,12 @@ Proof.
           assert (H6 : h ∈ ⦃h⦄ ⋃ list_to_ensemble t) by autoset. specialize (H2 H6). contradiction.
           replace (S (S n' - 1)) with (S n') by lia. auto.
         }
-        replace (⦃h⦄ ⋃ list_to_ensemble t) with (Add _ (list_to_ensemble t) h) in H2. 2 : {  unfold Add; autoset. }
-        assert (H5 : cardinal (Ensemble U) (Power_set (Add U (list_to_ensemble t) h)) (2 * (2 ^ (n - 1)))).
-        { apply cardinal_Power_set_add; auto. } assert (H6 : Add U (list_to_ensemble t) h = A). { rewrite <- H1. unfold Add. autoset. }
+        replace (⦃h⦄ ⋃ list_to_ensemble t) with (Ensembles.Add _ (list_to_ensemble t) h) in H2. 2 : {  unfold Ensembles.Add; autoset. }
+        assert (H5 : cardinal (Ensemble U) (Power_set (Ensembles.Add U (list_to_ensemble t) h)) (2 * (2 ^ (n - 1)))).
+        { apply cardinal_Power_set_add; auto. } assert (H6 : Ensembles.Add U (list_to_ensemble t) h = A). { rewrite <- H1. unfold Ensembles.Add. autoset. }
         assert (n = 0 \/ n > 0) as [H7 | H7] by lia.
         + subst. apply cardinal_Empty_1 in H2. rewrite set_equal_def in H2. specialize (H2 h) as [H1 H2].
-          assert (H7 : h ∈ Add U (list_to_ensemble t) h). { unfold Add. autoset. } specialize (H1 H7). contradiction.
+          assert (H7 : h ∈ Ensembles.Add U (list_to_ensemble t) h). { unfold Ensembles.Add. autoset. } specialize (H1 H7). contradiction.
         + rewrite H6 in H5. replace (2 * (2 ^ (n - 1))) with (2 ^ n) in H5. 2 : { replace n with (S (n - 1)) at 1 by lia. rewrite Nat.pow_succ_r'. lia. }
           auto. 
 Qed.
@@ -1059,18 +1060,18 @@ Section num_subsets.
                      specialize (H4 z H7). apply In_Setminus_def. split. autoset. intros H8. apply In_singleton_def in H8. subst. contradiction.
              }
              apply IH. apply cardinal_minus; auto.
-           + replace (Subsets_with_x A x k) with (Im (Ensemble U) (Ensemble U) (Subsets_of_Cardinality (A − ⦃x⦄) (k - 1)) (fun S : Ensemble U => Add U S x)).
+           + replace (Subsets_with_x A x k) with (Im (Ensemble U) (Ensemble U) (Subsets_of_Cardinality (A − ⦃x⦄) (k - 1)) (fun S : Ensemble U => Ensembles.Add U S x)).
              2 : { apply set_equal_def. intros y. split; intros H4.
                    - apply In_Im_def in H4 as [S [H4 H5]]. unfold Subsets_with_x. unfold Subsets_of_Cardinality in H4. destruct H4 as [H4 H6].
-                     split; auto. unfold Add in H5. rewrite Subset_def. intros z H7. rewrite <- H5 in H7. apply In_Union_def in H7 as [H7 | H7].
+                     split; auto. unfold Ensembles.Add in H5. rewrite Subset_def. intros z H7. rewrite <- H5 in H7. apply In_Union_def in H7 as [H7 | H7].
                      rewrite Subset_def in H4. specialize (H4 z H7). autoset. apply In_singleton_def in H7. autoset. split.
-                     unfold Add in H5. autoset. rewrite <- H5. replace k with (Datatypes.S (k - 1)) by lia. apply card_add; auto. intros H7.
+                     unfold Ensembles.Add in H5. autoset. rewrite <- H5. replace k with (Datatypes.S (k - 1)) by lia. apply card_add; auto. intros H7.
                      rewrite Subset_def in H4. specialize (H4 x H7). apply In_Setminus_def in H4 as [_ H4]. apply H4. autoset.
                    - unfold Subsets_with_x in H4. destruct H4 as [H4 [H5 H6]]. apply In_Im_def. exists (y − ⦃x⦄). split.
                      -- unfold Subsets_of_Cardinality. split; auto. rewrite Subset_def. intros z H7. rewrite Subset_def in H4. specialize (H4 z).
                         assert (z ∈ y) as H8 by autoset. specialize (H4 H8). apply In_Setminus_def. split. autoset. intros H9. apply In_singleton_def in H9.
                         rewrite H9 in H7. apply In_Setminus_def in H7 as [_ H7]. apply H7. autoset. apply cardinal_minus; autoset. replace (Datatypes.S (k - 1)) with k by lia. autoset.
-                     -- unfold Add. apply set_equal_def. intros z. split; intros H7. apply In_Union_def in H7 as [H7 | H7]; autoset. apply In_singleton_def in H7. autoset.
+                     -- unfold Ensembles.Add. apply set_equal_def. intros z. split; intros H7. apply In_Union_def in H7 as [H7 | H7]; autoset. apply In_singleton_def in H7. autoset.
                         apply In_Union_def. pose proof classic (z = x) as [H8 | H8]. right. autoset. left. apply In_Setminus_def. split; autoset.
                  }
               apply Add_not_in_preserves_cardinality. intros y H4. unfold Subsets_of_Cardinality in H4. destruct H4 as [H4 H5]. rewrite Subset_def in H4. intros H6. specialize (H4 x).

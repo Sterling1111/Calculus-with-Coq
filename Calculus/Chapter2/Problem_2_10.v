@@ -1,5 +1,4 @@
-From Lib Require Import Imports WI_SI_WO Sets.
-Import SetNotations.
+From Calculus.Chapter2 Require Import Prelude.
 Open Scope nat_scope.
 
 Lemma lemma_2_10 : well_ordering_nat -> induction_nat.

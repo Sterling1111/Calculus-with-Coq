@@ -1,4 +1,4 @@
-From Lib Require Import Imports Rational.
+From Calculus.Chapter2 Require Import Prelude.
 Open Scope Z_scope.
 
 Lemma lemma_2_12_a : forall a b,

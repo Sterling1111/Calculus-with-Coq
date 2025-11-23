@@ -1,5 +1,4 @@
-From Lib Require Import Imports Sums.
-Open Scope R_scope.
+From Calculus.Chapter2 Require Import Prelude.
 
 Lemma lemma_2_2_i : forall n : nat,
   (n >= 1)%nat -> ∑ 1 n (fun i => 2 * (INR i) - 1) = INR (n^2).

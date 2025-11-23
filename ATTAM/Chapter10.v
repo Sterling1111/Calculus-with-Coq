@@ -3,6 +3,8 @@ Require Export ATTAM.Chapter9.
 
 Import SetNotations.
 
+Local Notation In := Ensembles.In.
+
 Open Scope R_scope.
 Open Scope set_scope.
 

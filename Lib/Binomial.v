@@ -1,15 +1,6 @@
 From Lib Require Import Imports Sums Reals_util Rational.
 Open Scope nat_scope.
 
-Definition is_natural (r : R) : Prop :=
-    exists n : nat, r = INR n.
-
-Lemma is_natural_plus : forall r1 r2 : R,
-  is_natural r1 -> is_natural r2 -> is_natural (r1 + r2).
-Proof.
-  intros r1 r2 H1 H2. destruct H1 as [n1 H1]. destruct H2 as [n2 H2]. exists (n1 + n2)%nat. rewrite H1, H2. rewrite plus_INR. reflexivity.
-Qed.
-
 Lemma is_natural_sum_n_nat : forall n : nat,
   (n >= 1)%nat -> is_natural (sum_f 1 n (fun i => INR i)).
 Proof.
@@ -17,20 +8,6 @@ Proof.
   assert (S k = 1 \/ k >= 1)%nat as [H2 | H2] by lia.
   - rewrite H2. exists 1%nat. compute. reflexivity.
   - rewrite sum_f_i_Sn_f; try lia. apply is_natural_plus; auto. exists (S k). reflexivity.
-Qed.
-
-Lemma nltb_gt : forall a b : nat, (a > b)%nat <-> (a <=? b) = false.
-Proof.
-  intros a b. split.
-  - intros H1. apply leb_correct_conv; lia.
-  - intros H1. destruct (Nat.leb_spec a b); try lia. 
-Qed.
-
-Lemma nltb_ge : forall a b : nat, (a >= b)%nat <-> (a <? b) = false.
-Proof.
-  intros a b. split.
-  - intros H1. apply leb_correct_conv; lia.
-  - intros H1. destruct (Nat.ltb_spec a b); try lia.
 Qed.
 
 Module Binomial_R.
