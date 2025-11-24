@@ -1714,7 +1714,6 @@ Proof.
   lra.
 Qed.
 
-
 Example FTC2_test : ∫ 0 1 (λ x : ℝ, 2 * x) = 1.
 Proof.
   set (f := λ x : ℝ, 2 * x).

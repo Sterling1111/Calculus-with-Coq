@@ -1,4 +1,4 @@
-From Lib Require Import Imports Notations Integral Derivative Functions Continuity Limit Sets Reals_util.
+From Lib Require Import Imports Notations Integral Derivative Functions Continuity Limit Sets Reals_util Inverse.
 Import IntervalNotations SetNotations Function_Notations DerivativeNotations LimitNotations.
 
 Open Scope R_scope.
@@ -186,11 +186,35 @@ Proof.
     }
     apply theorem_10_5. apply lemma_15_0; solve_R.
   }
-    apply theorem_10_5.
-    - replace (λ x0 : ℝ, 2 * A x0) with (λ x0 : ℝ, 2 * (x0 * √(1 - x0 ^ 2) / 2 + ∫ x0 1 (λ t, √(1 - t^2)))).
-      2 : { extensionality y. unfold A. destruct (Rlt_dec y (-1)); try lra.
-            destruct (Rgt_dec y 1); try lra. lra. }
-      apply theorem_10_4_b; try
-  
-  apply theorem_10_5.
+  assert (H5 : -1 < 1) by lra.
+  assert (H6 : continuous_on B [-1, 1]) by admit.
+  assert (H7 : one_to_one_on B [-1, 1]) by admit.
+  assert (H8 : inverse_on B cos_0_π [-1, 1] [0, π]) by admit.
+  assert (H9 : x ∈ (Rmin (B (-1)) (B 1), Rmax (B (-1)) (B 1))) by admit.
+  assert (H10 : ⟦ der ⟧ B (-1, 1) = (λ x0, -1 / √(1 - x0 ^ 2))) by admit.
+  assert (H11 : (λ x0, -1 / √(1 - x0 ^ 2)) (cos_0_π x) ≠ 0) by admit.
+  assert (H12 : [0, π] = [Rmin (B (-1)) (B 1), Rmax (B (-1)) (B 1)]) by admit.
+  rewrite H12 in H8.
+  pose proof (theorem_12_5 B cos_0_π (λ x0, -1 / √(1 - x0 ^ 2))
+    (-1) 1 x H5 H6 H7 H8 H9 H10 H11) as H13.
+  apply derivative_at_eq_f'' with (f1' := λ x : ℝ, / (λ x0 : ℝ, -1 / √(1 - x0 ^ 2)) (cos_0_π x))(a := 0)(b := π); auto.
+  intros y H14. unfold sin_0_π. apply Rmult_eq_reg_r with (r := -1); try lra.
+  assert (√(1 - cos_0_π y ^ 2) = 0 \/ √(1 - cos_0_π y ^ 2) <> 0) as [H15 | H15] by lra.
+  - rewrite H15. rewrite Rdiv_0_r, Rinv_0. lra.
+  - solve_R.
 Admitted.
+
+Lemma cos_0_π_in_range : forall x, 0 <= x <= π -> cos_0_π x ∈ [-1, 1].
+Proof.
+  intros x H1. unfold cos_0_π.
+  destruct (Rle_dec 0 x) as [H2|H2]; destruct (Rle_dec x π) as [H3|H3]; try lra.
+  pose proof (proj2_sig (cos_0_π_existence x (conj H2 H3))) as [H4 _]; auto.
+Qed.
+
+Lemma test : forall x,
+  0 <= x <= π -> (sin_0_π x)^2 + (cos_0_π x)^2 = 1.
+Proof.
+  intros x H1. unfold sin_0_π. assert (1 - cos_0_π x ^ 2 >= 0).
+  { pose proof cos_0_π_in_range x H1; solve_R. }
+  rewrite pow2_sqrt; lra.
+Qed. 

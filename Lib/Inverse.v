@@ -207,7 +207,10 @@ Proof.
   pose proof differentiable_at_exists_f' f_inv y H8 as [f_inv' H10].
   specialize (H6 (f_inv y)). assert (⟦ der (f_inv y) ⟧ f = f') as H11.
   {
-    admit.
+    destruct H4 as [_ [H4 [_ H4']]]. specialize (H4 y ltac:(solve_R)). 
+    specialize (H6 H4) as [[_ H6] | [[H6 _] | [H6 _]]]; auto;
+    first [apply is_left_endpoint_closed in H6 | apply is_right_endpoint_closed in H6]; auto;
+    specialize (H4' y ltac:(solve_R)); rewrite <- H6, H4' in H5; solve_R.
   }
   pose proof theorem_10_9 f f_inv f' f_inv' y H10 H11 as H12.
   assert (H13 : ⟦ der y ⟧ (f ∘ f_inv) = (λ _ : ℝ, 1)).
@@ -220,4 +223,14 @@ Proof.
   }
   pose proof derivative_of_function_at_x_unique (f ∘ f_inv) (f' ∘ f_inv ∙ f_inv') (λ _ : ℝ, 1) y H12 H13 as H14.
   simpl in H14. rewrite H7 in H14. lra.
+Qed.
+
+Theorem theorem_12_5 : forall f f_inv f' a b y,
+  a < b -> continuous_on f [a, b] -> one_to_one_on f [a, b] ->
+  inverse_on f f_inv [a, b] [Rmin (f a) (f b), Rmax (f a) (f b)] ->
+  y ∈ (Rmin (f a) (f b), Rmax (f a) (f b)) ->
+  ⟦ der ⟧ f (a, b) = f' ->
+  f' (f_inv y) <> 0 ->
+  ⟦ der y ⟧ f_inv = (λ x, / (f' (f_inv x))).
+Proof.
 Admitted.
