@@ -194,6 +194,14 @@ Proof.
       rewrite <- H18, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
 Qed.
 
+Lemma decreasing_on_imp_one_to_one_on : forall f a b,
+  a < b -> decreasing_on f [a, b] -> one_to_one_on f [a, b].
+Proof.
+  intros f a b H1 H2 x y H3 H4 H5. pose proof (Rtotal_order x y) as [H6 | [H6 | H6]]; auto.
+  - specialize (H2 x y H3 H4 H6); lra.
+  - specialize (H2 y x H4 H3 H6); lra.
+Qed.
+
 Theorem theorem_12_4 : forall f f_inv f' a b y,
   a < b -> continuous_on f [a, b] -> one_to_one_on f [a, b] -> 
     inverse_on f f_inv [a, b] [Rmin (f a) (f b), Rmax (f a) (f b)] -> 
@@ -233,4 +241,8 @@ Theorem theorem_12_5 : forall f f_inv f' a b y,
   f' (f_inv y) <> 0 ->
   ⟦ der y ⟧ f_inv = (λ x, / (f' (f_inv x))).
 Proof.
+  intros f f_inv f' a b y H1 H2 H3 H4 H5 H6 H7. unfold derivative_at.
+  assert (f (f_inv y) = y) as H8.
+  { destruct H4 as [_ [_ [_ H4]]]. apply H4; solve_R. }
+
 Admitted.

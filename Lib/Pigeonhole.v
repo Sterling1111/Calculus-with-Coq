@@ -1,6 +1,7 @@
 From Lib Require Import Imports.
 
 Local Notation In := List.In (only parsing).
+Local Notation length := List.length.
 
 Inductive count_occ_of {A : Type} (x : A) : list A -> nat -> Prop :=
   | count_nil : count_occ_of x nil 0
@@ -180,6 +181,14 @@ Proof.
     -- rewrite H1 in H2. tauto.
     -- tauto.
 Qed.
+
+Lemma not_NoDup_nth : forall (A : Type) (l : list A) (d : A),
+  ~ NoDup l -> 
+  exists i j, (i < j < length l)%nat /\ nth i l d = nth j l d.
+Proof.
+  intros A l d H1.
+  pose proof (NoDup_nth l d) as H2.
+Admitted.
 
 Theorem longer_list:
     forall U : Type, forall l1 l2 : list U,
