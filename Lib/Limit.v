@@ -16,7 +16,6 @@ Definition right_limit (f : ℝ -> ℝ) (a L : ℝ) : Prop :=
 Definition limit_on (f : ℝ -> ℝ) (D : Ensemble ℝ) (a L : ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ δ, δ > 0 /\ ∀ x, x ∈ D -> 0 < |x - a| < δ -> |f x - L| < ε.
 
-(* Infinite target at a finite point *)
 Definition limit_to_pinf (f : ℝ -> ℝ) (a : ℝ) : Prop :=
   ∀ M : ℝ, ∃ δ, δ > 0 /\ ∀ x, 0 < |x - a| < δ -> f x > M.
 
@@ -35,14 +34,12 @@ Definition left_limit_to_pinf (f : ℝ -> ℝ) (a : ℝ) : Prop :=
 Definition left_limit_to_minf (f : ℝ -> ℝ) (a : ℝ) : Prop :=
   ∀ M : ℝ, ∃ δ, δ > 0 /\ ∀ x, 0 < a - x < δ -> f x < M.
 
-(* Finite target at ±∞ *)
 Definition limit_pinf (f : ℝ -> ℝ) (L : ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ N, ∀ x, x > N -> |f x - L| < ε.
 
 Definition limit_minf (f : ℝ -> ℝ) (L : ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ N, ∀ x, x < N -> |f x - L| < ε.
 
-(* Infinite target at ±∞ *)
 Definition limit_pinf_to_pinf (f : ℝ -> ℝ) : Prop :=
   ∀ M : ℝ, ∃ N, ∀ x, x > N -> f x > M.
 
@@ -77,7 +74,6 @@ Module LimitNotations.
     (limit_on f D a L)
       (at level 70, f at level 0, D at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  D  '='  L") : limit_scope.
 
-  (* x -> +∞, finite/infinite targets *)
   Notation "⟦ 'lim' ∞ ⟧ f '=' L" :=
     (limit_pinf f L)
       (at level 70, f at level 0, no associativity, format "⟦  'lim'  ∞  ⟧  f  '='  L") : limit_scope.
@@ -90,7 +86,6 @@ Module LimitNotations.
     (limit_pinf_to_minf f)
       (at level 70, f at level 0, no associativity, format "⟦  'lim'  ∞  ⟧  f  '='  -∞") : limit_scope.
 
-  (* x -> -∞, finite/infinite targets *)
   Notation "⟦ 'lim' -∞ ⟧ f '=' L" :=
     (limit_minf f L)
       (at level 70, f at level 0, no associativity, format "⟦  'lim'  -∞  ⟧  f  '='  L") : limit_scope.
@@ -103,7 +98,6 @@ Module LimitNotations.
     (limit_minf_to_minf f)
       (at level 70, f at level 0, no associativity, format "⟦  'lim'  -∞  ⟧  f  '='  -∞") : limit_scope.
 
-  (* x -> a, infinite targets *)
   Notation "⟦ 'lim' a ⟧ f '=' ∞" :=
     (limit_to_pinf f a)
       (at level 70, f at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  '='  ∞") : limit_scope.
