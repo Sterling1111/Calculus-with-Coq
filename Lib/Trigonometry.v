@@ -187,8 +187,15 @@ Proof.
     apply theorem_10_5. apply lemma_15_0; solve_R.
   }
   assert (H5 : -1 < 1) by lra.
-  assert (H6 : continuous_on B [-1, 1]) by admit.
-  assert (H7 : one_to_one_on B [-1, 1]) by admit.
+  assert (H6 : continuous_on B [-1, 1]).
+  {
+    pose proof A_continuous as H6. unfold B. intros y H7. specialize (H6 y H7).
+    apply limit_on_mult; auto. apply limit_on_const. 
+  }
+  assert (H7 : one_to_one_on B [-1, 1]).
+  {
+    admit.
+  }
   assert (H8 : inverse_on B cos_0_π [-1, 1] [0, π]) by admit.
   assert (H9 : x ∈ (Rmin (B (-1)) (B 1), Rmax (B (-1)) (B 1))) by admit.
   assert (H10 : ⟦ der ⟧ B (-1, 1) = (λ x0, -1 / √(1 - x0 ^ 2))) by admit.
@@ -218,3 +225,80 @@ Proof.
   { pose proof cos_0_π_in_range x H1; solve_R. }
   rewrite pow2_sqrt; lra.
 Qed. 
+
+Parameter red_0_2π :
+  ∀ x : ℝ, { y : ℝ | 0 <= y < 2 * π /\ ∃ k : ℤ, x = y + IZR k * 2 * π }.
+
+Lemma red_0_2π_spec : ∀ x,
+  let y := proj1_sig (red_0_2π x) in
+  0 <= y < 2 * π /\ ∃ k : ℤ, x = y + IZR k * 2 * π.
+Proof. intros x y. split; admit. Admitted.
+
+Definition cos_0_2π (y : ℝ) : ℝ :=
+  if Rle_dec y π
+  then cos_0_π y
+  else - cos_0_π (2 * π - y).
+
+Definition cos (x : ℝ) : ℝ :=
+  let y := proj1_sig (red_0_2π x) in cos_0_2π y.
+
+Lemma cos_on_0_π : ∀ x, 0 <= x <= π -> cos x = cos_0_π x.
+Proof.
+  intros x Hx.
+  admit.
+Admitted.
+
+Lemma cos_on_π_2π : ∀ x, π < x < 2 * π -> cos x = - cos_0_π (2 * π - x).
+Proof. admit. Admitted.
+
+Lemma cos_periodic : ∀ x, cos (x + 2 * π) = cos x.
+Proof.
+  intros x.
+  admit.
+Admitted.
+
+Lemma cos_even : ∀ x, cos (-x) = cos x.
+Proof. admit. Admitted.
+
+Lemma cos_le_1 : ∀ x, cos x <= 1.
+Proof.
+  intros x. admit.
+Admitted.
+
+Lemma cos_ge_neg1 : ∀ x, -1 <= cos x.
+Proof. admit.
+Admitted.
+
+Lemma cos_sign_q1 : ∀ x, 0 <= x <= π/2 -> 0 <= cos x.
+Proof. admit. Admitted.
+
+Lemma cos_sign_q2 : ∀ x, π/2 <= x <= π -> cos x <= 0.
+Proof. admit. Admitted.
+
+Lemma cos_sign_q3 : ∀ x, π <= x <= (3*π)/2 -> cos x <= 0.
+Proof. admit. Admitted.
+
+Lemma cos_sign_q4 : ∀ x, (3*π)/2 <= x <= 2 * π -> 0 <= cos x.
+Proof. admit. Admitted.
+
+Lemma cos_derivative_on_0_π :
+  ∀ x, 0 < x < π -> ⟦ der x ⟧ cos = - sin_0_π.
+Proof.
+  intros x Hx.
+  admit.
+Admitted.
+
+Definition sin (x : ℝ) : ℝ :=
+  let y := proj1_sig (red_0_2π x) in
+  if Rle_dec y π then  √(1 - (cos y)^2) else -√(1 - (cos y)^2).
+
+Lemma cos_derivative :
+  ⟦ der ⟧ cos = -sin.
+Proof.
+Admitted.
+
+Lemma sin_consistency_on_0_π : ∀ x, 0 <= x <= π -> sin x = sin_0_π x.
+Proof. admit. Admitted.
+
+Lemma sin2_plus_cos2 : ∀ x, (sin x)^2 + (cos x)^2 = 1.
+Proof. admit. Admitted.
