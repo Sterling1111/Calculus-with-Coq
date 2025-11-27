@@ -3,7 +3,7 @@ From Lib Require Import Imports Notations Completeness Sets Functions Sums
                Partition Sorted_Rlt.
 Import SetNotations IntervalNotations Function_Notations LimitNotations DerivativeNotations.
 
-Local Notation In := Ensembles.In.
+Local Notation length := List.length.
 
 Definition lower_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition a b) : ℝ :=
   let f := bf.(bounded_f a b) in
@@ -255,7 +255,7 @@ Proof.
        {
          specialize (H3 0%nat ltac:(lia)). specialize (H5 0%nat ltac:(lia)).
          apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[0], l2.[1]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto. 
-         intros x H18. rewrite H12 in H18; try lia. rewrite <- H13 with (k := 1%nat); try lia. destruct H18 as [x2 [H18 H19]]. exists x2. split; auto. unfold In in *.
+         intros x H18. rewrite H12 in H18; try lia. rewrite <- H13 with (k := 1%nat); try lia. destruct H18 as [x2 [H18 H19]]. exists x2. split; auto. unfold Ensembles.In in *.
          assert (Sorted Rlt l2). { rewrite H8. apply insert_Sorted_Rlt_sorted; auto. unfold l1. pose proof partition_spec a b P; tauto. }
          pose proof Sorted_Rlt_nth l2 1 2  0ltac:(auto) ltac:(lia). simpl. lra.
        }
@@ -263,7 +263,7 @@ Proof.
        {
          specialize (H3 0%nat ltac:(lia)). specialize (H5 1%nat ltac:(simpl in *; lia)).
          apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[1], l2.[2]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
-         intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. replace 2%nat with (1 + 1)%nat in H19 by lia. rewrite H13 in H19; try lia. rewrite <- H12; try lia.
+         intros x [x2 [H19 H20]]. exists x2. split; auto. unfold Ensembles.In in *. replace 2%nat with (1 + 1)%nat in H19 by lia. rewrite H13 in H19; try lia. rewrite <- H12; try lia.
          assert (Sorted Rlt l2). { rewrite H8. apply insert_Sorted_Rlt_sorted; auto. unfold l1. pose proof partition_spec a b P; tauto. }
          pose proof Sorted_Rlt_nth l2 0 1 0 ltac:(auto) ltac:(lia). simpl. lra.
        }
@@ -290,7 +290,7 @@ Proof.
           {
             specialize (H3 (k-1)%nat ltac:(lia)). specialize (H5 k ltac:(lia)). replace (k-1+1)%nat with k in H3 by lia.
             apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[k], l2.[(k+1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(k-1)], l1.[k]] /\ y = f x)); auto.
-            intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite H13 in H19; try lia.
+            intros x [x2 [H19 H20]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite H13 in H19; try lia.
             assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } rewrite <- H13; try lia. replace (k - 1 + 1)%nat with k by lia. lra.
           }
           rewrite H13; try lia. replace (l2.[k]) with (l1.[(k-1)]). 2 : { replace k with (k - 1 + 1)%nat at 2 by lia. rewrite H13; try lia. reflexivity. }
@@ -309,13 +309,13 @@ Proof.
           {
             specialize (H3 0%nat ltac:(lia)). specialize (H5 1%nat ltac:(lia)).
             apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[1], l2.[2]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
-            intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *.  rewrite <- H13 with (k := 1%nat); try lia. simpl. lra.
+            intros x [x2 [H20 H21]]. exists x2. split; auto. unfold Ensembles.In in *.  rewrite <- H13 with (k := 1%nat); try lia. simpl. lra.
           }
           assert (l3.[0] <= l4.[0]) as H21.
           {
             specialize (H3 0%nat ltac:(lia)). specialize (H5 0%nat ltac:(lia)).
             apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[0], l2.[1]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
-            intros x [x2 [H21 H22]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. lra.
+            intros x [x2 [H21 H22]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite <- H12; try lia. lra.
           }
           replace (l2.[0]) with (l1.[0]). 2 : { rewrite H12; try lia. reflexivity. } replace (l2.[2]) with (l1.[1]). 2 : { rewrite <- H13; try lia. reflexivity. } nra.
         } nra.
@@ -329,7 +329,7 @@ Proof.
         assert (l3.[k] <= l4.[k]) as H19.
         {
           apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[k], l2.[(k + 1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[k], l1.[(k + 1)]] /\ y = f x)); auto.
-          intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite H12 in H19; try lia. rewrite H12 in H19; try lia. lra.
+          intros x [x2 [H19 H20]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite H12 in H19; try lia. rewrite H12 in H19; try lia. lra.
         } 
         assert (Sorted Rlt l1) as H20. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 k (k+1) 0 ltac:(auto) ltac:(lia) as H21. nra.
        }
@@ -340,14 +340,14 @@ Proof.
          {
             specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 i ltac:(lia)). replace (i-1+1)%nat with i in H3 by lia.
             apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[i], l2.[(i+1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
-            intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia. 
+            intros x [x2 [H19 H20]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite <- H12; try lia. rewrite <- H13; try lia. 
             assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H22. lra.
          }
          assert (l3.[(i-1)] <= l4.[(i-1)]) as H20.
          {
           specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 (i-1)%nat ltac:(lia)). replace (i-1+1)%nat with i in H3, H5 by lia.
           apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[(i-1)], l2.[i]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
-          intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia. 
+          intros x [x2 [H20 H21]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite <- H12; try lia. rewrite <- H13; try lia. 
           assert (Sorted Rlt l2) as H22. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0  ltac:(auto) ltac:(lia) as H23. lra.
          }
          assert (l1.[(i-1)] < l2.[i] < l1.[i]) as H21.
@@ -370,14 +370,14 @@ Proof.
           {
             specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 i ltac:(lia)). replace (i-1+1)%nat with i in H3 by lia.
             apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[i], l2.[(i+1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
-            intros x [x2 [H18 H19]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
+            intros x [x2 [H18 H19]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
             assert (Sorted Rlt l2) as H20. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H21. lra.
           }
           assert (l3.[(i-1)] <= l4.[(i-1)]) as H19.
           {
             specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 (i-1)%nat ltac:(lia)). replace (i-1+1)%nat with i in H3, H5 by lia.
             apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[(i-1)], l2.[i]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
-            intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
+            intros x [x2 [H19 H20]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
             assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0 ltac:(auto) ltac:(lia) as H22. lra.
           }
           assert (l1.[(i-1)] < l2.[i] < l1.[i]) as H21.
@@ -393,7 +393,7 @@ Proof.
           assert (l3.[k] <= l4.[k]) as H20.
           {
             apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[k], l2.[(k + 1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[k], l1.[(k + 1)]] /\ y = f x)); auto.
-            intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *. rewrite H12 in H20; try lia. rewrite H12 in H20; try lia. lra.
+            intros x [x2 [H20 H21]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite H12 in H20; try lia. rewrite H12 in H20; try lia. lra.
           }
           assert (Sorted Rlt l1) as H21. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 k (k+1) 0 ltac:(auto) ltac:(lia) as H22. nra.
        }
@@ -404,7 +404,7 @@ Proof.
           {
             specialize (H3 k ltac:(lia)). specialize (H5 (k+1)%nat ltac:(lia)). replace (k + 1 + 1)%nat with (k + 2)%nat in H5 by lia.
             apply glb_subset with (E1 := (fun y => exists x, x ∈ [l2.[(k+1)], l2.[(k+2)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[k], l1.[(k+1)]] /\ y = f x)); auto.
-            intros x [x2 [H21 H22]]. exists x2. split; auto. unfold In in *. rewrite <- H13; try lia. replace (k + 2)%nat with (k + 1 + 1)%nat in H21 by lia.
+            intros x [x2 [H21 H22]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite <- H13; try lia. replace (k + 2)%nat with (k + 1 + 1)%nat in H21 by lia.
             rewrite (H13 (k + 1)%nat) in H21; try lia. lra.
           }
           rewrite H13; try lia. replace (k + 2)%nat with (k + 1 + 1)%nat by lia. rewrite H13; try lia.
@@ -431,7 +431,7 @@ Proof.
        {
          specialize (H3 0%nat ltac:(lia)). specialize (H5 0%nat ltac:(lia)). apply Rle_ge.
          apply lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[0], l2.[1]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
-         intros x H18. rewrite H12 in H18; try lia. rewrite <- H13 with (k := 1%nat); try lia. destruct H18 as [x2 [H18 H19]]. exists x2. split; auto. unfold In in *.
+         intros x H18. rewrite H12 in H18; try lia. rewrite <- H13 with (k := 1%nat); try lia. destruct H18 as [x2 [H18 H19]]. exists x2. split; auto. unfold Ensembles.In in *.
          assert (Sorted Rlt l2). { rewrite H8. apply insert_Sorted_Rlt_sorted; auto. unfold l1. pose proof partition_spec a b P; tauto. }
          pose proof Sorted_Rlt_nth l2 1 2 0 ltac:(auto) ltac:(lia). simpl. lra.
        }
@@ -439,7 +439,7 @@ Proof.
        {
          specialize (H3 0%nat ltac:(lia)). specialize (H5 1%nat ltac:(simpl in *; lia)). 
          apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[1], l2.[2]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
-         intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. replace 2%nat with (1 + 1)%nat in H19 by lia. rewrite H13 in H19; try lia. rewrite <- H12; try lia.
+         intros x [x2 [H19 H20]]. exists x2. split; auto. unfold Ensembles.In in *. replace 2%nat with (1 + 1)%nat in H19 by lia. rewrite H13 in H19; try lia. rewrite <- H12; try lia.
          assert (Sorted Rlt l2). { rewrite H8. apply insert_Sorted_Rlt_sorted; auto. unfold l1. pose proof partition_spec a b P; tauto. }
          pose proof Sorted_Rlt_nth l2 0 1 0 ltac:(auto) ltac:(lia). simpl. lra.
        }
@@ -466,7 +466,7 @@ Proof.
          {
            specialize (H3 (k-1)%nat ltac:(lia)). specialize (H5 k ltac:(lia)). replace (k-1+1)%nat with k in H3 by lia.
            apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[k], l2.[(k+1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(k-1)], l1.[k]] /\ y = f x)); auto.
-           intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite H13 in H19; try lia.
+           intros x [x2 [H19 H20]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite H13 in H19; try lia.
            assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } rewrite <- H13; try lia. replace (k - 1 + 1)%nat with k by lia. lra.
          }
          rewrite H13; try lia. replace (l2.[k]) with (l1.[(k-1)]). 2 : { replace k with (k - 1 + 1)%nat at 2 by lia. rewrite H13; try lia. reflexivity. }
@@ -485,13 +485,13 @@ Proof.
          {
            specialize (H3 0%nat ltac:(lia)). specialize (H5 1%nat ltac:(lia)).
            apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[1], l2.[2]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
-           intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *.  rewrite <- H13 with (k := 1%nat); try lia. simpl. lra.
+           intros x [x2 [H20 H21]]. exists x2. split; auto. unfold Ensembles.In in *.  rewrite <- H13 with (k := 1%nat); try lia. simpl. lra.
          }
          assert (l3.[0] >= l4.[0]) as H21.
          {
            specialize (H3 0%nat ltac:(lia)). specialize (H5 0%nat ltac:(lia)).
            apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[0], l2.[1]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[0], l1.[1]] /\ y = f x)); auto.
-           intros x [x2 [H21 H22]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. lra.
+           intros x [x2 [H21 H22]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite <- H12; try lia. lra.
          }
          replace (l2.[0]) with (l1.[0]). 2 : { rewrite H12; try lia. reflexivity. } replace (l2.[2]) with (l1.[1]). 2 : { rewrite <- H13; try lia. reflexivity. } nra.
        } nra.
@@ -505,7 +505,7 @@ Proof.
         assert (l3.[k] >= l4.[k]) as H19.
         {
           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[k], l2.[(k + 1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[k], l1.[(k + 1)]] /\ y = f x)); auto.
-          intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite H12 in H19; try lia. rewrite H12 in H19; try lia. lra.
+          intros x [x2 [H19 H20]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite H12 in H19; try lia. rewrite H12 in H19; try lia. lra.
         }
         assert (Sorted Rlt l1) as H20. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 k (k+1) 0 ltac:(auto) ltac:(lia) as H21. nra.
        }
@@ -516,14 +516,14 @@ Proof.
          {
            specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 i ltac:(lia)). replace (i-1+1)%nat with i in H3 by lia.
            apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[i], l2.[(i+1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
-           intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
+           intros x [x2 [H19 H20]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
            assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H22. lra.
          }
          assert (l3.[(i-1)] >= l4.[(i-1)]) as H20.
          {
           specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 (i-1)%nat ltac:(lia)). replace (i-1+1)%nat with i in H3, H5 by lia.
           apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[(i-1)], l2.[i]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
-          intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
+          intros x [x2 [H20 H21]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
           assert (Sorted Rlt l2) as H22. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0  ltac:(auto) ltac:(lia) as H23. lra.
          }
          assert (l1.[(i-1)] < l2.[i] < l1.[i]) as H21.
@@ -546,14 +546,14 @@ Proof.
          {
            specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 i ltac:(lia)). replace (i-1+1)%nat with i in H3 by lia.
            apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[i], l2.[(i+1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
-           intros x [x2 [H18 H19]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
+           intros x [x2 [H18 H19]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
            assert (Sorted Rlt l2) as H20. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 (i-1) i 0 ltac:(auto) ltac:(lia) as H21. lra.
          }
          assert (l3.[(i-1)] >= l4.[(i-1)]) as H19.
          {
            specialize (H3 (i-1)%nat ltac:(lia)). specialize (H5 (i-1)%nat ltac:(lia)). replace (i-1+1)%nat with i in H3, H5 by lia.
            apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[(i-1)], l2.[i]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[(i-1)], l1.[i]] /\ y = f x)); auto.
-           intros x [x2 [H19 H20]]. exists x2. split; auto. unfold In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
+           intros x [x2 [H19 H20]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite <- H12; try lia. rewrite <- H13; try lia.
            assert (Sorted Rlt l2) as H21. { pose proof partition_spec a b Q; tauto. } pose proof Sorted_Rlt_nth l2 i (i+1) 0 ltac:(auto) ltac:(lia) as H22. lra.
          }
          assert (l1.[(i-1)] < l2.[i] < l1.[i]) as H21.
@@ -569,7 +569,7 @@ Proof.
          assert (l3.[k] >= l4.[k]) as H20.
          {
            apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[k], l2.[(k + 1)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[k], l1.[(k + 1)]] /\ y = f x)); auto.
-           intros x [x2 [H20 H21]]. exists x2. split; auto. unfold In in *. rewrite H12 in H20; try lia. rewrite H12 in H20; try lia. lra.
+           intros x [x2 [H20 H21]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite H12 in H20; try lia. rewrite H12 in H20; try lia. lra.
          }
          assert (Sorted Rlt l1) as H21. { pose proof partition_spec a b P; tauto. } pose proof Sorted_Rlt_nth l1 k (k+1) 0 ltac:(auto) ltac:(lia) as H22. nra.
        }
@@ -580,7 +580,7 @@ Proof.
          {
            specialize (H3 k ltac:(lia)). specialize (H5 (k+1)%nat ltac:(lia)). replace (k + 1 + 1)%nat with (k + 2)%nat in H5 by lia.
            apply Rle_ge, lub_subset with (E1 := (fun y => exists x, x ∈ [l2.[(k+1)], l2.[(k+2)]] /\ y = f x)) (E2 := (fun y => exists x, x ∈ [l1.[k], l1.[(k+1)]] /\ y = f x)); auto.
-           intros x [x2 [H21 H22]]. exists x2. split; auto. unfold In in *. rewrite <- H13; try lia. replace (k + 2)%nat with (k + 1 + 1)%nat in H21 by lia.
+           intros x [x2 [H21 H22]]. exists x2. split; auto. unfold Ensembles.In in *. rewrite <- H13; try lia. replace (k + 2)%nat with (k + 1 + 1)%nat in H21 by lia.
            rewrite (H13 (k + 1)%nat) in H21; try lia. lra.
          }
          rewrite H13; try lia. replace (k + 2)%nat with (k + 1 + 1)%nat by lia. rewrite H13; try lia.
@@ -924,7 +924,7 @@ Proof.
   { 
     intros i H12. assert (H13 : (points a b P).[i] < (points a b P).[(i + 1)]). { apply Sorted_Rlt_nth; try lia. destruct P; auto. }
     assert (H14 : continuous_on f [(points a b P).[i], (points a b P).[(i + 1)]]).
-    { apply continuous_on_subset with (A2 := [a, b]). intros x H14. unfold In in *. destruct P as [l]; simpl in *.
+    { apply continuous_on_subset with (A2 := [a, b]). intros x H14. unfold Ensembles.In in *. destruct P as [l]; simpl in *.
       assert (H15 : List.In (l.[i]) l). { apply nth_In; lia. }
       assert (H16 : List.In (l.[(i + 1)]) l). { apply nth_In; lia. }
       specialize (partition_P5 (l.[i]) H15) as H17. specialize (partition_P5 (l.[(i + 1)]) H16) as H18. lra. auto.
@@ -937,7 +937,7 @@ Proof.
   { 
     intros i H13. assert (H14 : (points a b P).[i] < (points a b P).[(i + 1)]). { apply Sorted_Rlt_nth; try lia. destruct P; auto. }
     assert (H15 : continuous_on f [(points a b P).[i], (points a b P).[(i + 1)]]).
-    { apply continuous_on_subset with (A2 := [a, b]). intros x H15. unfold In in *. destruct P as [l]; simpl in *.
+    { apply continuous_on_subset with (A2 := [a, b]). intros x H15. unfold Ensembles.In in *. destruct P as [l]; simpl in *.
       assert (H16 : List.In (l.[i]) l). { apply nth_In; lia. }
       assert (H17 : List.In (l.[(i + 1)]) l). { apply nth_In; lia. }
       specialize (partition_P5 (l.[i]) H16) as H18. specialize (partition_P5 (l.[(i + 1)]) H17) as H19. lra. auto.
@@ -959,7 +959,7 @@ Proof.
     assert (H18 : List.In (l.[i]) l). { apply nth_In; lia. }
     assert (H19 : List.In (l.[(i+1)]) l). { apply nth_In; lia. }
     specialize (partition_P5 (l.[i]) H18) as H20. specialize (partition_P5 (l.[(i+1)]) H19) as H21.
-    unfold In in *. specialize (H7 i ltac:(lia)). specialize (H6 x y ltac:(lra) ltac:(lra) ltac:(solve_R)). solve_R.
+    unfold Ensembles.In in *. specialize (H7 i ltac:(lia)). specialize (H6 x y ltac:(lra) ltac:(lra) ltac:(solve_R)). solve_R.
   }
   replace (length l1) with (length l2) by lia. rewrite sum_f_minus; try lia.
   assert (∑ 0 (length l2 - 1) (λ i : ℕ, l2.[i] * ((points a b P).[(i + 1)] - (points a b P).[i]) -
@@ -1504,9 +1504,9 @@ Proof.
       specialize (H7 (c + h) c f ltac:(solve_R) H10) as [sup H11]. exists sup; auto. 
     }
     assert (H8 : forall h, ~h <= (a - c) /\ h < 0 -> h ∈ (λ x : ℝ, a - c < x < 0)). 
-    { intros h H8. unfold In in *. lra. }
+    { intros h H8. unfold Ensembles.In in *. lra. }
     assert (H9 : forall h, ~h >= (b - c) /\ h > 0 -> h ∈ (λ x : ℝ, 0 < x < b - c)).
-    { intros h H9. unfold In in *. lra. }
+    { intros h H9. unfold Ensembles.In in *. lra. }
     set (M := λ h, match (Rle_dec h (a - c)) with 
                    | left _ => 0
                    | right H10 => match (Rlt_dec h 0) with 
@@ -1645,11 +1645,11 @@ Proof.
       specialize (H12 c ltac:(solve_R)) as H12. specialize (H12 ε H11) as [δ [H13 H14]].
       exists (Rmin (δ/2) (Rmin (b - c) (c - a))). split. solve_R.
       intros x H15. specialize (H5 x) as [H5 H5']. assert (x > 0 \/ x < 0) as [H16 | H16] by solve_R.
-      - specialize (H5 ltac:(solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c <= x0 <= c + x)).
+      - specialize (H5 ltac:(solve_R)). assert (H17 : continuous_on f [c, c + x]).
         { apply continuous_on_subset with (A2 := [a, b]); auto. intros y H17. solve_R. }
         pose proof continuous_function_attains_glb_on_interval f c (c + x) ltac:(lra) H17 as [x0 [H18 H19]].
         replace (m x) with (f x0). 2 : { apply glb_unique with (E := (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ (λ x1 : ℝ, c <= x1 <= c + x) ∧ y = f x0)); auto. }
-        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R. 
+        assert (x0 = c \/ x0 <> c) as [H20 | H20] by lra. subst. solve_R.
         apply H14. solve_R.
       - specialize (H5' ltac:(solve_R)). assert (H17 : continuous_on f (λ x0 : ℝ, c + x <= x0 <= c)).
         { apply continuous_on_subset with (A2 := [a, b]); auto. intros y H17. solve_R. }

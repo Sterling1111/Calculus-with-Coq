@@ -126,6 +126,11 @@ Proof.
     apply Rdiv_neg_pos; lra.
 Qed.
 
+Lemma B_decreases : decreasing_on (2 * A) [-1, 1].
+Proof.
+  intros a b H1 H2 H3. specialize (A_decreases a b H1 H2 H3) as H4. lra.
+Qed.
+
 Theorem cos_existence_0 : 
   { y | y ∈ [-1, 1] /\ A y = 0 / 2 }.
 Proof.
@@ -197,9 +202,17 @@ Proof.
     admit.
   }
   assert (H8 : inverse_on B cos_0_π [-1, 1] [0, π]) by admit.
-  assert (H9 : x ∈ (Rmin (B (-1)) (B 1), Rmax (B (-1)) (B 1))) by admit.
-  assert (H10 : ⟦ der ⟧ B (-1, 1) = (λ x0, -1 / √(1 - x0 ^ 2))) by admit.
-  assert (H11 : (λ x0, -1 / √(1 - x0 ^ 2)) (cos_0_π x) ≠ 0) by admit.
+  assert (H9 : x ∈ (Rmin (B (-1)) (B 1), Rmax (B (-1)) (B 1))).
+  {
+    destruct H8 as [H8 _]. pose proof (conj (H8 1 ltac:(solve_R)) (H8 (-1) ltac:(solve_R))) as [H9 H10].
+    admit.
+  }
+  assert (H10 : ⟦ der ⟧ B (-1, 1) = (λ x0, -1 / √(1 - x0 ^ 2))).
+  { intros y H10. left; split. apply is_interior_point_open; auto. specialize (H4 y H10); auto. }
+  assert (H11 : (λ x0, -1 / √(1 - x0 ^ 2)) (cos_0_π x) ≠ 0).
+  {
+    admit.
+  }
   assert (H12 : [0, π] = [Rmin (B (-1)) (B 1), Rmax (B (-1)) (B 1)]) by admit.
   rewrite H12 in H8.
   pose proof (theorem_12_5 B cos_0_π (λ x0, -1 / √(1 - x0 ^ 2))

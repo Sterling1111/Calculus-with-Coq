@@ -158,7 +158,7 @@ Proof.
   intros f g a H1 H2 ε H3. unfold continuous_at in *. specialize (H2 ε H3) as [δ1 [H4 H5]].
   specialize (H1 δ1 H4) as [δ2 [H6 H7]]. exists δ2. split; auto. intros x H8.
   specialize (H7 x H8). specialize (H5 (g x)). pose proof classic (g x = g a) as [H9 | H9].
-  - rewrite H9. solve_R.
+  - unfold compose. rewrite H9. solve_R.
   - specialize (H5 ltac:(solve_R)). auto.
 Qed.
 
@@ -603,7 +603,8 @@ Qed.
 Lemma sqrt_f_continuous : forall f,
   continuous f -> continuous (fun x => √(f x)).
 Proof.
-  intros f H1 a. apply theorem_6_2; auto. apply limit_sqrt_x.
+  intros f H1 a. replace (λ x : ℝ, √f x) with (sqrt ∘ f) by reflexivity.
+  apply theorem_6_2; auto. apply limit_sqrt_x.
 Qed.
 
 Lemma sqrt_continuous : continuous (fun x => √x).
