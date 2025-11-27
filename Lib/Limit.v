@@ -237,7 +237,7 @@ Module Function_Notations.
 
   Delimit Scope function_scope with f.
 
-  Notation "f ∘ g" := (fun x : ℝ => f (g x)) (at level 40, left associativity) : function_scope.
+  Notation "f ∘ g" := (compose f g) (at level 40, left associativity) : function_scope.
   Notation "f + g" := (fun x : ℝ => f x + g x) (at level 50, left associativity) : function_scope.
   Notation "f - g" := (fun x : ℝ => f x - g x) (at level 50, left associativity) : function_scope.
   Notation "- f" := (fun x : ℝ => - f x) (at level 35) : function_scope.

@@ -543,7 +543,7 @@ Proof.
   (fun h => f (a + h) * ((g (a + h) - g a)/h) + ((f (a + h) - f a)/h * g a)) by (extensionality h; nra).
   replace (f' a * g a + f a * g' a) with (f a * g' a + f' a * g a) by lra.
   apply limit_plus.
-  - apply limit_mult; auto. assert (continuous_at (f ∘ Rplus a) 0) as H3.
+  - apply limit_mult; auto. assert (continuous_at (λ x : ℝ, f (a + x)) 0) as H3.
     {
        apply theorem_9_1_a. unfold differentiable_at. unfold derivative_at in *. exists (f' a).
        replace ((λ h : ℝ, (f (a + (0 + h)) - f (a + 0)) / h)) with (λ h : ℝ, (f (a + h) - f a) / h).
@@ -563,7 +563,7 @@ Proof.
   (fun h => f (a + h) * ((g (a + h) - g a)/h) + ((f (a + h) - f a)/h * g a)) by (extensionality h; nra).
   replace (f' a * g a + f a * g' a) with (f a * g' a + f' a * g a) by lra.
   apply right_limit_plus.
-  - apply right_limit_mult; auto. assert (right_continuous_at (f ∘ Rplus a) 0) as H3.
+  - apply right_limit_mult; auto. assert (right_continuous_at (λ x : ℝ, f (a + x)) 0) as H3.
     {
        apply theorem_9_1_b. unfold right_differentiable_at. exists (f' a).
        replace ((λ h : ℝ, (f (a + (0 + h)) - f (a + 0)) / h)) with (λ h : ℝ, (f (a + h) - f a) / h).
@@ -703,6 +703,7 @@ Proof.
   apply limit_mult. replace ((λ x : ℝ, -1 * (f (a + x) - f a) / x)) with ((fun x => -1) ∙ (fun x => (f (a + x) - f a) / x)).
   2 : { extensionality x. lra. } apply limit_mult; auto. apply limit_const. apply limit_inv; solve_R.
   apply limit_mult. apply limit_const. rewrite Rmult_1_r. pose proof theorem_6_2 f (Rplus a) 0 as H6. unfold continuous_at in H6.
+  unfold compose in H6.
   rewrite Rplus_0_r in H6. apply H6; auto_limit.
 Qed.
 
@@ -745,7 +746,7 @@ Proof.
   apply limit_to_0_equiv with (f1 := fun h => φ h * ((g (a + h) - g a)/h)). 
   2 : { apply limit_mult; auto. unfold φ in H3 at 2. rewrite Rplus_0_r in H3. replace (g a - g a) with 0 in H3 by lra.
          destruct (Req_dec_T 0 0); auto; lra. }
-  intros x H4. unfold φ. destruct (Req_dec_T (g (a + x) - g a) 0) as [H5 | H5].
+  intros x H4. unfold φ. unfold compose. destruct (Req_dec_T (g (a + x) - g a) 0) as [H5 | H5].
   - rewrite H5. field_simplify; auto. replace (0 / x) with 0 by nra. replace (g (a + x)) with (g a) by lra. lra.
   - field. auto.
 Qed.
@@ -1382,7 +1383,7 @@ Proof.
   intros f f' x H1 H2. set (g := sqrt). set (g' := λ x, 1 / (2 * √ x)).
   assert (H3 : forall x, x > 0 -> ⟦ der x ⟧ g = g'). { unfold g, g'. intros y H3. apply derivative_sqrt_x; auto. }
   replace (λ x0 : ℝ, f' x0 / (2 * g (f x0))) with (g' ∘ f ∙ f').
-  2 : { extensionality y. unfold g, g'. simpl. lra. }
+  2 : { extensionality y. unfold g, g', compose. lra. }
   assert (H4 : ⟦ der f x ⟧ g = g'). { apply H3. apply H1. }
   apply (theorem_10_9 g f g' f' x H2 H4).
 Qed.

@@ -227,10 +227,10 @@ Proof.
     2 : { apply theorem_10_2. }
     set (δ := Rmin (y - Rmin (f a) (f b)) (Rmax (f a) (f b) - y)).
     assert (δ > 0) as H13 by (unfold δ; solve_R).
-    exists δ; split; auto. intros x H14. unfold δ in *. destruct H4 as [_ [_ [_ H4]]]. rewrite H4; solve_R.
+    exists δ; split; auto. intros x H14. unfold δ in *. destruct H4 as [_ [_ [_ H4]]]. unfold compose in *. rewrite H4; solve_R.
   }
   pose proof derivative_of_function_at_x_unique (f ∘ f_inv) (f' ∘ f_inv ∙ f_inv') (λ _ : ℝ, 1) y H12 H13 as H14.
-  simpl in H14. rewrite H7 in H14. lra.
+  simpl in H14. unfold compose in *. rewrite H7 in H14. lra.
 Qed.
 
 Theorem theorem_12_5 : forall f f_inv f' a b y,
