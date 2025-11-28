@@ -1344,6 +1344,12 @@ Proof.
     intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
 Qed.
 
+Lemma derivative_on_eq' : forall a b f f1' f2',
+  a < b -> (forall x, a <= x <= b -> f1' x = f2' x) -> ⟦ der ⟧ f [a, b] = f1' -> ⟦ der ⟧ f [a, b] = f2'.
+Proof.
+  intros a b f f1' f2' H1 H2 H3. 
+Admitted.
+
 Lemma derivative_sqrt_x : forall x,
   x > 0 ->
   ⟦ der x ⟧ (λ x, √x) = (λ x, 1 / (2 * √ x)).

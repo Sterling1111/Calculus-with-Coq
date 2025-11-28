@@ -804,6 +804,12 @@ Proof.
   - assert (a = b) as H5 by lra. subst. rewrite smallest_upper_sum_n_n. lra.
 Qed.
 
+Lemma integral_neg' : forall a b f,
+  ∫ a b f = ∫ b a -f.
+Proof.
+
+Admitted.
+
 Lemma integral_n_n : forall a f,
   ∫ a a f = 0.
 Proof.

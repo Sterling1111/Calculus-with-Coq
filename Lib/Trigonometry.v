@@ -172,6 +172,13 @@ Proof.
   pose proof (proj2_sig (cos_0_π_existence x (conj H2 H3))) as H4. lra.
 Qed.
 
+Lemma cos_0_π_in_range : forall x, 0 <= x <= π -> cos_0_π x ∈ [-1, 1].
+Proof.
+  intros x H1. unfold cos_0_π.
+  destruct (Rle_dec 0 x) as [H2|H2]; destruct (Rle_dec x π) as [H3|H3]; try lra.
+  pose proof (proj2_sig (cos_0_π_existence x (conj H2 H3))) as [H4 _]; auto.
+Qed.
+
 Definition sin_0_π (x:R) : R :=
   √(1 - (cos_0_π x) ^ 2).
 
@@ -198,22 +205,48 @@ Proof.
     apply limit_on_mult; auto. apply limit_on_const. 
   }
   assert (H7 : one_to_one_on B [-1, 1]).
+  { apply decreasing_on_imp_one_to_one_on; try lra. apply B_decreases. }
+  assert (H8 : inverse_on B cos_0_π [-1, 1] [0, π]).
   {
-    admit.
+    assert (H8 : forall y, y  ∈ [-1, 1] -> B y ∈ [B 1, B (-1)]).
+    {
+      split; destruct (Req_dec_T y 1); destruct (Req_dec_T y (-1)); subst; try lra;
+      apply Rlt_le; apply B_decreases; solve_R.
+    }
+    split; [| split; [| split]]; intros y H9.
+    - specialize (H8 y H9). unfold B in *; rewrite A_at_1, A_at_neg_1 in *; solve_R.
+    - apply cos_0_π_in_range; auto.
+    - apply H7; auto.
+      -- apply cos_0_π_in_range; auto.
+        specialize (H8 y H9). unfold B in *; rewrite A_at_1, A_at_neg_1 in *; solve_R.
+      -- unfold B. rewrite cos_0_π_spec; try lra.
+        specialize (H8 y H9). unfold B in *; rewrite A_at_1, A_at_neg_1 in *; solve_R.
+    - unfold B. rewrite cos_0_π_spec; auto. lra.
   }
-  assert (H8 : inverse_on B cos_0_π [-1, 1] [0, π]) by admit.
   assert (H9 : x ∈ (Rmin (B (-1)) (B 1), Rmax (B (-1)) (B 1))).
-  {
-    destruct H8 as [H8 _]. pose proof (conj (H8 1 ltac:(solve_R)) (H8 (-1) ltac:(solve_R))) as [H9 H10].
-    admit.
-  }
+  { unfold B. rewrite A_at_1, A_at_neg_1. solve_R. }
   assert (H10 : ⟦ der ⟧ B (-1, 1) = (λ x0, -1 / √(1 - x0 ^ 2))).
   { intros y H10. left; split. apply is_interior_point_open; auto. specialize (H4 y H10); auto. }
   assert (H11 : (λ x0, -1 / √(1 - x0 ^ 2)) (cos_0_π x) ≠ 0).
   {
-    admit.
+    assert (H11: -1 < cos_0_π x < 1).
+    {
+      pose proof (cos_0_π_in_range x) as [H11 H12]; try lra.
+      unfold B in H2. split.
+      - destruct H11 as [H11 | H11]; auto. rewrite <- H11 in H2.
+        rewrite A_at_neg_1 in H2. lra.
+      - destruct H12 as [H12 | H12]; auto. rewrite H12 in H2.
+        rewrite A_at_1 in H2. lra.
+    }
+    pose proof sqrt_lt_R0 (1 - cos_0_π x ^ 2) ltac:(solve_R) as H12.
+    intros H13. pose proof Rdiv_neg_pos (-1) (√(1 - cos_0_π x ^ 2)) ltac:(lra) H12 as H14.
+    lra.
   }
-  assert (H12 : [0, π] = [Rmin (B (-1)) (B 1), Rmax (B (-1)) (B 1)]) by admit.
+  assert (H12 : [0, π] = [Rmin (B (-1)) (B 1), Rmax (B (-1)) (B 1)]).
+  {
+    unfold B. rewrite A_at_1, A_at_neg_1, Rmin_right, Rmax_left by lra.
+    rewrite Rmult_0_r. replace (2 * (π / 2)) with π by lra. reflexivity.
+  }
   rewrite H12 in H8.
   pose proof (theorem_12_5 B cos_0_π (λ x0, -1 / √(1 - x0 ^ 2))
     (-1) 1 x H5 H6 H7 H8 H9 H10 H11) as H13.
@@ -222,13 +255,6 @@ Proof.
   assert (√(1 - cos_0_π y ^ 2) = 0 \/ √(1 - cos_0_π y ^ 2) <> 0) as [H15 | H15] by lra.
   - rewrite H15. rewrite Rdiv_0_r, Rinv_0. lra.
   - solve_R.
-Admitted.
-
-Lemma cos_0_π_in_range : forall x, 0 <= x <= π -> cos_0_π x ∈ [-1, 1].
-Proof.
-  intros x H1. unfold cos_0_π.
-  destruct (Rle_dec 0 x) as [H2|H2]; destruct (Rle_dec x π) as [H3|H3]; try lra.
-  pose proof (proj2_sig (cos_0_π_existence x (conj H2 H3))) as [H4 _]; auto.
 Qed.
 
 Lemma test : forall x,
@@ -239,8 +265,9 @@ Proof.
   rewrite pow2_sqrt; lra.
 Qed. 
 
-Parameter red_0_2π :
-  ∀ x : ℝ, { y : ℝ | 0 <= y < 2 * π /\ ∃ k : ℤ, x = y + IZR k * 2 * π }.
+Definition red_0_2π (x : ℝ) : { y : ℝ | 0 <= y < 2 * π /\ ∃ k : ℤ, x = y + IZR k * 2 * π }.
+Proof.
+Admitted.
 
 Lemma red_0_2π_spec : ∀ x,
   let y := proj1_sig (red_0_2π x) in

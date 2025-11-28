@@ -242,7 +242,36 @@ Theorem theorem_12_5 : forall f f_inv f' a b y,
   ⟦ der y ⟧ f_inv = (λ x, / (f' (f_inv x))).
 Proof.
   intros f f_inv f' a b y H1 H2 H3 H4 H5 H6 H7. unfold derivative_at.
-  assert (f (f_inv y) = y) as H8.
-  { destruct H4 as [_ [_ [_ H4]]]. apply H4; solve_R. }
+  assert (f (f_inv y) = y) as H8 by (apply H4; solve_R).
+  set (x0 := f_inv y). replace (f_inv y) with x0 in *; auto.
+  assert (H9 : a < x0 < b).
+  {
+    assert (H9 : y <> f a /\ y <> f b) by solve_R.
+    assert (H10 : x0 <> a) by (intro H10; rewrite H10 in *; solve_R).
+    assert (H11 : x0 <> b) by (intro H11; rewrite H11 in *; solve_R).
+    assert (a <= x0 <= b). { apply H4; solve_R. }
+    lra.
+  }
+  assert (H10 : continuous_at f_inv y).
+  {
+    pose proof (theorem_12_3 f f_inv a b H1 H2 H3 H4) as H10.
+    pose proof continuous_on_interval_closed f_inv (Rmin (f a) (f b)) (Rmax (f a) (f b)) ltac:(solve_R) as H11.
+    apply H11 in H10 as [H10 _]. specialize (H10 y ltac:(solve_R)).
+    auto.
+  }
+  set (g := (λ h : ℝ, (f_inv (y + h) - x0) / h)).
+  apply limit_to_a_equiv with (f1 := (∕ ∕ g)).
+  {
+    intros x H11. unfold g. field; split; auto.
+    assert (one_to_one_on f_inv [Rmin (f a) (f b), Rmax (f a) (f b)]) as H12.
+    { admit. (*need theorem for exists inverse on iff*) } unfold x0. intros H13.
+    (* H14 of course isnt true but we can constrict x so that it is with anoterh limit_eq_lemma*)
+    assert ((y + x) ∈ [Rmin (f a) (f b), Rmax (f a) (f b)]) as H14 by admit.
+    specialize (H12 y (y + x) ltac:(solve_R) H14). solve_R.
+  }
 
+  apply limit_inv; auto.
+  - unfold g.
+    apply limit_to_0_equiv with (f1 := (λ x : ℝ, x / ((f_inv (y + x) - x0)))).
+    { intros x H11. field; split; auto. admit. }
 Admitted.
