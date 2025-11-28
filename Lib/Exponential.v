@@ -22,12 +22,14 @@ Lemma derivative_log_x : forall x,
   x > 0 -> ⟦ der x ⟧ log = (fun x => 1 / x).
 Proof.
   intros x H1. pose proof Rtotal_order x 1 as [H2 | [H2 | H2]].
+  - admit. 
   - admit.
-  - rewrite H2.
-    apply derivative_at_eq_f with (f1 := fun x => ∫ 1 x (λ t, 1 / t)) (a := 0) (b := 2); try lra.
-    intros z H3. rewrite log_spec; lra. apply derivative_on_imp_derivative_at with (a := 0)(b := 2).
-  
-  
+  - apply derivative_at_eq_f with (f1 := fun x => ∫ 1 x (λ t, 1 / t)) (a := 1)(b := 2 * x); try lra.
+    { intros y H3. rewrite log_spec; lra. }
+    apply derivative_on_imp_derivative_at with (a := 1) (b := (2 * x)); solve_R.
+    apply derivative_on_closed_imp_open.
+    apply FTC1; try lra. intros c H3. apply limit_imp_limit_on; auto_limit.
+Admitted.
 
 Theorem theorem_18_1 : forall x y,
   x > 0 -> y > 0 -> log (x * y) = log x + log y.
@@ -58,14 +60,7 @@ Proof.
       - unfold log'. replace 1 with a by solve_R. apply FTC1; auto.
         intros c H6. apply limit_imp_limit_on. unfold a, b in *. auto_limit.
     }
-    assert (H6 : forall x, x > 0 -> ⟦ der x ⟧ log = log').
-    {
-      clear. intros x H1. set (a := Rmin x/2 x). set (b := Rmax 1 x).
-      apply derivative_on_imp_derivative_at with (a := a)(b := b).
-      unfold a, b in *. solve_R.
-      apply derivative_at_eq_f with (f1 := fun x => ∫ 1 x (λ t, 1 / t)) (a := 0)(b := 2 * z); try lra.
-      intros x0 H7. rewrite log_spec; try lra. apply 
-    }
+    pose proof derivative_log_x as H6.
     assert (H7: ⟦ der ⟧ f [a, b] = log').
     {
       apply derivative_on_eq' with (f1' := (log' ∘ g) ∙ (fun _ => y * 1)); auto.
@@ -86,7 +81,6 @@ Proof.
         -- unfold g. apply theorem_10_5''. apply theorem_10_2.
         -- unfold g, a, b in *. apply H6; solve_R.
     }
-    
 
     pose proof (corollary_11_2 log log' f log' a b H4 H5 H7 ltac:(auto)) as [c H8].
 
@@ -100,36 +94,4 @@ Proof.
     specialize (H8 x H12).
     unfold f, g, compose in H8.
     rewrite H8. rewrite Rmult_comm. lra.
-Admitted.
-
-Theorem theorem_18_2 : forall x y,
-  x > 0 -> y > 0 -> log (x * y) = log x + log y.
-Proof.
-  intros x y H1 H2.
-  set (log' := λ x0 : ℝ, 1 / x0).
-  assert (H3 : forall x, x > 0 -> ⟦ der x ⟧ log = log').
-  { intros x0 H3. admit. }
-  set (g := fun x => y * x).
-  set (g' := fun _ : R => y * 1).
-  set (f := log ∘ g).
-  assert (H4 : forall x, x > 0 -> ⟦ der x ⟧ f = log').
-  {
-    intros x0 H4. unfold f.
-    apply derivative_at_eq_f'' with (f1' := log' ∘ g ∙ g') (a := 0) (b := 2 * x0); try lra.
-    { intros z H5. unfold g, g', log', compose. field; lra. }
-    apply theorem_10_9; auto.
-    unfold g, g'. apply theorem_10_5''. apply theorem_10_2.
-    replace (g x0) with (y * x0). 2 : { reflexivity. }
-    apply H3; nra.
-  }
-  assert (H5 : ⟦ der ⟧ log [x / 2, 2 * x] = log').
-  {
-    intros z H5. specialize (H3 z ltac:(solve_R)). unfold derivative_at in H3.
-    left. split; auto. admit.
-  }
-  assert (H6 : ⟦ der ⟧ f [x / 2, 2 * x] = log') by admit.
-  pose proof corollary_11_2 log log' f log' (x/2) (2 * x) ltac:(lra) H5 H6 ltac:(solve_R) as [c H7].
-  specialize (H7 x ltac:(solve_R)).
-  replace (f x) with (log (x * y)) in H7.
-  2 : { unfold f, g, compose. rewrite Rmult_comm. reflexivity. }
-  rewrite H7. 
+Qed.
