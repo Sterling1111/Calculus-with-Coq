@@ -22,7 +22,20 @@ Lemma derivative_log_x : forall x,
   x > 0 -> ⟦ der x ⟧ log = (fun x => 1 / x).
 Proof.
   intros x H1. pose proof Rtotal_order x 1 as [H2 | [H2 | H2]].
-  - admit. 
+  - apply derivative_at_eq_f with (f1 := fun x => ∫ 1 x (λ t, 1 / t)) (a := 0.5 * x)(b := 1); try lra.
+    {intros y H3. rewrite log_spec; lra. }
+    apply derivative_on_imp_derivative_at with (a := 0.5 * x) (b := 1); solve_R.
+    apply derivative_on_closed_imp_open.
+    set (h := λ t : ℝ, -1 / t).
+    replace (λ x0 : ℝ, ∫ 1 x0 (λ t : ℝ, 1 / t)) with (λ x : ℝ, ∫ x 1 h).
+    2 : {
+        extensionality z. apply eq_sym. unfold h. rewrite integral_neg'; auto.
+        replace (- Rdiv 1)%f with (λ t : ℝ, - 1 / t).
+        2 : { extensionality t. lra. } auto.
+    }
+    apply derivative_on_eq' with (f1' := (-h)%f); try lra.
+    { intros z H6. unfold h. lra. }
+    apply FTC1'; try lra. unfold h. intros c H6. apply limit_imp_limit_on. auto_limit.
   - admit.
   - apply derivative_at_eq_f with (f1 := fun x => ∫ 1 x (λ t, 1 / t)) (a := 1)(b := 2 * x); try lra.
     { intros y H3. rewrite log_spec; lra. }
@@ -95,3 +108,22 @@ Proof.
     unfold f, g, compose in H8.
     rewrite H8. rewrite Rmult_comm. lra.
 Qed.
+
+Corollary corollary_18_1 : forall n x,
+  x > 0 -> log (x^n) = n * log x.
+Proof.
+  intros n x H1. induction n as [| k IH].
+  - simpl. rewrite log_1. lra.
+  - rewrite <- tech_pow_Rmult.
+    replace (S k * log x) with (log x + k * log x) by (destruct k; simpl; lra).
+    rewrite theorem_18_1; try lra. apply Rpow_gt_0; auto.
+Qed.
+
+Corollary corollary_18_2 : forall x y,
+  x > 0 -> y > 0 -> log (x / y) = log x - log y.
+Proof.
+  intros x y H1 H2. 
+  pose proof theorem_18_1 (x / y) y ltac:(apply Rdiv_pos_pos; auto) H2 as H3.
+  replace (x / y * y) with x in H3 by solve_R. lra.
+Qed.
+
