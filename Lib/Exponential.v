@@ -29,7 +29,7 @@ Proof.
     set (h := λ t : ℝ, -1 / t).
     replace (λ x0 : ℝ, ∫ 1 x0 (λ t : ℝ, 1 / t)) with (λ x : ℝ, ∫ x 1 h).
     2 : {
-        extensionality z. apply eq_sym. unfold h. rewrite integral_neg'; auto.
+        extensionality z. apply eq_sym. unfold h. rewrite integral_b_a_neg'; auto.
         replace (- Rdiv 1)%f with (λ t : ℝ, - 1 / t).
         2 : { extensionality t. lra. } auto.
     }
@@ -43,6 +43,23 @@ Proof.
     apply derivative_on_closed_imp_open.
     apply FTC1; try lra. intros c H3. apply limit_imp_limit_on; auto_limit.
 Admitted.
+
+Lemma derivative_log_on : forall a b, 
+  0 < a < b -> ⟦ der ⟧ log [a, b] = (λ x : ℝ, 1 / x).
+Proof.
+  intros a b H1.
+  apply derivative_on_eq with  (f1 := log); solve_R.
+  intros x H2. assert (x = a \/ x = b \/ x ∈ (a, b)) as [H3 | [H3 | H3]] by solve_R.
+  - right; left. split. apply is_left_endpoint_closed; lra.
+    pose proof derivative_at_iff log (fun x0 => 1 / x0) x as H4.
+    assert (H5 : ⟦ der x ⟧ log = (λ x0 : ℝ, 1 / x0)) by (apply derivative_log_x; lra). tauto.
+  - right; right; split. apply is_right_endpoint_closed; lra.
+    pose proof derivative_at_iff log (fun x0 => 1 / x0) x as H4.
+    assert (H5 : ⟦ der x ⟧ log = (λ x0 : ℝ, 1 / x0)) by (apply derivative_log_x; lra). tauto.
+  - left. split. apply is_interior_point_closed; solve_R.
+    pose proof derivative_at_iff log (fun x0 => 1 / x0) x as H4.
+    assert (H5 : ⟦ der x ⟧ log = (λ x0 : ℝ, 1 / x0)) by (apply derivative_log_x; solve_R). tauto.
+Qed.
 
 Theorem theorem_18_1 : forall x y,
   x > 0 -> y > 0 -> log (x * y) = log x + log y.
@@ -63,7 +80,7 @@ Proof.
         set (h := λ t : ℝ, -b / t).
         replace (λ x0 : ℝ, ∫ b x0 (λ t : ℝ, b / t)) with (λ x : ℝ, ∫ x b h).
         2 : {
-           extensionality z. apply eq_sym. unfold h. rewrite integral_neg'; auto.
+           extensionality z. apply eq_sym. unfold h. rewrite integral_b_a_neg'; auto.
            replace (- Rdiv b)%f with (λ t : ℝ, - b / t).
            2 : { extensionality t. lra. } auto.
         }
@@ -127,3 +144,103 @@ Proof.
   replace (x / y * y) with x in H3 by solve_R. lra.
 Qed.
 
+Lemma log_maps_into : maps_into log (0, ∞) ℝ.
+Proof.
+  intros x H1. apply Full_intro.
+Qed.
+
+Lemma log_pos : forall x,
+  x > 1 -> log x > 0.
+Proof.
+  intros x H1. rewrite log_spec; try lra.
+  assert (H2 : continuous_on (λ t : ℝ, 1 / t) [1, x]).
+  { intros c H2. apply limit_imp_limit_on. auto_limit. }
+  apply integral_pos; auto.
+  - intros x0 H3. apply Rdiv_pos_pos; solve_R.
+  - apply theorem_13_3; solve_R.
+Qed.
+
+Lemma log_neg : forall x,
+  0 < x < 1 -> log x < 0.
+Proof.
+  intros x H1. rewrite log_spec; try lra.
+  assert (H2 : continuous_on (λ t : ℝ, -1 / t) [x, 1]).
+  { intros c H2. apply limit_imp_limit_on. auto_limit. }
+  rewrite integral_b_a_neg'; try lra. replace (- Rdiv 1)%f with (λ t : ℝ, -1 / t).
+  2 : { extensionality t. lra. }
+  apply integral_neg; solve_R.
+  pose proof Rdiv_pos_pos 1 x0 ltac:(lra) ltac:(lra). lra.
+  apply theorem_13_3; solve_R.
+Qed.
+
+Lemma log_increasing : increasing_on log (0, ∞).
+Proof.
+  intros x y H1 H2 H3.
+  replace y with (x * (y / x)) by (field; solve_R).
+  rewrite theorem_18_1; solve_R.
+  2 : { apply Rdiv_pos_pos; lra. }
+  assert (H4 : y / x > 1).
+  { apply Rmult_gt_reg_r with (r := x); field_simplify; lra. }
+  apply log_pos in H4.
+  lra.
+Qed.
+
+Lemma log_injective : injective_on log (0, ∞).
+Proof.
+  apply increasing_on_imp_one_to_one_on. apply log_increasing.
+Qed.
+
+Lemma log_2_pos : log 2 > 0.
+Proof.
+  apply log_pos; lra.
+Qed.
+
+Lemma log_continuous_sub : forall a b,
+  0 < a < b -> continuous_on log [a, b].
+Proof.
+  intros a b H1.
+  apply theorem_9_1_d; try lra. apply derivative_on_imp_differentiable_on with (f' := fun x => 1 / x).
+  apply derivative_log_on; try lra.
+Qed.
+
+Lemma log_unbounded_above_on : unbounded_above_on log (0, ∞).
+Admitted.
+
+Lemma log_unbounded_below_on : unbounded_below_on log (0, 1).
+Admitted.
+
+Lemma log_surjective : surjective_on log (0, ∞) ℝ.
+Proof.
+  intros y _.
+  assert (exists x, x ∈ (0, 1) /\ log x < y) as [x1 [H1 H2]] by admit.
+  assert (exists x, x ∈ (1, ∞) /\ log x > y) as [x2 [H3 H4]] by admit.
+  pose proof theorem_7_4 log x1 x2 y ltac:(solve_R) ltac:(apply log_continuous_sub; solve_R) ltac:(lra) as [c [H5 H6]].
+  exists c. solve_R.
+Admitted.
+
+Lemma exists_log_inverse : exists f, inverse_on log f (0, ∞) ℝ.
+Proof.
+  assert (H1 : bijective_on log (0, ∞) ℝ).
+  {
+    repeat split. 
+    - apply log_injective.
+    - apply log_surjective.
+  }
+  pose proof exists_inverse_on_iff log (0, ∞) ℝ as H2.
+  apply H2; auto.
+Qed.
+
+Definition exp_sig : { f : ℝ -> ℝ | inverse_on log f (0, ∞) ℝ }.
+Proof.
+  apply constructive_indefinite_description.
+  apply exists_log_inverse.
+Qed.
+
+Definition exp (x : ℝ) : ℝ := (proj1_sig exp_sig) x.
+
+Lemma exp_inverse_log : inverse_on log exp (0, ∞) ℝ.
+Proof.
+  apply (proj2_sig exp_sig).
+Qed.
+
+Definition e := exp 1.

@@ -82,6 +82,28 @@ Proof.
     pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia) as H12. nra.
 Qed.
 
+Lemma lower_sum_nonpos : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b),
+  let f := bf.(bounded_f a b) in
+  (forall x, x ∈ [a, b] -> f x <= 0) ->
+  a < b -> L(bf, P) <= 0.
+Proof.
+  intros a b [f H1 H2] P bf H3 H4. unfold lower_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_inf f a b P H2) as [l2 [H5 H6]].
+  replace bf with f in * by auto.
+  assert (length l2 = 0 \/ length l2 > 0)%nat as [H7 | H7] by lia.
+  - rewrite length_zero_iff_nil in H7. rewrite H7 in *. rewrite sum_f_0_0. simpl. lra.
+  - apply sum_f_nonpos; try lia. intros k H8.
+    specialize (H6 k ltac:(lia)). destruct H6 as [H6a H6b].
+    pose proof partition_in a b P ((points a b P).[k]) (points a b P) eq_refl ltac:(apply nth_In; lia) as H9.
+    pose proof partition_in a b P ((points a b P).[(k + 1)]) (points a b P) eq_refl ltac:(apply nth_In; lia) as H10.
+    pose proof Sorted_Rlt_nth (points a b P) k (k + 1) 0 ltac:(destruct P; auto) ltac:(lia) as H11.
+    assert (H12 : f ((points a b P).[k]) <= 0) by (apply H3; solve_R).
+    assert (H13 : (λ y : ℝ, ∃ x : ℝ, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] ∧ y = f x) (f ((points a b P).[k]))).
+    { exists ((points a b P).[k]). split; [solve_R | reflexivity]. }
+    specialize (H6a _ H13).
+    nra.
+Qed.
+
 Lemma lower_sum_pos : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b),
   let f := bf.(bounded_f a b) in
   (forall x, x ∈ [a, b] -> 0 < f x) -> continuous_on f [a, b] ->
@@ -98,13 +120,89 @@ Proof.
     specialize (H6 k ltac:(lia)).
     assert (H12 : (λ y : ℝ, ∃ x : ℝ, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] ∧ y = f x) ⊆
                   ((λ y : ℝ, ∃ x : ℝ, x ∈ [a, b] ∧ y = f x))).
-    { intros y [x' [H12 H13]]. exists x'. split; solve_R. 
-    pose proof partition_in a b P x' (points a b P) ltac:(apply eq_refl) as H14. apply H14. admit. }
+    { 
+      intros y [x' [H12 H13]]. exists x'; split; auto.
+      pose proof (partition_in a b P (nth k (points a b P) 0) (points a b P) ltac:(auto) ltac:(apply nth_In; lia)).
+      pose proof (partition_in a b P (nth (k+1) (points a b P) 0) (points a b P) ltac:(auto) ltac:(apply nth_In; lia)).
+      solve_R.
+    }
     pose proof glb_subset (λ y : ℝ, ∃ x : ℝ, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] ∧ y = f x)
       ((λ y : ℝ, ∃ x : ℝ, x ∈ [a, b] ∧ y = f x)) (l2.[k]) (f x) H6 H11 H12 as H13.
     specialize (H3 x H10). nra.
-Admitted.
+Qed.
 
+Lemma lower_sum_neg : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b),
+  let f := bf.(bounded_f a b) in
+  (forall x, x ∈ [a, b] -> f x < 0) ->
+  a < b -> L(bf, P) < 0.
+Proof.
+  intros a b [f H1 H2] P bf H3 H4. unfold lower_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_inf f a b P H2) as [l2 [H5 H6]].
+  replace bf with f in * by auto.
+  assert (length l2 = 0 \/ length l2 > 0)%nat as [H7 | H7] by lia.
+  - rewrite length_zero_iff_nil in H7. rewrite H7 in *. pose proof partition_length a b P as H8. simpl in *; lia.
+  - apply sum_f_neg; try lia. intros k H8.
+    specialize (H6 k ltac:(lia)). destruct H6 as [H6 _].
+    specialize (H6 (f ((points a b P).[k]))). specialize (H3 ((points a b P).[k])).
+    pose proof partition_in a b P ((points a b P).[k]) (points a b P) eq_refl ltac:(apply nth_In; lia) as H9.
+    specialize (H3 ltac:(solve_R)). assert (H10 : l2.[k] <= f ((points a b P).[k])).
+    { apply Rge_le. apply H6. exists ((points a b P).[k]). split; auto. pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia). solve_R. }
+    pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia) as H11. nra.
+Qed.
+
+Lemma upper_sum_nonpos : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b),
+  let f := bf.(bounded_f a b) in
+  (forall x, x ∈ [a, b] -> f x <= 0) ->
+  a < b -> U(bf, P) <= 0.
+Proof.
+  intros a b [f H1 H2] P bf H3 H4. unfold upper_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_sup f a b P H2) as [l2 [H5 H6]].
+  replace bf with f in * by auto.
+  assert (length l2 = 0 \/ length l2 > 0)%nat as [H7 | H7] by lia.
+  - rewrite length_zero_iff_nil in H7. rewrite H7 in *. rewrite sum_f_0_0. simpl. lra.
+  - apply sum_f_nonpos; try lia. intros k H8.
+    specialize (H6 k ltac:(lia)). destruct H6 as [_ H6].
+    specialize (H6 0). 
+    pose proof partition_in a b P ((points a b P).[k]) (points a b P) eq_refl ltac:(apply nth_In; lia) as H9.
+    pose proof partition_in a b P ((points a b P).[(k + 1)]) (points a b P) eq_refl ltac:(apply nth_In; lia) as H10.
+    assert (is_upper_bound (λ y : ℝ, ∃ x : ℝ, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] ∧ y = f x) 0) as H11.
+    { intros y [x [H12 H13]]. rewrite H13. apply H3. solve_R. }
+    specialize (H6 H11). 
+    pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia) as H12. nra.
+Qed.
+
+Lemma upper_sum_neg : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b),
+  let f := bf.(bounded_f a b) in
+  (forall x, x ∈ [a, b] -> f x < 0) -> continuous_on f [a, b] ->
+  a < b -> U(bf, P) < 0.
+Proof.
+  intros a b [f H1 H2] P bf H3 H0 H4. unfold upper_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_sup f a b P H2) as [l2 [H5 H6]].
+  replace bf with f in * by auto.
+  assert (length l2 = 0 \/ length l2 > 0)%nat as [H7 | H7] by lia.
+  - rewrite length_zero_iff_nil in H7. rewrite H7 in *.
+    pose proof partition_length a b P as H8. simpl in *; lia.
+  - apply sum_f_neg; try lia. intros k H8.
+    pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(lia) as H9.
+    pose proof continuous_function_attains_lub_on_interval f a b H4 H0 as [x [H10 H11]].
+    specialize (H6 k ltac:(lia)).
+    assert (H12 :
+      (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ [(points a b P).[k], (points a b P).[(k + 1)]] ∧ y = f x0) ⊆
+      (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ [a, b] ∧ y = f x0)).
+    {
+      intros y [x0 [H12 H13]]. exists x0; split; auto.
+      pose proof (partition_in a b P ((points a b P).[k]) (points a b P) eq_refl ltac:(apply nth_In; lia)).
+      pose proof (partition_in a b P ((points a b P).[(k+1)]) (points a b P) eq_refl ltac:(apply nth_In; lia)).
+      solve_R.
+    }
+    pose proof lub_subset
+      (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ [(points a b P).[k], (points a b P).[(k + 1)]] ∧ y = f x0)
+      (λ y : ℝ, ∃ x0 : ℝ, x0 ∈ [a, b] ∧ y = f x0)
+      (l2.[k]) (f x) H6 H11 H12 as H13.
+    specialize (H3 x H10).
+    nra.
+Qed.
+    
 Section lower_upper_sum_test.
   Let f : ℝ → ℝ := λ x, x.
   Let a : ℝ := 1.
@@ -794,7 +892,7 @@ Proof.
   assert (b < b -> False). lra. exfalso. auto.
 Qed.
 
-Lemma integral_neg : forall a b f,
+Lemma integral_b_a_neg : forall a b f,
   ∫ a b f = - ∫ b a f.
 Proof.
   intros a b f. unfold definite_integral. destruct (Rle_dec a b) as [H1 | H1]; destruct (Rle_dec b a) as [H2 | H2]; try lra; try (exfalso; lra);
@@ -804,7 +902,7 @@ Proof.
   - assert (a = b) as H5 by lra. subst. rewrite smallest_upper_sum_n_n. lra.
 Qed.
 
-Lemma integral_neg' : forall a b f,
+Lemma integral_b_a_neg' : forall a b f,
   ∫ a b f = ∫ b a -f.
 Proof.
 
@@ -1313,29 +1411,29 @@ Lemma integral_plus' : forall f a b c,
 Proof.
   intros f a b c H1. pose proof Rtotal_order a c as [H2 | [H2 | H2]]; pose proof Rtotal_order b c as [H3 | [H3 | H3]];
   pose proof Rtotal_order a b as [H4 | [H4 | H4]]; try (subst; rewrite integral_n_n; lra).
-  - rewrite integral_neg with (a := c). rewrite integral_plus with (b := c) (c := b); try lra.
+  - rewrite integral_b_a_neg with (a := c). rewrite integral_plus with (b := c) (c := b); try lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
-  - subst. rewrite integral_n_n. rewrite integral_neg with (a := c). lra.
-  - rewrite integral_neg with (a := c). rewrite integral_plus with (a := b) (b := c) (c := a); try lra.
-    rewrite integral_neg. lra. apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
+  - subst. rewrite integral_n_n. rewrite integral_b_a_neg with (a := c). lra.
+  - rewrite integral_b_a_neg with (a := c). rewrite integral_plus with (a := b) (b := c) (c := a); try lra.
+    rewrite integral_b_a_neg. lra. apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
   - rewrite integral_plus with (c := c); try lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
   - rewrite integral_plus with (c := c); try lra.
-  - rewrite integral_neg with (a := c). rewrite integral_plus with (a := b) (b := c) (c := a); try lra.
-  - rewrite integral_neg. rewrite integral_plus with (a := b) (c := c); try lra. rewrite integral_neg with (a := c).
-    rewrite integral_neg. lra.
+  - rewrite integral_b_a_neg with (a := c). rewrite integral_plus with (a := b) (b := c) (c := a); try lra.
+  - rewrite integral_b_a_neg. rewrite integral_plus with (a := b) (c := c); try lra. rewrite integral_b_a_neg with (a := c).
+    rewrite integral_b_a_neg. lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
-  - rewrite integral_plus with (a := c) (c := a); try lra. rewrite integral_neg with (b := c); lra.
+  - rewrite integral_plus with (a := c) (c := a); try lra. rewrite integral_b_a_neg with (b := c); lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
-  - subst. rewrite integral_n_n. rewrite integral_neg with (a := c). lra.
-  - rewrite integral_neg with (b := c). rewrite integral_plus with (a := c) (b := a) (c := b); try lra.
-    rewrite integral_neg. lra. apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
+  - subst. rewrite integral_n_n. rewrite integral_b_a_neg with (a := c). lra.
+  - rewrite integral_b_a_neg with (b := c). rewrite integral_plus with (a := c) (b := a) (c := b); try lra.
+    rewrite integral_b_a_neg. lra. apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
 Qed.
 
 Lemma integral_minus : forall f a b c,
   integrable_on (Rmin a (Rmin b (b + c))) (Rmax a (Rmax b (b + c))) f -> ∫ a (b + c) f - ∫ a b f = ∫ b (b + c) f.
 Proof.
-  intros f a b c H1. rewrite integral_plus' with (c := b + c) (a := a) (b := b). rewrite integral_neg with (a := b + c). lra.
+  intros f a b c H1. rewrite integral_plus' with (c := b + c) (a := a) (b := b). rewrite integral_b_a_neg with (a := b + c). lra.
   auto.
 Qed.
 
@@ -1344,10 +1442,10 @@ Lemma integral_minus' : forall f a b c,
 Proof.
   intros f a b c H1. pose proof Rtotal_order a c as [H2 | [H2 | H2]]; pose proof Rtotal_order b c as [H3 | [H3 | H3]];
   pose proof Rtotal_order a b as [H4 | [H4 | H4]]; try (subst; rewrite integral_n_n; lra).
-  - rewrite integral_neg with (a := c). field_simplify. rewrite integral_plus with (b := c) (c := b); try lra.
+  - rewrite integral_b_a_neg with (a := c). field_simplify. rewrite integral_plus with (b := c) (c := b); try lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
-  - subst. rewrite integral_n_n. rewrite integral_neg with (a := c). lra.
-  - rewrite integral_neg with (a := c). field_simplify.
+  - subst. rewrite integral_n_n. rewrite integral_b_a_neg with (a := c). lra.
+  - rewrite integral_b_a_neg with (a := c). field_simplify.
 Admitted.
 
 Lemma theorem_13_6_a : forall f a b c,
@@ -1569,7 +1667,7 @@ Proof.
     clear H11 H12. rename H13 into H11. assert (H12 : m h' <= ∫ c (c + h') f / h' <= M h').
     {
       destruct H11 as [H11 H12]. apply Rmult_le_compat_neg_l with (r := /h') in H11, H12; try (apply Rlt_le; apply Rinv_neg; solve_R).
-      replace (∫ (c + h') c f) with (- ∫ c (c + h') f) in *. 2 : { apply eq_sym. apply integral_neg. } replace (/ h' * (m h' * - h')) with (- m h') in H11 by (field; solve_R).
+      replace (∫ (c + h') c f) with (- ∫ c (c + h') f) in *. 2 : { apply eq_sym. apply integral_b_a_neg. } replace (/ h' * (m h' * - h')) with (- m h') in H11 by (field; solve_R).
       replace (/ h' * (M h' * - h')) with (- M h') in H12 by (field; solve_R). lra.
     } lra.
   }
@@ -1783,7 +1881,7 @@ Proof.
   2 : { apply integrable_on_sub_interval with (a := a) (b := b); auto. unfold δ in H7; solve_R. }
   assert (H8 : integrable_on a x f).
   { apply integrable_on_sub_interval with (a := a) (b := b); auto. unfold δ in H7; solve_R. }
-  rewrite integral_neg, Rabs_Ropp. 
+  rewrite integral_b_a_neg, Rabs_Ropp. 
   pose proof theorem_13_7 a x f m M ltac:(solve_R) H8 ltac:(intros y H9; apply H6; unfold δ in H7; solve_R) as [H10 H11].
   assert (H12 : |∫ a x f| <= C * (x - a)) by (unfold C; solve_R).
   assert (C = 0 \/ C > 0) as [H13 | H13] by (unfold C; solve_R); [solve_R | ].
@@ -1817,17 +1915,71 @@ Proof.
   rewrite Rminus_0_r. nra.
 Qed.
 
-
-
-(*
-Lemma integral_pos : forall a b f,
-    a < b -> (forall x, x ∈ [a, b] -> 0 <= f x) -> integrable_on a b f -> 0 <= ∫ a b f.  
+Lemma integral_nonneg : forall a b f,
+  a <= b -> (forall x, x ∈ [a, b] -> 0 <= f x) -> integrable_on a b f -> 0 <= ∫ a b f.  
 Proof.
-  intros a b f H1 H2 H3.
-  pose proof integral_eq' a b f H1 H3 as [bf [r [H5 [H6 [_ [H7 H8]]]]]].
-  pose proof lower_sum_pos a b bf as H9.
-  pose proof exists_partition_a_b a b H1 as [P _].
-  specialize (H9 P) as H10. specialize (H7 (L(bf, P)) ltac:(exists P; reflexivity)).
-  rewrite H5 in *. specialize (H10 H2 H1). nra.
+  intros a b f H1 H2 H3. destruct H1 as [H1 | H1]. 2 : { subst. rewrite integral_n_n. lra. }
+  pose proof integral_eq' a b f H1 H3 as [bf [r [H4 [H5 [_ [H6 H7]]]]]]. subst.
+  pose proof exists_partition_a_b a b H1 as [P H8].
+  specialize (H6 (L(bf, P)) ltac:(exists P; reflexivity)).
+  apply Rle_trans with (r2 := L(bf, P)); solve_R.
+  apply Rge_le. apply lower_sum_nonneg; auto.
 Qed.
-*)
+
+Lemma integral_pos : forall a b f,
+  a < b -> (forall x, x ∈ [a, b] -> 0 < f x) -> continuous_on f [a, b] -> integrable_on a b f -> 0 < ∫ a b f.
+Proof.
+  intros a b f H1 H2 H3 H4.
+  pose proof integral_eq' a b f H1 H4 as [bf [r [H5 [H6 [_ [H7 H8]]]]]]. subst.
+  pose proof exists_partition_a_b a b H1 as [P H9].
+  specialize (H7 (L(bf, P)) ltac:(exists P; reflexivity)).
+  apply Rlt_le_trans with (r2 := L(bf, P)).
+  - apply lower_sum_pos; auto.
+  - apply H7.
+Qed.
+
+Lemma integral_nonpos : forall a b f,
+  a <= b -> (forall x, x ∈ [a, b] -> f x <= 0) -> integrable_on a b f -> ∫ a b f <= 0.
+Proof.
+  intros a b f H1 H2 H3. destruct H1 as [H1 | H1]. 2 : { subst. rewrite integral_n_n. lra. }
+  pose proof integral_eq' a b f H1 H3 as [bf [r [H4 [H5 [[H6 H7] _]]]]]. subst.
+  pose proof exists_partition_a_b a b H1 as [P H8].
+  specialize (H6 (U(bf, P)) ltac:(exists P; reflexivity)).
+  apply Rle_trans with (r2 := U(bf, P)); solve_R.
+  apply upper_sum_nonpos; auto.
+Qed.
+
+Lemma integral_neg : forall a b f,
+  a < b -> (forall x, x ∈ [a, b] -> f x < 0) -> continuous_on f [a, b] -> integrable_on a b f -> ∫ a b f < 0.
+Proof.
+  intros a b f H1 H2 H3 H4.
+  pose proof integral_eq' a b f H1 H4 as [bf [r [H5 [H6 [[H7 H8] _]]]]]. subst.
+  pose proof exists_partition_a_b a b H1 as [P H9].
+  specialize (H7 (U(bf, P)) ltac:(exists P; reflexivity)).
+  apply Rle_lt_trans with (r2 := U(bf, P)); solve_R.
+  apply upper_sum_neg; auto.
+Qed.
+
+Lemma integral_pos' : forall a b f,
+  a < b -> (forall x, x ∈ [a, b] -> 0 <= f x) -> (exists x, x ∈ [a, b] /\ f x > 0) ->
+  continuous_on f [a, b] -> integrable_on a b f -> 0 < ∫ a b f.
+Proof.
+  intros a b f H1 H2 [c [H3 H4]] H5 H6.
+  pose proof continuous_strictly_pos_interval f a b c H1 H5 H3 H4 as [u [v [[H7 [H8 H9]] H10]]].
+  assert (H11 : integrable_on u v f). { apply integrable_on_sub_interval with (a := a)(b := b); solve_R. }
+  assert (H12 : integrable_on u b f). { apply integrable_on_sub_interval with (a := a)(b := b); solve_R. }
+  assert (H13 : integrable_on v b f). { apply integrable_on_sub_interval with (a := a)(b := b); solve_R. }
+  assert (H14 : integrable_on a u f). { apply integrable_on_sub_interval with (a := a)(b := b); solve_R. }
+  assert (H15 : 0 < ∫ u v f).
+  {
+    apply integral_pos; auto.
+    apply continuous_on_subset with (A2 := [a, b]); auto. intros x H15. solve_R.
+  }
+  assert (H16 : 0 <= ∫ v b f).
+  { apply integral_nonneg; auto. intros x H16. apply H2; solve_R. }
+  assert (H17 : 0 <= ∫ a u f).
+  { apply integral_nonneg; auto. intros x H17. apply H2; solve_R. }
+  replace (∫ a b f) with (∫ a u f + ∫ u b f) by (rewrite <- integral_plus'; solve_R).
+  replace (∫ u b f) with (∫ u v f + ∫ v b f) by (rewrite <- integral_plus'; solve_R).
+  lra.
+Qed.

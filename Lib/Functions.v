@@ -12,14 +12,17 @@ Proof.
   rewrite H3. reflexivity.
 Qed.
 
-Definition injective_on {A B : Type} (f : A -> B) (X : Ensemble A) : Prop :=
-  forall x y : A, x ∈ X -> y ∈ X -> f x = f y -> x = y.
+Definition maps_into {A B : Type} (f : A -> B) (D : Ensemble A) (C : Ensemble B) : Prop :=
+  forall x, x ∈ D -> f x ∈ C.
 
-Definition surjective_on {A B : Type} (f : A -> B) (E : Ensemble B) : Prop :=
-  forall y : B, y ∈ E -> exists x : A, f x = y.
+Definition injective_on {A B : Type} (f : A -> B) (D : Ensemble A) : Prop :=
+  forall x y : A, x ∈ D -> y ∈ D -> f x = f y -> x = y.
 
-Definition bijective_on {A B : Type} (f : A -> B) (X : Ensemble A) (Y : Ensemble B) : Prop :=
-  injective_on f X /\ surjective_on f Y.
+Definition surjective_on {A B : Type} (f : A -> B) (D : Ensemble A) (C : Ensemble B) : Prop :=
+  forall y : B, y ∈ C -> exists x : A, x ∈ D /\ f x = y.
+
+Definition bijective_on {A B : Type} (f : A -> B) (D : Ensemble A) (C : Ensemble B) : Prop :=
+  maps_into f D C /\ injective_on f D /\ surjective_on f D C.
 
 Lemma injective_subType : forall U V (A : Ensemble U) (f : U -> V),
   injective_on f A -> injective (fun x : subType A => f (val A x)).

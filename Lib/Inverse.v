@@ -4,15 +4,17 @@ Import SetNotations IntervalNotations Function_Notations LimitNotations Derivati
 Definition one_to_one_on (f : ℝ -> ℝ) (D : Ensemble ℝ) :=
   injective_on f D.
 
-Definition one_to_one f := one_to_one_on f ℝ.
+Definition one_to_one (f : ℝ -> ℝ) := 
+  one_to_one_on f ℝ.
 
-Definition injective f := one_to_one f.
+Definition injective (f : ℝ -> ℝ) := 
+  one_to_one f.
 
 Definition surjective (f : ℝ -> ℝ) :=
-  surjective_on f ℝ.
+  surjective_on f ℝ ℝ.
 
 Definition bijective (f : ℝ -> ℝ) :=
-  one_to_one f /\ surjective f.
+  bijective_on f ℝ ℝ.
 
 Definition inverse_on (f f_inv : ℝ -> ℝ) (D1 D2 : Ensemble ℝ) :=
   (forall x, x ∈ D1 -> f x ∈ D2) /\
@@ -37,21 +39,31 @@ Proof.
   apply (f_equal f_inv) in H5. rewrite (H1 x H3), (H1 y H4) in H5. auto.
 Qed.
 
-Theorem exists_inverse_iff : forall (f : ℝ -> ℝ),
-  (exists f_inv, inverse f f_inv) <-> bijective f.
+Theorem exists_inverse_on_iff : forall f D C,
+  (exists f_inv, inverse_on f f_inv D C) <-> bijective_on f D C.
 Proof.
-  intros f; split.
-  - intros [f_inv H1]. split.
-    -- apply (theorem_12_1_a f f_inv); auto.
-    -- intros x _. exists (f_inv x). destruct H1 as [_ [_[_ H1]]].
-       specialize (H1 x ltac:(apply Full_intro)). auto.
-  - intros [H1 H2]. unfold one_to_one, one_to_one_on, injective_on in H1.
-    unfold surjective, surjective_on in H2. 
-    set (f_inv := fun y => epsilon (A:=ℝ) (inhabits 0) (fun x => f x = y)).
-    exists f_inv. repeat split; intros x _.
-    -- assert (H3 : f (f_inv (f x)) = f x) by (unfold f_inv; apply epsilon_spec; eauto).
-       specialize (H1 (f_inv (f x)) x). apply H1; auto; apply Full_intro.
-    -- specialize (H2 x ltac:(apply Full_intro)). apply epsilon_spec; auto.
+  intros f D C; split.
+  - intros [f_inv H1]. destruct H1 as [H2 [H3 [H4 H5]]]. repeat split.
+    -- unfold maps_into. apply H2.
+    -- intros x y H6 H7 H8. apply (f_equal f_inv) in H8. 
+       rewrite H4 in H8; auto. rewrite H4 in H8; auto.
+    -- intros y H6. exists (f_inv y). split; auto.
+  - intros [H1 [H2 H3]]. 
+    set (f_inv := fun y => epsilon (A:=ℝ) (inhabits 0) (fun x => x ∈ D /\ f x = y)).
+    exists f_inv. repeat split.
+    -- apply H1.
+    -- intros y H4. unfold f_inv. specialize (H3 y H4) as [x [H5 H6]].
+       destruct (epsilon_spec (inhabits 0) (fun z => z ∈ D /\ f z = y)) as [H7 _].
+       { exists x; split; auto. }
+       apply H7.
+    -- intros x H4. unfold f_inv. 
+       pose proof (epsilon_spec (inhabits 0) (fun z => z ∈ D /\ f z = f x)) as [H5 H6].
+       { exists x; split; auto. }
+       apply H2; auto.
+    -- intros y H4. unfold f_inv. specialize (H3 y H4) as [x [H5 H6]].
+       destruct (epsilon_spec (inhabits 0) (fun z => z ∈ D /\ f z = y)) as [_ H7].
+       { exists x; split; auto. }
+       apply H7.
 Qed.
 
 Theorem theorem_12_2 : forall f a b,
@@ -194,12 +206,20 @@ Proof.
       rewrite <- H18, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
 Qed.
 
-Lemma decreasing_on_imp_one_to_one_on : forall f a b,
-  a < b -> decreasing_on f [a, b] -> one_to_one_on f [a, b].
+Lemma decreasing_on_imp_one_to_one_on : forall f D,
+  decreasing_on f D -> one_to_one_on f D.
 Proof.
-  intros f a b H1 H2 x y H3 H4 H5. pose proof (Rtotal_order x y) as [H6 | [H6 | H6]]; auto.
-  - specialize (H2 x y H3 H4 H6); lra.
-  - specialize (H2 y x H4 H3 H6); lra.
+  intros f D H1 x y H2 H3 H4. pose proof Rtotal_order x y as [H5 | [H5 | H5]]; try lra.
+  - specialize (H1 x y H2 H3 H5). lra.
+  - specialize (H1 y x H3 H2 H5). lra.
+Qed.
+
+Lemma increasing_on_imp_one_to_one_on : forall f D,
+  increasing_on f D -> one_to_one_on f D.
+Proof.
+  intros f D H1 x y H2 H3 H4. pose proof Rtotal_order x y as [H5 | [H5 | H5]]; try lra.
+  - specialize (H1 x y H2 H3 H5). lra.
+  - specialize (H1 y x H3 H2 H5). lra.
 Qed.
 
 Theorem theorem_12_4 : forall f f_inv f' a b y,

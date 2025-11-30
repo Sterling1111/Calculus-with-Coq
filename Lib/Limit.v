@@ -1,4 +1,4 @@
-From Lib Require Import Imports Sequence Sets Reals_util Sequence Notations Functions.
+From Lib Require Import Imports Sequence Sets Reals_util Notations Functions.
 Import SetNotations IntervalNotations.
 
 Open Scope R_scope.

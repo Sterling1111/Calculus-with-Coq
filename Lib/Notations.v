@@ -89,16 +89,16 @@ Delimit Scope interval_scope with interval.
 
 Module IntervalNotations.
   Notation "[ a , b ]" := (fun x => a <= x <= b) : interval_scope.
-  Notation "[ a , b ⦆" := (fun x => a <= x < b) : interval_scope.
-  Notation "⦅ a , b ]" := (fun x => a < x <= b)  : interval_scope.
-  Notation "⦅ a , b ⦆" := (fun x => a < x < b) : interval_scope.
+  Notation "[ a , b )" := (fun x => a <= x < b) : interval_scope.
+  Notation "( a , b ]" := (fun x => a < x <= b)  : interval_scope.
+  Notation "( a , b )" := (fun x => a < x < b) : interval_scope.
 
-  Notation "⦅-∞ , b ⦆" := (fun x => x < b) : interval_scope.
-  Notation "⦅ -∞ , b ]" := (fun x => x <= b) : interval_scope.
-  Notation "⦅ a , +∞]" := (fun x => a < x) : interval_scope.
-  Notation "[ a , +∞⦆" := (fun x => a <= x) : interval_scope.
+  Notation "(-∞ , b )" := (fun x => x < b) : interval_scope.
+  Notation "( -∞ , b ]" := (fun x => x <= b) : interval_scope.
+  Notation "( a , ∞)" := (fun x => a < x) : interval_scope.
+  Notation "[ a , ∞)" := (fun x => a <= x) : interval_scope.
 
-  Notation "⦅-∞ , +∞⦆" := (Full_set _) : interval_scope.
+  Notation "(-∞ , +∞)" := (Full_set _) : interval_scope.
 
   Notation "( a , b )" := (fun x => a < x < b) : interval_scope.
   Notation "[ a , b )" := (fun x => a <= x < b) : interval_scope.

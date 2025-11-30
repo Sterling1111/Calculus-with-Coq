@@ -5,6 +5,21 @@ Open Scope R_scope.
 
 Definition π := 2 * ∫ (-1) 1 (λ x, √(1 - x^2)).
 
+Lemma π_pos : π > 0.
+Proof.
+  set (f := λ x : R, √(1 - x ^ 2)).
+  assert (H1 : ∀ x : ℝ, x ∈ [-1, 1] → 0 ≤ f x).
+  { intros x H1. apply sqrt_pos. }
+  assert (H2 : ∃ x : ℝ, x ∈ [-1, 1] ∧ f x > 0).
+  { exists 0. split; solve_R. unfold f. apply sqrt_lt_R0. lra. }
+  assert (H3 : continuous_on f [-1, 1]).
+  { apply continuous_imp_continuous_on. apply sqrt_f_continuous. intros c. unfold continuous_at. auto_limit. }
+  assert (H4 : integrable_on (-1) 1 f).
+  { apply theorem_13_3; solve_R. }
+  pose proof integral_pos' (-1) 1 f ltac:(lra) H1 H2 H3 H4 as H5.
+  unfold π, f in *. lra.
+Qed.
+
 Definition A x :=
   match Rlt_dec x (-1) with
   | left _ => 0
