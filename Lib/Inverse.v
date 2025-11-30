@@ -32,6 +32,13 @@ Proof.
   specialize (H1 x y H2 H3). solve_R.
 Qed.
 
+Lemma one_to_one_on_subset : forall f D1 D2,
+  one_to_one_on f D2 -> D1 ⊆ D2 -> one_to_one_on f D1.
+Proof.
+  intros f D1 D2 H1 H2 x y H3 H4 H5.
+  apply H1; auto.
+Qed.
+
 Theorem theorem_12_1_a : forall f f_inv,
   inverse f f_inv -> one_to_one f.
 Proof.

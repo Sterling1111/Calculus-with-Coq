@@ -195,7 +195,7 @@ Proof.
   apply log_pos; lra.
 Qed.
 
-Lemma log_continuous_sub : forall a b,
+Lemma log_continuous_on : forall a b,
   0 < a < b -> continuous_on log [a, b].
 Proof.
   intros a b H1.
@@ -214,7 +214,7 @@ Proof.
   intros y _.
   assert (exists x, x ∈ (0, 1) /\ log x < y) as [x1 [H1 H2]] by admit.
   assert (exists x, x ∈ (1, ∞) /\ log x > y) as [x2 [H3 H4]] by admit.
-  pose proof theorem_7_4 log x1 x2 y ltac:(solve_R) ltac:(apply log_continuous_sub; solve_R) ltac:(lra) as [c [H5 H6]].
+  pose proof theorem_7_4 log x1 x2 y ltac:(solve_R) ltac:(apply log_continuous_on; solve_R) ltac:(lra) as [c [H5 H6]].
   exists c. solve_R.
 Admitted.
 
@@ -243,4 +243,58 @@ Proof.
   apply (proj2_sig exp_sig).
 Qed.
 
+Lemma exp_pos : forall x, exp x > 0.
+Proof.
+  intros x. pose proof exp_inverse_log as [H1 [H2 [H3 H4]]]; auto.
+  apply H2. apply Full_intro.
+Qed.
+
+Lemma exp_log : forall x, x > 0 -> exp (log x) = x.
+Proof.
+  intros x H1. pose proof exp_inverse_log as [H2 [H3 [H4 H5]]]; auto.
+Qed.
+
+Lemma log_exp : forall x, log (exp x) = x.
+Proof.
+  intros x. pose proof exp_inverse_log as [H1 [H2 [H3 H4]]]; auto.
+  apply H4. apply Full_intro.
+Qed.
+
 Definition e := exp 1.
+
+Theorem theorem_18_2 : ⟦ der ⟧ exp = exp.
+Proof.
+  intros x.
+  set (z := exp x).
+  assert (Hz : z > 0) by apply exp_pos.
+
+  set (a := 0.5 * z).
+  set (b := 2 * z).
+
+  pose proof theorem_12_5 log exp (fun t => 1/t) a b x 
+    ltac:(unfold a, b; lra)
+    ltac:(apply log_continuous_on; unfold a, b; lra) as H.
+
+  assert (H2 : one_to_one_on log [a, b]).
+  {
+    unfold one_to_one_on. apply one_to_one_on_subset with (D2 := (0, ∞)).
+    - apply log_injective.
+    - unfold a, b. intros t H1. solve_R. 
+  }
+  assert (H3 : inverse_on log exp [a, b] [Rmin (log a) (log b), Rmax (log a) (log b)]).
+  {
+    admit.
+  }
+  
+  assert (H4 : x ∈ (Rmin (log a) (log b), Rmax (log a) (log b))) by admit.
+  
+  assert (H5 : ⟦ der ⟧ log (a, b) = (λ t : ℝ, 1 / t)).
+  { apply derivative_on_closed_imp_open. apply derivative_log_on; unfold a, b; solve_R. }
+  
+  assert (H6 : (λ t : ℝ, 1 / t) (exp x) ≠ 0).
+  { intros H6. pose proof exp_pos x. pose proof Rdiv_pos_pos 1 (exp x) ltac:(lra) ltac:(lra). lra. }
+
+  specialize (H H2 H3 H4 H5 H6).
+  apply derivative_at_eq_f'' with (f1' := λ x : ℝ, / (λ t : ℝ, 1 / t) (exp x))(a := x - 1)(b := x + 1); try lra; auto.
+  intros x0 H7. field. pose proof exp_pos x0. lra.
+Admitted.
