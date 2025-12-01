@@ -341,12 +341,18 @@ Proof.
     unfold x0. intros H16.
     specialize (H15 y (y + x) ltac:(solve_R) ltac:(solve_R)). lra.
   }
-  apply limit_to_a_equiv' with (f1 := (λ x : ℝ, (f (x0 + x) - f x0) / x))(δ := Rmin (y - c) (d - y)); [solve_R | | auto].
-  {
-    intros x [H13 H14]. unfold k. replace (x0 + (f_inv (y + x) - x0)) with (f_inv (y + x)) by lra.
-    destruct H4 as [_ [_ [_ H4]]]. rewrite H4. 2 : { unfold c, d, δ in *; solve_R. }
-    rewrite H8. replace (y + x - y) with x by lra. field; split; auto.
-
+  apply limit_comp with (f := λ h, (f (x0 + h) - f x0) / h) (g := k) (b := 0); auto.
+  2 : {
+    exists δ; unfold δ, k in *; split. solve_R. intros x H13. 
+    assert (one_to_one_on f_inv [c, d]) as H14.
+    { 
+      pose proof exists_inverse_on_iff f_inv [c, d] [a, b] as H14.
+      apply H14. exists f. apply inverse_symmetric; auto.
+    }
+    unfold x0. intros H15.
+    specialize (H14 y (y + x) ltac:(solve_R) ltac:(solve_R)). solve_R. 
   }
-
-Admitted.
+  unfold k.
+  replace 0 with (x0 - x0) at 2 by lra.
+  apply limit_minus; auto_limit.
+Qed.

@@ -637,6 +637,26 @@ Proof.
   - specialize (H5 ltac:(solve_R)). auto.
 Qed.
 
+Lemma limit_comp : ∀ (f g : ℝ → ℝ) (a b l : ℝ),
+  ⟦ lim a ⟧ g = b ->
+  ⟦ lim b ⟧ f = l ->
+  (∃ δ : ℝ, δ > 0 ∧ ∀ x, 0 < |x -a| < δ -> g x ≠ b) ->
+  ⟦ lim a ⟧ (λ x, f (g x)) = l.
+Proof.
+  intros f g a b l H1 H2 H3 ε H4.
+  specialize (H2 ε H4) as [δ1 [H5 H6]].
+  specialize (H1 δ1 H5) as [δ2 [H7 H8]].
+  destruct H3 as [δ3 [H9 H10]].
+  set (δ := Rmin δ2 δ3).
+  assert (δ > 0) as H11 by (unfold δ; solve_min). 
+  exists δ. split; try lra.
+  intros x H12.
+  specialize (H8 x ltac:(unfold δ in *; solve_R)).
+  specialize (H6 (g x)).
+  assert (0 < |(g x - b)| < δ1) as H13.
+  { specialize (H10 x ltac:(unfold δ in *; solve_R)). unfold δ in H12. solve_R. }
+  specialize (H6 H13). auto.
+Qed.
 
 Lemma limit_sqrt_f_x : forall f a L,
   ⟦ lim a ⟧ f = L -> L >= 0 -> ⟦ lim a ⟧ (fun x => √(f x)) = √L.
