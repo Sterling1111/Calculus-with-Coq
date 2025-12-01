@@ -1345,8 +1345,20 @@ Qed.
 Lemma derivative_on_eq' : forall a b f f1' f2',
   a < b -> (forall x, a <= x <= b -> f1' x = f2' x) -> ⟦ der ⟧ f [a, b] = f1' -> ⟦ der ⟧ f [a, b] = f2'.
 Proof.
-  intros a b f f1' f2' H1 H2 H3. 
-Admitted.
+  intros a b f f1' f2' H1 H2 H3 c H4. specialize (H3 c H4) as [[H3 H5] | [[H3 H5] | [H3 H5]]].
+  - left; split; auto. intros ε H6. specialize (H5 ε H6) as [δ [H7 H8]].
+    apply is_interior_point_closed in H3; auto.
+    exists (Rmin δ (Rmin (b - c) (c - a))). split. solve_R.
+    intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
+  - right; left; split; auto. apply is_left_endpoint_closed in H3; auto.
+    intros ε H6. specialize (H5 ε H6) as [δ [H7 H8]]. 
+    exists (Rmin δ (b - c)). split. solve_R.
+    intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
+  - right; right; split; auto. apply is_right_endpoint_closed in H3; auto.
+    intros ε H6. specialize (H5 ε H6) as [δ [H7 H8]].
+    exists (Rmin δ (c - a)). split. solve_R.
+    intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
+Qed.
 
 Lemma derivative_sqrt_x : forall x,
   x > 0 ->

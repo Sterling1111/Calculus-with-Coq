@@ -36,13 +36,34 @@ Proof.
     apply derivative_on_eq' with (f1' := (-h)%f); try lra.
     { intros z H6. unfold h. lra. }
     apply FTC1'; try lra. unfold h. intros c H6. apply limit_imp_limit_on. auto_limit.
-  - admit.
+  - apply derivative_at_eq_f with (f1 := fun y => ∫ 1 0.5 (fun t => 1/t) + ∫ 0.5 y (fun t => 1/t)) (a := 0.5) (b := 2); try lra.
+    { 
+      intros y H3.
+      rewrite log_spec; try lra.
+      rewrite <- integral_plus' with (c := 0.5); auto.
+      assert (H4 : continuous_on (λ t : ℝ, 1 / t) [0.5, 2]).
+      { intros z H4. apply limit_imp_limit_on. auto_limit. }
+        apply theorem_13_3; [ solve_R | ].
+        apply continuous_on_subset with (A2 := [0.5, 2]); auto.
+        intros z H5. solve_R.
+    }
+
+    apply derivative_at_eq_f'' with (f1' := λ x0 : ℝ, 0 + 1 / x0) (a := 0.5)(b := 2); try lra.
+    { intros y H3. lra. }
+    
+    apply theorem_10_3_a.
+    -- apply theorem_10_1.
+    -- replace (Rdiv 1) with (fun x0 => 1 / x0) by auto.
+       apply derivative_on_imp_derivative_at with (a := 0.5) (b := 2); solve_R.
+       apply derivative_on_closed_imp_open.
+       apply FTC1; try lra.
+       intros c H3. apply limit_imp_limit_on; auto_limit.
   - apply derivative_at_eq_f with (f1 := fun x => ∫ 1 x (λ t, 1 / t)) (a := 1)(b := 2 * x); try lra.
     { intros y H3. rewrite log_spec; lra. }
     apply derivative_on_imp_derivative_at with (a := 1) (b := (2 * x)); solve_R.
     apply derivative_on_closed_imp_open.
     apply FTC1; try lra. intros c H3. apply limit_imp_limit_on; auto_limit.
-Admitted.
+Qed.
 
 Lemma derivative_log_on : forall a b, 
   0 < a < b -> ⟦ der ⟧ log [a, b] = (λ x : ℝ, 1 / x).
