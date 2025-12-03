@@ -281,8 +281,6 @@ Proof.
   apply H4. apply Full_intro.
 Qed.
 
-Definition e := exp 1.
-
 Theorem theorem_18_2 : ⟦ der ⟧ exp = exp.
 Proof.
   intros x.
@@ -318,4 +316,36 @@ Proof.
   specialize (H H2 H3 H4 H5 H6).
   apply derivative_at_eq_f'' with (f1' := λ x : ℝ, / (λ t : ℝ, 1 / t) (exp x))(a := x - 1)(b := x + 1); try lra; auto.
   intros x0 H7. field. pose proof exp_pos x0. lra.
+Admitted.
+
+Theorem theorem_18_3 : forall x y,
+  exp (x + y) = exp x * exp y.
+Proof.
+  intros x y.
+  set (x' := exp x).
+  set (y' := exp y).
+  assert (H1 : x = log x'). { unfold x'. rewrite log_exp; auto. }
+  assert (H2 : y = log y'). { unfold y'. rewrite log_exp; auto. }
+  rewrite H1, H2.
+  rewrite <- theorem_18_1; try apply exp_pos.
+  pose proof exp_pos x as H3.
+  pose proof exp_pos y as H4.
+  rewrite exp_log; auto.
+  unfold x', y'. nra.
+Qed.
+
+Definition e := exp 1.
+
+Definition Rpower (a x : R) : R :=
+  match Rlt_dec 0 a with
+  | left _ => exp (x * log a)
+  | right _ => 0
+  end.
+
+Notation "a ^^ x" := (Rpower a x) (at level 30) : R_scope.
+
+Theorem theorem_18_4 : forall a b c,
+  a > 0 -> (a ^^ b) ^^ c = a ^^ (b * c).
+Proof.
+  intros a b c H1.  
 Admitted.

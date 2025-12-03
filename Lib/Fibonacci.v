@@ -20,6 +20,15 @@ match n with
           end
 end.
 
+Fixpoint fibonacci_R' (n : nat) : R :=
+match n with
+| O => 0
+| S n' => match n' with
+          | O => 1
+          | S n'' => fibonacci_R'(n') + fibonacci_R'(n'')
+          end
+end.
+
 Local Notation F_nat := fibonacci_nat.
 Local Notation F := fibonacci_R.
 
