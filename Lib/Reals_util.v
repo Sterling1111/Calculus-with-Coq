@@ -3,6 +3,7 @@ From Lib Require Import Imports.
 Open Scope R_scope.
 
 Coercion INR : nat >-> R.
+Coercion IZR : Z >-> R.
 
 Ltac break_INR :=
   repeat match goal with
@@ -195,6 +196,9 @@ Ltac auto_list :=
 
 Definition is_natural (r : R) : Prop :=
     exists n : nat, r = INR n.
+
+Definition is_integer (r : R) : Prop :=
+    exists z : Z, r = IZR z.
 
 Lemma is_natural_plus : forall r1 r2 : R,
   is_natural r1 -> is_natural r2 -> is_natural (r1 + r2).

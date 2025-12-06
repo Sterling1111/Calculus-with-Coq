@@ -160,3 +160,11 @@ Lemma exists_irrational_between : forall a b,
 Proof.
   intros a b H1.
 Admitted.
+
+Lemma irrational_square_imp_irrational : forall r,
+  irrational (r^2) -> irrational r.
+Proof.
+  intros r H1. pose proof classic (rational r) as [H2 | H2]; auto.
+  intros _. apply H1. replace (r^2) with (r * r) by lra.
+  apply mult_rational; auto.
+Qed.

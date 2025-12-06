@@ -35,6 +35,7 @@ Lib/Partition.v
 Lib/Integral.v
 Lib/Notations.v
 Lib/Inverse.v
+Lib/Trigonometry.v
 
 # ==========================
 # ATTAM (depends on Lib only)
@@ -96,3 +97,4 @@ Calculus/Chapter2/Problem_2_3.v
 Calculus/Chapter2/Problem_2_12.v
 Calculus/Chapter2/Problem_2_13.v
 Calculus/Chapter5/Prelude.v
+Calculus/Chapter10/Prelude.v

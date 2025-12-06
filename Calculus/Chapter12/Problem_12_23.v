@@ -2,7 +2,7 @@ From Lib Require Import Imports Sets Limit Continuity Derivative Notations Reals
 Import LimitNotations IntervalNotations SetNotations DerivativeNotations Function_Notations.
 Open Scope R_scope.
 
-Lemma lemma_23_a : forall f g a b,
+Lemma lemma_12_23_a : forall f g a b,
   increasing f -> decreasing g -> f a = g a -> f b = g b -> a = b.
 Proof.
   intros f g a b H1 H2 H3 H4.

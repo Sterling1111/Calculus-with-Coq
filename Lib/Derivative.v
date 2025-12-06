@@ -48,6 +48,15 @@ Definition derivative_on (f f' : R -> R) (A : Ensemble R) :=
 Definition derivative (f f' : R -> R) :=
   forall x, derivative_at f f' x.
 
+Fixpoint nth_derivative (n:nat) (f fn' : R -> R) : Prop :=
+  match n with
+  | 0   => f = fn'
+  | S k => exists f', derivative f f' /\ nth_derivative k f' fn'
+  end.
+
+Definition nth_derivative_at (n:nat) (f : R -> R) (a val : R) : Prop :=
+  exists fn', nth_derivative n f fn' /\ fn' a = val.
+
 Module DerivativeNotations.
   Declare Scope derivative_scope.
   Delimit Scope derivative_scope with d.
@@ -69,6 +78,14 @@ Module DerivativeNotations.
 
   Notation "⟦ 'der' a ⁻ ⟧ f = f'" := (left_derivative_at f f' a)
     (at level 70, f at level 0, no associativity, format "⟦  'der'  a ⁻  ⟧  f  =  f'") : derivative_scope.
+
+  Notation "⟦ 'der' ^ n ⟧ f = fn" := (nth_derivative n f fn)
+    (at level 70, n at level 0, f at level 0, no associativity, 
+     format "⟦  'der' ^ n  ⟧  f  =  fn") : derivative_scope.
+
+  Notation "⟦ 'der' ^ n a ⟧ f = v" := (nth_derivative_at n f a v)
+  (at level 70, n at level 0, f at level 0, no associativity, 
+   format "⟦  'der' ^ n  a  ⟧  f  =  v") : derivative_scope.
 
 End DerivativeNotations.
 
@@ -247,6 +264,17 @@ Theorem derivative_of_function_unique : forall f f1' f2',
 Proof.
   intros f f1' f2' H1 H2. extensionality x. 
   apply (derivative_of_function_at_x_unique f f1' f2' x); auto.
+Qed.
+
+Lemma nth_derivative_of_function_unique : forall n f fn1' fn2',
+  ⟦ der ^ n ⟧ f = fn1' -> ⟦ der ^ n ⟧ f = fn2' -> fn1' = fn2'.
+Proof.
+  induction n as [| k IH]; intros f fn1' fn2' H1 H2.
+  - simpl in H1, H2. subst. reflexivity.
+  - destruct H1 as [f1' [H1 H3]], H2 as [f2' [H2 H4]].
+    pose proof (derivative_of_function_unique f f1' f2' H1 H2) as H5.
+    subst f2'.
+    apply (IH f1' fn1' fn2'); auto.
 Qed.
 
 Theorem replace_der_f_on : forall f f1' f2' a b,
@@ -455,6 +483,21 @@ Lemma derivative_imp_differentiable : forall f f',
 Proof.
   intros f f' H1 x. unfold differentiable_at. exists (f' x). intros ε H2.
   specialize (H1 x ε) as [δ [H3 H4]]; auto. exists δ. split; auto.
+Qed.
+
+Lemma differentiable_imp_exists_derivative : forall f,
+  differentiable f -> exists f', ⟦ der ⟧ f = f'.
+Proof.
+  intros f H1.
+  unfold derivative.
+  apply choice with (A := R) (B := R) (R := fun x y => ⟦ lim 0 ⟧ (fun h => (f (x + h) - f x) / h) = y).
+  intros x.
+  specialize (H1 x).
+  unfold differentiable_at in H1.
+  destruct H1 as [L H1].
+  exists L.
+  unfold derivative_at.
+  apply H1.
 Qed.
 
 Theorem theorem_10_1 : forall c,
@@ -1404,13 +1447,7 @@ Proof.
   apply (theorem_10_9 g f g' f' x H2 H4).
 Qed.
 
-Fixpoint DerN (n:nat) (f fn : R -> R) : Prop :=
-  match n with
-  | 0   => fn = f
-  | S k => exists g, ⟦ der ⟧ f = g /\ DerN k g fn
-  end.
-
-Lemma DerN_test : DerN 2 (λ x : ℝ, x^3) (λ x : ℝ, 6 * x).
+Lemma nth_derivative_test : ⟦ der ^ 2 ⟧ (λ x : ℝ, x^3) = (λ x : ℝ, 6 * x).
 Proof.
   exists (λ x : ℝ, 3 * x^2). split.
   - apply power_rule'; solve_R.
@@ -1421,55 +1458,39 @@ Proof.
     -- simpl. reflexivity.
 Qed.
 
-(*
+Definition is_derive_or_zero (f g : R -> R) : Prop :=
+  (derivative f g) \/ (~(exists h, derivative f h) /\ g = (fun _ => 0)).
 
-Fixpoint poly_deriv_from (n:nat) (l:list R) : list R :=
-  match l with
-  | [] => []
-  | a :: tl =>
-      match n with
-      | 0 => []
-      | S k => (INR n * a) :: poly_deriv_from k tl
-      end
-  end.
+Definition Derive (f : R -> R) : R -> R :=
+  epsilon (inhabits (fun _ => 0)) (is_derive_or_zero f).
 
-Definition poly_deriv (l:list R) : list R :=
-  poly_deriv_from (length l - 1) l.
-
-Lemma poly_deriv_cons : forall a tl,
-  poly_deriv (a :: tl) = 
-    match tl with
-    | [] => []
-    | _ :: _ => (INR (length tl) * a) :: poly_deriv (tl)
-    end.
+Lemma Derive_eq : forall f f',
+  ⟦ der ⟧ f = f' -> Derive f = f'.
 Proof.
-  intros a tl. destruct tl.
-  - compute. reflexivity.
-  - simpl. destruct (length tl)%nat. unfold poly_deriv. simpl. destruct (length tl); auto. 
-    replace (S n - 0)%nat with (S n) by lia. 
+  intros f f' H1.
+  unfold Derive.
+  assert (H2: is_derive_or_zero f (epsilon (inhabits (fun _ => 0)) (is_derive_or_zero f))).
+  { apply epsilon_spec. exists f'. left. auto. }
+  
+  unfold is_derive_or_zero in H2.
+  destruct H2 as [H2 | [H2 _]].
+  - apply derivative_of_function_unique with (f := f); auto.
+  - exfalso. apply H2. exists f'. auto.
 Qed.
 
-Lemma polynomial_derivative_correct :
-  forall l, ⟦ der ⟧ (polynomial l) = polynomial (poly_deriv l).
+Lemma Derive_spec : forall f f',
+  differentiable f ->
+  (⟦ der ⟧ f = f' <-> f' = Derive f).
 Proof.
-  intros l x. induction l as [| a tl IH]; simpl.
-  - replace (polynomial []) with (λ _ : R, 0). 2 : { extensionality y; compute; lra. }
-    replace (poly_deriv []) with ([] : list R). 2 : { compute; reflexivity. }
-    replace (polynomial []) with (λ _ : R, 0). 2 : { extensionality y; compute; lra. }
-    apply theorem_10_1.
-  - replace (polynomial (a :: tl)) with (λ x : R, a * x ^ (length tl) + (polynomial tl) x).
-    2 : { extensionality y; simpl. rewrite poly_cons. lra. } 
-    replace (poly_deriv (a :: tl)) with ((INR (length tl + 1) * a) :: poly_deriv_from (length tl - 1) tl).
-    2 : { simpl. destruct (length tl); reflexivity. }
-    unfold derivative_at. apply limit_to_0_equiv with (f1 := fun h => a * (( (x + h) ^ (length tl) - x ^ (length tl)) / h) + 
-      ((polynomial tl (x + h) - polynomial tl x) / h)).
-    + intros h H1. solve_R.
-    + apply limit_plus.
-      * apply limit_mult. apply limit_const. apply power_rule; auto.
-      * apply IH.
-
-Lemma derivative_poly : forall 
-Proof.
+  intros f f' H1.
+  split.
+  - intros H2. symmetry. apply Derive_eq. assumption.
+  - intros H2. subst f'. unfold Derive.
+    assert (H3: is_derive_or_zero f (epsilon (inhabits (fun _ => 0)) (is_derive_or_zero f))).
+    { 
+      apply epsilon_spec. pose proof differentiable_imp_exists_derivative f H1 as [f' H3].
+      exists f'. left. assumption.
+    }
+    destruct H3 as [H3 | [H3 _]]; auto.
+    exfalso. apply H3. apply differentiable_imp_exists_derivative; auto.
 Qed.
-
-*)

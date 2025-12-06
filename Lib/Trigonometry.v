@@ -352,8 +352,16 @@ Lemma cos_derivative :
 Proof.
 Admitted.
 
+Lemma sin_derivative :
+  ⟦ der ⟧ sin = cos.
+Proof.
+Admitted.
+
 Lemma sin_consistency_on_0_π : ∀ x, 0 <= x <= π -> sin x = sin_0_π x.
 Proof. admit. Admitted.
 
 Lemma sin2_plus_cos2 : ∀ x, (sin x)^2 + (cos x)^2 = 1.
 Proof. admit. Admitted.
+
+Definition f_n (n : nat) (x : R) : R :=
+  (pow x n * pow (1 - x) n) / INR (fact n).

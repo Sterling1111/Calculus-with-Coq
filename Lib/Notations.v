@@ -10,6 +10,8 @@ Notation "| x |" := (Rabs x)
 
 Notation "√ x" := (sqrt x) (format "√ x", at level 20).
 
+Notation "n !" := (fact n) (format "n !", at level 10).
+
 Open Scope R_scope.
 
 Notation "l .[ i ]" := (nth i l 0)

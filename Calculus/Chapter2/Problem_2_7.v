@@ -1,5 +1,7 @@
 From Calculus.Chapter2 Require Import Prelude Problem_2_3.
 
+Local Notation length := List.length.
+
 Lemma exist_R_plus_eq_l : forall (r r1 : R) (f : list R -> R) (s : nat),
   (exists l, length l = s /\ Forall (fun r : R => rational r) l /\ r1 = (f l)) -> (exists l, length l = s /\ Forall (fun r : R => rational r) l /\ r + r1 = r + f l).
 Proof.
@@ -371,8 +373,28 @@ Proof.
       rewrite <- sum_f_1_n_fSi_minus_fi with (n := n) (f := f); try lia. apply sum_f_equiv; try lia. intros k H6.
       unfold f. rewrite plus_INR. simpl. rewrite pow1. reflexivity.
     }
-    assert (H6 : forall n, (n >= 1)%nat -> sum_f 1 n (fun i => (INR i + 1)^(p+1) - (INR i)^(p+1)) = sum_f 1 n (fun i => sum_f 2 (p+1) (fun j => choose (p+1) j * (INR i)^(p+1-j)) + INR (p + 1) * INR i ^ p)).
-    { intros n H6. apply sum_f_equiv; try lia. intros k H7. specialize (H4 k). rewrite <- H4. lra. }
+    assert (H6 : forall n : nat, (n >= 1)%nat -> sum_f 1 p (fun i => choose (p + 1) i * n ^ i) + n ^ (p + 1) = sum_f 2 (p + 1) (fun j => choose (p + 1) j * sum_f 1 n (fun i => i ^ (p + 1 - j))) +  INR (p + 1) * sum_f 1 n (fun i => i ^ p)).
+    {
+      intros n H6.
+      assert (H7 : sum_f 1 n (fun i => (INR i + 1)^(p+1) - (INR i)^(p+1)) = sum_f 1 n (fun i => sum_f 2 (p+1) (fun j => choose (p+1) j * (INR i)^(p+1-j)) + INR (p + 1) * INR i ^ p)).
+      { apply sum_f_equiv; try lia. intros k H8. specialize (H4 k). rewrite <- H4. lra. }
+      rewrite H5 in H7; auto. rewrite <- sum_f_plus in H7; try lia. rewrite <- r_mult_sum_f_i_n_f_l in H7.
+      rewrite Rplus_comm in H7. rewrite lemma_2_3_d in H7. replace ((fun i : nat => choose (p + 1) i * 1 ^ (p + 1 - i) * INR n ^ i)) with 
+      (fun i : nat => choose (p + 1) i * INR n ^ i) in H7. 2 : { apply functional_extensionality. intros. rewrite pow1. lra. }
+      rewrite sum_f_Si in H7; try lia. rewrite n_choose_0 in H7. simpl in H7. rewrite Rmult_1_r in H7. field_simplify in H7.
+      replace (p + 1)%nat with (S p) in H7 at 1 by lia. rewrite sum_f_i_Sn_f in H7; try lia. replace (S p) with (p + 1)%nat in H7 by lia.
+      rewrite n_choose_n in H7. field_simplify in H7. rewrite sum_swap in H7; try lia.
+      replace (fun j : nat => sum_f 1 n (fun i : nat => choose (p + 1) j * INR i ^ (p + 1 - j))) with 
+      (fun j : nat => choose (p + 1) j * sum_f 1 n (fun i : nat => INR i ^ (p + 1 - j))) in H7. 2 : { apply functional_extensionality. intros. apply r_mult_sum_f_i_n_f_l. }
+      auto.
+    }
+    assert (H8 : forall n, (n >= 1)%nat -> INR (p + 1) * sum_f 1 n (fun i : nat => INR i ^ p) = INR n ^ (p + 1) + sum_f 1 p (fun i : nat => choose (p + 1) i * INR n ^ i) - sum_f 2 (p + 1) (fun j : nat => choose (p + 1) j * sum_f 1 n (fun i : nat => INR i ^ (p + 1 - j)))).
+    { intros n H8. specialize (H6 n H8). lra. }
+    assert (H9 : forall n, (n >= 1)%nat -> sum_f 1 n (fun i : nat => INR i ^ p) = INR n ^ (p + 1) / INR (p + 1) + (sum_f 1 p (fun i : nat => choose (p + 1) i * INR n ^ i) / INR (p + 1) - sum_f 2 (p + 1) (fun j : nat => choose (p + 1) j * sum_f 1 n (fun i : nat => INR i ^ (p + 1 - j))) / INR (p + 1))). 
+    { intros n H9. apply Rmult_eq_reg_l with (r := INR (p + 1)). rewrite H8. field. apply not_0_INR. lia. lia. apply not_0_INR. lia. }
+    assert (H10 : forall j n : nat, (2 <= j <= p + 1)%nat -> (n >= 1)%nat ->exists l : list R, length l = p%nat /\ Forall rational l /\ sum_f 1 n (fun i : nat => INR i ^ (p + 1 - j)) = sum_f 0 (p-1) (fun i : nat => nth i l 0 * INR n ^ (i+1))) by admit.
+    
+
 Admitted.
 
 
