@@ -363,5 +363,14 @@ Proof. admit. Admitted.
 Lemma sin2_plus_cos2 : ∀ x, (sin x)^2 + (cos x)^2 = 1.
 Proof. admit. Admitted.
 
-Definition f_n (n : nat) (x : R) : R :=
-  (pow x n * pow (1 - x) n) / INR (fact n).
+Lemma sin_π : sin π = 0.
+Proof. admit. Admitted.
+
+Lemma cos_π : cos π = -1.
+Proof. admit. Admitted. 
+
+Lemma sin_0 : sin 0 = 0.
+Proof. admit. Admitted.
+
+Lemma cos_0 : cos 0 = 1.
+Proof. admit. Admitted. 

@@ -63,6 +63,15 @@ Definition is_derive_or_zero (f g : R -> R) : Prop :=
 Definition Derive (f : R -> R) : R -> R :=
   epsilon (inhabits (fun _ => 0)) (is_derive_or_zero f).
 
+Fixpoint nth_Derive (n:nat) (f : R -> R) : R -> R :=
+  match n with
+  | 0   => f
+  | S k => Derive (nth_Derive k f)
+  end.
+
+Definition nth_Derive_at (n:nat) (f : R -> R) (a : R) : R :=
+  nth_Derive n f a.
+
 Module DerivativeNotations.
   Declare Scope derivative_scope.
   Delimit Scope derivative_scope with d.
@@ -95,6 +104,16 @@ Module DerivativeNotations.
 
   Notation "⟦ 'Der' ⟧ f" := (Derive f) 
     (at level 70, f at level 0, no associativity, format "⟦  'Der'  ⟧  f") : derivative_scope.
+
+  Notation "⟦ 'Der' ^ n ⟧ f" := (nth_Derive n f) 
+    (at level 70, n at level 9, f at level 0, no associativity, format "⟦  'Der' ^ n  ⟧  f") : derivative_scope.
+
+  Notation "⟦ 'Der' ^ n a ⟧ f" := (nth_Derive_at n f a) 
+    (at level 70, 
+     n at level 9,   
+     a at level 9,
+     f at level 0, 
+     no associativity, format "⟦  'Der' ^ n  a  ⟧  f") : derivative_scope.
 
 End DerivativeNotations.
 
@@ -627,6 +646,13 @@ Qed.
 Theorem theorem_10_4_b : forall f g f' g',
   ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' ->
   ⟦ der ⟧ (f ∙ g) = f' ∙ g + f ∙ g'.
+Proof.
+  intros f g f' g' H1 H2 x. apply theorem_10_4_a; auto.
+Qed.
+
+Theorem theorem_10_4_c : forall f g f' g',
+  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' ->
+  ⟦ der ⟧ (fun x => f x * g x) = fun x => f' x * g x + f x * g' x.
 Proof.
   intros f g f' g' H1 H2 x. apply theorem_10_4_a; auto.
 Qed.
@@ -1483,7 +1509,7 @@ Qed.
 
 Lemma Derive_spec : forall f f',
   differentiable f ->
-  (⟦ der ⟧ f = f' <-> f' = Derive f).
+  (⟦ der ⟧ f = f' <-> f' = ⟦ Der ⟧ f).
 Proof.
   intros f f' H1.
   split.
@@ -1496,4 +1522,25 @@ Proof.
     }
     destruct H3 as [H3 | [H3 _]]; auto.
     exfalso. apply H3. apply differentiable_imp_exists_derivative; auto.
+Qed.
+
+Lemma nth_Derive_shift : forall n f,
+  nth_Derive (S n) f = nth_Derive n (Derive f).
+Proof.
+  induction n as [| k IH].
+  - reflexivity.
+  - intros f. simpl. rewrite <- IH. reflexivity.
+Qed.
+
+Lemma nth_Derive_eq : forall n f f',
+  ⟦ der ^ n ⟧ f = f' -> ⟦ Der ^ n ⟧ f = f'.
+Proof.
+  induction n as [| k IH]; intros f f' H1; simpl in H1.
+  - subst. reflexivity.
+  - simpl in H1. destruct H1 as [f1' [H1 H2]].
+    rewrite nth_Derive_shift.
+    apply Derive_eq in H1.
+    rewrite H1.
+    apply IH.
+    auto.
 Qed.

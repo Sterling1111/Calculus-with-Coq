@@ -212,6 +212,18 @@ Proof.
   intros r1 r2 H1 H2. destruct H1 as [n1 H1]. destruct H2 as [n2 H2]. exists (n1 * n2)%nat. rewrite H1, H2. rewrite mult_INR. reflexivity.
 Qed. 
 
+Lemma is_integer_plus : forall r1 r2 : R,
+  is_integer r1 -> is_integer r2 -> is_integer (r1 + r2).
+Proof.
+  intros r1 r2 H1 H2. destruct H1 as [z1 H1]. destruct H2 as [z2 H2]. exists (z1 + z2)%Z. rewrite H1, H2. rewrite plus_IZR. reflexivity.
+Qed.
+
+Lemma is_integer_mult : forall r1 r2 : R,
+  is_integer r1 -> is_integer r2 -> is_integer (r1 * r2).
+Proof.
+  intros r1 r2 H1 H2. destruct H1 as [z1 H1]. destruct H2 as [z2 H2]. exists (z1 * z2)%Z. rewrite H1, H2. rewrite mult_IZR. reflexivity.
+Qed.
+
 Lemma nltb_gt : forall a b : nat, (a > b)%nat <-> (a <=? b) = false.
 Proof.
   intros a b. split.
