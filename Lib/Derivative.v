@@ -1,4 +1,4 @@
-From Lib Require Import Imports Sets Notations Functions Limit Continuity Reals_util.
+From Lib Require Import Imports Sets Notations Functions Limit Continuity Reals_util Sums.
 Import SetNotations IntervalNotations Function_Notations LimitNotations.
 
 Definition differentiable_at (f:R -> R) (a:R) :=
@@ -1509,11 +1509,11 @@ Qed.
 
 Lemma Derive_spec : forall f f',
   differentiable f ->
-  (⟦ der ⟧ f = f' <-> f' = ⟦ Der ⟧ f).
+  (⟦ der ⟧ f = f' <-> ⟦ Der ⟧ f = f').
 Proof.
   intros f f' H1.
   split.
-  - intros H2. symmetry. apply Derive_eq. assumption.
+  - intros H2. apply Derive_eq. assumption.
   - intros H2. subst f'. unfold Derive.
     assert (H3: is_derive_or_zero f (epsilon (inhabits (fun _ => 0)) (is_derive_or_zero f))).
     { 
@@ -1522,6 +1522,40 @@ Proof.
     }
     destruct H3 as [H3 | [H3 _]]; auto.
     exfalso. apply H3. apply differentiable_imp_exists_derivative; auto.
+Qed.
+
+Lemma differentiable_plus : forall f g,
+  differentiable f -> differentiable g -> differentiable (λ x, f x + g x).
+Proof.
+  intros f g H1 H2 x. unfold differentiable_at in *.
+  specialize (H1 x) as [L1 H3]. specialize (H2 x) as [L2 H4].
+  exists (L1 + L2).
+  intros ε H5. specialize (H3 (ε / 2)) as [δ1 [H6 H7]]; [solve_R |].
+  specialize (H4 (ε / 2)) as [δ2 [H8 H9]]; [solve_R |].
+  exists (Rmin δ1 δ2). split. solve_R. intros h H10.
+  specialize (H7 h ltac:(solve_R)). specialize (H9 h ltac:(solve_R)).
+  solve_R.
+Qed.
+
+Lemma differentiable_sum : forall (n : nat) (f : nat -> R -> R),
+  (forall k, differentiable (f k)) -> differentiable (λ x, ∑ 0 n (λ k, f k x)).
+Proof.
+  intros n f H1. induction n as [| k IH].
+  - replace (λ x0 : ℝ, ∑ 0 0 λ k : ℕ, f k x0) with (λ x0 : ℝ, f 0%nat x0); auto.
+  - replace (λ x0 : ℝ, ∑ 0 (S k) λ k0 : ℕ, f k0 x0) with (λ x0 : ℝ, (∑ 0 k λ k0 : ℕ, f k0 x0) + f (S k) x0).
+    2 : { extensionality y. rewrite sum_f_i_Sn_f; try lia. reflexivity. }
+    apply differentiable_plus; auto.
+Qed.
+
+Lemma Derive_plus : forall f g,
+  differentiable f -> differentiable g ->
+  ⟦ Der ⟧ (λ x, f x + g x) = (λ x, (⟦ Der ⟧ f) x + (⟦ Der ⟧ g) x).
+Proof.
+  intros f g H1 H2. pose proof differentiable_plus f g H1 H2 as H3.
+  pose proof Derive_spec f (⟦ Der ⟧ f) H1 as H4.
+  pose proof Derive_spec g (⟦ Der ⟧ g) H2 as H5.
+  pose proof Derive_spec (λ x, f x + g x) (λ x, (⟦ Der ⟧ f) x + (⟦ Der ⟧ g) x) H3 as H6.
+  apply H6. apply theorem_10_3_b. apply H4. reflexivity. apply H5. reflexivity.
 Qed.
 
 Lemma nth_Derive_shift : forall n f,
@@ -1543,4 +1577,31 @@ Proof.
     rewrite H1.
     apply IH.
     auto.
+Qed.
+
+Lemma Derive_nth_Derive : forall n f,
+  ⟦ Der ⟧ (⟦ Der ^ n ⟧ f) = ⟦ Der ^ (S n) ⟧ f.
+Proof.
+  reflexivity.
+Qed.
+
+Lemma nth_Derive_mth_Derive : forall n m f,
+  ⟦ Der ^ n ⟧ (⟦ Der ^ m ⟧ f) = ⟦ Der ^ (n + m) ⟧ f.
+Proof.
+  intros n m f. induction n as [| k IH].
+  - simpl. reflexivity.
+  - simpl. rewrite IH. reflexivity.
+Qed.
+
+Lemma sum_Derive_commute : forall (n : nat) (f : nat -> R -> R),
+  (forall k, differentiable (f k)) ->
+  ⟦ Der ⟧ (λ x, ∑ 0 n (λ k, f k x)) = (λ x, ∑ 0 n (λ k, (⟦ Der ⟧ (f k)) x)).
+Proof.
+  intros n f H1. induction n as [| k IH]; extensionality x.
+  - replace (λ x0 : ℝ, ∑ 0 0 λ k : ℕ, f k x0) with (λ x0 : ℝ, f 0%nat x0); reflexivity.
+  - replace (λ x0 : ℝ, ∑ 0 (S k) λ k0 : ℕ, f k0 x0) with (λ x0 : ℝ, (∑ 0 k λ k0 : ℕ, f k0 x0) + f (S k) x0).
+    2 : { extensionality y. rewrite sum_f_i_Sn_f; try lia. reflexivity. }
+    rewrite sum_f_i_Sn_f; try lia.
+    rewrite Derive_plus; auto. rewrite IH. reflexivity.
+    apply differentiable_sum; auto.
 Qed.

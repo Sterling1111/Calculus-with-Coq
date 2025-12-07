@@ -59,7 +59,17 @@ Proof.
 
     assert (H4 : is_integer (G 0)) by admit.
     assert (H5 : is_integer (G 1)) by admit.
-    assert (H6 : ⟦ der ⟧ G = G') by admit.
+    assert (H6 : ⟦ der ⟧ G = G').
+    {
+      unfold G, G'.
+      apply theorem_10_5'.
+      apply Derive_spec.
+      apply differentiable_sum. intros k. admit.
+      rewrite sum_Derive_commute. 2 : { admit. }
+      extensionality x.
+      apply sum_f_equiv; try lia. intros k H6.
+      admit.
+    }
     assert (H7 : ⟦ der ⟧ G' = G'') by admit.
     
     assert (H8 : ⟦ der ⟧ H = H').
@@ -80,7 +90,7 @@ Proof.
       unfold H'. extensionality x. assert (H9 : G'' x + π^2 * (G x) = π^2 * a^n * f n x) by admit.
       nra.
     }
-    assert (H10 : ∫ 0 1 (λ x : ℝ, π ^ 2 * (a ^ n * f n x * sin (π * x))) = H 1 - H 0).
+    assert (H10 : ∫ 0 1 (λ x : ℝ, π ^ 2 * (a ^ n * f n x * sin (π*x))) = H 1 - H 0).
     {
       rewrite <- H9.
       apply FTC2.
