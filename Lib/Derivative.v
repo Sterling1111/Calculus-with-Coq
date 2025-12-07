@@ -57,6 +57,12 @@ Fixpoint nth_derivative (n:nat) (f fn' : R -> R) : Prop :=
 Definition nth_derivative_at (n:nat) (f : R -> R) (a val : R) : Prop :=
   exists fn', nth_derivative n f fn' /\ fn' a = val.
 
+Definition is_derive_or_zero (f g : R -> R) : Prop :=
+  (derivative f g) \/ (~(exists h, derivative f h) /\ g = (fun _ => 0)).
+
+Definition Derive (f : R -> R) : R -> R :=
+  epsilon (inhabits (fun _ => 0)) (is_derive_or_zero f).
+
 Module DerivativeNotations.
   Declare Scope derivative_scope.
   Delimit Scope derivative_scope with d.
@@ -84,8 +90,11 @@ Module DerivativeNotations.
      format "⟦  'der' ^ n  ⟧  f  =  fn") : derivative_scope.
 
   Notation "⟦ 'der' ^ n a ⟧ f = v" := (nth_derivative_at n f a v)
-  (at level 70, n at level 0, f at level 0, no associativity, 
-   format "⟦  'der' ^ n  a  ⟧  f  =  v") : derivative_scope.
+    (at level 70, n at level 0, f at level 0, no associativity, 
+    format "⟦  'der' ^ n  a  ⟧  f  =  v") : derivative_scope.
+
+  Notation "⟦ 'Der' ⟧ f" := (Derive f) 
+    (at level 70, f at level 0, no associativity, format "⟦  'Der'  ⟧  f") : derivative_scope.
 
 End DerivativeNotations.
 
@@ -1458,14 +1467,8 @@ Proof.
     -- simpl. reflexivity.
 Qed.
 
-Definition is_derive_or_zero (f g : R -> R) : Prop :=
-  (derivative f g) \/ (~(exists h, derivative f h) /\ g = (fun _ => 0)).
-
-Definition Derive (f : R -> R) : R -> R :=
-  epsilon (inhabits (fun _ => 0)) (is_derive_or_zero f).
-
 Lemma Derive_eq : forall f f',
-  ⟦ der ⟧ f = f' -> Derive f = f'.
+  ⟦ der ⟧ f = f' -> ⟦ Der ⟧ f = f'.
 Proof.
   intros f f' H1.
   unfold Derive.
