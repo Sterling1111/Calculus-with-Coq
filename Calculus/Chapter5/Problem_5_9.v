@@ -1,11 +1,14 @@
 From Calculus.Chapter5 Require Import Prelude.
 
-Lemma lemma_5_9 : ∀ f a L1 L2,
-  ⟦ lim a ⟧ f = L1 ->  ⟦ lim 0 ⟧ (λ h, f(a + h)) = L2 -> L1 = L2.
+Lemma lemma_5_9 : ∀ f a L,
+  ⟦ lim a ⟧ f = L <->  ⟦ lim 0 ⟧ (λ h, f(a + h)) = L.
 Proof.
-  intros f a L1 L2 H1 H2. apply cond_eq. intros ε H3. specialize (H1 (ε/2) ltac:(lra)) as [δ1 [H1 H4]].
-  specialize (H2 (ε/2) ltac:(lra)) as [δ2 [H2 H5]]. set (δ := Rmin δ1 δ2).
-  specialize (H4 (a + δ / 2) ltac:(unfold δ; solve_R)).
-  specialize (H5 (δ / 2) ltac:(unfold δ; solve_R)).
-  solve_R.
+  intros f a L. split; intros H1 ε H2.
+  - specialize (H1 ε H2). destruct H1 as [δ [H1 H3]].
+    exists δ. split; auto. intros h H4.
+    specialize (H3 (a + h) ltac:(solve_R)). solve_R.
+  - specialize (H1 ε H2). destruct H1 as [δ [H1 H3]].
+    exists δ. split; auto. intros h H4.
+    specialize (H3 (h - a) ltac:(solve_R)).
+    replace (a + (h - a)) with h in H3 by lra. solve_R.
 Qed.

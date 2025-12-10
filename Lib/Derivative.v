@@ -1605,3 +1605,66 @@ Proof.
     rewrite Derive_plus; auto. rewrite IH. reflexivity.
     apply differentiable_sum; auto.
 Qed.
+
+Lemma nth_derivative_scale : forall n f f' c,
+  ⟦ der ^ n ⟧ f = f' -> ⟦ der ^ n ⟧ (c * f) = (c * f').
+Proof.
+  induction n as [| k IH]; intros f f' c H1.
+  - simpl in *. subst. reflexivity.
+  - simpl in *. destruct H1 as [g [H1 H2]].
+    exists (c * g)%f. split.
+    -- apply theorem_10_5'; auto.
+    -- apply IH; auto.
+Qed.
+
+Lemma nth_derivative_x_i_at_0 : ∀ i k,
+  ⟦ der^k 0 ⟧ (fun x => x ^ i) = (if Nat.eq_dec i k then INR (fact k) else 0).
+Proof.
+  intros i k. generalize dependent i.
+  induction k as [| k IH]; intros i.
+  
+  - simpl. destruct (Nat.eq_dec i 0) as [H1 | H1].
+    -- subst. exists (fun x => 1). split; reflexivity.
+    -- exists (fun x => x ^ i). split; [reflexivity |].
+       apply pow_ne_zero; auto.
+  - simpl. destruct i as [| i'].
+    -- exists (fun x => 0). split.
+       + exists (fun x => 0). split.
+         * replace (λ _ : ℝ, 0) with (λ x, 0 * (x ^ (0 -1))).
+           2 : { extensionality y. simpl. lra. }
+           apply power_rule.
+         * clear IH. induction k; simpl; auto.
+           exists (fun x => 0). split; auto. apply theorem_10_1.
+       + reflexivity.
+         
+    --
+       assert (H_first_der: ⟦ der ⟧ (fun x => x ^ (S i')) = (fun x => INR (S i') * x ^ (S i' - 1))).
+       { apply power_rule'. reflexivity. } (* *)
+       
+       (* 2. Apply IH to the (i')-th power for the remaining k derivatives *)
+       specialize (IH i').
+       destruct IH as [f_k_prev [H_nth_prev H_val_prev]].
+       
+       (* 3. Construct the (S k)-th derivative using the scaling helper *)
+       exists (INR (S i') * f_k_prev)%f. split.
+       + (* Existence of derivative chain *)
+         exists (fun x => INR (S i') * x ^ i'). split.
+         * replace (S i' - 1)%nat with i' in H_first_der by lia. apply H_first_der.
+         * apply nth_derivative_scale. auto.
+       +
+          rewrite H_val_prev.
+         destruct (Nat.eq_dec i' k) as [Heq | Hneq].
+         *
+           subst. destruct (Nat.eq_dec (S k) (S k)) as [Hcontra | Hcontra]; try lia.
+           rewrite <- mult_INR. reflexivity.
+         * destruct (Nat.eq_dec (S i') (S k)); [try lia |].
+           lra.
+Qed.
+
+Lemma nth_derivative_of_function_at_x_unique_short : forall n f f1' f2' x,
+  ⟦ der ^ n ⟧ f = f1' -> ⟦ der ^ n ⟧ f = f2' -> f1' x = f2' x.
+Proof.
+  intros n f f1' f2' x H1 H2.
+  pose proof (nth_derivative_of_function_unique n f f1' f2' H1 H2).
+  subst. reflexivity.
+Qed.

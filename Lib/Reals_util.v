@@ -224,6 +224,14 @@ Proof.
   intros r1 r2 H1 H2. destruct H1 as [z1 H1]. destruct H2 as [z2 H2]. exists (z1 * z2)%Z. rewrite H1, H2. rewrite mult_IZR. reflexivity.
 Qed.
 
+Lemma is_integer_pow : forall r n,
+  is_integer r -> is_integer (r ^ n).
+Proof.
+  intros r n H1. induction n as [| k IH].
+  - simpl. exists 1%Z. reflexivity.
+  - simpl. apply is_integer_mult; try apply IH; auto.
+Qed.
+
 Lemma nltb_gt : forall a b : nat, (a > b)%nat <-> (a <=? b) = false.
 Proof.
   intros a b. split.
