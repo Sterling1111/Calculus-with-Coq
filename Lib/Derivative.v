@@ -72,6 +72,9 @@ Fixpoint nth_Derive (n:nat) (f : R -> R) : R -> R :=
 Definition nth_Derive_at (n:nat) (f : R -> R) (a : R) : R :=
   nth_Derive n f a.
 
+Definition nth_differentiable (f : R -> R) : Prop :=
+  forall n, exists fn', nth_derivative n f fn'.
+
 Module DerivativeNotations.
   Declare Scope derivative_scope.
   Delimit Scope derivative_scope with d.
@@ -1537,14 +1540,18 @@ Proof.
   solve_R.
 Qed.
 
-Lemma differentiable_sum : forall (n : nat) (f : nat -> R -> R),
-  (forall k, differentiable (f k)) -> differentiable (λ x, ∑ 0 n (λ k, f k x)).
+Lemma differentiable_sum : forall (i n : nat) (f : nat -> R -> R),
+  (i <= n)%nat -> (forall k, differentiable (f k)) -> differentiable (λ x, ∑ i n (λ k, f k x)).
 Proof.
-  intros n f H1. induction n as [| k IH].
-  - replace (λ x0 : ℝ, ∑ 0 0 λ k : ℕ, f k x0) with (λ x0 : ℝ, f 0%nat x0); auto.
-  - replace (λ x0 : ℝ, ∑ 0 (S k) λ k0 : ℕ, f k0 x0) with (λ x0 : ℝ, (∑ 0 k λ k0 : ℕ, f k0 x0) + f (S k) x0).
-    2 : { extensionality y. rewrite sum_f_i_Sn_f; try lia. reflexivity. }
-    apply differentiable_plus; auto.
+  intros i n f H1. induction n as [| k IH].
+  - replace (λ x0 : ℝ, ∑ i 0 λ k : ℕ, f k x0) with (λ x0 : ℝ, f 0%nat x0); auto. extensionality x. destruct i. reflexivity. 
+    rewrite sum_f_Sn_n; try lia. 
+  - assert (i = S k \/ i <= k)%nat as [H2 | H2] by lia.
+    -- subst i. replace (λ x0 : ℝ, ∑ (S k) (S k) (λ k0 : ℕ, f k0 x0)) with (λ x0 : ℝ, f (S k) x0); auto.
+       extensionality x. rewrite sum_f_n_n; auto.
+    -- intros H3. replace (λ x0 : ℝ, ∑ i (S k) (λ k0 : ℕ, f k0 x0)) with (λ x0 : ℝ, (∑ i k (λ k0 : ℕ, f k0 x0)) + f (S k) x0).
+       2 : { extensionality y. rewrite sum_f_i_Sn_f; try lia. reflexivity. }
+       apply differentiable_plus; auto.
 Qed.
 
 Lemma Derive_plus : forall f g,
@@ -1579,10 +1586,76 @@ Proof.
     auto.
 Qed.
 
+Lemma nth_Derive_at_eq : forall n a f f',
+  ⟦ der ^ n a ⟧ f = f' a -> ⟦ Der ^ n a ⟧ f = f' a.
+Proof.
+  intros n a f f' [f1' [H1 H2]]. 
+  pose proof nth_Derive_eq n f f1' H1 as H3. rewrite <- H2.
+  rewrite <- H3. reflexivity.
+Qed.
+
+Lemma nth_Derive_at_eq' : forall n a f f',
+  ⟦ der ^ n a ⟧ f = f' -> ⟦ Der ^ n a ⟧ f = f'.
+Proof.
+  intros n a f f' [fn' [H1 H2]].
+  pose proof nth_Derive_eq n f fn' H1 as H3.
+  unfold nth_Derive_at.
+  rewrite H3.
+  auto.
+Qed.
+
+Lemma nth_differentiable_imp_differentiable : forall f,
+  nth_differentiable f -> differentiable f.
+Proof.
+  intros f H1.
+  destruct (H1 1%nat) as [f' H2].
+  destruct H2 as [f'' [H3 H4]]. simpl in H4. subst.
+  apply derivative_imp_differentiable with (f' := f'); auto.
+Qed.
+
 Lemma Derive_nth_Derive : forall n f,
   ⟦ Der ⟧ (⟦ Der ^ n ⟧ f) = ⟦ Der ^ (S n) ⟧ f.
 Proof.
   reflexivity.
+Qed.
+
+Lemma nth_Derive_spec : forall n f,
+  nth_differentiable f ->
+  (⟦ der ^ n ⟧ f = ⟦ Der ^ n⟧ f).
+Proof.
+  intros n.
+  (* Generalize f so the IH works for (Derive f) later *)
+  induction n as [| k IH].
+  - (* Base Case: n = 0 *)
+    intros f H1.
+    simpl.
+    reflexivity.
+  - (* Inductive Step: S k *)
+    intros f H1.
+    simpl.
+    
+    (* The definition of nth_derivative (S k) requires us to witness the first derivative *)
+    (* We propose (Derive f) as the first derivative *)
+    exists (Derive f).
+    split.
+    + apply nth_differentiable_imp_differentiable in H1.  pose proof Derive_spec f (Derive f) H1 as H2; tauto.
+    + rewrite Derive_nth_Derive. rewrite nth_Derive_shift.
+      apply IH.
+      
+      (* We must show that (Derive f) is also nth_differentiable *)
+      intro m.
+      (* The m-th derivative of (Derive f) is the (S m)-th derivative of f *)
+      destruct (H1 (S m)) as [fm' Hchain].
+      simpl in Hchain.
+      destruct Hchain as [f' [Hf' Hrest]].
+      
+      (* Since derivatives are unique, f' must be extensionally equal to Derive f *)
+      assert (H_eq: f' = Derive f).
+      { apply derivative_of_function_unique with (f := f); auto.
+        apply nth_differentiable_imp_differentiable in H1. pose proof Derive_spec f (Derive f) H1 as H2; tauto. }
+      subst f'.
+      exists fm'.
+      apply Hrest.
 Qed.
 
 Lemma nth_Derive_mth_Derive : forall n m f,
@@ -1603,7 +1676,7 @@ Proof.
     2 : { extensionality y. rewrite sum_f_i_Sn_f; try lia. reflexivity. }
     rewrite sum_f_i_Sn_f; try lia.
     rewrite Derive_plus; auto. rewrite IH. reflexivity.
-    apply differentiable_sum; auto.
+    apply differentiable_sum; auto; lia.
 Qed.
 
 Lemma nth_derivative_scale : forall n f f' c,
@@ -1667,4 +1740,98 @@ Proof.
   intros n f f1' f2' x H1 H2.
   pose proof (nth_derivative_of_function_unique n f f1' f2' H1 H2).
   subst. reflexivity.
+Qed.
+
+Lemma differentiable_mult_const : forall f c,
+  differentiable f -> differentiable (λ x, c * f x).
+Proof.
+  intros f c H1. pose proof differentiable_imp_exists_derivative f H1 as [f' H2].
+  pose proof theorem_10_5' f f' c H2 as H3.
+  apply derivative_imp_differentiable with (f' := (c * f')%f); auto.
+Qed.
+
+Lemma differentiable_pow : forall n,
+  differentiable (λ x, x ^ n).
+Proof.
+  intros n. apply derivative_imp_differentiable with (f' := λ x, INR n * x ^ (n - 1)).
+  apply power_rule'; reflexivity.
+Qed.
+
+Lemma nth_Derive_spec' : forall n a f f',
+  nth_differentiable f ->
+  (⟦ der ^ n a ⟧ f = f' <-> ⟦ Der ^ n a ⟧ f = f').
+Proof.
+  intros n a f f' H1. specialize (H1 n) as [fn' H1].
+  split; intros H2.
+  - apply nth_Derive_at_eq'; auto.
+  - exists fn'. split; auto.
+    unfold nth_Derive_at in H2.
+    pose proof nth_Derive_eq n f fn' H1 as H3.
+    rewrite H3 in H2.
+    apply H2.
+Qed.
+
+Lemma nth_differentiable_mult_const : forall f c,
+  nth_differentiable f -> nth_differentiable (λ x, c * f x).
+Proof.
+  intros f c H1 n. specialize (H1 n) as [fn' H2].
+  pose proof nth_derivative_scale n f fn' c H2 as H3.
+  exists (c * fn')%f. auto.
+Qed.
+
+Lemma nth_derivative_plus : forall n f1 f1' f2 f2',
+  ⟦ der ^ n ⟧ f1 = f1' -> ⟦ der ^ n ⟧ f2 = f2' ->
+    ⟦ der ^ n ⟧ (λ x, f1 x + f2 x) = (λ x, f1' x + f2' x).
+Proof.
+  induction n as [| k IH]; intros f1 f1' f2 f2' H1 H2.
+  - simpl in *. subst. extensionality x. lra.
+  - simpl in *. destruct H1 as [g1 [H1 H3]]. destruct H2 as [g2 [H2 H4]].
+    exists (g1 + g2)%f. split.
+    -- apply theorem_10_3_b; try apply differentiable_plus; auto.
+    -- apply IH; auto.
+Qed.
+
+Lemma nth_differentiable_sum : forall (i n : nat) (f : nat -> R -> R),
+  (i <= n)%nat -> (forall k, nth_differentiable (f k)) -> nth_differentiable (λ x, ∑ i n (λ k, f k x)).
+Proof.
+  intros i n f H1 H2 m.
+  induction n as [| k IH].
+  - replace (λ x0 : ℝ, ∑ i 0 λ k : ℕ, f k x0) with (λ x0 : ℝ, f 0%nat x0). apply H2. extensionality x. destruct i. reflexivity. 
+    rewrite sum_f_Sn_n; try lia. 
+  - assert (i = S k \/ i <= k)%nat as [H3 | H3] by lia.
+    -- subst i. replace (λ x0 : ℝ, ∑ (S k) (S k) (λ k0 : ℕ, f k0 x0)) with (λ x0 : ℝ, f (S k) x0). apply H2.
+       extensionality x. rewrite sum_f_n_n; auto.
+    -- specialize (IH H3) as [fn' H4].
+       replace (λ x0 : ℝ, ∑ i (S k) (λ k0 : ℕ, f k0 x0)) with (λ x0 : ℝ, (∑ i k (λ k0 : ℕ, f k0 x0)) + f (S k) x0).
+       2 : { extensionality y. rewrite sum_f_i_Sn_f; try lia. reflexivity. }
+       specialize (H2 (S k) m) as [f_k' H5].
+       exists ((fn' + f_k')%f). apply nth_derivative_plus; auto.
+Qed.
+
+Lemma nth_derivative_const : forall n c,
+  (n > 0)%nat -> ⟦ der ^ n ⟧ (λ _, c) = (λ x, 0).
+Proof.
+  intros n c. generalize dependent c. induction n as [| k IH]; try lia.
+  - intros c H1. assert ((k = 0)%nat \/ (k > 0)%nat) as [H2 | H2] by lia.
+    -- subst k. exists (λ x, 0). split.
+       ++ apply theorem_10_1.
+       ++ reflexivity.
+    -- specialize (IH c H2) as H3. exists (λ x, 0). split.
+       ++ apply theorem_10_1.
+       ++ apply IH; auto.
+Qed. 
+
+Lemma nth_differentiable_pow : forall n,
+  nth_differentiable (λ x, x ^ n).
+Proof.
+  intros n m. generalize dependent n. induction m as [| k IH].
+  - intros n. simpl. exists (λ x, x ^ n). split; reflexivity.
+  - intros n.
+    specialize (IH (n - 1)%nat) as [fn' H1].
+    exists (fun x => INR n * fn' x).
+    simpl.
+    exists (fun x => INR n * x ^ (n - 1)).
+    split.
+    -- apply power_rule.
+    -- apply nth_derivative_scale; auto.
 Qed.

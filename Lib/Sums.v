@@ -638,3 +638,12 @@ Proof.
   - rewrite sum_f_i_Sn_f; try lia. rewrite IH; try lia. 
     replace (S n') with (n' + 1)%nat by lia. lra.
 Qed.
+
+Lemma is_integer_sum : forall (f : nat -> R) (n : nat),
+  (forall k : nat, k <= n -> is_integer (f k)) -> is_integer (∑ 0 n f).
+Proof.
+  intros f n H1. induction n as [| n' IH].
+  - rewrite sum_f_0_0. apply H1. lra.
+  - rewrite sum_f_i_Sn_f; try lia. apply is_integer_plus. 2 : { apply H1. lra. }
+    apply IH. intros k H2. apply H1. apply INR_le in H2. apply le_INR. lia.
+Qed.

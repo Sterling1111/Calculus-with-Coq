@@ -64,12 +64,28 @@ Proof.
   lra.
 Qed.
 
+Lemma f_n_differentiable : ∀ n,
+  differentiable (f n).
+Proof.
+  intros n. rewrite f_n_is_polynomial.
+  apply differentiable_mult_const. apply differentiable_sum; try lia.
+  intros k H1. apply differentiable_mult_const. apply differentiable_pow.
+Qed.
+
+Lemma f_n_nth_differentiable : ∀ n,
+  nth_differentiable (f n).
+Proof.
+  intros n. rewrite f_n_is_polynomial. apply nth_differentiable_mult_const.
+  apply nth_differentiable_sum; try lia.
+  intros k H1. apply nth_differentiable_mult_const. apply nth_differentiable_pow.
+Qed.
+
 Lemma f_n_derivatives_at_0_are_integers : ∀ (n k: nat) (r : R),
   ⟦ der ^ k 0 ⟧ (f n) = r -> is_integer r.
 Proof.
   intros n k r H1.
   rewrite f_n_is_polynomial in H1.
-  pose proof nth_derivative_x_i_at_0 k k.
+  pose proof nth_derivative_x_i_at_0 k k as H2.
   
 Admitted.
 
@@ -110,17 +126,40 @@ Proof.
 
     assert (H4 : is_integer (G 0)).
     {
-      unfold G. apply is_integer_mult.
-      - apply is_integer_pow; auto. exists b. reflexivity.
-      - admit.
+      unfold G. rewrite r_mult_sum_f_i_n_f_l.
+      apply is_integer_sum. intros k H4. rewrite <- Rmult_assoc. apply is_integer_mult.
+      - replace (π ^ (2 * n - 2 * k)) with ((π ^ 2) ^ (n - k)). 2 : { rewrite <- pow_mult. f_equal. lia. }
+        rewrite H1. rewrite Rmult_comm. rewrite Rmult_assoc. apply is_integer_mult.
+        -- pose proof Nat.Even_or_Odd k as [[l H5] | [l H5]]. exists 1%Z. rewrite H5. apply pow_1_even.
+           exists (-1)%Z. rewrite H5. replace (2 * l + 1)%nat with (S (2 * l)) by lia. apply pow_1_odd.
+        -- rewrite Rdiv_pow_distr; auto. replace (a ^ (n - k) / b ^ (n - k) * b ^ n) with (a^(n-k) * ((b^n) / (b^(n-k)))) by lra.
+           rewrite <- pow_div_sub; solve_R. replace (n - (n - k))%nat with k. 2 : { apply INR_le in H4. lia. }
+           apply is_integer_mult; apply is_integer_pow; [ exists a | exists b ]; reflexivity.
+      - apply (f_n_derivatives_at_0_are_integers n (2 * k)). pose proof nth_Derive_at_eq (2 * k) 0 (f n) as H6.
+        pose proof f_n_differentiable n as H7. pose proof differentiable_imp_exists_derivative (f n) H7 as [f' H8].
+        specialize (H6 f'). apply nth_Derive_spec'; auto. apply f_n_nth_differentiable.
     }
-    assert (H5 : is_integer (G 1)) by admit.
+    assert (H5 : is_integer (G 1)).
+    {
+      unfold G. rewrite r_mult_sum_f_i_n_f_l.
+      apply is_integer_sum. intros k H5. rewrite <- Rmult_assoc. apply is_integer_mult.
+      - replace (π ^ (2 * n - 2 * k)) with ((π ^ 2) ^ (n - k)). 2 : { rewrite <- pow_mult. f_equal. lia. }
+        rewrite H1. rewrite Rmult_comm. rewrite Rmult_assoc. apply is_integer_mult.
+        -- pose proof Nat.Even_or_Odd k as [[l H6] | [l H6]]. exists 1%Z. rewrite H6. apply pow_1_even.
+           exists (-1)%Z. rewrite H6. replace (2 * l + 1)%nat with (S (2 * l)) by lia. apply pow_1_odd.
+        -- rewrite Rdiv_pow_distr; auto. replace (a ^ (n - k) / b ^ (n - k) * b ^ n) with (a^(n-k) * ((b^n) / (b^(n-k)))) by lra.
+           rewrite <- pow_div_sub; solve_R. replace (n - (n - k))%nat with k. 2 : { apply INR_le in H5. lia. }
+           apply is_integer_mult; apply is_integer_pow; [ exists a | exists b ]; reflexivity.
+      - apply (f_n_derivatives_at_1_are_integers n (2 * k)). pose proof nth_Derive_at_eq (2 * k) 1 (f n) as H6.
+        pose proof f_n_differentiable n as H7. pose proof differentiable_imp_exists_derivative (f n) H7 as [f' H8].
+        specialize (H6 f'). apply nth_Derive_spec'; auto. apply f_n_nth_differentiable.
+    }
     assert (H6 : ⟦ der ⟧ G = G').
     {
       unfold G, G'.
       apply theorem_10_5'.
       apply Derive_spec.
-      apply differentiable_sum. intros k. admit.
+      apply differentiable_sum; try lia. intros k. apply differentiable_mult_const. admit.
       rewrite sum_Derive_commute. 2 : { admit. }
       extensionality x.
       apply sum_f_equiv; try lia. intros k H6.

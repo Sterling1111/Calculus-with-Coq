@@ -232,6 +232,17 @@ Proof.
   - simpl. apply is_integer_mult; try apply IH; auto.
 Qed.
 
+Lemma pow_div_sub : forall x n1 n2,
+  x <> 0 -> (n2 >= n1)%nat -> x ^ (n2 - n1)%nat = x ^ n2 / x ^ n1.
+Proof.
+  intros x n1 n2 H1 H3. generalize dependent n1. induction n2 as [| k IH].
+  - intros n1 H2. replace (n1) with 0%nat by lia. simpl. lra.
+  - intros n1 H2. destruct (Nat.eq_dec n1 (S k)).
+    + subst. simpl. rewrite Nat.sub_diag. field. split; auto. apply pow_nonzero; auto.
+    + assert (H3 : (n1 <= k)%nat) by lia. replace (S k - n1)%nat with (S (k - n1)) by lia.
+      simpl. rewrite IH; auto. field; apply pow_nonzero; auto.
+Qed.
+
 Lemma nltb_gt : forall a b : nat, (a > b)%nat <-> (a <=? b) = false.
 Proof.
   intros a b. split.
