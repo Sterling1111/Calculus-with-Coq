@@ -639,6 +639,22 @@ Proof.
     replace (S n') with (n' + 1)%nat by lia. lra.
 Qed.
 
+Lemma sum_f_0_n_fSi_minus_fi : forall n (f : nat -> R),
+  ∑ 0 n (fun i => f (i+1)%nat - f i) = f (n+1)%nat - f 0%nat.
+Proof.
+  intros n f. induction n as [| n' IH].
+  - compute. reflexivity.
+  - rewrite sum_f_i_Sn_f. 2 : { lia. } rewrite IH. replace (S n') with (n' + 1)%nat by lia. lra.
+Qed.
+
+Lemma sum_f_0_n_fi_minus_fSi : forall n (f : nat -> R),
+  ∑ 0 n (fun i => f i - f (i+1)%nat) = f 0%nat - f (n+1)%nat.
+Proof.
+  intros n f. induction n as [| n' IH].
+  - compute. reflexivity.
+  - rewrite sum_f_i_Sn_f. 2 : { lia. } rewrite IH. replace (S n') with (n' + 1)%nat by lia. lra .
+Qed.
+
 Lemma is_integer_sum : forall (f : nat -> R) (n : nat),
   (forall k : nat, k <= n -> is_integer (f k)) -> is_integer (∑ 0 n f).
 Proof.

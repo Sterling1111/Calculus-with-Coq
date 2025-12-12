@@ -157,32 +157,99 @@ Proof.
     assert (H6 : ⟦ der ⟧ G = G').
     {
       unfold G, G'.
-      apply theorem_10_5'.
+      apply theorem_10_5'. assert (H6 : forall k, differentiable (nth_Derive_at (2 * k) (f n))).
+      { intros k. apply nth_differentiable_imp_differentiable. apply nth_Derive_nth_differentiable. apply f_n_nth_differentiable. }
       apply Derive_spec.
-      apply differentiable_sum; try lia. intros k. apply differentiable_mult_const. admit.
-      rewrite sum_Derive_commute. 2 : { admit. }
-      extensionality x.
-      apply sum_f_equiv; try lia. intros k H6.
-      admit.
+      - apply differentiable_sum; try lia. intros k. apply differentiable_mult_const; auto.
+      - rewrite sum_Derive_commute. 2 : { intros k H7. apply differentiable_mult_const; auto. }
+        extensionality x. apply sum_f_equiv; try lia. intros k H7.
+        rewrite Derive_mult_const; auto. apply Rmult_eq_compat_l. rewrite Derive_nth_Derive.
+        replace (S (2 * k)) with (2 * k + 1)%nat by lia. reflexivity.
     }
-    assert (H7 : ⟦ der ⟧ G' = G'') by admit.
-    
+    assert (H7 : ⟦ der ⟧ G' = G'').
+    {
+      unfold G', G''.
+      apply theorem_10_5'. assert (H7 : forall k, differentiable (nth_Derive_at (2 * k + 1) (f n))).
+      { intros k. apply nth_differentiable_imp_differentiable. apply nth_Derive_nth_differentiable. apply f_n_nth_differentiable. }
+      apply Derive_spec.
+      - apply differentiable_sum; try lia. intros k. apply differentiable_mult_const; auto.
+      - rewrite sum_Derive_commute. 2 : { intros k H8. apply differentiable_mult_const; auto. }
+        extensionality x. apply sum_f_equiv; try lia. intros k H8.
+        rewrite Derive_mult_const; auto. apply Rmult_eq_compat_l. rewrite Derive_nth_Derive.
+        replace (S (2 * k + 1)) with (2 * k + 2)%nat by lia. reflexivity.
+    }
     assert (H8 : ⟦ der ⟧ H = H').
     {
       unfold H, H'.
-      assert (H8 : ⟦ der ⟧ (fun x => sin (π*x)) = fun x => π * cos (π*x)) by admit.
-      assert (H9 : ⟦ der ⟧ (fun x => cos (π*x)) = fun x => - π * sin (π*x)) by admit.
+      assert (H8 : ⟦ der ⟧ (fun x => sin (π*x)) = fun x => π * cos (π*x)).
+      {
+        replace (λ x : ℝ, π * cos (π * x)) with (λ x : ℝ, cos (π * x) * π) by (extensionality x; lra).
+        set (f := sin).
+        set (f' := cos).
+        set (g := λ x : ℝ, π * x).
+        set (g' := λ x : ℝ, π).
+        assert (H8 : ⟦ der ⟧ f = f'). { apply sin_derivative. }
+        assert (H9 : ⟦ der ⟧ g = g').
+        {
+          unfold g, g'. replace (λ x : ℝ, π) with ((λ _, π) ∙ (λ x : ℝ, 1)) by (extensionality x; lra).
+          apply theorem_10_5'. apply theorem_10_2.
+        }
+        replace (λ x : ℝ, f' (g x) * π) with (f' ∘ g ∙ g'). 2 : { extensionality x. unfold g'. unfold compose. lra. }
+        apply chain_rule; auto.
+      }
+      assert (H9 : ⟦ der ⟧ (fun x => cos (π*x)) = fun x => - π * sin (π*x)).
+      {
+        replace (λ x : ℝ, - π * sin (π * x)) with (λ x : ℝ, - sin (π * x) * π) by (extensionality x; lra).
+        set (f := cos).
+        set (f' := (- sin)%f).
+        set (g := λ x : ℝ, π * x).
+        set (g' := λ x : ℝ, π).
+        assert (H10 : ⟦ der ⟧ f = f'). { apply cos_derivative. }
+        assert (H11 : ⟦ der ⟧ g = g').
+        {
+          unfold g, g'. replace (λ x : ℝ, π) with ((λ _, π) ∙ (λ x : ℝ, 1)) by (extensionality x; lra).
+          apply theorem_10_5'. apply theorem_10_2.
+        }
+        replace (λ x : ℝ, - sin (g x) * π) with (f' ∘ g ∙ g'). 2 : { extensionality x. unfold g', f'. unfold compose. lra. }
+        apply chain_rule; auto.
+      }
       
       apply theorem_10_3_d.
       - pose proof theorem_10_4_c G' (fun x => sin (π*x)) G'' (fun x => π * cos (π*x)) H7 H8 as H10.
-        admit.
+        intros c. specialize (H10 c). 
+        apply derivative_at_eq_f' with (f1' := (λ x : ℝ, G'' x * (λ x0 : ℝ, sin (π * x0)) x + G' x * (λ x0 : ℝ, π * cos (π * x0)) x)); auto.
+        intros x. lra.
       - apply theorem_10_5'. 
         pose proof theorem_10_4_c G (fun x => cos (π*x)) G' (fun x => - π * sin (π*x)) H6 H9 as H11.
-        admit.
+        intros c. specialize (H11 c).
+        apply derivative_at_eq_f' with (f1' := (λ x : ℝ, G' x * (λ x0 : ℝ, cos (π * x0)) x + G x * (λ x0 : ℝ, - π * sin (π * x0)) x)); auto.
+        intros x. lra.
     }
     assert (H9 : H' = (fun x => π^2 * (a^n * f n x * sin (π * x)))).
     {
-      unfold H'. extensionality x. assert (H9 : G'' x + π^2 * (G x) = π^2 * a^n * f n x) by admit.
+      unfold H'. extensionality x.
+      assert (H9 : G'' x + π^2 * (G x) = π^2 * a^n * f n x).
+      {
+        unfold G, G''.
+        rewrite r_mult_sum_f_i_n_f_l. do 2 rewrite r_mult_sum_f_i_n_f_l.
+        set (A := fun i => b ^ n * ((-1) ^ i * π ^ (2 * n - 2 * i) * (⟦ Der^(2 * i + 2) x ⟧ (f n)))).
+        set (B := fun i => π ^ 2 * (b ^ n * ((-1) ^ i * π ^ (2 * n - 2 * i) * (⟦ Der^(2 * i) x ⟧ (f n))))).
+        assert (H9 : ∀ i : ℕ, A i + B (i + 1)%nat = 0). 
+        {
+          intros i. unfold A, B. replace (2 * (i + 1))%nat with (2 * i + 2)%nat by lia.
+          replace (b ^ n * ((-1) ^ i * π ^ (2 * n - 2 * i) * (⟦ Der^(2 * i + 2) x ⟧ (f n))) + π ^ 2 * (b ^ n * ((-1) ^ (i + 1) * π ^ (2 * n - (2 * i + 2)) * (⟦ Der^(2 * i + 2) x ⟧ (f n))))) with
+          ((b ^ n * (⟦ Der^(2 * i + 2) x ⟧ (f n))) * ((-1) ^ i * π ^ (2 * n - 2 * i) + π ^ 2 * ((-1) ^ (i + 1) * π ^ (2 * n - (2 * i + 2))))) by lra.
+          apply Rmult_eq_0_compat_l. admit.
+        }
+        rewrite sum_f_plus; try lia. 
+        replace (λ i : ℕ, A i + B i) with (λ i : ℕ, B i - B (i + 1)%nat).
+        2 : { extensionality i. specialize (H9 i). lra. }
+        rewrite sum_f_0_n_fi_minus_fSi. replace (B (n + 1)%nat) with (0) by admit.
+        rewrite Rminus_0_r. unfold B. rewrite pow_O. rewrite Rmult_1_l. rewrite Nat.mul_0_r.
+        rewrite Nat.sub_0_r. replace (⟦ Der^0 x ⟧ (f n)) with (f n x) by reflexivity.
+        rewrite Rmult_assoc. apply Rmult_eq_compat_l. rewrite <- Rmult_assoc.
+        apply Rmult_eq_compat_r. rewrite pow_mult, H1. rewrite Rdiv_pow_distr; auto. field. apply pow_nonzero; lra.
+      }
       nra.
     }
     assert (H10 : ∫ 0 1 (λ x : ℝ, π ^ 2 * (a ^ n * f n x * sin (π*x))) = H 1 - H 0).
@@ -190,17 +257,17 @@ Proof.
       rewrite <- H9.
       apply FTC2.
       - lra.
-      - admit.
+      - rewrite H9. admit.
       - apply derivative_imp_derivative_on; try lra; auto.
     }
     assert (H11 : H 1 - H 0 = π * (G 1 + G 0)).
     { unfold H. rewrite Rmult_1_r, Rmult_0_r. rewrite sin_0, sin_π, cos_0, cos_π. lra. }
 
     rewrite H11 in H10. rewrite theorem_13_6_b in H10; try lra.
-    2 : { apply theorem_13_3; try lra. admit. }
+    2 : { apply theorem_13_3; try lra. apply theorem_9_1_d; try lra. admit. }
     pose proof π_pos as H12.
     apply Rmult_eq_compat_r with (r := 1 / π) in H10; try lra. field_simplify in H10; try lra.
-    rewrite <- theorem_13_6_b in H10; try lra. 2 : { admit. }
+    rewrite <- theorem_13_6_b in H10; try lra. 2 : {  admit. }
     replace (λ x : ℝ, π * (a ^ n * f n x * sin (π * x))) with (λ x : ℝ, π * a ^ n * f n x * sin (π * x)) in H10.
     2 : { extensionality x; lra. }
     rewrite H10.

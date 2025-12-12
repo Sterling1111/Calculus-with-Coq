@@ -11,6 +11,9 @@ Qed.
 Lemma lemma_36_1' : ⟦ lim 4 ⟧ (fun x => 2 * x + 3) = 11.
 Proof. solve_lim. Qed.
 
+Lemma lemma_36_1'' : ⟦ lim 4 ⟧ (fun x => 2 * x + 3) = 11.
+Proof. auto_limit. Qed.
+
 Lemma lemma_36_2 : forall a c d, ⟦ lim a ⟧ (fun x => c * x + d) = c * a + d.
 Proof.
   intros a c d. intros ε H1. assert (c = 0 \/ c <> 0) as [H2 | H2] by lra.

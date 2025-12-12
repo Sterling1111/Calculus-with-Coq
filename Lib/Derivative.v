@@ -1835,3 +1835,27 @@ Proof.
     -- apply power_rule.
     -- apply nth_derivative_scale; auto.
 Qed.
+
+Lemma nth_Derive_nth_differentiable : forall n f,
+  nth_differentiable f -> nth_differentiable (⟦ Der ^ n ⟧ f).
+Proof.
+  intros n. induction n as [| k IH].
+  - simpl. auto.
+  - intros f H1. rewrite nth_Derive_shift. apply IH.
+    intros m. pose proof nth_differentiable_imp_differentiable f H1 as H2.
+    specialize (H1 (S m)) as [fn' H3].
+    simpl in H3. destruct H3 as [f' [H4 H5]].
+    exists fn'.
+    assert (H6 : f' = ⟦ Der ⟧ f).
+    { apply Derive_spec in H4; auto. }
+    subst. auto.
+Qed.
+
+Lemma Derive_mult_const : forall f c,
+  differentiable f ->
+  ⟦ Der ⟧ (λ x, c * f x) = (λ x, c * (⟦ Der ⟧ f) x).
+Proof.
+  intros f c H1. pose proof theorem_10_5' f (⟦ Der ⟧ f) c ltac:(apply Derive_spec; auto) as H2.
+  apply Derive_spec in H2; auto.
+  apply differentiable_mult_const; auto.
+Qed.
