@@ -361,4 +361,4 @@ Proof.
   pose proof corollary_18_1 2 (sqrt a) ltac:(apply sqrt_lt_R0; auto) as H3.
   rewrite pow2_sqrt in H3; try lra. 
   pose proof theorem_18_4 a (1/2) 2 H1 as H4.
-
+Admitted.
