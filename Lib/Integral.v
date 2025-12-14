@@ -1470,6 +1470,76 @@ Proof.
   - admit.
 Admitted.
 
+Lemma integral_nonneg : forall a b f,
+  a <= b -> (forall x, x ∈ [a, b] -> 0 <= f x) -> integrable_on a b f -> 0 <= ∫ a b f.  
+Proof.
+  intros a b f H1 H2 H3. destruct H1 as [H1 | H1]. 2 : { subst. rewrite integral_n_n. lra. }
+  pose proof integral_eq' a b f H1 H3 as [bf [r [H4 [H5 [_ [H6 H7]]]]]]. subst.
+  pose proof exists_partition_a_b a b H1 as [P H8].
+  specialize (H6 (L(bf, P)) ltac:(exists P; reflexivity)).
+  apply Rle_trans with (r2 := L(bf, P)); solve_R.
+  apply Rge_le. apply lower_sum_nonneg; auto.
+Qed.
+
+Lemma integral_pos : forall a b f,
+  a < b -> (forall x, x ∈ [a, b] -> 0 < f x) -> continuous_on f [a, b] -> integrable_on a b f -> 0 < ∫ a b f.
+Proof.
+  intros a b f H1 H2 H3 H4.
+  pose proof integral_eq' a b f H1 H4 as [bf [r [H5 [H6 [_ [H7 H8]]]]]]. subst.
+  pose proof exists_partition_a_b a b H1 as [P H9].
+  specialize (H7 (L(bf, P)) ltac:(exists P; reflexivity)).
+  apply Rlt_le_trans with (r2 := L(bf, P)).
+  - apply lower_sum_pos; auto.
+  - apply H7.
+Qed.
+
+Lemma integral_nonpos : forall a b f,
+  a <= b -> (forall x, x ∈ [a, b] -> f x <= 0) -> integrable_on a b f -> ∫ a b f <= 0.
+Proof.
+  intros a b f H1 H2 H3. destruct H1 as [H1 | H1]. 2 : { subst. rewrite integral_n_n. lra. }
+  pose proof integral_eq' a b f H1 H3 as [bf [r [H4 [H5 [[H6 H7] _]]]]]. subst.
+  pose proof exists_partition_a_b a b H1 as [P H8].
+  specialize (H6 (U(bf, P)) ltac:(exists P; reflexivity)).
+  apply Rle_trans with (r2 := U(bf, P)); solve_R.
+  apply upper_sum_nonpos; auto.
+Qed.
+
+Lemma integral_neg : forall a b f,
+  a < b -> (forall x, x ∈ [a, b] -> f x < 0) -> continuous_on f [a, b] -> integrable_on a b f -> ∫ a b f < 0.
+Proof.
+  intros a b f H1 H2 H3 H4.
+  pose proof integral_eq' a b f H1 H4 as [bf [r [H5 [H6 [[H7 H8] _]]]]]. subst.
+  pose proof exists_partition_a_b a b H1 as [P H9].
+  specialize (H7 (U(bf, P)) ltac:(exists P; reflexivity)).
+  apply Rle_lt_trans with (r2 := U(bf, P)); solve_R.
+  apply upper_sum_neg; auto.
+Qed.
+
+Lemma integral_pos' : forall a b f,
+  a < b -> (forall x, x ∈ [a, b] -> 0 <= f x) -> (exists x, x ∈ [a, b] /\ f x > 0) ->
+  continuous_on f [a, b] -> 0 < ∫ a b f.
+Proof.
+  intros a b f H1 H2 [c [H3 H4]] H5.
+  pose proof theorem_13_3 f a b ltac:(lra) H5 as H6.
+  pose proof continuous_strictly_pos_interval f a b c H1 H5 H3 H4 as [u [v [[H7 [H8 H9]] H10]]].
+  assert (H11 : integrable_on u v f). { apply integrable_on_sub_interval with (a := a)(b := b); solve_R. }
+  assert (H12 : integrable_on u b f). { apply integrable_on_sub_interval with (a := a)(b := b); solve_R. }
+  assert (H13 : integrable_on v b f). { apply integrable_on_sub_interval with (a := a)(b := b); solve_R. }
+  assert (H14 : integrable_on a u f). { apply integrable_on_sub_interval with (a := a)(b := b); solve_R. }
+  assert (H15 : 0 < ∫ u v f).
+  {
+    apply integral_pos; auto.
+    apply continuous_on_subset with (A2 := [a, b]); auto. intros x H15. solve_R.
+  }
+  assert (H16 : 0 <= ∫ v b f).
+  { apply integral_nonneg; auto. intros x H16. apply H2; solve_R. }
+  assert (H17 : 0 <= ∫ a u f).
+  { apply integral_nonneg; auto. intros x H17. apply H2; solve_R. }
+  replace (∫ a b f) with (∫ a u f + ∫ u b f) by (rewrite <- integral_plus'; solve_R).
+  replace (∫ u b f) with (∫ u v f + ∫ v b f) by (rewrite <- integral_plus'; solve_R).
+  lra.
+Qed.
+
 Theorem theorem_13_7 : ∀ a b f m M,
   a <= b -> integrable_on a b f -> (∀ x, x ∈ [a, b] -> m <= f x <= M) ->
     m * (b - a) <= ∫ a b f <= M * (b - a).
@@ -1543,6 +1613,66 @@ Proof.
   destruct H6 as [H6 H6']. specialize (H6 r'' ltac:(exists P2; auto)).
   specialize (H8 P1). specialize (H9 P2). lra.
 Qed.
+
+Lemma integral_bounds_strong : forall a b f m M,
+  a < b -> (forall x, x ∈ [a, b] -> m < f x < M) -> continuous_on f [a, b] ->
+    m * (b - a) < ∫ a b f < M * (b - a).
+Proof.
+  intros a b f m M H1 H2 H3.
+  assert (H4 : integrable_on a b f). { apply theorem_13_3; try lra; auto. }
+  pose proof continuous_function_attains_glb_on_interval f a b H1 H3 as [x1 [H5 H6]].
+  pose proof continuous_function_attains_lub_on_interval f a b H1 H3 as [x2 [H7 H8]].
+  assert (H9 : m < f x1). { apply H2. auto. }
+  assert (H10 : f x2 < M). { apply H2. auto. }
+  pose proof theorem_13_7 a b f (f x1) (f x2) ltac:(lra) H4 as H11.
+  assert (H12 : forall x, x ∈ [a, b] -> f x1 <= f x <= f x2).
+  {
+    intros x H12. destruct H6 as [H6 _]. specialize (H6 (f x) ltac:(exists x; split; auto)).
+    destruct H8 as [H8 _]. specialize (H8 (f x) ltac:(exists x; split; auto)).
+    lra.
+  }
+  specialize (H11 H12). nra.
+Qed.
+
+Lemma integral_bounds_strong_open : forall a b f m M,
+  a < b -> 
+  (forall x, x ∈ (a, b) -> m < f x < M) -> 
+  continuous_on f [a, b] ->
+    m * (b - a) < ∫ a b f < M * (b - a).
+Proof.
+  intros a b f m M H1 H2 H3.
+  
+  assert (H5 : forall x, x ∈ [a, b] -> m <= f x <= M).
+  {
+    intros x H4. assert (x = a \/ x = b \/ (a < x < b)) as [H5 | [H5 | H5]] by solve_R.
+    - subst. admit.
+    - subst. admit.
+    - specialize (H2 x H5). lra.
+  }
+  assert (H6 : integrable_on a b f). { apply theorem_13_3; try lra; auto. }
+
+  split.
+  - assert (0 < ∫ a b (fun x => f x - m)) as H7.
+    {
+      apply integral_pos'; auto.
+      - intros x H7. specialize (H5 x H7). lra.
+      - exists ((a + b) / 2). split; solve_R.
+        specialize (H2 ((a + b) / 2) ltac:(solve_R)). lra.
+      - admit.
+    }
+    rewrite integral_minus' with (b := a + (b - a) / 2). admit.
+    apply integrable_on_sub_interval with (a := a) (b := b); solve_R.
+  - assert (0 < ∫ a b (fun x => M - f x)) as H7.
+    {
+      apply integral_pos'; auto.
+      - intros x H7. specialize (H5 x H7). lra.
+      - exists ((a + b) / 2). split; solve_R.
+        specialize (H2 ((a + b) / 2) ltac:(solve_R)). lra.
+      - admit.
+    }
+    rewrite integral_minus' with (b := a + (b - a) / 2). admit.
+    apply integrable_on_sub_interval with (a := a) (b := b); solve_R.
+Admitted.
 
 Theorem FTC1 : ∀ f a b,
   a < b -> continuous_on f [a, b] -> ⟦ der ⟧ (λ x, ∫ a x f) [a, b] = f.
@@ -1913,73 +2043,4 @@ Proof.
   assert (H14 : C * (b - x) < C * (ε / (C + 1))) by (apply Rmult_lt_compat_l; auto; unfold δ in H7; solve_R).
   assert (H15 : C * (ε / (C + 1)) < ε) by (pose proof Rdiv_lt_1 C (C + 1) ltac:(lra) ltac:(lra); nra).
   rewrite Rminus_0_r. nra.
-Qed.
-
-Lemma integral_nonneg : forall a b f,
-  a <= b -> (forall x, x ∈ [a, b] -> 0 <= f x) -> integrable_on a b f -> 0 <= ∫ a b f.  
-Proof.
-  intros a b f H1 H2 H3. destruct H1 as [H1 | H1]. 2 : { subst. rewrite integral_n_n. lra. }
-  pose proof integral_eq' a b f H1 H3 as [bf [r [H4 [H5 [_ [H6 H7]]]]]]. subst.
-  pose proof exists_partition_a_b a b H1 as [P H8].
-  specialize (H6 (L(bf, P)) ltac:(exists P; reflexivity)).
-  apply Rle_trans with (r2 := L(bf, P)); solve_R.
-  apply Rge_le. apply lower_sum_nonneg; auto.
-Qed.
-
-Lemma integral_pos : forall a b f,
-  a < b -> (forall x, x ∈ [a, b] -> 0 < f x) -> continuous_on f [a, b] -> integrable_on a b f -> 0 < ∫ a b f.
-Proof.
-  intros a b f H1 H2 H3 H4.
-  pose proof integral_eq' a b f H1 H4 as [bf [r [H5 [H6 [_ [H7 H8]]]]]]. subst.
-  pose proof exists_partition_a_b a b H1 as [P H9].
-  specialize (H7 (L(bf, P)) ltac:(exists P; reflexivity)).
-  apply Rlt_le_trans with (r2 := L(bf, P)).
-  - apply lower_sum_pos; auto.
-  - apply H7.
-Qed.
-
-Lemma integral_nonpos : forall a b f,
-  a <= b -> (forall x, x ∈ [a, b] -> f x <= 0) -> integrable_on a b f -> ∫ a b f <= 0.
-Proof.
-  intros a b f H1 H2 H3. destruct H1 as [H1 | H1]. 2 : { subst. rewrite integral_n_n. lra. }
-  pose proof integral_eq' a b f H1 H3 as [bf [r [H4 [H5 [[H6 H7] _]]]]]. subst.
-  pose proof exists_partition_a_b a b H1 as [P H8].
-  specialize (H6 (U(bf, P)) ltac:(exists P; reflexivity)).
-  apply Rle_trans with (r2 := U(bf, P)); solve_R.
-  apply upper_sum_nonpos; auto.
-Qed.
-
-Lemma integral_neg : forall a b f,
-  a < b -> (forall x, x ∈ [a, b] -> f x < 0) -> continuous_on f [a, b] -> integrable_on a b f -> ∫ a b f < 0.
-Proof.
-  intros a b f H1 H2 H3 H4.
-  pose proof integral_eq' a b f H1 H4 as [bf [r [H5 [H6 [[H7 H8] _]]]]]. subst.
-  pose proof exists_partition_a_b a b H1 as [P H9].
-  specialize (H7 (U(bf, P)) ltac:(exists P; reflexivity)).
-  apply Rle_lt_trans with (r2 := U(bf, P)); solve_R.
-  apply upper_sum_neg; auto.
-Qed.
-
-Lemma integral_pos' : forall a b f,
-  a < b -> (forall x, x ∈ [a, b] -> 0 <= f x) -> (exists x, x ∈ [a, b] /\ f x > 0) ->
-  continuous_on f [a, b] -> integrable_on a b f -> 0 < ∫ a b f.
-Proof.
-  intros a b f H1 H2 [c [H3 H4]] H5 H6.
-  pose proof continuous_strictly_pos_interval f a b c H1 H5 H3 H4 as [u [v [[H7 [H8 H9]] H10]]].
-  assert (H11 : integrable_on u v f). { apply integrable_on_sub_interval with (a := a)(b := b); solve_R. }
-  assert (H12 : integrable_on u b f). { apply integrable_on_sub_interval with (a := a)(b := b); solve_R. }
-  assert (H13 : integrable_on v b f). { apply integrable_on_sub_interval with (a := a)(b := b); solve_R. }
-  assert (H14 : integrable_on a u f). { apply integrable_on_sub_interval with (a := a)(b := b); solve_R. }
-  assert (H15 : 0 < ∫ u v f).
-  {
-    apply integral_pos; auto.
-    apply continuous_on_subset with (A2 := [a, b]); auto. intros x H15. solve_R.
-  }
-  assert (H16 : 0 <= ∫ v b f).
-  { apply integral_nonneg; auto. intros x H16. apply H2; solve_R. }
-  assert (H17 : 0 <= ∫ a u f).
-  { apply integral_nonneg; auto. intros x H17. apply H2; solve_R. }
-  replace (∫ a b f) with (∫ a u f + ∫ u b f) by (rewrite <- integral_plus'; solve_R).
-  replace (∫ u b f) with (∫ u v f + ∫ v b f) by (rewrite <- integral_plus'; solve_R).
-  lra.
 Qed.

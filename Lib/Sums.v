@@ -663,3 +663,14 @@ Proof.
   - rewrite sum_f_i_Sn_f; try lia. apply is_integer_plus. 2 : { apply H1. lra. }
     apply IH. intros k H2. apply H1. apply INR_le in H2. apply le_INR. lia.
 Qed.
+
+Lemma sum_f_0 : forall (i n : nat) f,
+  (i <= n)%nat -> (forall k, (i <= k <= n)%nat -> f k = 0) -> ∑ i n f = 0.
+Proof.
+  intros i n f H1 H2. induction n as [| k IH].
+  - destruct i as [| i']; try lia. rewrite sum_f_0_0. apply H2; lia.
+  - assert (i = S k \/ i <= k)%nat as [H3 | H3] by lia.
+    -- rewrite H3. rewrite sum_f_n_n. apply H2; lia.
+    -- rewrite sum_f_i_Sn_f; try lia. rewrite IH; try lia. rewrite H2; try lra; try lia.
+       intros m H4. apply H2; lia.
+Qed.  

@@ -14,9 +14,7 @@ Proof.
   { exists 0. split; solve_R. unfold f. apply sqrt_lt_R0. lra. }
   assert (H3 : continuous_on f [-1, 1]).
   { apply continuous_imp_continuous_on. apply sqrt_f_continuous. intros c. unfold continuous_at. auto_limit. }
-  assert (H4 : integrable_on (-1) 1 f).
-  { apply theorem_13_3; solve_R. }
-  pose proof integral_pos' (-1) 1 f ltac:(lra) H1 H2 H3 H4 as H5.
+  pose proof integral_pos' (-1) 1 f ltac:(lra) H1 H2 H3 as H4.
   unfold π, f in *. lra.
 Qed.
 
@@ -357,6 +355,12 @@ Lemma sin_derivative :
 Proof.
 Admitted.
 
+Lemma sin_differentiable : differentiable sin.
+Proof.
+  apply derivative_imp_differentiable with (f' := cos).
+  apply sin_derivative.
+Qed.
+
 Lemma sin_consistency_on_0_π : ∀ x, 0 <= x <= π -> sin x = sin_0_π x.
 Proof. admit. Admitted.
 
@@ -364,6 +368,9 @@ Lemma sin2_plus_cos2 : ∀ x, (sin x)^2 + (cos x)^2 = 1.
 Proof. admit. Admitted.
 
 Lemma sin_π : sin π = 0.
+Proof. admit. Admitted.
+
+Lemma sin_π_over_2 : sin (π / 2) = 1.
 Proof. admit. Admitted.
 
 Lemma cos_π : cos π = -1.
