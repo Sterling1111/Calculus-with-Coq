@@ -1445,8 +1445,21 @@ Proof.
   - rewrite integral_b_a_neg with (a := c). field_simplify. rewrite integral_plus with (b := c) (c := b); try lra.
     apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
   - subst. rewrite integral_n_n. rewrite integral_b_a_neg with (a := c). lra.
-  - rewrite integral_b_a_neg with (a := c). field_simplify.
-Admitted.
+  - rewrite integral_b_a_neg with (a := c). field_simplify. rewrite integral_plus with (a := b) (b := c) (c := a); try lra.
+    rewrite integral_b_a_neg with (a := b). lra. apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
+  - rewrite integral_plus with (a := a) (b := b) (c := c); try lra. 
+    apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
+  - rewrite integral_plus with (a := a) (b := b) (c := c); try lra.
+  - rewrite integral_b_a_neg with (a := c). field_simplify. rewrite integral_plus with (a := b) (b := c) (c := a); try lra.
+  - rewrite integral_b_a_neg with (a := a) (b := b). rewrite integral_plus with (a := b) (b := a) (c := c); try lra. rewrite integral_b_a_neg with (a := c).
+    rewrite integral_b_a_neg with (a := b). lra.
+    apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
+  - rewrite integral_plus with (a := c) (b := b) (c := a); try lra. rewrite integral_b_a_neg with (b := c). lra.
+    apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
+  - subst. rewrite integral_n_n. rewrite integral_b_a_neg with (a := c). lra.
+  - rewrite integral_b_a_neg with (b := c). field_simplify. rewrite integral_plus with (a := c) (b := a) (c := b); try lra.
+    rewrite integral_b_a_neg with (a := b). lra. apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
+Qed.
 
 Lemma theorem_13_6_a : forall f a b c,
   a < b -> integrable_on a b f -> integrable_on a b (c * f).

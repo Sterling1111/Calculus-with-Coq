@@ -12,6 +12,9 @@ Proof.
   
   assert (H1 : ⟦ der ⟧ f = f') by apply sin_derivative.
   assert (H2 : ⟦ der ⟧ g = g').
-  { unfold g. apply theorem_10_3_b. apply theorem_10_2. admit. }
+  {
+    apply theorem_10_3_b. apply theorem_10_2. replace (Rmult 2) with (fun x => INR 2 * x^(2-1)).
+    2 : { extensionality x. simpl. lra. } apply power_rule.
+  }
   apply chain_rule; auto.
-Admitted.
+Qed.
