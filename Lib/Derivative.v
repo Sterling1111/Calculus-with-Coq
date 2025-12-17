@@ -719,6 +719,14 @@ Proof.
   intros f g f' g' H1 H2 x. apply theorem_10_3_c; auto.
 Qed.
 
+Lemma der_neg : forall f f' a,
+  ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ (fun x => - (f x)) = (fun x => - (f' x)).
+Proof.
+  intros f f' H1 x. replace (- f)%f with ((fun _ => 0) - (fun y => f y))%f by (extensionality y; nra).
+  replace (- f')%f with ((fun _ => 0) - (fun y => f' y))%f by (extensionality y; nra).
+  apply theorem_10_3_c; auto. apply theorem_10_1.
+Qed.
+
 Lemma derivative_on_minus : forall f g f' g' a b,
   a < b -> ⟦ der ⟧ f [a, b] = f' -> ⟦ der ⟧ g [a, b] = g' ->
   ⟦ der ⟧ (f - g) [a, b] = f' - g'.
@@ -1221,6 +1229,14 @@ Lemma left_derivative_at_eq :  forall f f1' f2' c,
 Proof.
   intros f f1' f2' c H1 H2 ε H3. specialize (H2 ε H3) as [δ [H2 H4]].
   exists δ; split; auto. intros x H5. specialize (H4 x H5). rewrite <- H1.
+  auto.
+Qed.
+
+Lemma derivative_replace_eq : forall f g f',
+  (forall x, f x = g x) -> ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = f'.
+Proof.
+  intros f g f' H1 H2 x. specialize (H2 x).
+  replace g with f in *. 2 : { extensionality x'. apply H1. }
   auto.
 Qed.
   

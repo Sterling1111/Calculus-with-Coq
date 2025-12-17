@@ -1030,5 +1030,6 @@ Ltac auto_limit :=
 Lemma lim_div_test : forall f,
   ⟦ lim 2⁺ ⟧ (fun x => (x * x - 1) / (x - 1) * (x - 19) + f 1) = (-51 + (f 1)).
 Proof.
+  intros. change_fun_to_expr.
   auto_limit.
 Qed.

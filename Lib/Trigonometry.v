@@ -345,15 +345,29 @@ Definition sin (x : ℝ) : ℝ :=
   let y := proj1_sig (red_0_2π x) in
   if Rle_dec y π then  √(1 - (cos y)^2) else -√(1 - (cos y)^2).
 
+Lemma cos_derivative_at : forall x,
+  ⟦ der x ⟧ cos = - sin.
+Proof.
+Admitted.
+
 Lemma cos_derivative :
   ⟦ der ⟧ cos = -sin.
+Proof.
+  intros x.
+  apply cos_derivative_at.
+Qed.
+
+Lemma sin_derivative_at : forall x,
+  ⟦ der x ⟧ sin = cos.
 Proof.
 Admitted.
 
 Lemma sin_derivative :
   ⟦ der ⟧ sin = cos.
 Proof.
-Admitted.
+  intros x.
+  apply sin_derivative_at.
+Qed.
 
 Lemma sin_differentiable : differentiable sin.
 Proof.
