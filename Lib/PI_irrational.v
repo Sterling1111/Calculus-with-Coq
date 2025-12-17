@@ -1,4 +1,5 @@
-From Lib Require Import Imports Notations Integral Derivative Functions Continuity Limit Sets Reals_util Inverse Trigonometry Sums Rational Binomial.
+From Lib Require Import Imports Notations Integral Derivative Functions Continuity 
+                          Limit Sets Reals_util Inverse Trigonometry Sums Rational Binomial Tactics.
 Import IntervalNotations SetNotations Function_Notations DerivativeNotations LimitNotations Choose_Notations.
 
 Open Scope R_scope.
@@ -219,46 +220,13 @@ Proof.
     assert (H8 : ⟦ der ⟧ H = H').
     {
       unfold H, H'.
-      assert (H8 : ⟦ der ⟧ (fun x => sin (π*x)) = fun x => π * cos (π*x)).
-      {
-        replace (λ x : ℝ, π * cos (π * x)) with (λ x : ℝ, cos (π * x) * π) by (extensionality x; lra).
-        set (f := sin).
-        set (f' := cos).
-        set (g := λ x : ℝ, π * x).
-        set (g' := λ x : ℝ, π).
-        assert (H8 : ⟦ der ⟧ f = f'). { apply sin_derivative. }
-        assert (H9 : ⟦ der ⟧ g = g').
-        {
-          unfold g, g'. replace (λ x : ℝ, π) with ((λ _, π) ∙ (λ x : ℝ, 1)) by (extensionality x; lra).
-          apply theorem_10_5'. apply theorem_10_2.
-        }
-        replace (λ x : ℝ, f' (g x) * π) with (f' ∘ g ∙ g'). 2 : { extensionality x. unfold g'. unfold compose. lra. }
-        apply chain_rule; auto.
-      }
-      assert (H9 : ⟦ der ⟧ (fun x => cos (π*x)) = fun x => - π * sin (π*x)).
-      {
-        replace (λ x : ℝ, - π * sin (π * x)) with (λ x : ℝ, - sin (π * x) * π) by (extensionality x; lra).
-        set (f := cos).
-        set (f' := (- sin)%f).
-        set (g := λ x : ℝ, π * x).
-        set (g' := λ x : ℝ, π).
-        assert (H10 : ⟦ der ⟧ f = f'). { apply cos_derivative. }
-        assert (H11 : ⟦ der ⟧ g = g').
-        {
-          unfold g, g'. replace (λ x : ℝ, π) with ((λ _, π) ∙ (λ x : ℝ, 1)) by (extensionality x; lra).
-          apply theorem_10_5'. apply theorem_10_2.
-        }
-        replace (λ x : ℝ, - sin (g x) * π) with (f' ∘ g ∙ g'). 2 : { extensionality x. unfold g', f'. unfold compose. lra. }
-        apply chain_rule; auto.
-      }
-      
       apply theorem_10_3_d.
-      - pose proof theorem_10_4_c G' (fun x => sin (π*x)) G'' (fun x => π * cos (π*x)) H7 H8 as H10.
+      - pose proof theorem_10_4_c G' (fun x => sin (π*x)) G'' (fun x => π * cos (π*x)) H7 ltac:(auto_diff) as H10.
         intros c. specialize (H10 c). 
         apply derivative_at_eq_f' with (f1' := (λ x : ℝ, G'' x * (λ x0 : ℝ, sin (π * x0)) x + G' x * (λ x0 : ℝ, π * cos (π * x0)) x)); auto.
         intros x. lra.
       - apply theorem_10_5'. 
-        pose proof theorem_10_4_c G (fun x => cos (π*x)) G' (fun x => - π * sin (π*x)) H6 H9 as H11.
+        pose proof theorem_10_4_c G (fun x => cos (π*x)) G' (fun x => - π * sin (π*x)) H6 ltac:(auto_diff) as H11.
         intros c. specialize (H11 c).
         apply derivative_at_eq_f' with (f1' := (λ x : ℝ, G' x * (λ x0 : ℝ, cos (π * x0)) x + G x * (λ x0 : ℝ, - π * sin (π * x0)) x)); auto.
         intros x. lra.
