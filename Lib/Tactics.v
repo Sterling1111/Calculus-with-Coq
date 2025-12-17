@@ -142,3 +142,10 @@ Lemma diff_test_safe_div : ⟦ der ⟧ (λ x, 1 / (x^2 + 1)) = (λ x, -2*x / (x^
 Proof.
   auto_diff.
 Qed.
+
+Lemma diff_test_boss : 
+  ⟦ der ⟧ (fun x => sin (1 / (x^2 + 1))) = 
+  (fun x => cos (1 / (x^2 + 1)) * (-2 * x / (x^2 + 1)^2)).
+Proof.
+  auto_diff.
+Qed.
