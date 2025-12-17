@@ -217,20 +217,7 @@ Proof.
         rewrite Derive_mult_const; auto. apply Rmult_eq_compat_l. rewrite Derive_nth_Derive.
         replace (S (2 * k + 1)) with (2 * k + 2)%nat by lia. reflexivity.
     }
-    assert (H8 : ⟦ der ⟧ H = H').
-    {
-      unfold H, H'.
-      apply theorem_10_3_d.
-      - pose proof theorem_10_4_c G' (fun x => sin (π*x)) G'' (fun x => π * cos (π*x)) H7 ltac:(auto_diff) as H10.
-        intros c. specialize (H10 c). 
-        apply derivative_at_eq_f' with (f1' := (λ x : ℝ, G'' x * (λ x0 : ℝ, sin (π * x0)) x + G' x * (λ x0 : ℝ, π * cos (π * x0)) x)); auto.
-        intros x. lra.
-      - apply theorem_10_5'. 
-        pose proof theorem_10_4_c G (fun x => cos (π*x)) G' (fun x => - π * sin (π*x)) H6 ltac:(auto_diff) as H11.
-        intros c. specialize (H11 c).
-        apply derivative_at_eq_f' with (f1' := (λ x : ℝ, G' x * (λ x0 : ℝ, cos (π * x0)) x + G x * (λ x0 : ℝ, - π * sin (π * x0)) x)); auto.
-        intros x. lra.
-    }
+    assert (H8 : ⟦ der ⟧ H = H') by (unfold H, H'; auto_diff).
     assert (H9 : H' = (fun x => π^2 * (a^n * f n x * sin (π * x)))).
     {
       unfold H'. extensionality x.

@@ -8,11 +8,12 @@ Inductive expr :=
 | ESub (e1 e2 : expr)
 | EMul (e1 e2 : expr)
 | EDiv (e1 e2 : expr)
-| ENeg (e : expr)      (* New: Negation *)
+| ENeg (e : expr)
 | ESin (e : expr)
 | ECos (e : expr)
 | ESqrt (e : expr)
-| EPow (e : expr) (n : nat).
+| EPow (e : expr) (n : nat)
+| EApp (f : R -> R) (f' : R -> R) (e : expr).
 
 Fixpoint eval (e : expr) (x : R) : R :=
   match e with
@@ -27,6 +28,7 @@ Fixpoint eval (e : expr) (x : R) : R :=
   | ECos e => cos (eval e x)
   | ESqrt e => sqrt (eval e x)
   | EPow e n => (eval e x) ^ n
+  | EApp f _ e => f (eval e x)
   end.
 
 Fixpoint wf_expr (e : expr) (x : R) : Prop :=
@@ -40,6 +42,8 @@ Fixpoint wf_expr (e : expr) (x : R) : Prop :=
       wf_expr e x
   | ESqrt e => 
       wf_expr e x /\ eval e x > 0
+  | EApp f f' e =>
+      wf_expr e x /\ ⟦ der (eval e x) ⟧ f = f'
   end.
 
 Fixpoint derive (e : expr) : expr :=
@@ -62,11 +66,12 @@ Fixpoint derive (e : expr) : expr :=
       | 0 => EConst 0
       | S k => EMul (EMul (EConst (INR n)) (EPow e k)) (derive e)
       end
+  | EApp f f' e => EMul (EApp f' (λ _, 0) e) (derive e)
   end.
 
 Lemma derive_correct : forall e x,
   wf_expr e x ->
-  ⟦ der x ⟧ (fun t => eval e t) = (fun t => eval (derive e) t).
+  ⟦ der x ⟧ (λ t, eval e t) = (λ t, eval (derive e) t).
 Proof.
   induction e; simpl; try lra.
   - intros x _. apply theorem_10_2.
@@ -83,6 +88,7 @@ Proof.
   - intros x H1. (*chain rule here*) admit.
   - intros x [H1 H2]. admit.
   - intros x H1. admit.
+  - intros x [H1 H2]. apply theorem_10_9; auto.
 Admitted.
 
 Lemma derive_correct_global : forall e,
@@ -92,9 +98,19 @@ Proof.
   intros e H1 x. apply derive_correct; auto.
 Qed.
 
+Ltac reify_constant c :=
+  lazymatch type of c with
+  | R => constr:(EConst c)
+  | Z => let r := constr:(IZR c) in constr:(EConst r)
+  | nat => let z := constr:(Z.of_nat c) in let r := constr:(IZR z) in constr:(EConst r)
+  | positive => let z := constr:(Zpos c) in let r := constr:(IZR z) in constr:(EConst r)
+  | _ => fail "reify_expr: Cannot parse term or unsupported constant:" c
+  end.
+
 Ltac reify_expr x t :=
   lazymatch t with
   | x           => constr:(EVar)
+  (* Standard Operators *)
   | ?u + ?v     => let e1 := reify_expr x u in let e2 := reify_expr x v in constr:(EAdd e1 e2)
   | ?u - ?v     => let e1 := reify_expr x u in let e2 := reify_expr x v in constr:(ESub e1 e2)
   | ?u * ?v     => let e1 := reify_expr x u in let e2 := reify_expr x v in constr:(EMul e1 e2)
@@ -104,27 +120,48 @@ Ltac reify_expr x t :=
   | cos ?u      => let e := reify_expr x u in constr:(ECos e)
   | sqrt ?u     => let e := reify_expr x u in constr:(ESqrt e)
   | ?u ^ ?n     => let e := reify_expr x u in constr:(EPow e n)
-  | ?c          => constr:(EConst c)
+  
+  (* Arbitrary Function App (With Type Check!) *)
+  | ?f ?u =>
+      let Tf := type of f in
+      lazymatch Tf with
+      | R -> R => 
+          (* It IS a real function (e.g. f(x), g(x)) *)
+          let e := reify_expr x u in
+          let df := match goal with
+                    | [ H : ⟦ der ⟧ f = ?g |- _ ] => constr:(g)
+                    | [ H : forall t, ⟦ der t ⟧ f = ?g t |- _ ] => constr:(g)
+                    | _ => fail "reify_expr: No derivative hypothesis found for function" f
+                    end in
+          constr:(EApp f df e)
+      | _ => 
+          (* It is NOT a real function (e.g. 'xI' constructor for positive numbers) *)
+          reify_constant t
+      end
+  
+  (* Atomic Constants *)
+  | ?c          => reify_constant c
   end.
 
-Ltac change_deriv_to_eval :=
+  Ltac change_deriv_to_eval :=
   eapply derivative_replace_eq;
   [ let x := fresh "x" in intros x;
     match goal with 
     | [ |- _ = ?rhs ] =>
-      let fx := eval cbv beta in rhs in
+      let rhs_unfolded := eval unfold compose in rhs in
+      let fx := eval cbv beta in rhs_unfolded in
       let e := reify_expr x fx in
-      (* idtac e; *) (* Optional: Debugging *)
       instantiate (1 := fun t => eval e t);
       simpl; reflexivity
     end
   | idtac ].
 
 Ltac auto_diff :=
+  intros;
   change_deriv_to_eval;
   match goal with
   | [ |- ⟦ der ⟧ (fun t => eval ?e t) = ?rhs ] =>
-    replace rhs with (fun t => eval (derive e) t) by (extensionality x; solve_R);
+    replace rhs with (fun t => eval (derive e) t) by (extensionality x; unfold compose in *; solve_R);
     apply derive_correct_global; repeat split; solve_R
   end.
 
@@ -140,11 +177,8 @@ Qed.
 
 Lemma diff_test_safe_div : ⟦ der ⟧ (λ x, 1 / (x^2 + 1)) = (λ x, -2*x / (x^2 + 1)^2).
 Proof.
-  unfold derivative, derivative_at, limit.
   auto_diff.
 Qed.
-
-
 
 Lemma diff_test_boss : 
   ⟦ der ⟧ (fun x => sin (1 / (x^2 + 1))) = 
@@ -177,6 +211,13 @@ Lemma diff_insane :
        sin (sin (x^2 + 3*x + 7)) *
        cos (x^2 + 3*x + 7) *
        (2*x + 3)).
+Proof.
+  auto_diff.
+Qed.
+
+Lemma auto_chain_test : forall f f' g g' h h' i i',
+  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' -> ⟦ der ⟧ h = h' -> ⟦ der ⟧ i = i' ->
+  ⟦ der ⟧ (f ∘ g ∘ h ∘ i) = (f' ∘ g ∘ h ∘ i) ∙ (g' ∘ h ∘ i) ∙ (h' ∘ i) ∙ i'.
 Proof.
   auto_diff.
 Qed.
