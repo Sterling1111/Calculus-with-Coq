@@ -140,12 +140,43 @@ Qed.
 
 Lemma diff_test_safe_div : ⟦ der ⟧ (λ x, 1 / (x^2 + 1)) = (λ x, -2*x / (x^2 + 1)^2).
 Proof.
+  unfold derivative, derivative_at, limit.
   auto_diff.
 Qed.
+
+
 
 Lemma diff_test_boss : 
   ⟦ der ⟧ (fun x => sin (1 / (x^2 + 1))) = 
   (fun x => cos (1 / (x^2 + 1)) * (-2 * x / (x^2 + 1)^2)).
+Proof.
+  auto_diff.
+Qed.
+
+Lemma sin_comp_diff_test : 
+  ⟦ der ⟧ (fun x => sin (cos (cos (1 + x^2)))) =
+  (fun x =>
+     cos (cos (cos (1 + x^2))) *
+     sin (cos (1 + x^2)) *
+     sin (1 + x^2) *
+     (2 * x)).
+Proof.
+  auto_diff.
+Qed.
+
+Lemma diff_insane :
+  ⟦ der ⟧
+    (fun x =>
+       cos (sin (cos (sin (cos (sin (x^2 + 3*x + 7)))))))
+  =
+  (fun x =>
+     - sin (sin (cos (sin (cos (sin (x^2 + 3*x + 7)))))) *
+       cos (cos (sin (cos (sin (x^2 + 3*x + 7))))) *
+       sin (sin (cos (sin (x^2 + 3*x + 7)))) *
+       cos (cos (sin (x^2 + 3*x + 7))) *
+       sin (sin (x^2 + 3*x + 7)) *
+       cos (x^2 + 3*x + 7) *
+       (2*x + 3)).
 Proof.
   auto_diff.
 Qed.
