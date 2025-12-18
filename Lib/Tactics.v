@@ -104,47 +104,49 @@ Ltac reify_constant c :=
   | Z => let r := constr:(IZR c) in constr:(EConst r)
   | nat => let z := constr:(Z.of_nat c) in let r := constr:(IZR z) in constr:(EConst r)
   | positive => let z := constr:(Zpos c) in let r := constr:(IZR z) in constr:(EConst r)
-  | _ => fail "reify_expr: Cannot parse term or unsupported constant:" c
+  | _ => fail "reify_constant: Cannot parse term:" c
   end.
 
 Ltac reify_expr x t :=
   lazymatch t with
-  | x           => constr:(EVar)
-  (* Standard Operators *)
-  | ?u + ?v     => let e1 := reify_expr x u in let e2 := reify_expr x v in constr:(EAdd e1 e2)
-  | ?u - ?v     => let e1 := reify_expr x u in let e2 := reify_expr x v in constr:(ESub e1 e2)
-  | ?u * ?v     => let e1 := reify_expr x u in let e2 := reify_expr x v in constr:(EMul e1 e2)
-  | ?u / ?v     => let e1 := reify_expr x u in let e2 := reify_expr x v in constr:(EDiv e1 e2)
-  | - ?u        => let e := reify_expr x u in constr:(ENeg e)
-  | sin ?u      => let e := reify_expr x u in constr:(ESin e)
-  | cos ?u      => let e := reify_expr x u in constr:(ECos e)
-  | sqrt ?u     => let e := reify_expr x u in constr:(ESqrt e)
-  | ?u ^ ?n     => let e := reify_expr x u in constr:(EPow e n)
-  
-  (* Arbitrary Function App (With Type Check!) *)
-  | ?f ?u =>
-      let Tf := type of f in
-      lazymatch Tf with
-      | R -> R => 
-          (* It IS a real function (e.g. f(x), g(x)) *)
-          let e := reify_expr x u in
-          let df := match goal with
-                    | [ H : ⟦ der ⟧ f = ?g |- _ ] => constr:(g)
-                    | [ H : forall t, ⟦ der t ⟧ f = ?g t |- _ ] => constr:(g)
-                    | _ => fail "reify_expr: No derivative hypothesis found for function" f
-                    end in
-          constr:(EApp f df e)
-      | _ => 
-          (* It is NOT a real function (e.g. 'xI' constructor for positive numbers) *)
-          reify_constant t
+  | x => constr:(EVar)
+  | ?u + ?v => let e1 := reify_expr x u in let e2 := reify_expr x v in constr:(EAdd e1 e2)
+  | ?u - ?v => let e1 := reify_expr x u in let e2 := reify_expr x v in constr:(ESub e1 e2)
+  | ?u * ?v => let e1 := reify_expr x u in let e2 := reify_expr x v in constr:(EMul e1 e2)
+  | ?u / ?v => let e1 := reify_expr x u in let e2 := reify_expr x v in constr:(EDiv e1 e2)
+  | - ?u    => let e := reify_expr x u in constr:(ENeg e)
+  | sin ?u  => let e := reify_expr x u in constr:(ESin e)
+  | cos ?u  => let e := reify_expr x u in constr:(ECos e)
+  | ?u ^ ?n => 
+      lazymatch u with
+      | context[x] => let e := reify_expr x u in constr:(EPow e n)
+      | _ => reify_constant t
       end
-  
-  (* Atomic Constants *)
-  | ?c          => reify_constant c
+  | ?h ?u =>
+      let Th := type of h in
+      lazymatch Th with
+      | R -> R =>
+          lazymatch u with
+          | context[x] => 
+              let e1 := reify_expr x u in 
+              let df := match goal with
+                        | [ H : ⟦ der ⟧ h = ?g |- _ ] => constr:(g)
+                        | _ => fail "reify_expr: No derivative found for" h
+                        end in
+              constr:(EApp h df e1)
+          | _ => reify_constant t
+              
+          end
+      | _ => reify_constant t
+      end
+  | ?c => reify_constant c
   end.
 
-  Ltac change_deriv_to_eval :=
-  eapply derivative_replace_eq;
+ Ltac change_deriv_to_eval :=
+  match goal with
+  | [ |- ⟦ der ⟧ _ = _ ] => eapply derivative_replace_eq
+  | [ |- ⟦ der _ ⟧ _ = _ ] => eapply derivative_at_replace_eq
+  end;
   [ let x := fresh "x" in intros x;
     match goal with 
     | [ |- _ = ?rhs ] =>
@@ -161,8 +163,18 @@ Ltac auto_diff :=
   change_deriv_to_eval;
   match goal with
   | [ |- ⟦ der ⟧ (fun t => eval ?e t) = ?rhs ] =>
-    replace rhs with (fun t => eval (derive e) t) by (extensionality x; unfold compose in *; solve_R);
+    replace rhs with (fun t => eval (derive e) t) by (
+      let x := fresh "x" in
+      extensionality x; unfold compose in *; try (simpl; lra); solve_R
+    );
     apply derive_correct_global; repeat split; solve_R
+
+  | [ |- ⟦ der _ ⟧ (fun t => eval ?e t) = ?rhs ] =>
+    replace rhs with (fun t => eval (derive e) t) by (
+      let x := fresh "x" in
+      extensionality x; unfold compose in *; try (simpl; lra); solve_R
+    );
+    apply derive_correct; repeat split; solve_R
   end.
 
 Lemma diff_test_trig_compose : ⟦ der ⟧ (λ x, sin (x^2)) = λ x, cos(x^2) * 2*x.
@@ -184,6 +196,7 @@ Lemma diff_test_boss :
   ⟦ der ⟧ (fun x => sin (1 / (x^2 + 1))) = 
   (fun x => cos (1 / (x^2 + 1)) * (-2 * x / (x^2 + 1)^2)).
 Proof.
+
   auto_diff.
 Qed.
 

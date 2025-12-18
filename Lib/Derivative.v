@@ -1239,6 +1239,14 @@ Proof.
   replace g with f in *. 2 : { extensionality x'. apply H1. }
   auto.
 Qed.
+
+Lemma derivative_at_replace_eq : forall f g f' a,
+  (forall x, f x = g x) -> ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = f'.
+Proof.
+  intros f g f' a H1 H2.
+  replace g with f; auto.
+  extensionality x. apply H1.
+Qed.
   
 Corollary corollary_11_3_a : forall f f' a b, 
   a < b -> ⟦ der ⟧ f [a, b] = f' -> (forall x, x ∈ [a, b] -> f' x > 0) -> increasing_on f [a, b].

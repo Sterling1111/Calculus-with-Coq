@@ -169,8 +169,7 @@ Proof.
       apply is_integer_sum. intros k H4. rewrite <- Rmult_assoc. apply is_integer_mult.
       - replace (π ^ (2 * n - 2 * k)) with ((π ^ 2) ^ (n - k)). 2 : { rewrite <- pow_mult. f_equal. lia. }
         rewrite H1. rewrite Rmult_comm. rewrite Rmult_assoc. apply is_integer_mult.
-        -- pose proof Nat.Even_or_Odd k as [[l H5] | [l H5]]. exists 1%Z. rewrite H5. apply pow_1_even.
-           exists (-1)%Z. rewrite H5. replace (2 * l + 1)%nat with (S (2 * l)) by lia. apply pow_1_odd.
+        -- apply is_integer_pow. exists (-1)%Z. reflexivity.
         -- rewrite Rdiv_pow_distr; auto. replace (a ^ (n - k) / b ^ (n - k) * b ^ n) with (a^(n-k) * ((b^n) / (b^(n-k)))) by lra.
            rewrite <- pow_div_sub; solve_R. replace (n - (n - k))%nat with k. 2 : { apply INR_le in H4. lia. }
            apply is_integer_mult; apply is_integer_pow; [ exists a | exists b ]; reflexivity.
@@ -184,8 +183,7 @@ Proof.
       apply is_integer_sum. intros k H5. rewrite <- Rmult_assoc. apply is_integer_mult.
       - replace (π ^ (2 * n - 2 * k)) with ((π ^ 2) ^ (n - k)). 2 : { rewrite <- pow_mult. f_equal. lia. }
         rewrite H1. rewrite Rmult_comm. rewrite Rmult_assoc. apply is_integer_mult.
-        -- pose proof Nat.Even_or_Odd k as [[l H6] | [l H6]]. exists 1%Z. rewrite H6. apply pow_1_even.
-           exists (-1)%Z. rewrite H6. replace (2 * l + 1)%nat with (S (2 * l)) by lia. apply pow_1_odd.
+        -- apply is_integer_pow. exists (-1)%Z. reflexivity.
         -- rewrite Rdiv_pow_distr; auto. replace (a ^ (n - k) / b ^ (n - k) * b ^ n) with (a^(n-k) * ((b^n) / (b^(n-k)))) by lra.
            rewrite <- pow_div_sub; solve_R. replace (n - (n - k))%nat with k. 2 : { apply INR_le in H5. lia. }
            apply is_integer_mult; apply is_integer_pow; [ exists a | exists b ]; reflexivity.
