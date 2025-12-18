@@ -1,6 +1,3 @@
-# =========================
-# Logical roots (recursive)
-# =========================
 -R Lib Lib
 -R Calculus Calculus
 -R ATTAM ATTAM
@@ -99,3 +96,7 @@ Calculus/Chapter2/Problem_2_12.v
 Calculus/Chapter2/Problem_2_13.v
 Calculus/Chapter5/Prelude.v
 Calculus/Chapter10/Prelude.v
+Calculus/Chapter10/Problem_10_2.v
+Calculus/Chapter10/Problem_10_1.v
+Calculus/Chapter10/Problem_10_5.v
+Calculus/Chapter10/Problem_10_6.v
