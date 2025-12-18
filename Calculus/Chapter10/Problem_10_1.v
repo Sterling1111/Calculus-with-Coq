@@ -18,3 +18,27 @@ Proof.
   }
   apply chain_rule; auto.
 Qed.
+
+Lemma lemma_10_1_i' : ⟦ der ⟧ (λ x, sin (x + x^2)) = (λ x, cos (x + x^2) * (1 + 2 * x)).
+Proof. auto_diff. Qed.
+
+Lemma lemma_10_1_ii : ⟦ der ⟧ (λ x, sin x + sin (x^2)) = (λ x, cos x + cos (x^2) * (2 * x)).
+Proof. auto_diff. Qed.
+
+Lemma lemma_10_1_iii : ⟦ der ⟧ (λ x, sin (cos x)) = (λ x, cos (cos x) * (- sin x)).
+Proof. auto_diff. Qed.
+
+Lemma lemma_10_1_iv : ⟦ der ⟧ (λ x, sin (sin x)) = (λ x, cos (sin x) * cos x).
+Proof. auto_diff. Qed.
+
+Lemma lemma_10_1_v : ∀ x, x ≠ 0 -> ⟦ der x ⟧ (λ x, sin (cos x / x)) = (λ x, cos (cos x / x) * ((- x * sin x - cos x) / x^2)).
+Proof. auto_diff. Qed.
+
+Lemma lemma_10_1_vi : ∀ x, x ≠ 0 -> ⟦ der x ⟧ (λ x, sin (cos x) / x) = (λ x, (- x * sin x * cos (cos x) - sin (cos x)) / x^2).
+Proof. auto_diff. Qed.
+
+Lemma lemma_10_1_vii : ⟦ der ⟧ (λ x, sin (x + sin x)) = (λ x, cos (x + sin x) * (1 + cos x)).
+Proof. auto_diff. Qed.
+
+Lemma lemma_10_1_viii : ⟦ der ⟧ (λ x, sin (cos (sin x))) = (λ x, cos (cos (sin x)) * (- sin (sin x) * cos x)).
+Proof. auto_diff. Qed.

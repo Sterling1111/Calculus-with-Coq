@@ -1,6 +1,4 @@
-From Lib Require Import Imports Sets Limit Continuity Derivative Notations Reals_util.
-Import LimitNotations IntervalNotations SetNotations DerivativeNotations Function_Notations.
-Open Scope R_scope.
+From Calculus.Chapter10 Require Import Prelude.
 
 Lemma lemma_10_5_i : ∀ f f' x,
   f = (λ x, 1 / x) -> x ≠ 0 -> ⟦ der x ⟧ f = f' -> f (f'(x)) = -x^2.
