@@ -81,6 +81,6 @@ Proof.
 Qed.
 
 Lemma lemma_10_2_xviii : ∀ x, x - sin x ≠ 0 -> x - sin (x / (x - sin x)) ≠ 0 -> ⟦ der x ⟧ (λ x, sin (x / (x - sin (x / (x - sin x))))) = 
-  (λ x, let inner := (x - sin (x / (x - sin x))) in
-        cos (x / inner) * ((inner - x * (1 - cos (x / (x - sin x)) * ((x - sin x - x * (1 - cos x)) / (x - sin x)^2))) / inner^2)).
+  let f := (λ x, (x - sin (x / (x - sin x)))) in
+        λ x, cos (x / f x) * ((f x - x * (1 - cos (x / (x - sin x)) * ((x - sin x - x * (1 - cos x)) / (x - sin x)^2))) / (f x)^2).
 Proof. auto_diff. Qed.

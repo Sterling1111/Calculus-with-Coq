@@ -1,6 +1,4 @@
-From Lib Require Import Imports Notations Limit Continuity Reals_util.
-Import LimitNotations.
-Open Scope R_scope.
+From Calculus.Chapter6 Require Import Prelude.
 
 Lemma lemma_6_7 : forall f,
   (forall x y, f(x + y) = f(x) + f(y)) -> 
