@@ -1103,6 +1103,9 @@ Proof.
   apply corollary_11_1 with (a := a) (b := b) in H7 as [c H8]; auto. exists c. intros x H9. unfold h. specialize (H8 x H9). unfold h in H8. lra.
 Qed.
 
+Definition tangent_line (f f' : R -> R) (a : R) : R -> R :=
+  fun x => f' a * (x - a) + f a.
+
 Definition increasing_on (f: ℝ -> ℝ) (A : Ensemble ℝ) :=
   forall a b, a ∈ A -> b ∈ A -> a < b -> f a < f b.
 

@@ -1014,17 +1014,17 @@ Ltac finish_with_eval :=
 
   
 Ltac auto_limit :=
-  intros; solve_R;
+  intros; 
+  try solve_R;
   change_fun_to_expr;
   match goal with
   | |- ⟦ lim ?a ⟧ (fun x => eval ?ex x) = ?L =>
-      assert (defined_at ex a) by (solve_defined_at; solve_R)
+      assert (defined_at ex a); [ solve_defined_at; try solve_R | finish_with_eval ]
   | |- ⟦ lim ?a ⁺ ⟧ (fun x => eval ?ex x) = ?L =>
-      assert (defined_at ex a) by (solve_defined_at; solve_R)
+      assert (defined_at ex a); [ solve_defined_at; try solve_R | finish_with_eval ]
   | |- ⟦ lim ?a ⁻ ⟧ (fun x => eval ?ex x) = ?L =>
-      assert (defined_at ex a) by (solve_defined_at; solve_R)
-  end;
-  finish_with_eval.
+      assert (defined_at ex a); [ solve_defined_at; try solve_R | finish_with_eval ]
+  end.
 
 
 Lemma lim_div_test : forall f,
