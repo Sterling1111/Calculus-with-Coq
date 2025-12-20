@@ -54,6 +54,30 @@ Fixpoint nth_derivative (n:nat) (f fn' : R -> R) : Prop :=
   | S k => exists f', derivative f f' /\ nth_derivative k f' fn'
   end.
 
+Definition nth_differentiable (n : nat) (f : R -> R) : Prop :=
+  exists fn', nth_derivative n f fn'.
+
+Fixpoint nth_derivative_on (n : nat) (f fn' : R -> R) (D : Ensemble R) : Prop :=
+  match n with
+  | 0   => f = fn'
+  | S k => exists f', derivative_on f f' D /\ nth_derivative_on k f' fn' D
+  end.
+
+Definition nth_differentiable_on (n : nat) (f : R -> R) (D : Ensemble R) : Prop :=
+  exists fn', nth_derivative_on n f fn' D.
+
+Definition is_derive_on_or_zero (f : R -> R) (D : Ensemble R) (g : R -> R) : Prop :=
+  (derivative_on f g D) \/ (~(exists h, derivative_on f h D) /\ g = (fun _ => 0)).
+
+Definition Derive_on (f : R -> R) (D : Ensemble R) : R -> R :=
+  epsilon (inhabits (fun _ => 0)) (is_derive_on_or_zero f D).
+
+Fixpoint nth_Derive_on (n : nat) (f : R -> R) (D : Ensemble R) : R -> R :=
+  match n with
+  | 0   => f
+  | S k => Derive_on (nth_Derive_on k f D) D
+  end.
+
 Definition nth_derivative_at (n:nat) (f : R -> R) (a val : R) : Prop :=
   exists fn', nth_derivative n f fn' /\ fn' a = val.
 
@@ -72,7 +96,7 @@ Fixpoint nth_Derive (n:nat) (f : R -> R) : R -> R :=
 Definition nth_Derive_at (n:nat) (f : R -> R) (a : R) : R :=
   nth_Derive n f a.
 
-Definition nth_differentiable (f : R -> R) : Prop :=
+Definition inf_differentiable (f : R -> R) : Prop :=
   forall n, exists fn', nth_derivative n f fn'.
 
 Module DerivativeNotations.
@@ -101,6 +125,10 @@ Module DerivativeNotations.
     (at level 70, n at level 0, f at level 0, no associativity, 
      format "⟦  'der' ^ n  ⟧  f  =  fn") : derivative_scope.
 
+  Notation "⟦ 'der' ^ n ⟧ f D = fn" := (nth_derivative_on n f fn D)
+    (at level 70, n at level 0, f at level 0, D at level 0, no associativity, 
+     format "⟦  'der' ^ n  ⟧  f  D  =  fn") : derivative_scope.
+
   Notation "⟦ 'der' ^ n a ⟧ f = v" := (nth_derivative_at n f a v)
     (at level 70, n at level 0, f at level 0, no associativity, 
     format "⟦  'der' ^ n  a  ⟧  f  =  v") : derivative_scope.
@@ -108,8 +136,14 @@ Module DerivativeNotations.
   Notation "⟦ 'Der' ⟧ f" := (Derive f) 
     (at level 70, f at level 0, no associativity, format "⟦  'Der'  ⟧  f") : derivative_scope.
 
+  Notation "⟦ 'Der' ⟧ f D" := (Derive_on f D)
+    (at level 70, f at level 0, D at level 0, no associativity, format "⟦  'Der'  ⟧  f  D") : derivative_scope.
+
   Notation "⟦ 'Der' ^ n ⟧ f" := (nth_Derive n f) 
     (at level 70, n at level 9, f at level 0, no associativity, format "⟦  'Der' ^ n  ⟧  f") : derivative_scope.
+
+  Notation "⟦ 'Der' ^ n ⟧ f D" := (nth_Derive_on n f D) 
+    (at level 70, n at level 9, f at level 0, D at level 0, no associativity, format "⟦  'Der' ^ n  ⟧  f  D") : derivative_scope.
 
   Notation "⟦ 'Der' ^ n a ⟧ f" := (nth_Derive_at n f a) 
     (at level 70, 
@@ -1637,8 +1671,8 @@ Proof.
   auto.
 Qed.
 
-Lemma nth_differentiable_imp_differentiable : forall f,
-  nth_differentiable f -> differentiable f.
+Lemma inf_differentiable_imp_differentiable : forall f,
+  inf_differentiable f -> differentiable f.
 Proof.
   intros f H1.
   destruct (H1 1%nat) as [f' H2].
@@ -1653,7 +1687,7 @@ Proof.
 Qed.
 
 Lemma nth_Derive_spec : forall n f,
-  nth_differentiable f ->
+  inf_differentiable f ->
   (⟦ der ^ n ⟧ f = ⟦ Der ^ n⟧ f).
 Proof.
   intros n.
@@ -1671,11 +1705,11 @@ Proof.
     (* We propose (Derive f) as the first derivative *)
     exists (Derive f).
     split.
-    + apply nth_differentiable_imp_differentiable in H1.  pose proof Derive_spec f (Derive f) H1 as H2; tauto.
+    + apply inf_differentiable_imp_differentiable in H1.  pose proof Derive_spec f (Derive f) H1 as H2; tauto.
     + rewrite Derive_nth_Derive. rewrite nth_Derive_shift.
       apply IH.
       
-      (* We must show that (Derive f) is also nth_differentiable *)
+      (* We must show that (Derive f) is also inf_differentiable *)
       intro m.
       (* The m-th derivative of (Derive f) is the (S m)-th derivative of f *)
       destruct (H1 (S m)) as [fm' Hchain].
@@ -1685,7 +1719,7 @@ Proof.
       (* Since derivatives are unique, f' must be extensionally equal to Derive f *)
       assert (H_eq: f' = Derive f).
       { apply derivative_of_function_unique with (f := f); auto.
-        apply nth_differentiable_imp_differentiable in H1. pose proof Derive_spec f (Derive f) H1 as H2; tauto. }
+        apply inf_differentiable_imp_differentiable in H1. pose proof Derive_spec f (Derive f) H1 as H2; tauto. }
       subst f'.
       exists fm'.
       apply Hrest.
@@ -1827,7 +1861,7 @@ Proof.
 Qed.
 
 Lemma nth_Derive_spec' : forall n a f f',
-  nth_differentiable f ->
+  inf_differentiable f ->
   (⟦ der ^ n a ⟧ f = f' <-> ⟦ Der ^ n a ⟧ f = f').
 Proof.
   intros n a f f' H1. specialize (H1 n) as [fn' H1].
@@ -1840,19 +1874,19 @@ Proof.
     apply H2.
 Qed.
 
-Lemma nth_differentiable_mult_const_l : forall f c,
-  nth_differentiable f -> nth_differentiable (λ x, c * f x).
+Lemma inf_differentiable_mult_const_l : forall f c,
+  inf_differentiable f -> inf_differentiable (λ x, c * f x).
 Proof.
   intros f c H1 n. specialize (H1 n) as [fn' H2].
   pose proof nth_derivative_mult_const_l n f fn' c H2 as H3.
   exists (c * fn')%f. auto.
 Qed.
 
-Lemma nth_differentiable_mult_const_r : forall f c,
-  nth_differentiable f -> nth_differentiable (λ x, f x * c).
+Lemma inf_differentiable_mult_const_r : forall f c,
+  inf_differentiable f -> inf_differentiable (λ x, f x * c).
 Proof.
   intros f c H1 n. replace (λ x, f x * c) with (λ x, c * f x).
-  2 : { extensionality y. lra. } apply nth_differentiable_mult_const_l; auto.
+  2 : { extensionality y. lra. } apply inf_differentiable_mult_const_l; auto.
 Qed.
 
 Lemma nth_derivative_plus : forall n f1 f1' f2 f2',
@@ -1867,8 +1901,8 @@ Proof.
     -- apply IH; auto.
 Qed.
 
-Lemma nth_differentiable_sum : forall (i n : nat) (f : nat -> R -> R),
-  (i <= n)%nat -> (forall k, nth_differentiable (f k)) -> nth_differentiable (λ x, ∑ i n (λ k, f k x)).
+Lemma inf_differentiable_sum : forall (i n : nat) (f : nat -> R -> R),
+  (i <= n)%nat -> (forall k, inf_differentiable (f k)) -> inf_differentiable (λ x, ∑ i n (λ k, f k x)).
 Proof.
   intros i n f H1 H2 m.
   induction n as [| k IH].
@@ -1884,8 +1918,8 @@ Proof.
        exists ((fn' + f_k')%f). apply nth_derivative_plus; auto.
 Qed.
 
-Lemma nth_differentiable_pow : forall n,
-  nth_differentiable (λ x, x ^ n).
+Lemma inf_differentiable_pow : forall n,
+  inf_differentiable (λ x, x ^ n).
 Proof.
   intros n m. generalize dependent n. induction m as [| k IH].
   - intros n. simpl. exists (λ x, x ^ n). split; reflexivity.
@@ -1899,13 +1933,13 @@ Proof.
     -- apply nth_derivative_mult_const_l; auto.
 Qed.
 
-Lemma nth_Derive_nth_differentiable : forall n f,
-  nth_differentiable f -> nth_differentiable (⟦ Der ^ n ⟧ f).
+Lemma nth_Derive_inf_differentiable : forall n f,
+  inf_differentiable f -> inf_differentiable (⟦ Der ^ n ⟧ f).
 Proof.
   intros n. induction n as [| k IH].
   - simpl. auto.
   - intros f H1. rewrite nth_Derive_shift. apply IH.
-    intros m. pose proof nth_differentiable_imp_differentiable f H1 as H2.
+    intros m. pose proof inf_differentiable_imp_differentiable f H1 as H2.
     specialize (H1 (S m)) as [fn' H3].
     simpl in H3. destruct H3 as [f' [H4 H5]].
     exists fn'.
@@ -1915,15 +1949,15 @@ Proof.
 Qed.
 
 Lemma nth_Derive_sum : forall (i n m : nat) (f : nat -> R -> R),
-  (i <= m)%nat -> (forall k, nth_differentiable (f k)) ->
+  (i <= m)%nat -> (forall k, inf_differentiable (f k)) ->
   ⟦ Der ^ n ⟧ (λ x, ∑ i m (λ k, f k x)) = (λ x, ∑ i m (λ k, (⟦ Der ^ n ⟧ (f k)) x)).
 Proof.
   intros i n m f H1 H2. induction n as [| k IH]; extensionality x.
   - replace (λ x0 : ℝ, ∑ 0 m λ k : ℕ, f k x0) with (λ x0 : ℝ, ∑ 0 m λ k : ℕ, f k x0); reflexivity.
   - simpl. rewrite IH.
     rewrite Derive_sum; auto.
-    intros l. apply nth_differentiable_imp_differentiable.
-    apply nth_Derive_nth_differentiable; auto. 
+    intros l. apply inf_differentiable_imp_differentiable.
+    apply nth_Derive_inf_differentiable; auto. 
 Qed.
 
 Lemma Derive_mult_const : forall f c,
@@ -1936,19 +1970,19 @@ Proof.
 Qed.
 
 Lemma nth_Derive_mult_const : forall n f c,
-  nth_differentiable f ->
+  inf_differentiable f ->
   ⟦ Der ^ n ⟧ (λ x, c * f x) = (λ x, c * (⟦ Der ^ n ⟧ f) x).
 Proof.
   intros n f c H1.
   induction n as [| k IH].
   - simpl. extensionality x. lra.
   - simpl. rewrite <- Derive_mult_const. rewrite IH. auto.
-    apply nth_differentiable_imp_differentiable.
-    apply nth_Derive_nth_differentiable; auto.
+    apply inf_differentiable_imp_differentiable.
+    apply nth_Derive_inf_differentiable; auto.
 Qed.
 
 Lemma nth_Derive_at_mult_const : forall n a f c,
-  nth_differentiable f ->
+  inf_differentiable f ->
   ⟦ Der ^ n a ⟧ (λ x, c * f x) = c * (⟦ Der ^ n a ⟧ f).
 Proof.
   intros n a f c H1.
@@ -1961,7 +1995,7 @@ Lemma nth_Derive_pow : forall k n, (k <= n)%nat ->
 Proof.
   intros k n H1.
   apply nth_derivative_of_function_unique with (f := fun x => x ^ n) (n := k).
-  - apply nth_Derive_spec. apply nth_differentiable_pow.
+  - apply nth_Derive_spec. apply inf_differentiable_pow.
   - apply nth_derivative_pow. apply H1.
 Qed.
 
@@ -1970,7 +2004,7 @@ Lemma nth_Derive_pow_gt : forall k n, (k > n)%nat ->
 Proof.
   intros k n H1.
   apply nth_derivative_of_function_unique with (f := fun x => x ^ n) (n := k).
-  - apply nth_Derive_spec. apply nth_differentiable_pow.
+  - apply nth_Derive_spec. apply inf_differentiable_pow.
   - apply nth_derivative_pow_gt. apply H1.
 Qed.
 
