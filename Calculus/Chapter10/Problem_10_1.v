@@ -1,7 +1,5 @@
 From Calculus.Chapter10 Require Import Prelude.
 
-Set Ltac Profiling.
-
 Lemma lemma_10_1_i : ⟦ der ⟧ (λ x, sin (x + x^2)) = (λ x, cos (x + x^2) * (1 + 2 * x)).
 Proof.
   set (f := λ x, sin x).
@@ -45,5 +43,3 @@ Proof. auto_diff. Qed.
 
 Lemma lemma_10_1_viii : ⟦ der ⟧ (λ x, sin (cos (sin x))) = (λ x, cos (cos (sin x)) * (- sin (sin x) * cos x)).
 Proof. auto_diff. Qed.
-
-Show Ltac Profile.

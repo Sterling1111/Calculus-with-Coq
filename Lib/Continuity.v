@@ -575,8 +575,6 @@ Proof.
 Qed.
 *)
 
-Set Ltac Profiling.
-
 Lemma continuous_on_subset : forall A1 A2 f,
   A1 ⊆ A2 -> continuous_on f A2 -> continuous_on f A1.
 Proof.
@@ -612,7 +610,6 @@ Proof.
   apply sqrt_f_continuous. intro a. unfold continuous_at. solve_lim.
 Qed.
 
-(* clearly this proof need major work. *)
 Theorem theorem_8_A_1 : forall f a b,
   a <= b -> continuous_on f [a, b] -> uniformly_continuous_on f [a, b].
 Proof.
@@ -645,22 +642,23 @@ Proof.
        exists (Rmin δ (α - a)). unfold δ' in *; split; [solve_R|]. intros x y H13 H14 H15. 
        assert (H16 : exists δ1, δ1 > 0 /\ forall x y, x ∈ [α - δ'/2, α + δ'/2] -> y ∈ [α - δ'/2, α + δ'/2] -> |x - y| < δ1 -> |f x - f y| < ε).
        {
-          clear H7 H13 H14 H10 H2'.
-          exists δ'. unfold δ' in *; split; [solve_R|].  intros x1 y1 H17 H18 H19. specialize (H12 x1) as H20. specialize (H12 y1) as H21.
-          clear H12.
-          assert (x1 = α \/ x1 ≠ α) as [H22 | H22] by lra; assert (y1 = α \/ y1 ≠ α) as [H23 | H23] by lra.
-          - subst. solve_R.
-          - specialize (H21 ltac:(solve_R)). subst. solve_R.
-          - specialize (H20 ltac:( solve_R)). subst. solve_R.
-          - specialize (H20 ltac:( solve_R) ltac:( solve_R)). specialize (H21 ltac:( solve_R) ltac:( solve_R)). solve_R.
+         clear H7 H13 H14 H10 H2'.
+         assert (H_bounds: δ' <= α - a /\ δ' <= b - α) by (unfold δ'; solve_R).
+         exists δ'. split; [ unfold δ' in *; solve_R|].  intros x1 y1 H17 H18 H19. specialize (H12 x1) as H20. specialize (H12 y1) as H21.
+         clear H12. 
+         assert (x1 ∈ [a, b]) as H22 by (solve_R).
+         assert (y1 ∈ [a, b]) as H23 by (solve_R).
+         assert (δ' <= δ) as H24 by (apply Rmin_l).
+         assert (x1 = α \/ x1 ≠ α) as [H25 | H25] by lra;
+         assert (y1 = α \/ y1 ≠ α) as [H26 | H26] by lra; subst; solve_R.
        }
        assert (H17 : exists δ2, δ2 > 0 /\ forall x y, x ∈ [a, α - δ'/2] -> y ∈ [a, α - δ'/2] -> |x - y| < δ2 -> |f x - f y| < ε).
        {
-          pose proof classic (α ∈ A) as [H17 | H17].
-          - destruct H17 as [H17 [δ2 [H18 H19]]]. exists δ2.  split; auto. intros x1 y1 H20 H21 H22. unfold δ' in *. apply H19; solve_R.
-          - pose proof exists_point_within_delta A α (δ'/2) H7 ltac:(unfold δ'; solve_R) as [x1 [H18 H19]].
-            destruct H18 as [H18 [δ2 [H20 H21]]]. exists (Rmin δ2 (δ'/2)). split; [solve_R|].
-            intros x2 y2 H22 H23 H24. apply H21;  solve_R.
+         pose proof classic (α ∈ A) as [H17 | H17].
+         - destruct H17 as [H17 [δ2 [H18 H19]]]. exists δ2.  split; auto. intros x1 y1 H20 H21 H22. unfold δ' in *. apply H19; solve_R.
+         - pose proof exists_point_within_delta A α (δ'/2) H7 ltac:(unfold δ'; solve_R) as [x1 [H18 H19]].
+           destruct H18 as [H18 [δ2 [H20 H21]]]. exists (Rmin δ2 (δ'/2)). split; [solve_R|].
+           intros x2 y2 H22 H23 H24. apply H21;  solve_R.
        }
        assert (H19 : continuous_on f (λ x : ℝ, a <= x <= α + δ' / 2)).
        { apply continuous_on_subset with (A2 := [a, b]). intros x2 H18. unfold δ' in *. solve_R. auto. }
@@ -695,8 +693,6 @@ Proof.
     assert (H15 : a < b - δ' / 2 < b) by (unfold δ' in *; solve_R).
     pose proof lemma_8_A_1 f a (b - δ'/2) b ε H15 H2' H3 H13 H12 as [δ3 [H16 H17]]. exists δ3. split; auto.
 Qed.
-
-Show Ltac Profile.
 
 Definition bounded_below_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
   has_lower_bound (fun y => exists x, x ∈ A /\ y = f x).

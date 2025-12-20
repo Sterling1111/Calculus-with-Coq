@@ -11,7 +11,7 @@ Lemma lemma_1_12_ii : forall x,
   |1 / x| = 1 / |x|.
 Proof.
   intros x. pose proof Rinv_neg x. pose proof Rinv_pos x. 
-  solve_abs. nra.  
+  solve_abs.
   unfold Rdiv. destruct r0. nra.
   rewrite H1. unfold Rdiv. rewrite Rinv_0. nra.
 Qed.
@@ -20,7 +20,7 @@ Lemma lemma_1_12_iii : forall x y,
   y <> 0 -> |x| / |y| = |x / y|.
 Proof.
   intros x y H1. pose proof Rinv_neg y. pose proof Rinv_pos y.
-  solve_abs. nra. nra. destruct r. nra. nra. 
+  solve_abs. destruct r; nra.
 Qed.
 
 Lemma lemma_1_12_iv : forall x y,

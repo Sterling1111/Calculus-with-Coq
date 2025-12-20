@@ -19,9 +19,6 @@ Ltac break_INR :=
       rewrite pow_INR
   end.
 
-Ltac break_INR_simpl :=
-  break_INR; simpl; try field_simplify; try nra; try nia.
-
 Ltac convert_nat_to_INR_in_H :=
   try
   match goal with
@@ -32,20 +29,71 @@ Ltac convert_nat_to_INR_in_H :=
   | [ H: (?x = ?y)%nat |- _ ] => apply INR_eq in H; simpl in H
   end.
 
+Ltac break_INR_simpl :=
+  break_INR; simpl; try field_simplify; try lra; try nra; try nia.
+
 Ltac solve_INR :=
-  convert_nat_to_INR_in_H; try field_simplify_eq; try break_INR; simpl; try field; try nra; try lia.
+  convert_nat_to_INR_in_H; try field_simplify_eq; try break_INR; simpl; try field; try lra; try nra; try lia.
 
 Ltac solve_abs := 
-  try intros; repeat unfold Rabs in *; repeat destruct Rcase_abs in *; try nra; try field; try nia.
+  try intros; 
+  try lra; 
+  unfold Rabs in *; 
+  repeat match goal with
+  | [ |- context[if Rcase_abs ?x then _ else _] ] => 
+      destruct (Rcase_abs x); try lra
+  | [ H: context[if Rcase_abs ?x then _ else _] |- _ ] => 
+      destruct (Rcase_abs x); try lra
+  | [ Z := context[if Rcase_abs ?x then _ else _] |- _ ] =>
+      destruct (Rcase_abs x); try lra
+  end;
+  try field; try nra; try nia.
 
 Ltac solve_max := 
-  try intros; repeat unfold Rmax in *; repeat destruct Rle_dec in *; repeat unfold Nat.max; repeat destruct le_dec; try nra; try field; try nia.
+  try intros; 
+  try lra;
+  unfold Rmax, Nat.max in *;
+  repeat match goal with
+  | [ |- context[if Rle_dec ?x ?y then _ else _] ] => 
+      destruct (Rle_dec x y); try lra
+  | [ H: context[if Rle_dec ?x ?y then _ else _] |- _ ] => 
+      destruct (Rle_dec x y); try lra
+  | [ |- context[if le_dec ?x ?y then _ else _] ] =>
+      destruct (le_dec x y); try lia
+  | [ Z := context[if Rle_dec ?x ?y then _ else _] |- _ ] =>
+      destruct (Rle_dec x y); try lra
+  | [ Z := context[if le_dec ?x ?y then _ else _] |- _ ] =>
+      destruct (le_dec x y); try lia
+  end;
+  try field; try nra; try nia.
 
 Ltac solve_min :=
-  try intros; repeat unfold Rmin in *; repeat destruct Rle_dec in *; repeat unfold Nat.min; repeat destruct le_dec; try nra; try field; try nia.
+  try intros; 
+  try lra;
+  unfold Rmin, Nat.min in *;
+  repeat match goal with
+  | [ |- context[if Rle_dec ?x ?y then _ else _] ] => 
+      destruct (Rle_dec x y); try lra
+  | [ H: context[if Rle_dec ?x ?y then _ else _] |- _ ] => 
+      destruct (Rle_dec x y); try lra
+  | [ |- context[if le_dec ?x ?y then _ else _] ] =>
+      destruct (le_dec x y); try lia
+  | [ Z := context[if Rle_dec ?x ?y then _ else _] |- _ ] =>
+      destruct (Rle_dec x y); try lra
+  | [ Z := context[if le_dec ?x ?y then _ else _] |- _ ] =>
+      destruct (le_dec x y); try lia
+  end;
+  try field; try nra; try nia.
 
 Ltac solve_R :=
-  unfold Ensembles.In in *; try solve_INR; try solve_abs; try solve_max; try solve_min; try tauto; auto.
+  unfold Ensembles.In in *; 
+  try solve_INR; 
+  try solve_abs; 
+  try solve_max; 
+  try solve_min; 
+  try lra; 
+  try tauto; 
+  auto.
 
 Lemma pow2_gt_0 : forall r, r <> 0 -> r ^ 2 > 0.
 Proof.

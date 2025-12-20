@@ -1,7 +1,5 @@
 From Calculus.Chapter10 Require Import Prelude.
 
-Set Ltac Profiling.
-
 Lemma lemma_10_2_i : ⟦ der ⟧ (λ x, sin ((x + 1)^2 * (x+2))) = 
   (λ x, cos ((x + 1)^2 * (x + 2)) * (2 * (x + 1) * (x + 2) + (x + 1)^2)).
 Proof.
@@ -86,5 +84,3 @@ Lemma lemma_10_2_xviii : ∀ x, x - sin x ≠ 0 -> x - sin (x / (x - sin x)) ≠
   let f := (λ x, (x - sin (x / (x - sin x)))) in
         λ x, cos (x / f x) * ((f x - x * (1 - cos (x / (x - sin x)) * ((x - sin x - x * (1 - cos x)) / (x - sin x)^2))) / (f x)^2).
 Proof. auto_diff. Qed.
-
-Show Ltac Profile.
