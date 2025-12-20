@@ -575,6 +575,8 @@ Proof.
 Qed.
 *)
 
+Set Ltac Profiling.
+
 Lemma continuous_on_subset : forall A1 A2 f,
   A1 ⊆ A2 -> continuous_on f A2 -> continuous_on f A1.
 Proof.
@@ -693,6 +695,8 @@ Proof.
     assert (H15 : a < b - δ' / 2 < b) by (unfold δ' in *; solve_R).
     pose proof lemma_8_A_1 f a (b - δ'/2) b ε H15 H2' H3 H13 H12 as [δ3 [H16 H17]]. exists δ3. split; auto.
 Qed.
+
+Show Ltac Profile.
 
 Definition bounded_below_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
   has_lower_bound (fun y => exists x, x ∈ A /\ y = f x).
