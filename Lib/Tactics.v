@@ -1,7 +1,6 @@
 From Lib Require Import Imports Notations Reals_util Sets Limit Continuity Derivative Integral Trigonometry.
 Import IntervalNotations SetNotations Function_Notations DerivativeNotations LimitNotations.
 
-(** * Unified Symbolic Expression Type *)
 Inductive expr :=
 | EVar
 | EConst (c : R)
@@ -16,7 +15,6 @@ Inductive expr :=
 | EPow (e : expr) (n : nat)
 | EApp (f : R -> R) (df : option (R -> R)) (e : expr).
 
-(** * Evaluation *)
 Fixpoint eval (e : expr) (x : R) : R :=
   match e with
   | EVar => x
@@ -32,8 +30,6 @@ Fixpoint eval (e : expr) (x : R) : R :=
   | EPow e n => (eval e x) ^ n
   | EApp f _ e => f (eval e x)
   end.
-
-(** * Well-Formedness Predicates *)
 
 Fixpoint wf_limit_right (e : expr) (a : R) : Prop :=
   match e with
@@ -57,18 +53,17 @@ Fixpoint wf_limit_left (e : expr) (a : R) : Prop :=
 
 Definition wf_limit (e : expr) (a : R) : Prop := wf_limit_left e a /\ wf_limit_right e a.
 
-Fixpoint wf_expr (e : expr) (x : R) : Prop :=
+Fixpoint wf_derive (e : expr) (x : R) : Prop :=
   match e with
   | EVar | EConst _ => True
-  | EAdd e1 e2 | ESub e1 e2 | EMul e1 e2 => wf_expr e1 x /\ wf_expr e2 x
-  | EDiv e1 e2 => wf_expr e1 x /\ wf_expr e2 x /\ eval e2 x <> 0
-  | ENeg e | ESin e | ECos e | EPow e _ => wf_expr e x
-  | ESqrt e => wf_expr e x /\ eval e x > 0
-  | EApp f (Some f') e => wf_expr e x /\ ⟦ der (eval e x) ⟧ f = f'
+  | EAdd e1 e2 | ESub e1 e2 | EMul e1 e2 => wf_derive e1 x /\ wf_derive e2 x
+  | EDiv e1 e2 => wf_derive e1 x /\ wf_derive e2 x /\ eval e2 x <> 0
+  | ENeg e | ESin e | ECos e | EPow e _ => wf_derive e x
+  | ESqrt e => wf_derive e x /\ eval e x > 0
+  | EApp f (Some f') e => wf_derive e x /\ ⟦ der (eval e x) ⟧ f = f'
   | EApp f None e => False
   end.
 
-(** * Symbolic Differentiation *)
 Fixpoint derive (e : expr) : expr :=
   match e with
   | EVar => EConst 1
@@ -86,33 +81,79 @@ Fixpoint derive (e : expr) : expr :=
   | EApp f None e => EConst 0
   end.
 
-(** * Correctness Lemmas (Proofs Omitted) *)
-
 Lemma right_limit_eval_expr : forall e a,
   wf_limit_right e a -> ⟦ lim a⁺ ⟧ (fun x => eval e x) = eval e a.
-Proof. Admitted.
+Proof.
+  induction e; intros a H; simpl in *; try solve_R; try apply right_limit_id || apply right_limit_const.
+  - destruct H as [H1 H2]. apply right_limit_plus; auto.
+  - destruct H as [H1 H2]. apply right_limit_minus; auto.
+  - destruct H as [H1 H2]. apply right_limit_mult; auto.
+  - destruct H as [H1 [H2 H3]]. apply right_limit_div; auto.
+  - apply right_limit_neg; auto.
+  - apply right_limit_continuous_comp; auto. apply limit_sin.
+  - apply right_limit_continuous_comp; auto. apply limit_cos.
+  - destruct H as [H1 H2]. apply right_limit_continuous_comp; auto. apply limit_sqrt_x.
+  - apply right_limit_pow; auto.
+  - destruct H as [H1 H2]. apply right_limit_continuous_comp; auto.
+Qed.
 
 Lemma left_limit_eval_expr : forall e a,
   wf_limit_left e a -> ⟦ lim a⁻ ⟧ (fun x => eval e x) = eval e a.
-Proof. Admitted.
+Proof.
+  induction e; intros a H; simpl in *; try solve_R; try apply left_limit_id || apply left_limit_const.
+  - destruct H as [H1 H2]. apply left_limit_plus; auto.
+  - destruct H as [H1 H2]. apply left_limit_minus; auto.
+  - destruct H as [H1 H2]. apply left_limit_mult; auto.
+  - destruct H as [H1 [H2 H3]]. apply left_limit_div; auto.
+  - apply left_limit_neg; auto.
+  - apply left_limit_continuous_comp; auto. apply limit_sin.
+  - apply left_limit_continuous_comp; auto. apply limit_cos.
+  - destruct H as [H1 H2]. apply left_limit_continuous_comp; auto. apply limit_sqrt_x.
+  - apply left_limit_pow; auto.
+  - destruct H as [H1 H2]. apply left_limit_continuous_comp; auto.
+Qed.
 
 Lemma limit_eval_expr : forall e a,
   wf_limit e a -> ⟦ lim a ⟧ (fun x => eval e x) = eval e a.
-Proof. Admitted.
+Proof.
+  intros e a [HL HR]. apply left_right_iff; split.
+  - apply left_limit_eval_expr; auto.
+  - apply right_limit_eval_expr; auto.
+Qed.
 
 Lemma continuity_correct : forall e x,
   wf_limit e x -> continuous_at (λ t, eval e t) x.
-Proof. Admitted.
+Proof.
+  intros e x H. apply limit_eval_expr in H. exact H.
+Qed.
 
 Lemma derive_correct : forall e x,
-  wf_expr e x -> ⟦ der x ⟧ (λ t, eval e t) = (λ t, eval (derive e) t).
-Proof. Admitted.
+  wf_derive e x -> ⟦ der x ⟧ (λ t, eval e t) = (λ t, eval (derive e) t).
+Proof.
+  induction e; simpl; try lra.
+  - intros x _. apply theorem_10_2.
+  - intros x _. apply theorem_10_1.
+  - intros x [H1 H2]; apply theorem_10_3_a; auto.
+  - intros x [H1 H2]. apply theorem_10_3_c; auto.
+  - intros x [H1 H2]. apply theorem_10_4_a; auto.
+  - intros x [H1 [H2 H3]]. pose proof theorem_10_8 as H4.
+    apply derivative_at_eq_f' with (f1' := ((eval e2 ∙ eval (derive e1) - eval e1 ∙ eval (derive e2))%f / (eval e2 ∙ eval e2))%f).
+    { intros y. rewrite Rmult_1_r. rewrite Rmult_comm. reflexivity. } apply H4; auto.
+  - intros x H1. apply der_neg; auto.
+  - intros x H1. admit.
+  - intros x H1. admit.
+  - intros x [H1 H2]. admit.
+  - intros x H1. admit.
+  - intros x. destruct df.
+    -- intros [H1 H2]. apply theorem_10_9; auto.
+    -- tauto.
+Admitted.
 
 Lemma derive_correct_global : forall e,
-  (forall x, wf_expr e x) -> ⟦ der ⟧ (fun x => eval e x) = (fun x => eval (derive e) x).
-Proof. Admitted.
-
-(** * High-Speed Reification Infrastructure *)
+  (forall x, wf_derive e x) -> ⟦ der ⟧ (fun x => eval e x) = (fun x => eval (derive e) x).
+Proof.
+  intros e H1 x. apply derive_correct; auto.
+Qed.
 
 Ltac reify_constant c :=
   lazymatch type of c with
@@ -149,8 +190,6 @@ Ltac reify_expr x t :=
   | _ => reify_constant t
   end.
 
-(** * Helper Tactics *)
-
 Ltac change_fun_to_expr :=
   let reify_current f :=
     let x := fresh "x" in intros x _;
@@ -181,7 +220,7 @@ Ltac change_deriv_to_eval :=
   | idtac ].
 
 Ltac auto_limit :=
-  intros; 
+  intros;
   try solve [ solve_R ];
   change_fun_to_expr;
   match goal with
@@ -191,11 +230,13 @@ Ltac auto_limit :=
   end.
 
 Ltac auto_cont :=
-  intros; match goal with | [ |- continuous_on ?f ?I ] => apply continuous_imp_continuous_on | _ => idtac end;
+  intros;
+  try solve [ solve_R ];
+  match goal with | [ |- continuous_on ?f ?I ] => apply continuous_imp_continuous_on | _ => idtac end;
   unfold continuous, continuous_at in *; auto_limit.
 
 Ltac auto_diff :=
-  intros; 
+  intros;
   try solve [ solve_R ];
   change_deriv_to_eval;
   match goal with

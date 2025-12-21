@@ -119,18 +119,6 @@ Proof.
   
 Admitted.
 
-Lemma f_n_symmetry : ∀ n x,
-  f n x = f n (1 - x).
-Proof.
-  intros n x. unfold f. replace (1 - (1 - x)) with x by nra. lra.
-Qed.
-
-Lemma f_n_derivative_symmetry : ∀ f_n' (n k: nat) (x : R),
-  ⟦ der ^ k ⟧ (f n) = f_n' ->
-  ⟦ der ^ k x ⟧ (f n) = ((-1) ^ k) * f_n' (1 - x).
-Proof.
-Admitted.
-
 Lemma f_n_derivatives_at_1_are_integers : ∀ (n k: nat) (r : R),
   ⟦ der ^ k 1 ⟧ (f n) = r -> is_integer r.
 Proof.
