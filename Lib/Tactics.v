@@ -238,6 +238,7 @@ Ltac auto_cont :=
 Ltac auto_diff :=
   intros;
   try solve [ solve_R ];
+  try (match goal with | [ |- ⟦ der ⟧ _ _ = _ ] => apply derivative_imp_derivative_on; [ solve_R | ] end);
   change_deriv_to_eval;
   match goal with
   | [ |- ⟦ der ⟧ (fun t => eval ?e t) = ?rhs ] =>
@@ -247,3 +248,14 @@ Ltac auto_diff :=
     replace rhs with (fun t => eval (derive e) t) by (let x := fresh "x" in extensionality x; unfold compose in *; try (simpl; lra); solve_R);
     apply derive_correct; repeat split; solve_R
   end.
+
+Example FTC2_test : ∫ 0 1 (λ x : ℝ, 2 * x) = 1.
+Proof.
+  set (f := λ x : ℝ, 2 * x).
+  set (g := λ x : ℝ, x^2).
+  assert (H1 : 0 < 1) by lra.
+  assert (H2 : continuous_on f [0, 1]) by (unfold f; auto_cont).
+  assert (H3 : ⟦ der ⟧ g [0, 1] = f) by (unfold f, g; auto_diff).
+  replace 1 with (g 1 - g 0) at 2 by (unfold g; lra).
+  apply (FTC2 0 1 f g H1 H2 H3).
+Qed.
