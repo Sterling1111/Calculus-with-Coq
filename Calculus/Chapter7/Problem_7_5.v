@@ -1,6 +1,4 @@
-From Lib Require Import Imports Sets Limit Continuity Rational Notations Reals_util.
-Import LimitNotations IntervalNotations SetNotations.
-Open Scope R_scope.
+From Calculus.Chapter7 Require Import Prelude.
 
 Lemma lemma_7_5 : ∀ f a b,
   a < b -> continuous_on f [a, b] -> (∀ x, rational (f x)) -> ∃ c, ∀ x, x ∈ [a, b] -> f x = c.

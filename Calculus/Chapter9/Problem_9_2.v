@@ -8,7 +8,7 @@ Proof.
   {
     rewrite H2. unfold derivative_at.
     apply limit_to_a_equiv' with (f1 := (λ h, ((-2 * a - h) / (a^2 * (a + h)^2))) ) (δ := |a/2|); solve_R.
-    auto_limit. rewrite Rplus_0_r, Rmult_1_r. repeat apply Rmult_integral_contrapositive; auto.
+    auto_limit; rewrite Rplus_0_r, Rmult_1_r; repeat apply Rmult_integral_contrapositive; auto.
   }
   rewrite (derivative_of_function_at_x_unique f f' (λ x, -2 / (x ^ 3)) a H3 H4); auto.
 Qed.

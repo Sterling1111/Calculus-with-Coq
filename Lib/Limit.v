@@ -335,6 +335,12 @@ Proof.
   apply left_right_iff; split; [ apply left_limit_plus | apply right_limit_plus ]; auto.
 Qed.
 
+Lemma limit_on_id : forall a D,
+  ⟦ lim a ⟧ (fun x => x) D = a.
+Proof.
+  intros a D ε H1. exists ε. split; solve_abs.
+Qed.
+
 Lemma limit_on_plus : forall f1 f2 a D L1 L2,
   ⟦ lim a ⟧ f1 D = L1 -> ⟦ lim a ⟧ f2 D = L2 -> ⟦ lim a ⟧ (f1 + f2) D = (L1 + L2).
 Proof.

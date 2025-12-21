@@ -230,7 +230,6 @@ Ltac auto_limit :=
   end.
 
 Ltac auto_cont :=
-  intros;
   try solve [ solve_R ];
   match goal with | [ |- continuous_on ?f ?I ] => apply continuous_imp_continuous_on | _ => idtac end;
   unfold continuous, continuous_at in *; auto_limit.
