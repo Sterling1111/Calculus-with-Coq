@@ -574,7 +574,7 @@ Qed.
 Theorem theorem_10_1 : forall c,
   ⟦ der ⟧ (fun _ => c) = (fun _ => 0).
 Proof.
-  intros c. intros x. apply limit_to_0_equiv with (f1 := fun h => 0); auto_limit.
+  intros c. intros x. apply limit_to_0_equiv with (f1 := fun h => 0); solve_lim.
 Qed.
 
 Theorem theorem_10_1_right : forall c a,
@@ -586,7 +586,7 @@ Qed.
 
 Theorem theorem_10_2 : ⟦ der ⟧ (fun x => x) = (fun _ => 1).
 Proof.
-  intros x. apply limit_to_0_equiv with (f1 := fun h => 1); auto_limit.
+  intros x. apply limit_to_0_equiv with (f1 := fun h => 1); solve_lim.
 Qed.
 
 Lemma right_derivative_at_plus : forall f g f' g' a,
@@ -663,7 +663,7 @@ Proof.
        auto.
     }
     unfold continuous_at in H3. rewrite Rplus_0_r in H3. auto.
-  - apply limit_mult; auto. auto_limit.
+  - apply limit_mult; auto. solve_lim.
 Qed.
 
 Theorem theorem_10_4_a_right : forall f g f' g' a,
@@ -831,7 +831,7 @@ Proof.
   2 : { extensionality x. lra. } apply limit_mult; auto. apply limit_const. apply limit_inv; solve_R.
   apply limit_mult. apply limit_const. rewrite Rmult_1_r. pose proof theorem_6_2 f (Rplus a) 0 as H6. unfold continuous_at in H6.
   unfold compose in H6.
-  rewrite Rplus_0_r in H6. apply H6; auto_limit.
+  rewrite Rplus_0_r in H6. apply H6; solve_lim.
 Qed.
 
 Theorem theorem_10_8 : forall f f' g g' a,
@@ -979,7 +979,7 @@ Proof.
   }
   apply H5. apply H4; auto. unfold maximum_point. split; auto. intros y H6. specialize (H2 y H6). lra.
   unfold differentiable_at. exists (-1 * L). replace ((λ h : ℝ, (- f (x + h) - - f x) / h)) with ((λ h : ℝ, -1 * ((f (x + h) - f x) / h))).
-  2 : { extensionality x'. lra. } apply limit_mult; auto_limit.
+  2 : { extensionality x'. lra. } apply limit_mult; solve_lim.
 Qed.
 
 Theorem theorem_11_2_a : forall f a b x,
@@ -1003,7 +1003,7 @@ Proof.
   }
   apply H7. apply H6; auto. split; auto. exists δ; split; [auto | split; auto]. intros y H8. specialize (H4 y H8). lra.
   exists (-1 * L). replace ((λ h : ℝ, (- f (x + h) - - f x) / h)) with ((λ h : ℝ, -1 * ((f (x + h) - f x) / h))).
-  apply limit_mult; auto_limit. extensionality h. lra.
+  apply limit_mult; solve_lim. extensionality h. lra.
 Qed.
 
 Definition critical_point (f: ℝ -> ℝ) (A : Ensemble ℝ) (x : ℝ) :=
@@ -1029,7 +1029,7 @@ Proof.
     -- exfalso. apply (right_interval_endpoint_open a b x2); auto.
   - assert (y1 = y2) as H15. { destruct H13 as [H13 | H13], H14 as [H14 | H14]; subst; auto. }
     pose proof min_max_val_eq' f a b y1 y2 H5 H6 H15 as H16. 
-    exists ((a + b) / 2). split. unfold Ensembles.In. lra. apply limit_to_0_equiv' with (f1 := (fun x => 0)); try auto_limit.
+    exists ((a + b) / 2). split. unfold Ensembles.In. lra. apply limit_to_0_equiv' with (f1 := (fun x => 0)); try solve_lim.
     exists ((b - a)/2); split; try lra. intros h H17 H18. replace (f ((a + b) / 2 + h)) with (f ((a + b) / 2)).
     2 : { apply H16; unfold Ensembles.In in *; solve_R. } nra.
 Qed.
@@ -1041,18 +1041,23 @@ Proof.
   assert (continuous_on h [a, b]) as H4. 
   { 
     apply continuous_on_interval_closed; auto; repeat split.
-    - intros x H4. apply continuous_on_interval_closed in H2 as [H2 _]; auto. specialize (H2 x H4). unfold h. auto_limit.
+    - intros x H4. apply continuous_on_interval_closed in H2 as [H2 _]; auto. specialize (H2 x H4). unfold h.
+      apply limit_minus; solve_lim.
     - apply continuous_on_interval_closed in H2 as [_ [H2 _]]; auto. unfold h.
-      apply right_limit_minus; auto_limit.
+      apply right_limit_minus; auto. apply right_limit_mult. apply right_limit_div; try lra.
+      apply right_limit_minus. apply right_limit_const. apply right_limit_const. apply right_limit_const.
+      apply right_limit_minus. apply right_limit_id. apply right_limit_const.
     - apply continuous_on_interval_closed in H2 as [_ [_ H2]]; auto. unfold h.
-      apply left_limit_minus; auto. auto_limit.
+      apply left_limit_minus; auto. apply left_limit_mult. apply left_limit_div; try lra.
+      apply left_limit_minus. apply left_limit_const. apply left_limit_const. apply left_limit_const.
+      apply left_limit_minus. apply left_limit_id. apply left_limit_const.  
   }
   assert (differentiable_on h (a, b)) as H5.
   {
     intros x. left. destruct (H3 x ltac:(auto)) as [[H6 [L H7]] | [[H6 _] | [H6 H7]]].
     - split; auto. exists (L - (f b - f a) / (b - a)). unfold h.
       apply limit_to_0_equiv with (f1 := (fun h => (f (x + h) - f x) / h - (f b - f a) / (b - a))); solve_R.
-      apply limit_minus; auto. auto_limit.
+      apply limit_minus; auto. solve_lim.
     - exfalso. apply (left_interval_endpoint_open a b x); auto.
     - exfalso. apply (right_interval_endpoint_open a b x); auto.
   }
@@ -1400,7 +1405,7 @@ Proof.
     unfold h, differentiable_at. exists ((g b - g a) * f' x - (f b - f a) * g' x).
     apply limit_to_0_equiv with (f1 := (λ h, ((g b - g a) * ((f (x + h) - f x)/h)) - ((f b - f a) * ((g (x + h) - g x)/h)))).
     - intros h0 H8. solve_R.
-    - apply limit_minus; apply limit_mult; auto_limit.
+    - apply limit_minus; apply limit_mult; solve_lim.
   }
   assert (h a = f a * g b - g a * f b) as H8. { unfold h. lra. }
   assert (h b = f a * g b - g a * f b) as H9. { unfold h. lra. }
@@ -1521,7 +1526,7 @@ Proof.
     2 : { pose proof sqrt_lt_R0 x H1 as H2. solve_R. }
     apply limit_div. apply limit_const. apply limit_plus.
     2 : { apply limit_const. } pose proof sqrt_f_continuous (fun h => x + h) as H2.
-    assert (H3 : continuous (λ h : ℝ, x + h)). { intros a. unfold continuous_at. auto_limit. }
+    assert (H3 : continuous (λ h : ℝ, x + h)). { intros a. unfold continuous_at. solve_lim. }
     specialize (H2 H3). specialize (H2 0). unfold continuous_at in H2.
     rewrite Rplus_0_r in H2. apply H2. pose proof sqrt_lt_R0 x H1 as H4. lra.
 Qed.

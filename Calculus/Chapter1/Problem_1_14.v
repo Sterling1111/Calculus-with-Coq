@@ -1,5 +1,4 @@
-From Lib Require Import Imports Notations Reals_util.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Lemma lemma_1_14_a : forall a,
   |a| = |(-a)|.

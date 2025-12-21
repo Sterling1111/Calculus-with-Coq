@@ -866,21 +866,6 @@ Definition definite_integral a b (f : ℝ -> ℝ) : ℝ :=
                end
   end.
 
-Definition integral_helper (f : ℝ -> ℝ) (a b r : ℝ) : Prop :=
-  exists (bf : bounded_function_R a b), bf.(bounded_f a b) = f /\
-    let LS := (fun x : ℝ => exists p : partition a b, x = L(bf, p)) in
-    let US := (fun x : ℝ => exists p : partition a b, x = U(bf, p)) in
-    is_lub LS r /\ is_glb US r.
-
-Definition integral (f : ℝ -> ℝ) (a b r : ℝ) : Prop :=  
-  match Rlt_dec a b with 
-  | left _ => integral_helper f a b r
-  | right _ => match Req_dec_T a b with
-               | left _ => r = 0
-               | right _ => integral_helper (-f) b a r
-               end
-  end.
-
 Notation "∫ a b f" := (definite_integral a b f)
    (at level 9, f at level 0, a at level 0, b at level 0, format "∫  a  b  f").
 

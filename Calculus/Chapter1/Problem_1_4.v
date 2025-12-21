@@ -1,5 +1,4 @@
-From Lib Require Import Imports.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Lemma lemma_1_4_vii : forall x : R,
   x < -2 \/ x > 3 <-> x^2 - x + 10 > 16.

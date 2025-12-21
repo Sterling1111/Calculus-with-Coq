@@ -1,5 +1,4 @@
-From Lib Require Import Imports.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Definition one_and_only_one_3 (P1 P2 P3 : Prop) : Prop :=
   (P1 /\ ~ P2 /\ ~ P3) \/ (~ P1 /\ P2 /\ ~ P3) \/ (~ P1 /\ ~ P2 /\ P3).

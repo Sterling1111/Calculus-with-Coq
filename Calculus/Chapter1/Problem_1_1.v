@@ -1,7 +1,6 @@
-From Lib Require Import Imports Sums.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
-Lemma lemma_1_1_i : forall (a x : R),
+Lemma lemma_1_1_i : ∀ (a x : R),
   a <> 0 -> a * x = a -> x = 1.
 Proof.
   intros a x H1 H2.
@@ -14,7 +13,7 @@ Proof.
   - apply H1.
 Qed.
 
-Lemma lemma_1_1_ii : forall (x y : R),
+Lemma lemma_1_1_ii : ∀ (x y : R),
   x ^ 2 - y ^ 2 = (x - y) * (x + y).
 Proof.
   intros x y. unfold pow. unfold Rminus. repeat rewrite Rmult_1_r.
@@ -26,7 +25,7 @@ Proof.
   rewrite <- Ropp_mult_distr_l_reverse. reflexivity.
 Qed.
 
-Lemma lemma_1_1_iii : forall (x y : R),
+Lemma lemma_1_1_iii : ∀ (x y : R),
   x ^ 2 = y ^ 2 -> x = y \/ x = -y.
 Proof.
   intros x y H.
@@ -37,7 +36,7 @@ Proof.
   - right. rewrite Rplus_comm in H1. apply Rplus_opp_r_uniq in H1. apply H1.
 Qed.
 
-Lemma lemma_1_1_iv : forall (x y : R),
+Lemma lemma_1_1_iv : ∀ (x y : R),
   x^3 - y^3 = (x - y) * (x^2 + x * y + y^2).
 Proof.
   intros x y. unfold pow. unfold Rminus. repeat rewrite Rmult_1_r. 
@@ -57,7 +56,7 @@ Proof.
   reflexivity.
 Qed.
 
-Theorem pow_equ : forall (r: R) (a : nat),
+Theorem pow_equ : ∀ (r: R) (a : nat),
   (a > 0)%nat -> r ^ a = r * r ^ (a - 1).
 Proof.
   intros r a H1. destruct a.
@@ -65,7 +64,7 @@ Proof.
   - simpl. rewrite Nat.sub_0_r. reflexivity.
 Qed.
 
-Lemma lemma_1_1_v : forall (x y : R) (n : nat),
+Lemma lemma_1_1_v : ∀ (x y : R) (n : nat),
   (n >= 1)%nat ->
   x ^ n - y ^ n = (x - y) * ∑ 0 (n-1) (fun i => x ^ i * y ^ (n - i - 1)).
 Proof.
@@ -84,7 +83,7 @@ Proof.
         rewrite r_mult_sum_f_i_n_f.
         set (f1 := fun i : nat => x ^ i * y ^ (n - i - 1) * x).
         set (f2 := fun i : nat => x ^ (i + 1) * y ^ (n - 1 - i)).
-        assert (forall i : nat, f1 i = f2 i).
+        assert (∀ i : nat, f1 i = f2 i).
         { intro i. unfold f1. unfold f2. replace (i + 1)%nat with (S i) by lia.
           replace (n - 1 - i)%nat with (n - i - 1)%nat by lia.
           replace (x ^ i * y ^ (n - i - 1) * x) with (x ^ i * x * y ^ (n - i - 1)) by lra.
@@ -119,7 +118,7 @@ Proof.
       rewrite H5. lra.
 Qed.
 
-Lemma lemma_1_1_vi : forall (x y : R),
+Lemma lemma_1_1_vi : ∀ (x y : R),
   x ^ 3 + y ^ 3 = (x + y) * (x ^ 2 - x * y + y ^ 2).
 Proof.
   intros x y. assert (H1 : x ^ 3 + y ^ 3 = x ^ 3 - ((- y) ^ 3)) by lra.

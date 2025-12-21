@@ -1,5 +1,4 @@
-From Lib Require Import Imports.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Lemma lemma_1_5_i : forall a b c d,
   a < b -> c < d -> a + c < b + d.

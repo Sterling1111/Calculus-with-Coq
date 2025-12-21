@@ -1,5 +1,4 @@
-From Lib Require Import Imports.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Lemma Rpow_0 : forall k, 
   (k >= 1)%nat -> 0 ^ k = 0.

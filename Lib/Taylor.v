@@ -18,7 +18,7 @@ Notation "'R(' n ',' a ',' f ')'" := (Taylor_remainder n f a)
   (at level 10, n, a, f at level 9, format "R( n , a , f )").
 
 Theorem theorem_20_1 : forall n a f,
-  nth_differentiable f -> 
+  nth_differentiable n f -> 
     ⟦ lim a ⟧ (λ x, (f x - P(n, a, f) x) / ((x - a)^n)) = 0.
 Proof.
 
@@ -64,7 +64,7 @@ Admitted.
 
 Corollary corollary_20_1 : forall n a f l,
   let P := fun x => polynomial l (x - a) in
-  nth_differentiable f ->
+  nth_differentiable n f ->
   (length l <= n + 1)%nat ->
   equal_up_to_order n f P a ->
   P = P(n, a, f).

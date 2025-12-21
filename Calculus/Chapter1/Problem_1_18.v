@@ -1,5 +1,4 @@
-From Lib Require Import Imports Notations Reals_util.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Lemma lemma_1_18_a : forall b c x,
   (b^2 - 4 * c >= 0) -> ((x = (-b + √ (b^2 - 4 * c))/ 2 \/ x = (-b - √ (b^2 - 4 * c))/ 2)) -> x^2 + b * x + c = 0.

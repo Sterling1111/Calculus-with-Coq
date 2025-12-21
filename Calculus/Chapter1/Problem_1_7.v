@@ -1,5 +1,4 @@
-From Lib Require Import Imports Notations.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Lemma lemma_1_7 : forall a b : R,
   (0 < a < b) -> a < √(a * b) < (a + b) / 2 /\ (a + b) / 2 < b.

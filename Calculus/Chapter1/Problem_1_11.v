@@ -1,5 +1,4 @@
-From Lib Require Import Imports Notations Reals_util.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Lemma lemma_1_11_i : forall x, 
   (x = 11 \/ x = -5) <-> |x - 3| = 8.

@@ -1,5 +1,4 @@
-From Lib Require Import Imports.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 (*we dont need b <> 0 in this proof because in coq r / 0 = 0 so it hold true anyway*)
 Lemma lemma_1_3_i : forall a b c : R,

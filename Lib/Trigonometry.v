@@ -13,7 +13,9 @@ Proof.
   assert (H2 : ∃ x : ℝ, x ∈ [-1, 1] ∧ f x > 0).
   { exists 0. split; solve_R. unfold f. apply sqrt_lt_R0. lra. }
   assert (H3 : continuous_on f [-1, 1]).
-  { apply continuous_imp_continuous_on. apply sqrt_f_continuous. intros c. unfold continuous_at. auto_limit. }
+  { apply continuous_imp_continuous_on. apply sqrt_f_continuous. intros c. unfold continuous_at.
+    apply limit_minus; solve_lim.
+  }
   pose proof integral_pos' (-1) 1 f ltac:(lra) H1 H2 H3 as H4.
   unfold π, f in *. lra.
 Qed.
@@ -395,3 +397,37 @@ Proof. admit. Admitted.
 
 Lemma cos_0 : cos 0 = 1.
 Proof. admit. Admitted. 
+
+Lemma left_limit_cos : forall a,
+  ⟦ lim a⁻ ⟧ cos = cos a.
+Proof. admit.
+Admitted.
+
+Lemma right_limit_cos : forall a,
+  ⟦ lim a⁺ ⟧ cos = cos a.
+Proof. admit.
+Admitted.
+
+Lemma limit_cos : forall a,
+  ⟦ lim a ⟧ cos = cos a.
+Proof.
+  intros a.
+  apply left_right_iff; split; [ apply left_limit_cos | apply right_limit_cos ].
+Qed.
+
+Lemma left_limit_sin : forall a,
+  ⟦ lim a⁻ ⟧ sin = sin a.
+Proof. admit.
+Admitted. 
+
+Lemma right_limit_sin : forall a,
+  ⟦ lim a⁺ ⟧ sin = sin a.
+Proof. admit.
+Admitted.
+
+Lemma limit_sin : forall a,
+  ⟦ lim a ⟧ sin = sin a.
+Proof.
+  intros a.
+  apply left_right_iff; split; [ apply left_limit_sin | apply right_limit_sin ].
+Qed.

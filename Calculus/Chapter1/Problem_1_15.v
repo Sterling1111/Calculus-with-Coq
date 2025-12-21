@@ -1,6 +1,5 @@
-From Lib Require Import Imports Notations Reals_util.
+From Calculus.Chapter1 Require Import Prelude.
 From Calculus Require Import Problem_1_6.
-Open Scope R_scope.
 
 Lemma lemma_1_15' : forall x y,
   x <> 0 -> x^2 + x * y + y^2 > 0 /\ x^4 + x^3 * y + x^2 * y^2 + x * y^3 + y^4 > 0.

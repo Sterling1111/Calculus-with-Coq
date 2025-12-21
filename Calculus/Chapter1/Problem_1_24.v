@@ -1,5 +1,4 @@
-From Lib Require Import Imports Notations Reals_util.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Fixpoint standard_sum (l : list R) : R := 
   match l with

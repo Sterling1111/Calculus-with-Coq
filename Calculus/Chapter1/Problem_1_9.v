@@ -1,5 +1,4 @@
-From Lib Require Import Imports Reals_util Notations.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Lemma lemma_1_9_i : |√2 + √3 - √5 + √7| = √2 + √3 - √5 + √7.
 Proof.

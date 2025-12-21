@@ -324,7 +324,7 @@ Proof.
     specialize (H14 y (y + x) ltac:(unfold c, d, δ in *; solve_R) ltac:(unfold c, d, δ in *; solve_R)). lra.
   }
   assert (H11 : ⟦ lim 0 ⟧ (λ x, f_inv (y + x)) = x0).
-  { apply limit_continuous_comp; auto_limit. }
+  { apply limit_continuous_comp; solve_lim. }
   specialize (H6 x0 H9) as [[_ H12] | [[H12 _] | [H12 _]]];
   [| exfalso; apply (left_interval_endpoint_open a b x0) | exfalso; apply (right_interval_endpoint_open a b x0) ]; auto.
   unfold derivative_at in H12.
@@ -354,5 +354,5 @@ Proof.
   }
   unfold k.
   replace 0 with (x0 - x0) at 2 by lra.
-  apply limit_minus; auto_limit.
+  apply limit_minus; solve_lim.
 Qed.

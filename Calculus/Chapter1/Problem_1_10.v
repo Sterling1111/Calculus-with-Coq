@@ -1,5 +1,4 @@
-From Lib Require Import Imports Notations Reals_util.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Lemma lemma_1_10_i : forall a b,
   ((a >= -b /\ b >= 0) -> |a + b| - |b| = a) /\

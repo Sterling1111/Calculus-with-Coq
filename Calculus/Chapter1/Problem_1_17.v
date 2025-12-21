@@ -1,5 +1,4 @@
-From Lib Require Import Imports Notations Reals_util.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Lemma lemma_1_17_a : forall x,
   (x = 3 / 4 -> 2 * x^2 - 3 * x + 4 = 23 / 8) /\ 23 / 8 <= 2 * x^2 - 3 * x + 4.

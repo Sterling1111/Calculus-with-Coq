@@ -1,6 +1,5 @@
-From Lib Require Import Imports Notations Reals_util.
+From Calculus.Chapter1 Require Import Prelude.
 From Calculus Require Import Problem_1_15.
-Open Scope R_scope.
 
 Lemma lemma_1_16_a : forall x y,
   (x = 0 \/ y = 0) <-> (x + y)^2 = x^2 + y^2.

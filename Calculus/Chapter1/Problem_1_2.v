@@ -1,6 +1,5 @@
-From Lib Require Import Imports.
+From Calculus.Chapter1 Require Import Prelude.
 From Calculus Require Import Chapter1.Problem_1_1.
-Open Scope R_scope.
 
 Lemma lemma_1_2 : forall x y : R,
   x = y -> 1 = 2.

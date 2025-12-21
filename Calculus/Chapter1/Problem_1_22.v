@@ -1,5 +1,4 @@
-From Lib Require Import Imports Notations Reals_util.
-Open Scope R_scope.
+From Calculus.Chapter1 Require Import Prelude.
 
 Lemma lemma_1_22 : forall y y0 ε,
   (y0 <> 0) -> (|y - y0| < Rmin (|y0 / 2|) ((ε * (|y0|)^2) / 2)) -> (y <> 0 /\ |1 / y - 1 / y0| < ε).

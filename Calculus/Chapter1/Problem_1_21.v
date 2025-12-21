@@ -1,6 +1,5 @@
-From Lib Require Import Imports Notations Reals_util.
+From Calculus.Chapter1 Require Import Prelude.
 From Calculus Require Import Problem_1_12.
-Open Scope R_scope.
 
 Lemma lemma_1_21 : forall x x0 y y0 ε,
   |x - x0| < Rmin (ε / (2 * (|y0| + 1))) 1 -> |y - y0| < ε / (2 * ((|x0|) + 1)) -> |x * y - x0 * y0| < ε.

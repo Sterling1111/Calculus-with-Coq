@@ -1,6 +1,5 @@
-From Lib Require Import Imports Notations Reals_util.
+From Calculus.Chapter1 Require Import Prelude.
 From Calculus Require Import Problem_1_18.
-Open Scope R_scope.
 
 Lemma lemma_1_19_a : forall x1 y1 x2 y2 α,
   x1 = α * y1 -> x2 = α * y2 -> α >= 0 ->

@@ -1,4 +1,4 @@
-From Lib Require Import Imports Limit Sets Notations Functions Reals_util.
+From Lib Require Import Imports Limit Sets Notations Functions Reals_util Tactics.
 Require Export ATTAM.Chapter35.
 Import SetNotations LimitNotations.
 

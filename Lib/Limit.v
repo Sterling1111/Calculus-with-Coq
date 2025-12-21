@@ -548,6 +548,29 @@ Proof.
   apply left_right_iff; split; [ apply left_limit_pow | apply right_limit_pow ]; auto.
 Qed.
 
+Lemma right_limit_neg : forall f a L,
+  ⟦ lim a⁺ ⟧ f = L -> ⟦ lim a⁺ ⟧ (- f) = - L.
+Proof.
+  intros f a L H1 ε H2. specialize (H1 ε ltac:(lra)) as [δ [H3 H4]].
+  exists δ. split; try lra. intros x H5. specialize (H4 x H5).
+  solve_R.
+Qed.
+
+Lemma left_limit_neg : forall f a L,
+  ⟦ lim a⁻ ⟧ f = L -> ⟦ lim a⁻ ⟧ (- f) = - L.
+Proof.
+  intros f a L H1 ε H2. specialize (H1 ε ltac:(lra)) as [δ [H3 H4]].
+  exists δ. split; try lra. intros x H5. specialize (H4 x H5).
+  solve_R.
+Qed.
+
+Lemma limit_neg : forall f a L,
+  ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ (- f) = - L.
+Proof.
+  intros f a L H1. apply left_right_iff in H1 as [H2 H3].
+  apply left_right_iff; split; [ apply left_limit_neg | apply right_limit_neg ]; auto.
+Qed.  
+
 Lemma sqrt_limit_helper_1 : forall x a,
   x >= 0 -> a >= 0 -> |√x - √a| = |x - a| / (√x + √a).  
 Proof.
@@ -593,6 +616,20 @@ Proof.
        * pose proof sqrt_limit_helper_2 x a ltac:(lra) ltac:(lra) as H7.
          rewrite sqrt_limit_helper_1; try lra. apply Rmult_lt_reg_r with (r := √x + √a); try nra.
          field_simplify; nra.
+Qed.
+
+Lemma right_limit_sqrt_x : forall a,
+  ⟦ lim a⁺ ⟧ (fun x => √x) = √a.
+Proof.
+  intros a. pose proof limit_sqrt_x a as H1.
+  apply left_right_iff in H1 as [H2 H3]. auto.
+Qed.
+
+Lemma left_limit_sqrt_x : forall a,
+  ⟦ lim a⁻ ⟧ (fun x => √x) = √a.
+Proof.
+  intros a. pose proof limit_sqrt_x a as H1.
+  apply left_right_iff in H1 as [H2 H3]. auto.
 Qed.
 
 Lemma limit_continuous_comp :
@@ -818,218 +855,3 @@ Ltac solve_lim :=
          ])); apply (lim_equality_substitution f a L2 rhs);
       solve_R; auto
   end.
-
-Inductive expr :=
-| EVar
-| EConst (c : R)
-| EAdd (e1 e2 : expr)
-| ESub (e1 e2 : expr)
-| EMul (e1 e2 : expr)
-| EDiv (e1 e2 : expr)
-| EApp (f : R -> R) (e : expr).
-
-
-Fixpoint eval (e : expr) (x : R) : R :=
-  match e with
-  | EVar => x
-  | EConst c => c
-  | EAdd e1 e2 => eval e1 x + eval e2 x
-  | ESub e1 e2 => eval e1 x - eval e2 x
-  | EMul e1 e2 => eval e1 x * eval e2 x
-  | EDiv e1 e2 => eval e1 x / eval e2 x
-  | EApp f e1 => f (eval e1 x)
-  end.
-
-Fixpoint defined_at (e : expr) (a : R) : Prop :=
-  match e with
-  | EVar | EConst _ => True
-  | EAdd e1 e2 | ESub e1 e2 | EMul e1 e2 =>
-      defined_at e1 a /\ defined_at e2 a
-  | EDiv e1 e2 =>
-      defined_at e1 a /\ defined_at e2 a /\ eval e2 a <> 0
-  | EApp f e1 =>
-      defined_at e1 a /\ ⟦ lim (eval e1 a) ⟧ f = f (eval e1 a)
-  end.
-
-Fixpoint defined_at_right (e : expr) (a : R) : Prop :=
-  match e with
-  | EVar | EConst _ => True
-  | EAdd e1 e2 | ESub e1 e2 | EMul e1 e2 =>
-      defined_at_right e1 a /\ defined_at_right e2 a
-  | EDiv e1 e2 =>
-      defined_at_right e1 a /\ defined_at_right e2 a /\ eval e2 a <> 0
-  | EApp f e1 =>
-      defined_at_right e1 a /\ ⟦ lim (eval e1 a)⁺ ⟧ f = f (eval e1 a)
-  end.
-
-Lemma right_limit_eval_expr :
-  forall e a,
-    defined_at e a ->
-    ⟦ lim a⁺ ⟧ (fun x => eval e x) = eval e a.
-Proof.
-  induction e; intros a H; simpl in *; try solve_R.
-  - apply right_limit_id.
-  - apply right_limit_const.
-  - destruct H as [H1 H2]. apply right_limit_plus; [now apply IHe1|now apply IHe2].
-  - destruct H as [H1 H2]. apply right_limit_minus; [now apply IHe1|now apply IHe2].
-  - destruct H as [H1 H2]. apply right_limit_mult; [now apply IHe1|now apply IHe2].
-  - destruct H as [H1 [H2 Hnz]].
-    apply right_limit_div; [now apply IHe1|now apply IHe2|exact Hnz].
-  - destruct H as [Harg Hcont].
-    eapply right_limit_continuous_comp; auto.
-Qed.
-
-Lemma left_limit_eval_expr :
-  forall e a,
-    defined_at e a ->
-    ⟦ lim a⁻ ⟧ (fun x => eval e x) = eval e a.
-Proof.
-  induction e; intros a H; simpl in *; try solve_R.
-  - apply left_limit_id.
-  - apply left_limit_const.
-  - destruct H as [H1 H2]. apply left_limit_plus; [now apply IHe1|now apply IHe2].
-  - destruct H as [H1 H2]. apply left_limit_minus; [now apply IHe1|now apply IHe2].
-  - destruct H as [H1 H2]. apply left_limit_mult; [now apply IHe1|now apply IHe2].
-  - destruct H as [H1 [H2 Hnz]].
-    apply left_limit_div; [now apply IHe1|now apply IHe2|exact Hnz].
-  - destruct H as [Harg Hcont].
-    eapply left_limit_continuous_comp; [ now apply IHe | exact Hcont ].
-Qed.
-
-Lemma limit_eval_expr :
-  forall e a,
-    defined_at e a ->
-    ⟦ lim a ⟧ (fun x => eval e x) = eval e a.
-Proof.
-  intros e a H1. apply left_right_iff; split.
-  - apply left_limit_eval_expr; auto.
-  - apply right_limit_eval_expr; auto.
-Qed.
-
-Ltac reify_expr x t :=
-  lazymatch t with
-  | x                 => constr:(EVar)
-  | ?u / ?v           => let e1 := reify_expr x u in
-                         let e2 := reify_expr x v in
-                         constr:(EDiv e1 e2)
-  | ?u * ?v           => let e1 := reify_expr x u in
-                         let e2 := reify_expr x v in
-                         constr:(EMul e1 e2)
-  | ?u + ?v           => let e1 := reify_expr x u in
-                         let e2 := reify_expr x v in
-                         constr:(EAdd e1 e2)
-  | ?u - ?v           => let e1 := reify_expr x u in
-                         let e2 := reify_expr x v in
-                         constr:(ESub e1 e2)
-  | - ?u              => let e := reify_expr x u in
-                         constr:(ESub (EConst 0%R) e)
-
-  | ?h ?u             =>
-      let Th := type of h in
-      lazymatch Th with
-      | R -> R =>
-          lazymatch u with
-          | context[x] =>
-              let e1 := reify_expr x u in
-              constr:(EApp h e1)
-          | _ =>
-              lazymatch type of (h u) with
-              | R => constr:(EConst (h u))
-              | _ => fail "reify_expr: (h u) is not R-valued"
-              end
-          end
-      | _ =>
-          lazymatch type of t with
-          | R        => constr:(EConst t)
-          | Z        => let r := constr:(IZR t) in constr:(EConst r)
-          | nat      => let z := constr:(Z.of_nat t) in
-                        let r := constr:(IZR z) in constr:(EConst r)
-          | positive => let z := constr:(Zpos t) in
-                        let r := constr:(IZR z) in constr:(EConst r)
-          | _        => fail "reify_expr: unsupported non-R application:" t
-          end
-      end
-
-  | ?c =>
-      lazymatch type of c with
-      | R        => constr:(EConst c)
-      | Z        => let r := constr:(IZR c) in constr:(EConst r)
-      | nat      => let z := constr:(Z.of_nat c) in
-                    let r := constr:(IZR z) in constr:(EConst r)
-      | positive => let z := constr:(Zpos c) in
-                    let r := constr:(IZR z) in constr:(EConst r)
-      | _        => fail "reify_expr: unsupported constant:" c
-      end
-  end.
-
-Ltac change_fun_to_expr :=
-  let reify_current f :=
-    let x := fresh "x" in
-    intros x _;
-    let fx := (eval cbv beta in (f x)) in
-    let ex := reify_expr x fx in
-    instantiate (1 := fun y => eval ex y);
-    reflexivity
-  in
-  lazymatch goal with
-  | |- forall _, _ => intro; change_fun_to_expr
-  | |- ?P -> _     => intro; change_fun_to_expr
-  | |- ⟦ lim ?a ⟧ ?f = ?L =>
-      eapply limit_to_a_equiv; [ reify_current f | ]
-  | |- ⟦ lim ?a ⁺ ⟧ ?f = ?L =>
-      eapply right_limit_to_a_equiv; [ reify_current f | ]
-  | |- ⟦ lim ?a ⁻ ⟧ ?f = ?L =>
-      eapply left_limit_to_a_equiv; [ reify_current f | ]
-  | _ => fail "No matching goal found"
-  end.
-
-
-Ltac solve_defined_at :=
-  repeat match goal with
-  | |- defined_at EVar _ => exact I
-  | |- defined_at (EConst _) _ => exact I
-  | |- defined_at (EAdd _ _) _ => split
-  | |- defined_at (ESub _ _) _ => split
-  | |- defined_at (EMul _ _) _ => split
-  | |- defined_at (EDiv _ _) _ => repeat split
-  | |- defined_at (EApp ?f ?e) ?a =>
-      split; [ solve_defined_at | auto ]
-  end; solve_R.
-
-
-
-Ltac finish_with_eval :=
-  lazymatch goal with
-  | |- ⟦ lim ?a ⟧ (fun _ => eval ?e _) = ?L =>
-      eapply (lim_equality_substitution (fun _ => eval e _) a (eval e a) L);
-      [ solve_R | apply limit_eval_expr; auto ]
-  | |- ⟦ lim ?a ⁺ ⟧ (fun _ => eval ?e _) = ?L =>
-      eapply (right_lim_equality_substitution (fun _ => eval e _) a (eval e a) L);
-      [ solve_R | apply right_limit_eval_expr; auto ]
-  | |- ⟦ lim ?a ⁻ ⟧ (fun _ => eval ?e _) = ?L =>
-      eapply (left_lim_equality_substitution (fun _ => eval e _) a (eval e a) L);
-      [ solve_R | apply left_limit_eval_expr; auto ]
-  | _ => fail "No matching goal found"
-  end.
-
-  
-Ltac auto_limit :=
-  intros; 
-  try solve_R;
-  change_fun_to_expr;
-  match goal with
-  | |- ⟦ lim ?a ⟧ (fun x => eval ?ex x) = ?L =>
-      assert (defined_at ex a); [ solve_defined_at; try solve_R | finish_with_eval ]
-  | |- ⟦ lim ?a ⁺ ⟧ (fun x => eval ?ex x) = ?L =>
-      assert (defined_at ex a); [ solve_defined_at; try solve_R | finish_with_eval ]
-  | |- ⟦ lim ?a ⁻ ⟧ (fun x => eval ?ex x) = ?L =>
-      assert (defined_at ex a); [ solve_defined_at; try solve_R | finish_with_eval ]
-  end.
-
-
-Lemma lim_div_test : forall f,
-  ⟦ lim 2⁺ ⟧ (fun x => (x * x - 1) / (x - 1) * (x - 19) + f 1) = (-51 + (f 1)).
-Proof.
-  intros. change_fun_to_expr.
-  auto_limit.
-Qed.

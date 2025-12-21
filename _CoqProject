@@ -60,45 +60,10 @@ ATTAM/Chapter36.v
 # =========================
 # Calculus (depends on Lib only)
 # =========================
-Calculus/Chapter1/Problem_1_1.v
-Calculus/Chapter1/Problem_1_2.v
-Calculus/Chapter1/Problem_1_3.v
-Calculus/Chapter1/Problem_1_4.v
-Calculus/Chapter1/Problem_1_5.v
-Calculus/Chapter1/Problem_1_6.v
-Calculus/Chapter1/Problem_1_7.v
-Calculus/Chapter1/Problem_1_8.v
-Calculus/Chapter1/Problem_1_9.v
-Calculus/Chapter1/Problem_1_10.v
-Calculus/Chapter1/Problem_1_11.v
-Calculus/Chapter1/Problem_1_12.v
-Calculus/Chapter1/Problem_1_13.v
-Calculus/Chapter1/Problem_1_14.v
-Calculus/Chapter1/Problem_1_15.v
-Calculus/Chapter1/Problem_1_16.v
-Calculus/Chapter1/Problem_1_17.v
-Calculus/Chapter1/Problem_1_18.v
-Calculus/Chapter1/Problem_1_19.v
-Calculus/Chapter1/Problem_1_20.v
-Calculus/Chapter1/Problem_1_21.v
-Calculus/Chapter1/Problem_1_22.v
-Calculus/Chapter1/Problem_1_23.v
-Calculus/Chapter1/Problem_1_24.v
-Calculus/Chapter1/Problem_1_25.v
-
-Calculus/Chapter3/Prelude.v
-
-# Calculusulus Chapter 5 problems
+Calculus/Chapter1/Prelude.v
 Calculus/Chapter2/Prelude.v
-Calculus/Chapter2/Problem_2_1.v
-Calculus/Chapter2/Problem_2_3.v
-Calculus/Chapter2/Problem_2_12.v
-Calculus/Chapter2/Problem_2_13.v
+Calculus/Chapter3/Prelude.v
 Calculus/Chapter5/Prelude.v
 Calculus/Chapter6/Prelude.v
 Calculus/Chapter9/Prelude.v
 Calculus/Chapter10/Prelude.v
-Calculus/Chapter10/Problem_10_2.v
-Calculus/Chapter10/Problem_10_1.v
-Calculus/Chapter10/Problem_10_5.v
-Calculus/Chapter10/Problem_10_6.v
