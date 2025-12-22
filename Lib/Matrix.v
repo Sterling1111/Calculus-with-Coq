@@ -66,4 +66,3 @@ Definition Mplus {m n : nat} (A B : Matrix m n) : Matrix m n :=
 
 Infix "+" := Mplus (at level 50, left associativity) : matrix_scope.
 Infix "*" := Mscale (at level 40, left associativity) : matrix_scope.
-
