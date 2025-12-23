@@ -88,10 +88,10 @@ Proof.
   rewrite sum_f_reindex with (s := n); try lia.
   rewrite Nat.sub_diag. replace (2 * n - n)%nat with n by lia.
   rewrite sum_f_0; auto; try lia. intros m H2. rewrite nth_Derive_mult_const.
-  rewrite nth_Derive_pow_gt; try lia. lra. apply inf_differentiable_pow. intros m.
-  apply inf_differentiable_mult_const_l. apply inf_differentiable_pow.
-  apply inf_differentiable_sum; try lia. intros m. 
-  apply inf_differentiable_mult_const_l. apply inf_differentiable_pow.
+  rewrite nth_Derive_pow_gt; try lia. lra. apply nth_differentiable_pow. intros m.
+  apply nth_differentiable_mult_const_l. apply nth_differentiable_pow.
+  apply nth_differentiable_sum; try lia. intros m. 
+  apply nth_differentiable_mult_const_l. apply nth_differentiable_pow.
 Qed.
 
 Lemma f_n_differentiable : ∀ n,
@@ -102,12 +102,12 @@ Proof.
   intros k H1. apply differentiable_mult_const_l. apply differentiable_pow.
 Qed.
 
-Lemma f_n_inf_differentiable : ∀ n,
-  inf_differentiable (f n).
+Lemma f_n_nth_differentiable : ∀ n k,
+  nth_differentiable k (f n).
 Proof.
-  intros n. rewrite f_n_is_polynomial. apply inf_differentiable_mult_const_l.
-  apply inf_differentiable_sum; try lia.
-  intros k H1. apply inf_differentiable_mult_const_l. apply inf_differentiable_pow.
+  intros n k. rewrite f_n_is_polynomial. apply nth_differentiable_mult_const_l.
+  apply nth_differentiable_sum; try lia.
+  intros l. apply nth_differentiable_mult_const_l. apply nth_differentiable_pow.
 Qed.
 
 Lemma f_n_derivatives_at_0_are_integers : ∀ (n k: nat) (r : R),
@@ -163,7 +163,7 @@ Proof.
            apply is_integer_mult; apply is_integer_pow; [ exists a | exists b ]; reflexivity.
       - apply (f_n_derivatives_at_0_are_integers n (2 * k)). pose proof nth_Derive_at_eq (2 * k) 0 (f n) as H6.
         pose proof f_n_differentiable n as H7. pose proof differentiable_imp_exists_derivative (f n) H7 as [f' H8].
-        specialize (H6 f'). apply nth_Derive_spec'; auto. apply f_n_inf_differentiable.
+        specialize (H6 f'). apply nth_Derive_spec'; auto. apply f_n_nth_differentiable.
     }
     assert (H5 : is_integer (G 1)).
     {
@@ -177,13 +177,13 @@ Proof.
            apply is_integer_mult; apply is_integer_pow; [ exists a | exists b ]; reflexivity.
       - apply (f_n_derivatives_at_1_are_integers n (2 * k)). pose proof nth_Derive_at_eq (2 * k) 1 (f n) as H6.
         pose proof f_n_differentiable n as H7. pose proof differentiable_imp_exists_derivative (f n) H7 as [f' H8].
-        specialize (H6 f'). apply nth_Derive_spec'; auto. apply f_n_inf_differentiable.
+        specialize (H6 f'). apply nth_Derive_spec'; auto. apply f_n_nth_differentiable.
     }
     assert (H6 : ⟦ der ⟧ G = G').
     {
       unfold G, G'.
       apply theorem_10_5'. assert (H6 : forall k, differentiable (nth_Derive_at (2 * k) (f n))).
-      { intros k. apply inf_differentiable_imp_differentiable. apply nth_Derive_inf_differentiable. apply f_n_inf_differentiable. }
+      { intros k. apply nth_differentiable_imp_differentiable with (n := 1%nat); try lia. apply nth_Derive_nth_differentiable. apply f_n_nth_differentiable. }
       apply Derive_spec.
       - apply differentiable_sum; try lia. intros k. apply differentiable_mult_const_l; auto.
       - rewrite Derive_sum; try lia. 2 : { intros k H7. apply differentiable_mult_const_l; auto. }
@@ -195,7 +195,7 @@ Proof.
     {
       unfold G', G''.
       apply theorem_10_5'. assert (H7 : forall k, differentiable (nth_Derive_at (2 * k + 1) (f n))).
-      { intros k. apply inf_differentiable_imp_differentiable. apply nth_Derive_inf_differentiable. apply f_n_inf_differentiable. }
+      { intros k. apply nth_differentiable_imp_differentiable with (n := 1%nat); try lia. apply nth_Derive_nth_differentiable. apply f_n_nth_differentiable. }
       apply Derive_spec.
       - apply differentiable_sum; try lia. intros k. apply differentiable_mult_const_l; auto.
       - rewrite Derive_sum; try lia. 2 : { intros k H8. apply differentiable_mult_const_l; auto. }

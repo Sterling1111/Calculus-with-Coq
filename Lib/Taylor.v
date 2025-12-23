@@ -1,5 +1,5 @@
-From Lib Require Import Imports Notations Reals_util Functions Sums Limit Continuity Derivative.
-Import Function_Notations LimitNotations DerivativeNotations.
+From Lib Require Import Imports Notations Reals_util Functions Sums Sets Limit Continuity Derivative Trigonometry.
+Import Function_Notations LimitNotations DerivativeNotations SetNotations IntervalNotations.
 
 Open Scope R_scope.
 
@@ -18,26 +18,22 @@ Notation "'R(' n ',' a ',' f ')'" := (Taylor_remainder n f a)
   (at level 10, n, a, f at level 9, format "R( n , a , f )").
 
 Theorem theorem_20_1 : forall n a f,
-  nth_differentiable n f -> 
+  nth_differentiable_at n f a -> 
     ⟦ lim a ⟧ (λ x, (f x - P(n, a, f) x) / ((x - a)^n)) = 0.
 Proof.
+  intros n a f H1.  admit.
 
 Admitted.
 
-Theorem theorem_20_2 : forall n a f,
-  (forall k, (1 <= k < n)%nat -> ⟦ Der^k a ⟧ f = 0) -> ⟦ Der^n a ⟧ f <> 0 ->
-  (
-    (Nat.Even n /\ ⟦ Der^n a ⟧ f > 0 -> local_minimum_point f ℝ a) /\
-    (Nat.Even n /\ ⟦ Der^n a ⟧ f < 0 -> local_maximum_point f ℝ a) /\
-    (Nat.Odd n -> ~ local_maximum_point f ℝ a /\ ~ local_minimum_point f ℝ a)
-  ).
+Theorem theorem_20_2 : forall n a f, 
+  nth_differentiable_at n f a ->
+  (forall k, (1 <= k < n)%nat -> ⟦ Der ^ k a ⟧ f = 0) -> 
+  ⟦ Der ^ n a ⟧ f <> 0 -> 
+  ( (Nat.Even n /\ ⟦ Der ^ n a ⟧ f > 0 -> local_minimum_point f ℝ a) \/ 
+    (Nat.Even n /\ ⟦ Der ^ n a ⟧ f < 0 -> local_maximum_point f ℝ a) \/
+    (Nat.Odd n -> ~ local_maximum_point f ℝ a /\ ~ local_minimum_point f ℝ a) ).
 Proof.
-  intros n a f H1 H2. split; [| split ]; intros H3.
-  - destruct H3 as [H3 H4]. admit. 
-  - destruct H3 as [H3 H4]. admit.
-  - split; intros H4.
-    -- admit.
-    -- admit. 
+  intros n a f H1 H2 H3. admit.
 Admitted.
 
 Definition equal_up_to_order (n : nat) (f g : R -> R) (a : R) : Prop :=
@@ -53,15 +49,6 @@ Proof.
   intros n a pl ql P Q H1 H2 H3. admit.
 Admitted.
 
-Lemma Taylor_polynomial_is_polynomial : forall n a f,
-  exists l, 
-  let P := fun x => polynomial l (x - a) in
-  (length l = n + 1)%nat /\
-  P(n, a, f) = P.
-Proof.
-  intros n a f. admit.
-Admitted.
-
 Corollary corollary_20_1 : forall n a f l,
   let P := fun x => polynomial l (x - a) in
   nth_differentiable n f ->
@@ -72,4 +59,22 @@ Proof.
   intros n a f l P H1 H2 H3. admit.
 Admitted.
 
+Lemma lemma_20_1 : forall n a b f,
+  a < b ->
+  nth_differentiable_on (S n) (R(n, a, f)) [a, b] ->
+  (forall k, (k <= n)%nat -> ⟦ Der ^ k a ⟧ (R(n, a, f)) = 0) ->
+  forall x, x ∈ (a, b] ->
+  exists t, t ∈ (a, x) /\
+    (R(n, a, f) x) / (x - a) ^ (S n) = (⟦ Der ^ (S n) t ⟧ (R(n, a, f))) / (S n)!.
+Proof.
+  intros n a b f H1 H2 H3 x H4. admit.
+Admitted.
 
+Theorem Taylors_Theorem : forall n a x f,
+  a < x ->
+  nth_differentiable_on (n + 1) f [a, x] ->
+  exists t, t ∈ (a, x) /\ R(n, a, f) x = (⟦ Der ^ (n + 1) t ⟧ f) / ((n + 1)!) * (x - a) ^ (n + 1).
+Proof.
+  intros n a x f H1 H2.
+  admit.
+Admitted.
