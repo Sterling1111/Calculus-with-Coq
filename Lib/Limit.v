@@ -839,6 +839,28 @@ Proof.
   exists δ; split; auto. intros x. specialize (H6 x). solve_abs.
 Qed.
 
+Lemma limit_minus_constant : forall f a L C,
+  ⟦ lim a ⟧ f = L <-> ⟦ lim a ⟧ (f - (fun _ => C)) = L - C.
+Proof.
+  intros f a L C. split.
+  - intros H. apply limit_minus; auto. apply limit_const.
+  - intros H. replace f with (((f - (fun _ => C))%f + (fun _ => C))%f).
+    2 : { extensionality x. lra. }
+    replace L with (L - C + C) by lra.
+    apply limit_plus; auto. apply limit_const.
+Qed.
+
+Lemma limit_plus_constant : forall f a L C,
+  ⟦ lim a ⟧ f = L <-> ⟦ lim a ⟧ (f + (fun _ => C)) = L + C.
+Proof.
+  intros f a L C. split.
+  - intros H. apply limit_plus; auto. apply limit_const.
+  - intros H. replace f with (((f + (fun _ => C))%f - (fun _ => C))%f).
+    2 : { extensionality x. lra. }
+    replace L with (L + C - C) by lra.
+    apply limit_minus; auto. apply limit_const.
+Qed.
+
 Ltac solve_lim :=
   try solve_R;
   match goal with

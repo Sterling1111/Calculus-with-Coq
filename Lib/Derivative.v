@@ -2007,6 +2007,15 @@ Proof.
     apply H2.
 Qed.
 
+Lemma nth_Derive_at_sum : forall (i n m : nat) (a : R) (f : nat -> R -> R),
+  (i <= m)%nat -> (forall k, nth_differentiable n (f k)) ->
+  ⟦ Der ^ n a ⟧ (λ x, ∑ i m (λ k, f k x)) = (∑ i m (λ k, ⟦ Der ^ n a ⟧ (f k))).
+Proof.
+  intros i n m a f H1 H2.
+  unfold nth_Derive_at.
+  rewrite nth_Derive_sum; auto.
+Qed.
+
 Lemma Derive_mult_const : forall f c,
   differentiable f ->
   ⟦ Der ⟧ (λ x, c * f x) = (λ x, c * (⟦ Der ⟧ f) x).
@@ -2082,4 +2091,31 @@ Lemma differentiable_id : differentiable (λ x, x).
 Proof.
   apply derivative_imp_differentiable with (f' := λ x, 1).
   apply theorem_10_2.
+Qed.
+
+Lemma nth_differentiable_shift : forall n f c,
+  nth_differentiable n f -> nth_differentiable n (λ x, f (x - c)).
+Proof.
+  induction n as [| k IH]; intros f c H.
+  - exists (λ x, f (x - c)). reflexivity.
+  - destruct H as [fn' [f' [Hder Hnth]]].
+    exists (λ x, fn' (x - c)). simpl.
+    exists (λ x, f' (x - c)). split.
+    -- intros x. specialize (Hder (x - c)) as Hder.  
+    + intros x.
+      replace (λ h, (f (x + h - c) - f (x - c)) / h) 
+      with (λ h, (f ((x - c) + h) - f (x - c)) / h). 
+      2 : { extensionality y. replace (x + y - c) with ((x - c) + y) by lra. reflexivity. }
+      unfold derivative_at.
+      simpl. 
+(* Simplifies the RHS to f' (x - c) *)
+
+replace (λ h : ℝ, (f (x + h - c) - f (x - c)) / h)
+   with (λ h : ℝ, (f ((x - c) + h) - f (x - c)) / h). apply Hder. admit.
+   +
+- apply Hder.
+- extensionality h. f_equal. lra.
+      specialize (Hder (x - c)) as Hder'.
+      apply Hder.
+    + apply IH. exists fn'. apply Hnth.
 Qed.

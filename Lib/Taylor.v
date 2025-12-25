@@ -18,10 +18,35 @@ Notation "'R(' n ',' a ',' f ')'" := (Taylor_remainder n f a)
   (at level 10, n, a, f at level 9, format "R( n , a , f )").
 
 Theorem theorem_20_1 : forall n a f,
-  nth_differentiable_at n f a -> 
+  (n > 0)%nat -> nth_differentiable_at n f a -> 
     ⟦ lim a ⟧ (λ x, (f x - P(n, a, f) x) / ((x - a)^n)) = 0.
 Proof.
-  intros n a f H1.  admit.
+  intros n a f H1 H2. 
+  set (Q := λ x, ∑ 0 (n - 1) λ i, (⟦ Der^i a ⟧ f) / i! * (x - a) ^ i).
+  set (g := λ x, (x - a)^n).
+  apply limit_plus_constant with (C := ⟦ Der^n a ⟧ f / n!). rewrite Rplus_0_l.
+  apply limit_to_a_equiv with (f1 := λ x, (f x - Q x) / g x).
+  {
+    intros x H3. unfold Q, Taylor_polynomial, g. replace n with (S (n - 1))%nat at 3 by lia.
+    rewrite sum_f_i_Sn_f; try lia. replace (S (n - 1)) with n by lia. field. split. apply INR_fact_neq_0.
+    apply pow_nonzero. lra.
+  }
+
+  assert (H3 : forall k, (k <= n - 1)%nat -> ⟦ Der^k a⟧ Q = ⟦ Der^k a⟧ f).
+  {
+    intros k H3. unfold Q, Taylor_polynomial.
+    rewrite nth_Derive_at_sum; try lia.
+    2 : { intros i. rewrite nth_differentiable_Derive.
+    }
+    rewrite nth_derivative_sum; try lia.
+    rewrite Derivative_sum; try lia.
+    rewrite Derivative_const_mult; try lia.
+    rewrite Derivative_power; try lia.
+    rewrite sum_f_i_const; try lia.
+    rewrite INR_fact_neq_0.
+    replace (k - k)%nat with 0%nat by lia. simpl. lra.
+  }
+
 
 Admitted.
 
