@@ -1921,7 +1921,7 @@ Proof.
   set (h := (λ x : ℝ, ∫ a x f)).
   apply derivative_on_eq with (f1 := (g - h)%function); auto.
   - intros x H3. unfold g, h. pose proof Rtotal_order a x as [H4 | [H4 | H4]];
-    pose proof Rtotal_order x b as [H5 | [H5 | H5]]; try lra.
+    pose proof Rtotal_order x b as [H5 | [H5 | H5]]; solve_R.
     -- rewrite integral_plus with (c := x); try lra. apply theorem_13_3; solve_R.
     -- subst. rewrite integral_eq with (a := b); lra.
     -- subst. rewrite integral_eq with (b := x); lra.

@@ -37,10 +37,26 @@ Proof.
   assert (H4 : forall k, (k <= n - 1)%nat -> ⟦ Der^k a⟧ Q = ⟦ Der^k a⟧ f) by admit.
   assert (H5 : forall k, ⟦ Der^k ⟧ g = (λ x, n! * (x - a) ^ (n - k)/(n-k)!)) by admit.
 
-  apply lhopital_nth_interior with (n := n); try lia.
-  - intros k H5. 
-
-
+  apply lhopital_nth_local with (D := D) (n := (n-1)%nat); auto.
+  - admit.
+  - admit.
+  - intros k H6. admit.
+  - intros k H6. admit.
+  - replace (⟦ Der^(n - 1) ⟧ g D) with (fun x => n! * (x - a)).
+    2: {
+      extensionality x.
+      specialize (H5 (n - 1)%nat). replace (λ x : ℝ, n! * (x - a) ^ (n - (n - 1)) / (n - (n - 1))!) with (λ x, n! * (x - a)) in H5.
+      2 : { extensionality y. replace (n - (n - 1))%nat with 1%nat by lia. simpl. lra. }
+      replace ((⟦ Der^(n - 1) ⟧ g D) x) with ((⟦ Der^(n - 1) ⟧ g) x).
+      - rewrite H5. reflexivity.
+      - admit.
+  }
+  replace (⟦ Der^(n - 1) ⟧ (f - Q) D) with ((⟦ Der^(n-1) ⟧ f - ⟦ Der^(n-1) ⟧ f))%f.
+  2: {
+    extensionality x.
+    admit. 
+  }
+  admit.
 Admitted.
 
 Theorem theorem_20_2 : forall n a f, 
