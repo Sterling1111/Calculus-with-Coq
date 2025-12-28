@@ -1,56 +1,59 @@
 From Lib Require Import Imports Sets Functions Pigeonhole.
 Import SetNotations.
 
-Notation length := List.length.
-
 Set Implicit Arguments.
 
-Record Fin_Type (T : Type) : Type := {
-  Fin_Type_l : list T;
-  Fin_Type_P1 : forall x, List.In x Fin_Type_l;
-  Fin_Type_P2 : NoDup Fin_Type_l;
-  Fin_Type_P3 : forall x y : T, {x = y} + {x <> y};
+Notation length := List.length.
+
+Class Finite (A : Type) := {
+  Finite_l : list A;
+  Finite_P1 : forall x, List.In x Finite_l;
+  Finite_P2 : NoDup Finite_l;
+  Finite_P3 : forall x y : A, {x = y} + {x <> y}
 }.
 
 Module DFA_Theory.
 
-  Record DFA := mk_DFA {
+  Record DFA (Σ : Type) `{Finite Σ} := mk_DFA {
     Q : Type;
-    Σ : Type;
     δ : Q * Σ -> Q;
     q0 : Q;
     F : Ensemble Q;
-    DFA_P1 : Fin_Type Q;
-    DFA_P2 : Fin_Type Σ;
+    DFA_P1 :> Finite Q;
   }.
 
-  Fixpoint DFA_compute M l q :=
+  Arguments DFA Σ {H}.
+
+  Fixpoint DFA_compute {Σ : Type} {HΣ : Finite Σ} (M : DFA Σ) (l : list Σ) (q : M.(Q)) : M.(Q) :=
     let δ := M.(δ) in
     match l with
     | [] => q
     | h :: t => DFA_compute M t (δ (q, h))
     end.
 
-  Fixpoint DFA_compute_list M l q :=
+  Fixpoint DFA_compute_list {Σ : Type} {HΣ : Finite Σ} (M : DFA Σ) (l : list Σ) (q : M.(Q)) : list M.(Q) :=
     match l with
     | [] => [q]
     | h :: t => let q' := M.(δ) (q, h) in
                 q :: DFA_compute_list M t q'
     end.
 
-  Definition DFA_accepts M l : Prop :=
+  Definition DFA_accepts {Σ : Type} {HΣ : Finite Σ} (M : DFA Σ) (l : list Σ) : Prop :=
     let q0 := M.(q0) in
     let F := M.(F) in
     let q := DFA_compute M l q0 in
     q ∈ F.
 
-  Definition DFA_recognizes_language M L :=
+  Definition DFA_recognizes_language {Σ : Type} {HΣ : Finite Σ} (M : DFA Σ) (L : Ensemble (list Σ)) :=
     forall l, l ∈ L <-> DFA_accepts M l.
 
-  Definition regular_language {Σ' : Type} (L : Ensemble (list Σ')) :=
-    exists Q' δ' q0' F' (H1 : Fin_Type Q') (H2 : Fin_Type Σ'),
-      let M := mk_DFA δ' q0' F' H1 H2 in
-      DFA_recognizes_language M L.
+  Arguments DFA_compute {Σ} {HΣ} M l q.
+  Arguments DFA_compute_list {Σ} {HΣ} M l q.
+  Arguments DFA_accepts {Σ} {HΣ} M l.
+  Arguments DFA_recognizes_language {Σ} {HΣ} M L.
+
+  Definition regular_language {Σ : Type} `{Finite Σ} (L : Ensemble (list Σ)) :=
+    exists (M : DFA Σ), DFA_recognizes_language M L.
 
   Fixpoint list_power {T : Type} (l : list T) (n : nat) :=
     match n with 
@@ -60,13 +63,13 @@ Module DFA_Theory.
 
   Notation "l ^ n" := (list_power l n) (at level 30).
 
-  Lemma DFA_compute_list_length : forall M s q, 
+  Lemma DFA_compute_list_length : forall {Σ} {HΣ : Finite Σ} (M: DFA Σ) s q, 
     length (DFA_compute_list M s q) = S (length s).
   Proof.
-    intros; induction s in q |- *; simpl; auto.
+    intros. induction s in q |- *; simpl; auto.
   Qed.
 
-  Lemma pumping_lemma : forall {Σ : Type} (L : Ensemble (list Σ)),
+  Lemma pumping_lemma : forall {Σ : Type} `{Finite Σ} (L : Ensemble (list Σ)),
     regular_language L -> exists p, forall s,
       s ∈ L -> length s >= p ->
         exists x y z, s = x ++ y ++ z /\
@@ -74,9 +77,9 @@ Module DFA_Theory.
                       length (x ++ y) <= p /\
                       forall i, (x ++ (y ^ i) ++ z) ∈ L.
   Proof.
-    intros Σ L H1. destruct H1 as [Q [δ [q0 [F [H2 [H3 H4]]]]]]; simpl in *.
-    set (M := mk_DFA δ q0 F H2 H3). fold M in H4.
-    set (l := H2.(Fin_Type_l)). set (p := length l). exists p. intros s H5 H6.
+    intros Σ H1 L H2. destruct H2 as [[Q δ q0 F H2] H3].
+    set (M := @mk_DFA Σ H1 Q δ q0 F H2). fold M in H3.
+    set (l := H2.(Finite_l)). set (p := length l). exists p. intros s H5 H6.
     set (trace := DFA_compute_list M s q0).
     set (short_trace := firstn (S p) trace).
     assert (H7 : ~NoDup short_trace).
@@ -119,7 +122,7 @@ Module DFA_test.
   Definition q0 : Q := s1.
   Definition F := ⦃s2⦄.
 
-  Lemma DFA_P1 : Fin_Type Q.
+  Lemma DFA_P1 : Finite Q.
   Proof.
     exists ([s1; s2; s3]).
     - intros x. destruct x; simpl; auto.
@@ -130,7 +133,7 @@ Module DFA_test.
       try (left; reflexivity); try (left; reflexivity).
   Qed.
 
-  Lemma DFA_P2 : Fin_Type Σ.
+  Lemma DFA_P2 : Finite Σ.
   Proof.
     exists ([w1; w2; w3]).
     - intros x. destruct x; simpl; auto.
@@ -143,7 +146,15 @@ Module DFA_test.
 
   Import DFA_Theory.
 
-  Definition M := mk_DFA DFA_test.δ DFA_test.q0 DFA_test.F DFA_test.DFA_P1 DFA_test.DFA_P2.
+  Definition M := @mk_DFA
+  DFA_test.Σ
+  DFA_test.DFA_P2
+  DFA_test.Q
+  DFA_test.δ
+  DFA_test.q0
+  DFA_test.F
+  DFA_test.DFA_P1.
+
   Definition l := [w1; w2; w3; w1; w1; w2; w1; w2; w2; w1; w1; w2; w1; w1; w1; w2; w2; w3; w3; w1; w1; w1; w2; w2; w3].
 
   Compute DFA_compute M l DFA_test.q0.
@@ -158,6 +169,14 @@ Module Non_Regular_Lang.
   | s1
   | s2.
 
+  Instance Sym_Is_Finite : Finite Sym.
+  Proof.
+    exists [s1; s2].
+    - intros x; destruct x; simpl; auto.
+    - repeat constructor; auto; intro H; inversion H. inversion H0. inversion H0.
+    - intros x y; decide equality.
+  Defined.
+
   Definition L : Ensemble (list Sym) :=
     fun w => exists n, w = ([s1] ^ n) ++ ([s2] ^ n).
 
@@ -166,8 +185,7 @@ Module Non_Regular_Lang.
     intro H_regular.
     
     destruct (pumping_lemma H_regular) as [p H_pump].
-    
-       
+    admit.
   Admitted.
 
 End Non_Regular_Lang.
@@ -175,31 +193,50 @@ End Non_Regular_Lang.
 Module Finite_Languages_Regular.
   Import DFA_Theory.
 
-  Theorem union_regular : forall {Σ : Type} (L1 L2 : Ensemble (list Σ)),
-    regular_language L1 -> regular_language L2 -> regular_language (Union _ L1 L2).
+  (* --- 1. Helper Instances for constructing bigger Finite types --- *)
+
+  Instance Finite_unit : Finite unit.
   Proof.
-    intros Σ L1 L2 H1 H2. 
+    exists [tt].
+    - intros []; simpl; auto.
+    - repeat constructor; auto; intro H; inversion H.
+    - decide equality.
+  Defined.
+
+  Instance Finite_sum {A B} `{Finite A} `{Finite B} : Finite (A + B).
+  Proof.
+    admit.
   Admitted.
 
-  Lemma finite_languages_are_regular : forall {Σ : Type} (L : Ensemble (list Σ)),
-    Fin_Type Σ -> Finite_set L -> regular_language L.
+  Instance Finite_option {A} `{Finite A} : Finite (option A).
   Proof.
-    intros Σ L H1 [l H2]. generalize dependent L. induction l as [| h t IH].
-    - intros L H2. simpl in H2. rewrite <- H2. unfold regular_language.
-      exists unit.
-      exists (fun (_ : unit * Σ) => tt).
-      exists tt.
-      exists (Empty_set unit).
-      exists (@Build_Fin_Type unit [tt] 
-        (fun x => match x with tt => or_introl eq_refl end) 
-        (@NoDup_cons unit tt [] (fun H => match H with end) (@NoDup_nil unit)) 
-        (fun x y => left (match x, y with tt, tt => eq_refl end))).
-      exists H1. 
-      intros l; split; intros H3; autoset.
-    - intros L H2. rewrite <- H2. specialize (IH (list_to_ensemble t) ltac:(auto)).
-      rewrite list_to_ensemble_cons. apply union_regular; auto.
-      unfold regular_language. admit.
   Admitted.
+
+  Lemma singleton_regular : forall {Σ} `{Finite Σ} (w : list Σ),
+    regular_language (Singleton _ w).
+  Proof.
+    admit.
+  Admitted.
+
+  Theorem union_regular : forall {Σ : Type} `{Finite Σ} (L1 L2 : Ensemble (list Σ)),
+    regular_language L1 -> regular_language L2 -> regular_language (L1 ⋃ L2).
+  Proof. admit. Admitted.
+
+  Lemma finite_languages_are_regular : forall {Σ : Type} `{Finite Σ} (L : Ensemble (list Σ)),
+    Finite_set L -> regular_language L.
+  Proof.
+    intros Σ HΣ L [l H_eq]. generalize dependent L. induction l as [| h t IH].
+    - (* Empty *)
+      intros L H_eq. simpl in H_eq. rewrite <- H_eq. unfold regular_language.
+      exists (@mk_DFA Σ HΣ unit (fun _ => tt) tt (Empty_set unit) Finite_unit).
+      intros x; split; intro H; inversion H. 
+    - (* Cons *)
+      intros L H_eq. rewrite <- H_eq. 
+      rewrite list_to_ensemble_cons. 
+      apply union_regular; auto.
+      (* Apply the new lemma *)
+      apply singleton_regular.
+  Qed.
 
 End Finite_Languages_Regular.
 

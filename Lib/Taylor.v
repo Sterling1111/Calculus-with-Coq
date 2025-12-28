@@ -26,29 +26,33 @@ Proof.
   intros n a f D H1 H2 H3. 
   set (Q := λ x, ∑ 0 (n - 1) λ i, (⟦ Der^i a ⟧ f) / i! * (x - a) ^ i).
   set (g := λ x, (x - a)^n).
+
+  assert (H4 : nth_differentiable_on n Q D) by admit.
+  assert (H5 : nth_differentiable_on n g D) by admit.
+  
   apply limit_plus_constant with (C := ⟦ Der^n a ⟧ f / n!). rewrite Rplus_0_l.
   apply limit_to_a_equiv with (f1 := λ x, (f x - Q x) / g x).
   {
-    intros x H4. unfold Q, Taylor_polynomial, g. replace n with (S (n - 1))%nat at 3 by lia.
+    intros x H6. unfold Q, Taylor_polynomial, g. replace n with (S (n - 1))%nat at 3 by lia.
     rewrite sum_f_i_Sn_f; try lia. replace (S (n - 1)) with n by lia. field. split. apply INR_fact_neq_0.
     apply pow_nonzero. lra.
   }
 
-  assert (H4 : forall k, (k <= n - 1)%nat -> ⟦ Der^k a⟧ Q = ⟦ Der^k a⟧ f) by admit.
-  assert (H5 : forall k, ⟦ Der^k ⟧ g = (λ x, n! * (x - a) ^ (n - k)/(n-k)!)) by admit.
+  assert (H6 : forall k, (k <= n - 1)%nat -> ⟦ Der^k a⟧ Q = ⟦ Der^k a⟧ f) by admit.
+  assert (H7 : forall k, ⟦ Der^k ⟧ g = (λ x, n! * (x - a) ^ (n - k)/(n-k)!)) by admit.
 
   apply lhopital_nth_local with (D := D) (n := (n-1)%nat); auto.
   - admit.
   - admit.
-  - intros k H6. admit.
-  - intros k H6. admit.
+  - intros k H8. admit.
+  - intros k H8. admit.
   - replace (⟦ Der^(n - 1) ⟧ g D) with (fun x => n! * (x - a)).
     2: {
       extensionality x.
-      specialize (H5 (n - 1)%nat). replace (λ x : ℝ, n! * (x - a) ^ (n - (n - 1)) / (n - (n - 1))!) with (λ x, n! * (x - a)) in H5.
+      specialize (H7 (n - 1)%nat). replace (λ x : ℝ, n! * (x - a) ^ (n - (n - 1)) / (n - (n - 1))!) with (λ x, n! * (x - a)) in H7.
       2 : { extensionality y. replace (n - (n - 1))%nat with 1%nat by lia. simpl. lra. }
       replace ((⟦ Der^(n - 1) ⟧ g D) x) with ((⟦ Der^(n - 1) ⟧ g) x).
-      - rewrite H5. reflexivity.
+      - rewrite H7. reflexivity.
       - admit.
   }
   replace (⟦ Der^(n - 1) ⟧ (f - Q) D) with ((⟦ Der^(n-1) ⟧ f - ⟦ Der^(n-1) ⟧ f))%f.
