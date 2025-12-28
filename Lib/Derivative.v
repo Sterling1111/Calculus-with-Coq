@@ -1412,6 +1412,18 @@ Proof.
   replace g with f; auto.
   extensionality x. apply H1.
 Qed.
+
+Theorem MVT : forall f f' a b,
+  a < b -> continuous_on f [a, b] -> ⟦ der ⟧ f (a, b) = f' ->
+  exists x, x ∈ (a, b) /\ f' x = (f b - f a) / (b - a).
+Proof.
+  intros f f' a b H1 H2 H3. pose proof theorem_11_4 f a b H1 H2 as [x [H4 H5]].
+  - apply derivative_on_imp_differentiable_on with (f' := f') in H3 as H6; auto.
+  - exists x; split; auto. specialize (H3 x ltac:(solve_R)). destruct H3 as [[_ H3] | [[H3 _] | [H3 _]]]; auto.
+    -- pose proof derivative_of_function_at_x_unique f f' (fun _ => (f b - f a) / (b - a)) x H3 H5. auto.
+    -- exfalso. apply (left_interval_endpoint_open a b x); auto.
+    -- exfalso. apply (right_interval_endpoint_open a b x); auto.
+Qed.
   
 Corollary corollary_11_3_a : forall f f' a b, 
   a < b -> ⟦ der ⟧ f [a, b] = f' -> (forall x, x ∈ [a, b] -> f' x > 0) -> increasing_on f [a, b].
@@ -1557,11 +1569,13 @@ Qed.
 Theorem theorem_11_9 : forall f f' g g' a L,
   ⟦ lim a ⟧ f = 0 -> ⟦ lim a ⟧ g = 0 ->
   ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = g' ->
+  (exists δ, δ > 0 /\ forall x, x ∈ (a - δ, a + δ) -> x <> a -> differentiable_at f x) ->
+  (exists δ, δ > 0 /\ forall x, x ∈ (a - δ, a + δ) -> x <> a -> differentiable_at g x) ->
   (exists δ, δ > 0 /\ forall x, x ∈ (a - δ, a + δ) -> x <> a -> g' x <> 0) ->
   ⟦ lim a ⟧ (f' / g') = L ->
   ⟦ lim a ⟧ (f / g) = L.
 Proof.
-  intros f f' g g' a L H1 H2 H3 H4 H5 H6.
+  intros f f' g g' a L H1 H2 H3 H4 H5 H6 H7 H8.
 Admitted.
 
 Lemma derivative_on_all_imp_derivative : forall f f',
@@ -1858,6 +1872,14 @@ Proof.
   intros f n H1 [f' H2].
   destruct n; try lia. destruct H2 as [f'' [H3 H4]].
   apply derivative_imp_differentiable with (f' := f''); auto.
+Qed.
+
+Lemma nth_differentiable_imp_differentiable_at : forall f n a,
+ (n > 0)%nat -> nth_differentiable n f -> differentiable_at f a.
+Proof.
+  intros f n a H1 H2.
+  apply nth_differentiable_imp_differentiable in H2; try lia.
+  unfold differentiable_at. specialize (H2 a). tauto.
 Qed.
 
 Lemma Derive_nth_Derive : forall n f,
@@ -2585,6 +2607,8 @@ Proof.
       destruct H8 as [f'' [f' [H10 H11]]]. apply derivative_imp_differentiable with (f' := f'); auto.
     -- apply Derive_spec; try reflexivity. specialize (H3 1%nat ltac:(lia)) as H8.
       destruct H8 as [g'' [g' [H9 H10]]]. apply derivative_imp_differentiable with (f' := g'); auto.
+    -- exists 1. split; try lra. intros x H7 _. apply nth_differentiable_imp_differentiable_at with (n := 1%nat); auto.
+    -- exists 1. split; try lra. intros x H7 _. apply nth_differentiable_imp_differentiable_at with (n := 1%nat); auto.
     -- apply (H1 0%nat); lia.
   - apply theorem_11_9 with (f' := ⟦ Der ⟧ f) (g' := ⟦ Der ⟧ g); auto.
     -- specialize (H4 0%nat ltac:(lia)); auto.
@@ -2593,6 +2617,8 @@ Proof.
        destruct H8 as [f'' [f' [H9 H10]]]. apply derivative_imp_differentiable with (f' := f'); auto.
     -- apply Derive_spec; try reflexivity. specialize (H3 1%nat ltac:(lia)) as H8.
        destruct H8 as [g'' [g' [H9 H10]]]. apply derivative_imp_differentiable with (f' := g'); auto.
+    -- exists 1. split; try lra. intros x H8 _. apply nth_differentiable_imp_differentiable_at with (n := 1%nat); auto.
+    -- exists 1. split; try lra. intros x H8 _. apply nth_differentiable_imp_differentiable_at with (n := 1%nat); auto.
     -- apply (H1 0%nat); lia.
     -- apply IH; auto.
        ++ intros i H8. specialize (H1 (S i) ltac:(lia)) as [δ [H9 H10]].
@@ -2638,6 +2664,14 @@ Proof.
     apply H7; lia.
   - rewrite Derive_on_spec_at; auto. apply nth_differentiable_on_imp_differentiable_on with (n := 1%nat); try lia.
     apply H8; lia.
+  - destruct H1 as [δ [H9 H10]]. exists δ. split; auto. intros x H11 H12.
+    apply nth_differentiable_on_imp_differentiable_at with (n := 1%nat) (D := D); auto.
+    -- exists (Rmin (x - (a - δ)) (a + δ - x)). split; [solve_R |]. intros y H13. apply (H10 y ltac:(solve_R)).
+    -- apply H7; lia.
+  - destruct H1 as [δ [H9 H10]]. exists δ. split; auto. intros x H11 H12.
+    apply nth_differentiable_on_imp_differentiable_at with (n := 1%nat) (D := D); auto.
+    -- exists (Rmin (x - (a - δ)) (a + δ - x)). split; [solve_R |]. intros y H13. apply (H10 y ltac:(solve_R)).
+    -- apply H8; lia.
   - apply (H0 0%nat); lia.
   - apply IH.
     + apply nth_differentiable_on_Derive; auto.
