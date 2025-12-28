@@ -1555,10 +1555,13 @@ Proof.
 Qed.
 
 Theorem theorem_11_9 : forall f f' g g' a L,
-  ⟦ lim a ⟧ f = 0 -> ⟦ lim a ⟧ g = 0 -> ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = g' -> ⟦ lim a ⟧ (f' / g') = L ->
-    ⟦ lim a ⟧ (f / g) = L.
+  ⟦ lim a ⟧ f = 0 -> ⟦ lim a ⟧ g = 0 ->
+  ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = g' ->
+  (exists δ, δ > 0 /\ forall x, x ∈ (a - δ, a + δ) -> x <> a -> g' x <> 0) ->
+  ⟦ lim a ⟧ (f' / g') = L ->
+  ⟦ lim a ⟧ (f / g) = L.
 Proof.
-  intros f f' g g' a L H1 H2 H3 H4 H5.
+  intros f f' g g' a L H1 H2 H3 H4 H5 H6.
 Admitted.
 
 Lemma derivative_on_all_imp_derivative : forall f f',
@@ -2563,6 +2566,7 @@ Qed.
 
 Lemma lhopital_nth : forall (n : nat) f g a L,
   (n > 0)%nat ->
+  (forall k, (k < n)%nat -> exists δ, δ > 0 /\ forall x, x ∈ (a - δ, a + δ) -> x <> a -> ⟦ Der^(S k) x ⟧ g <> 0) ->
   (forall k, (k <= n)%nat -> nth_differentiable k f) ->
   (forall k, (k <= n)%nat -> nth_differentiable k g) ->
   (forall k, (k < n)%nat -> ⟦ lim a ⟧ (⟦ Der^k ⟧ f) = 0) ->
@@ -2572,7 +2576,7 @@ Lemma lhopital_nth : forall (n : nat) f g a L,
 Proof.
   intros n. 
   induction n as [| k IH]; try lia.
-  intros f g a L H1 H2 H3 H4 H5 H6.
+  intros f g a L H0 H1 H2 H3 H4 H5 H6.
   assert ((k = 0)%nat \/ (k > 0)%nat) as [H7 | H7] by lia.
   - subst k. apply theorem_11_9 with (f' := ⟦ Der ⟧ f) (g' := ⟦ Der ⟧ g); auto.
     -- specialize (H4 0%nat ltac:(lia)); auto.
@@ -2581,6 +2585,7 @@ Proof.
       destruct H8 as [f'' [f' [H10 H11]]]. apply derivative_imp_differentiable with (f' := f'); auto.
     -- apply Derive_spec; try reflexivity. specialize (H3 1%nat ltac:(lia)) as H8.
       destruct H8 as [g'' [g' [H9 H10]]]. apply derivative_imp_differentiable with (f' := g'); auto.
+    -- apply (H1 0%nat); lia.
   - apply theorem_11_9 with (f' := ⟦ Der ⟧ f) (g' := ⟦ Der ⟧ g); auto.
     -- specialize (H4 0%nat ltac:(lia)); auto.
     -- specialize (H5 0%nat ltac:(lia)); auto.
@@ -2588,7 +2593,11 @@ Proof.
        destruct H8 as [f'' [f' [H9 H10]]]. apply derivative_imp_differentiable with (f' := f'); auto.
     -- apply Derive_spec; try reflexivity. specialize (H3 1%nat ltac:(lia)) as H8.
        destruct H8 as [g'' [g' [H9 H10]]]. apply derivative_imp_differentiable with (f' := g'); auto.
+    -- apply (H1 0%nat); lia.
     -- apply IH; auto.
+       ++ intros i H8. specialize (H1 (S i) ltac:(lia)) as [δ [H9 H10]].
+          exists δ. split; auto. intros x H11 H12. rewrite nth_Derive_Derive_comm.
+          rewrite Derive_nth_Derive. apply H10; auto. apply H3. lia.
        ++ intros i H8; apply nth_differentiable_Derive; apply H2; lia.
        ++ intros i H8. apply nth_differentiable_Derive; apply H3; lia.
        ++ intros i H8. rewrite nth_Derive_Derive_comm. rewrite Derive_nth_Derive. apply H4; lia.
@@ -2605,16 +2614,17 @@ Lemma lhopital_nth_local : forall (n : nat) f g a D L,
   (forall k, (k < n)%nat -> (⟦ Der^k ⟧ f D) a = 0) ->
   (forall k, (k < n)%nat -> (⟦ Der^k ⟧ g D) a = 0) ->
   ⟦ lim a ⟧ ( (⟦ Der^n ⟧ f D) / (⟦ Der^n ⟧ g D) ) = L ->
+  (forall k, (k < n)%nat -> exists δ, δ > 0 /\ forall x, x ∈ (a - δ, a + δ) -> x <> a -> (⟦ Der^(S k) ⟧ g D) x <> 0) ->
   ⟦ lim a ⟧ ( f / g ) = L.
 Proof.
-  intros n f g a D L H1 H2 H3 H4 H5 H6.
+  intros n f g a D L H1 H2 H3 H4 H5 H6 H0.
   assert (forall k, (k <= n)%nat -> nth_differentiable_on k f D) as H7.
   { intros m H8. apply nth_differentiable_on_le with (m := n); try lia; auto. }
   assert (forall k, (k <= n)%nat -> nth_differentiable_on k g D) as H8.
   { intros m H9. apply nth_differentiable_on_le with (m := n); try lia; auto. }
   generalize dependent g. generalize dependent f.
   induction n as [| k IH]; auto.
-  intros f H2 H4 H7 g H3 H5 H6 H8.
+  intros f H2 H4 H7 g H3 H5 H6 H0 H8.
   apply theorem_11_9 with (f' := ⟦ Der ⟧ f D) (g' := ⟦ Der ⟧ g D).
   - specialize (H4 0%nat ltac:(lia)). simpl in H4. rewrite <- H4.
     apply theorem_9_1_a.
@@ -2628,6 +2638,7 @@ Proof.
     apply H7; lia.
   - rewrite Derive_on_spec_at; auto. apply nth_differentiable_on_imp_differentiable_on with (n := 1%nat); try lia.
     apply H8; lia.
+  - apply (H0 0%nat); lia.
   - apply IH.
     + apply nth_differentiable_on_Derive; auto.
     + intros i H9. rewrite nth_Derive_Derive_on_comm. rewrite Derive_nth_Derive_on.
@@ -2637,6 +2648,10 @@ Proof.
     + intros i H9. rewrite nth_Derive_Derive_on_comm. rewrite Derive_nth_Derive_on.
       apply H5; lia. apply H8; lia.
     + repeat rewrite nth_Derive_Derive_on_comm; auto.
+    + intros i H9. specialize (H0 (S i) ltac:(lia)). destruct H0 as [δ [H10 H11]].
+      exists δ. split; auto. intros x H12 H13.
+      rewrite nth_Derive_Derive_on_comm. rewrite Derive_nth_Derive_on.
+      apply H11; auto. apply H8; lia.
     + intros i H9. apply nth_differentiable_on_le with (m := k); auto. apply nth_differentiable_on_Derive; auto.
 Qed.
 
@@ -2647,10 +2662,11 @@ Lemma lhopital_nth_open : forall (n : nat) f g a b c L,
   nth_differentiable_on n g (a, b) ->
   (forall k, (k < n)%nat -> (⟦ Der^k ⟧ f (a, b)) c = 0) ->
   (forall k, (k < n)%nat -> (⟦ Der^k ⟧ g (a, b)) c = 0) ->
+  (forall k, (k < n)%nat -> exists δ, δ > 0 /\ forall x, x ∈ (c - δ, c + δ) -> x <> c -> (⟦ Der^(S k) ⟧ g (a, b)) x <> 0) ->
   ⟦ lim c ⟧ ( (⟦ Der^n ⟧ f (a, b)) / (⟦ Der^n ⟧ g (a, b)) ) = L ->
   ⟦ lim c ⟧ ( f / g ) = L.
 Proof.
-  intros n f g a b c L H1 H2 H3 H4 H5 H6 H7.
+  intros n f g a b c L H1 H2 H3 H4 H5 H6 H7 H8.
   apply lhopital_nth_local with (D := (a, b)) (n := n); auto.
   apply is_interior_point_open; solve_R.
 Qed.
