@@ -329,3 +329,11 @@ Proof.
     - apply INR_lt in H1. destruct n; [left; reflexivity | right; apply lt_INR; lia ].
   }
 Qed.
+
+Lemma Rdiv_neg_neg_eq : forall r1 r2,
+  -r1 / -r2 = r1 / r2.
+Proof.
+  intros r1 r2. destruct (Req_dec_T r1 0) as [H1 | H1]; destruct (Req_dec_T r2 0) as [H2 | H2]; try nra.
+  - rewrite H2, Ropp_0, Rdiv_0_r, Rdiv_0_r. reflexivity.
+  - field; auto.
+Qed.

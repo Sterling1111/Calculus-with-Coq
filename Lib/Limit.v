@@ -883,3 +883,36 @@ Ltac solve_lim :=
          ])); apply (lim_equality_substitution f a L2 rhs);
       solve_R; auto
   end.
+
+Lemma limit_shift : forall f a c L,
+  ⟦ lim a ⟧ (fun x => f (x + c)) = L <-> ⟦ lim (a + c) ⟧ f = L.
+Proof.
+  intros f a c L. split.
+  - intros H1 ε H2.
+    specialize (H1 ε H2) as [δ [H3 H4]].
+    exists δ; split; auto.
+    intros y H5.
+    replace y with ((y - c) + c) by lra.
+    apply H4.
+    replace (y - c - a) with (y - (a + c)) by lra. auto.
+  - intros H1 ε H2.
+    specialize (H1 ε H2) as [δ [H3 H4]].
+    exists δ; split; auto.
+    intros x H5.
+    apply H4.
+    replace (x + c - (a + c)) with (x - a) by lra. auto.
+Qed.
+
+Lemma limit_neq_x_exists_neighborhood : forall f a L x,
+  ⟦ lim a ⟧ f = L -> L <> x -> exists δ, δ > 0 /\ forall y, 0 < |y - a| < δ -> f y <> x.
+Proof.
+  intros f a L x H1 H2.
+  specialize (H1 (|L - x| / 2)).
+  assert (H3 : |L - x| / 2 > 0) by (apply Rdiv_pos_pos; solve_abs).
+  specialize (H1 H3) as [δ [H4 H5]].
+  exists δ; split; auto.
+  intros y H6 H7. specialize (H5 y H6).
+  rewrite H7 in H5.
+  replace (|x - L|) with (|L - x|) in H5 by solve_abs.
+  lra.
+Qed.
