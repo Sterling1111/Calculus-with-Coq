@@ -17,42 +17,62 @@ Definition Taylor_remainder (n : nat) (f : R -> R) (a : R) (x : R) : R :=
 Notation "'R(' n ',' a ',' f ')'" := (Taylor_remainder n f a) 
   (at level 10, n, a, f at level 9, format "R( n , a , f )").
 
-Theorem theorem_20_1 : forall n a f D,
+Theorem theorem_20_1 : forall n a f,
   (n > 0)%nat -> 
-  interior_point D a ->
-  nth_differentiable_on n f D -> 
+  nth_differentiable_at n f a -> 
   ⟦ lim a ⟧ (λ x, (f x - P(n, a, f) x) / ((x - a)^n)) = 0.
 Proof.
-  intros n a f D H1 H2 H3. 
+  intros n a f H1 H2.
+  
+  pose proof H2 as H3. destruct H3 as [δ [H3 [fn' H4]]].
+
+  set (D := (a - δ, a + δ)).
   set (Q := λ x, ∑ 0 (n - 1) λ i, (⟦ Der^i a ⟧ f) / i! * (x - a) ^ i).
   set (g := λ x, (x - a)^n).
 
-  assert (H4 : nth_differentiable_on n Q D) by admit.
-  assert (H5 : nth_differentiable_on n g D) by admit.
+  assert (H5 : nth_differentiable_at n Q a).
+  { 
+    unfold Q. apply nth_differentiable_imp_nth_differentiable_at.
+    apply nth_differentiable_sum; try lia. intros k. apply nth_differentiable_mult_const_l.
+    apply nth_differentiable_pow_shift.
+  }
+
+  assert (H6 : nth_differentiable_at n g a).
+  {
+    unfold g. apply nth_differentiable_imp_nth_differentiable_at.
+    apply nth_differentiable_pow_shift. 
+  }
   
   apply limit_plus_constant with (C := ⟦ Der^n a ⟧ f / n!). rewrite Rplus_0_l.
   apply limit_to_a_equiv with (f1 := λ x, (f x - Q x) / g x).
   {
-    intros x H6. unfold Q, Taylor_polynomial, g. replace n with (S (n - 1))%nat at 3 by lia.
+    intros x H7. unfold Q, Taylor_polynomial, g. replace n with (S (n - 1))%nat at 3 by lia.
     rewrite sum_f_i_Sn_f; try lia. replace (S (n - 1)) with n by lia. field. split. apply INR_fact_neq_0.
     apply pow_nonzero. lra.
   }
 
-  assert (H6 : forall k, (k <= n - 1)%nat -> ⟦ Der^k a⟧ Q = ⟦ Der^k a⟧ f) by admit.
-  assert (H7 : forall k, ⟦ Der^k ⟧ g = (λ x, n! * (x - a) ^ (n - k)/(n-k)!)) by admit.
+  assert (H7 : forall k, (k <= n - 1)%nat -> ⟦ Der^k a⟧ Q = ⟦ Der^k a⟧ f).
+  {
+    unfold Q. intros k H7. rewrite nth_Derive_at_sum; try lia.
+    - admit.
+    - intros i. apply nth_differentiable_mult_const_l. apply nth_differentiable_pow_shift.
+  }
+  assert (H8 : forall k, (k <= n)%nat -> ⟦ Der^k ⟧ g = (λ x, n! / (n-k)! * (x - a) ^ (n - k))).
+  {  intros k H8. unfold g. apply nth_Derive_pow_shift; auto. }
 
-  apply lhopital_nth_local with (D := D) (n := (n-1)%nat); auto.
+  apply lhopital_nth_at with (n := (n-1)%nat).
   - admit.
   - admit.
-  - intros k H8. admit.
-  - intros k H8. admit.
+  - intros k H9. admit.
+  - intros k H9. admit.
+  - intros k H9. admit.
   - replace (⟦ Der^(n - 1) ⟧ g D) with (fun x => n! * (x - a)).
     2: {
       extensionality x.
-      specialize (H7 (n - 1)%nat). replace (λ x : ℝ, n! * (x - a) ^ (n - (n - 1)) / (n - (n - 1))!) with (λ x, n! * (x - a)) in H7.
+      specialize (H8 (n - 1)%nat ltac:(lia)). replace (λ x : ℝ, n! / (n - (n - 1))! * (x - a) ^ (n - (n - 1))) with (λ x, n! * (x - a)) in H8.
       2 : { extensionality y. replace (n - (n - 1))%nat with 1%nat by lia. simpl. lra. }
       replace ((⟦ Der^(n - 1) ⟧ g D) x) with ((⟦ Der^(n - 1) ⟧ g) x).
-      - rewrite H7. reflexivity.
+      - rewrite H8. reflexivity.
       - admit.
   }
   replace (⟦ Der^(n - 1) ⟧ (f - Q) D) with ((⟦ Der^(n-1) ⟧ f - ⟦ Der^(n-1) ⟧ f))%f.

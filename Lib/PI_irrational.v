@@ -163,7 +163,7 @@ Proof.
            apply is_integer_mult; apply is_integer_pow; [ exists a | exists b ]; reflexivity.
       - apply (f_n_derivatives_at_0_are_integers n (2 * k)). pose proof nth_Derive_at_eq (2 * k) 0 (f n) as H6.
         pose proof f_n_differentiable n as H7. pose proof differentiable_imp_exists_derivative (f n) H7 as [f' H8].
-        specialize (H6 f'). apply nth_Derive_spec'; auto. apply f_n_nth_differentiable.
+        specialize (H6 f'). apply nth_Derive_at_spec; auto. apply f_n_nth_differentiable.
     }
     assert (H5 : is_integer (G 1)).
     {
@@ -177,7 +177,7 @@ Proof.
            apply is_integer_mult; apply is_integer_pow; [ exists a | exists b ]; reflexivity.
       - apply (f_n_derivatives_at_1_are_integers n (2 * k)). pose proof nth_Derive_at_eq (2 * k) 1 (f n) as H6.
         pose proof f_n_differentiable n as H7. pose proof differentiable_imp_exists_derivative (f n) H7 as [f' H8].
-        specialize (H6 f'). apply nth_Derive_spec'; auto. apply f_n_nth_differentiable.
+        specialize (H6 f'). apply nth_Derive_at_spec; auto. apply f_n_nth_differentiable.
     }
     assert (H6 : ⟦ der ⟧ G = G').
     {
@@ -313,8 +313,14 @@ Proof.
          apply differentiable_id.
   }
   pose proof pow_over_factorial_tends_to_0 (a * π) (1) (ltac:(pose proof π_pos; nra)) (ltac:(lra)) as [n H7].
-  specialize (H4 n) as [c H8].
-  specialize (H6 n). pose proof π_pos as H9. assert (H10 : c > 0) by admit.
-  assert (H11 : (a * π) ^ n >= π * a^n). { admit. }
-  assert (H12 : π * (a^n) / n! < 1) by admit. 
+  assert (H8 : π * a ^ n / n! < (a * π) ^ n / n!).
+  {
+    apply Rmult_lt_reg_l with (r := n!). apply INR_fact_lt_0.  field_simplify; try apply INR_fact_neq_0.
+    rewrite Rpow_mult_distr. rewrite Rmult_comm. apply Rmult_lt_compat_l. apply pow_lt; auto.
+    admit.
+  }
+  assert ((n = 0)%nat \/ (n > 0)%nat) as [H9 | H9] by lia.
+  - subst. simpl in H7. rewrite Rdiv_1_r in H7. lra.
+  - specialize (H6 n H9) as [H10 H11]. specialize (H4 n) as [c H4].
+    rewrite H4 in *. assert (H12 : 0 < c < 1) by lra. 
 Admitted.
