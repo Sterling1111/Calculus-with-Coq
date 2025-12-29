@@ -62,10 +62,18 @@ Fixpoint nth_derivative_on (n : nat) (f fn' : R -> R) (D : Ensemble R) : Prop :=
   | 0   => forall x, x ∈ D -> f x = fn' x
   | S k => exists f', derivative_on f f' D /\ nth_derivative_on k f' fn' D
   end.
+  
+Definition nth_derivative_at (n : nat) (f fn' : R -> R) (a : R) : Prop :=
+  match n with
+  | 0   => f a = fn' a
+  | S k => exists δ (fk : R -> R),
+             δ > 0 /\
+             nth_derivative_on k f fk (fun x => a - δ < x < a + δ) /\
+             derivative_at fk fn' a
+  end.
 
 Definition nth_differentiable_at (n : nat) (f : R -> R) (a : R) : Prop :=
-  exists δ, δ > 0 /\ 
-  exists fn', nth_derivative_on n f fn' (fun x => a - δ < x < a + δ).
+  exists fn', nth_derivative_at n f fn' a.
 
 Definition nth_differentiable_on (n : nat) (f : R -> R) (D : Ensemble R) : Prop :=
   exists fn', nth_derivative_on n f fn' D.
@@ -81,9 +89,6 @@ Fixpoint nth_Derive_on (n : nat) (f : R -> R) (D : Ensemble R) : R -> R :=
   | 0   => f
   | S k => Derive_on (nth_Derive_on k f D) D
   end.
-
-Definition nth_derivative_at (n:nat) (f : R -> R) (a val : R) : Prop :=
-  exists fn', nth_derivative n f fn' /\ fn' a = val.
 
 Definition is_derive_or_zero (f g : R -> R) : Prop :=
   (derivative f g) \/ (~(exists h, derivative f h) /\ g = (fun _ => 0)).
@@ -102,15 +107,6 @@ Definition nth_Derive_at (n:nat) (f : R -> R) (a : R) : R :=
 
 Definition inf_differentiable (f : R -> R) : Prop :=
   forall n, exists fn', nth_derivative n f fn'.
-
-Definition locally_differentiable_at (f : ℝ -> ℝ) (a : ℝ) :=
-  exists δ, δ > 0 /\ forall x, 0 < |x - a| < δ -> differentiable_at f x.
-
-Definition locally_nth_differentiable_at (n : nat) (f : ℝ -> ℝ) (a : ℝ) :=
-  exists δ, δ > 0 /\ forall x, 0 < |x - a| < δ -> nth_differentiable_at n f x.
-
-Definition locally_nth_differentiable_on (n : nat) (f : ℝ -> ℝ) (D : Ensemble ℝ) :=
-  forall a, a ∈ D -> exists δ, δ > 0 /\ forall x, x ∈ D -> 0 < |x - a| < δ -> nth_differentiable_at n f x.
 
 Module DerivativeNotations.
   Declare Scope derivative_scope.
@@ -142,9 +138,9 @@ Module DerivativeNotations.
     (at level 70, n at level 0, f at level 0, D at level 0, no associativity, 
      format "⟦  'der' ^ n  ⟧  f  D  =  fn") : derivative_scope.
 
-  Notation "⟦ 'der' ^ n a ⟧ f = v" := (nth_derivative_at n f a v)
+  Notation "⟦ 'der' ^ n a ⟧ f = fn'" := (nth_derivative_at n f a fn')
     (at level 70, n at level 0, f at level 0, no associativity, 
-    format "⟦  'der' ^ n  a  ⟧  f  =  v") : derivative_scope.
+    format "⟦  'der' ^ n  a  ⟧  f  =  fn'") : derivative_scope.
 
   Notation "⟦ 'Der' ⟧ f" := (Derive f) 
     (at level 70, f at level 0, no associativity, format "⟦  'Der'  ⟧  f") : derivative_scope.
@@ -1933,12 +1929,20 @@ Proof.
   - intros f. simpl. rewrite <- IH. reflexivity.
 Qed.
 
+Lemma nth_Derive_on_S : forall n f D,
+  ⟦ Der^(S n) ⟧ f D = ⟦ Der^n ⟧ (⟦ Der ⟧ f D) D.
+Proof.
+  induction n as [| k IH].
+  - reflexivity.
+  - intros f D. simpl. rewrite <- IH. reflexivity.
+Qed.
+
 Lemma nth_Derive_eq : forall n f f',
   ⟦ der ^ n ⟧ f = f' -> ⟦ Der ^ n ⟧ f = f'.
 Proof.
   induction n as [| k IH]; intros f f' H1; simpl in H1.
   - subst. reflexivity.
-  - simpl in H1. destruct H1 as [f1' [H1 H2]].
+  - destruct H1 as [f1' [H1 H2]].
     rewrite nth_Derive_S.
     apply Derive_eq in H1.
     rewrite H1.
@@ -1946,12 +1950,18 @@ Proof.
     auto.
 Qed.
 
-Lemma nth_Derive_at_eq : forall n a f f',
-  ⟦ der ^ n a ⟧ f = f' a -> ⟦ Der ^ n a ⟧ f = f' a.
+Lemma nth_derivative_at_1_iff : forall f f' a,
+  ⟦ der ^ 1 a ⟧ f = f' a <-> ⟦ der a ⟧ f = f'.
+
+Lemma nth_Derive_at_eq : forall n a f fn',
+  ⟦ der ^ n a ⟧ f = fn' a -> ⟦ Der ^ n a ⟧ f = fn' a.
 Proof.
-  intros n a f f' [f1' [H1 H2]]. 
-  pose proof nth_Derive_eq n f f1' H1 as H3. rewrite <- H2.
-  rewrite <- H3. reflexivity.
+  intros n a f fn' H1. induction n as [| k IH].
+  - simpl in *. auto.
+  - destruct H1 as [δ [fk' [H3 [H4 H5]]]].
+    rewrite nth_Derive_S.
+    apply Derive_eq in H3; auto.
+
 Qed.
 
 Lemma nth_Derive_at_eq' : forall n a f f',
@@ -2338,6 +2348,17 @@ Proof.
     rewrite nth_Derive_S.
     apply IH.
     apply nth_differentiable_Derive; auto.
+Qed.
+
+Lemma nth_Derive_on_nth_differentiable_on : forall n m f D,
+  nth_differentiable_on (n + m) f D -> nth_differentiable_on m (⟦ Der ^ n ⟧ f D) D.
+Proof.
+  intros n. induction n as [| k IH].
+  - intros m f D H1. simpl. auto.
+  - intros m f D H1.
+    rewrite nth_Derive_on_S.
+    apply IH.
+    apply nth_differentiable_on_Derive; auto.
 Qed.
 
 Lemma nth_differentiable_S_imp_nth_differentiable : forall n f,
@@ -2882,6 +2903,65 @@ Proof.
   apply H.
 Qed.
 
+Lemma interior_point_in : forall D a,
+  interior_point D a -> a ∈ D.
+Proof.
+  intros D a [δ [H1 H2]].
+  apply H2. solve_R.
+Qed.
+
+Lemma nth_Derive_on_eq_nth_Derive_at_interior : forall n f D a,
+  interior_point D a ->
+  nth_differentiable_on n f D ->
+  nth_differentiable n f ->
+  (⟦ Der^n ⟧ f D) a = ⟦ Der^n a ⟧ f.
+Proof.
+  intros n f D.
+  induction n as [| k IH].
+  - intros a H1 H2 H3. simpl. reflexivity.
+  - intros a H1 H2 H3.
+    simpl. unfold nth_Derive_at.
+    assert (H4 : nth_differentiable_on k f D).
+    { apply nth_differentiable_on_le with (m := S k); try lia; auto. }
+    assert (H5 : nth_differentiable k f).
+    { apply nth_differentiable_le with (m := S k); try lia; auto. }
+    set (g1 := ⟦ Der^k ⟧ f D).
+    set (g2 := ⟦ Der^k ⟧ f). pose proof H1 as H0.
+    destruct H1 as [δ [H6 H7]].
+    assert (H8 : forall x, |x - a| < δ -> g1 x = g2 x).
+    {
+      intros x H8.
+      apply IH; auto.
+      - exists (δ - |x - a|). split.
+        + solve_R.
+        + intros y H9. apply H7.
+          replace y with (x + (y - x)) by lra.
+          assert (|x + (y - x) - a| <= |x - a| + |y - x|) by (solve_R).
+          solve_R.
+    }
+    assert (H9 : differentiable_at g1 a).
+    {
+       apply nth_differentiable_on_imp_differentiable_at with (n := 1%nat) (D := D); auto.
+       apply interior_point_in; auto. unfold g1. 
+       apply nth_Derive_on_nth_differentiable_on.
+       replace (k + 1)%nat with (S k) by lia. auto.
+    }
+    assert (H10 : differentiable_at g2 a).
+    {
+       apply nth_differentiable_imp_differentiable_at with (n := 1%nat); auto.
+       apply nth_Derive_nth_differentiable; auto. replace (k + 1)%nat with (S k) by lia. auto.
+    }
+    apply Derive_on_spec_at; auto.  
+    apply nth_differentiable_on_imp_differentiable_on with (n := 1%nat); try lia. admit.
+    apply Derive_spec_at; auto.
+    assert (H11 : ⟦ Der a ⟧ g2 = ⟦ der a ⟧ g2).
+    { symmetry. apply Derive_spec. auto. }
+    rewrite H11.
+    apply derivative_at_eq_eventually with (f1 := g1).
+    - exists δ. split; auto.
+    - reflexivity.
+Qed.
+
 Lemma nth_derivative_subset_open : forall n f f' a b c d,
   (a <= c <= d <= b) -> ⟦ der^n ⟧ f (a, b) = f' ->
   ⟦ der^n ⟧ f (c, d) = f'.
@@ -2988,19 +3068,9 @@ Proof.
     { apply is_interior_point_open; unfold δ; solve_R. }
     assert (H13: (⟦ Der^k ⟧ f D) a = ⟦ Der^k a ⟧ f).
     {
-      apply nth_derivative_of_function_at_x_unique with (n:=k) (f:=f).
-      - apply nth_derivative_on_imp_derivative_at' with (D := D).
-      - unfold D. apply is_interior_point_open; unfold δ; solve_R.
-      - unfold D, δ; solve_R.
-      - apply nth_Derive_on_is_derivative.
-        apply nth_differentiable_on_le with (m := n); try lia.
-        exact H9. admit.
-      - admit.
+      admit.
     }
-    rewrite H_eq; auto.
-  }
-Qed.
-    
+    rewrite H13; auto.
   }
   assert (H12 : forall k, (k < n)%nat -> (⟦ Der^k ⟧ g (a - δ, a + δ)) a = 0).
   { admit. }
