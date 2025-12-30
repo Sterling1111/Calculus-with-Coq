@@ -1,5 +1,5 @@
-From Lib Require Import Imports Sequence Sets Reals_util Notations Functions.
-Import SetNotations IntervalNotations.
+From Lib Require Import Imports Sequence Sets Reals_util Notations Functions Interval.
+Import SetNotations IntervalNotations Function_Notations.
 
 Open Scope R_scope.
 Open Scope interval_scope.
@@ -128,28 +128,6 @@ Import LimitNotations.
 
 Open Scope limit_scope.
 
-Definition circle (a b r : ℝ) : Ensemble (ℝ * ℝ) :=
-  fun p => let (x, y) := p in
-  (x - a)^2 + (y - b)^2 = r^2.
-
-Lemma limit_imp_limit_on : forall f L D a,
-  ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ f D = L.
-Proof.
-  intros f L D a H1. intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ; split; auto.
-Qed.
-
-Lemma left_right_iff : forall f a L,
-  ⟦ lim a ⟧ f = L <-> ⟦ lim a⁻ ⟧ f = L ∧ ⟦ lim a⁺ ⟧ f = L.
-Proof.
-  intros f a L. split.
-  - intros H1. split.
-    -- intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5. specialize (H4 x). solve_R.
-    -- intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5. specialize (H4 x). solve_R.
-  - intros [H1 H2] ε H3. specialize (H1 ε H3) as [δ1 [H4 H5]]. specialize (H2 ε H3) as [δ2 [H6 H7]]. set (δ := Rmin δ1 δ2).
-    assert (δ > 0) as H8 by (unfold δ; solve_min). assert (δ <= δ1 /\ δ <= δ2) as [H9 H10] by (unfold δ; solve_min).
-    exists δ. split; auto. intros x H11. specialize (H5 x). specialize (H7 x). solve_R.
-Qed.
-
 Lemma lemma_1_20 : forall x x0 y y0 ε,
   |x - x0| < ε / 2 -> |y - y0| < ε / 2 -> |(x + y) - (x0 + y0)| < ε /\ |(x - y) - (x0 - y0)| < ε.
 Proof.
@@ -159,20 +137,20 @@ Qed.
 Lemma lemma_1_21 : forall x x0 y y0 ε,
   |x - x0| < Rmin (ε / (2 * (|y0| + 1))) 1 -> |y - y0| < ε / (2 * (|x0| + 1)) -> |x * y - x0 * y0| < ε.
 Proof.
-  intros x x0 y y0 ε H1 H2. assert (H3 : (Rabs (x - x0)) < 1). { apply Rlt_gt in H1. apply Rmin_Rgt_l in H1. lra. }
-  assert (H4 : Rabs x - Rabs x0 < 1). { pose proof Rabs_triang_inv x x0. lra. }
-  assert (H5 : Rabs (y - y0) >= 0) by (apply Rle_ge; apply Rabs_pos).
-  assert (H6 : Rabs x0 >= 0) by (apply Rle_ge; apply Rabs_pos).
+  intros x x0 y y0 ε H1 H2. assert (H3 : (|x - x0|) < 1). { apply Rlt_gt in H1. apply Rmin_Rgt_l in H1. lra. }
+  assert (H4 : |x| - |x0| < 1). { pose proof Rabs_triang_inv x x0. lra. }
+  assert (H5 : |y - y0| >= 0) by (apply Rle_ge; apply Rabs_pos).
+  assert (H6 : |x0| >= 0) by (apply Rle_ge; apply Rabs_pos).
   assert (H7 : ε > 0).
   { 
     pose proof Rtotal_order ε 0 as [H7 | [H7 | H7]].
-    - assert (H8 : ε / (2 * (Rabs x0 + 1)) < 0). { apply Rdiv_neg_pos. lra. lra. } lra.
+    - assert (H8 : ε / (2 * (|x0| + 1)) < 0). { apply Rdiv_neg_pos. lra. lra. } lra.
     - nra.
     - apply H7.
   }
-  assert (H8 : Rabs x < 1 + Rabs x0) by lra. replace (x * y - x0 * y0) with (x * (y - y0) + y0 * (x - x0)) by lra.
-  assert (H9 : Rabs (x * (y - y0) + y0 * (x - x0)) <= Rabs x * Rabs (y - y0) + Rabs y0 * Rabs (x - x0)) by solve_abs.
-  assert (H10 : (1 + Rabs x0) * (ε / (2 * (Rabs x0 + 1))) = ε / 2). { field; try unfold Rabs; try destruct Rcase_abs; try nra. }
+  assert (H8 : |x| < 1 + |x0|) by lra. replace (x * y - x0 * y0) with (x * (y - y0) + y0 * (x - x0)) by lra.
+  assert (H9 : |x * (y - y0) + y0 * (x - x0)| <= |x| * |y - y0| + |y0| * |x - x0|) by solve_abs.
+  assert (H10 : (1 + |x0|) * (ε / (2 * (|x0| + 1))) = ε / 2). { field; try unfold Rabs; try destruct Rcase_abs; try nra. }
   assert (H11 : forall x, x >= 0 -> x / (2 * (x + 1)) < 1 / 2).
   {
     intros x1 H11. apply Rmult_lt_reg_l with (r := 2). lra. unfold Rdiv.
@@ -180,18 +158,18 @@ Proof.
     rewrite Rinv_mult. replace (2 * (/ 2 * / (x1 + 1))) with (2 * / 2 * / (x1 + 1)) by nra. rewrite Rinv_r. 2 : lra.
     rewrite Rmult_1_l. rewrite <- Rdiv_def. apply Rdiv_lt_1. lra. lra.
   }
-  assert (H12 : (Rabs y0 * (ε / (2 * ((Rabs y0) + 1)))) < ε / 2). 
+  assert (H12 : (|y0| * (ε / (2 * (|y0| + 1)))) < ε / 2). 
   { 
-    replace (Rabs y0 * (ε / (2 * (Rabs y0 + 1)))) with (ε * (Rabs y0 * / (2 * (Rabs y0 + 1)))) by lra.
-    pose proof H11 (Rabs y0) as H12. unfold Rdiv. apply Rmult_lt_compat_l. lra. unfold Rdiv in H12. rewrite Rmult_1_l in H12.
+    replace (|y0| * (ε / (2 * (|y0| + 1)))) with (ε * (|y0| * / (2 * (|y0| + 1)))) by lra.
+    pose proof H11 (|y0|) as H12. unfold Rdiv. apply Rmult_lt_compat_l. lra. unfold Rdiv in H12. rewrite Rmult_1_l in H12.
     apply H12. apply Rle_ge. apply Rabs_pos.
   }
   replace (ε) with (ε / 2 + ε / 2) by lra. 
-  assert (H13 : Rabs x * Rabs (y - y0) < ((1 + Rabs x0) * (ε / (2 * (Rabs x0 + 1))))) by nra.
-  assert (H14 : Rabs (x - x0) < (ε / (2 * (Rabs y0 + 1)))). { apply Rlt_gt in H1. apply Rmin_Rgt_l in H1. lra. }
-  assert (H15 : Rabs y0 >= 0) by (apply Rle_ge; apply Rabs_pos).
-  assert (H16 : Rabs (x - x0) >= 0) by (apply Rle_ge; apply Rabs_pos).
-  assert (H17 : Rabs y0 * Rabs (x - x0) <= (Rabs y0 * (ε / (2 * ((Rabs y0 + 1)))))) by nra.
+  assert (H13 : |x| * |y - y0| < ((1 + |x0|) * (ε / (2 * (|x0| + 1))))) by nra.
+  assert (H14 : |x - x0| < (ε / (2 * (|y0| + 1)))). { apply Rlt_gt in H1. apply Rmin_Rgt_l in H1. lra. }
+  assert (H15 : |y0| >= 0) by (apply Rle_ge; apply Rabs_pos).
+  assert (H16 : |x - x0| >= 0) by (apply Rle_ge; apply Rabs_pos).
+  assert (H17 : |y0| * |x - x0| <= (|y0| * (ε / (2 * (|y0| + 1))))) by nra.
   nra.
 Qed.
 
@@ -199,59 +177,85 @@ Lemma lemma_1_22 : forall y y0 ε,
   y0 <> 0 -> |y - y0| < Rmin (|y0| / 2) ((ε * |y0|^2) / 2) -> y <> 0 /\ |1 / y - 1 / y0| < ε.
 Proof.
   intros y y0 eps H1 H2. assert (H3 : y <> 0).
-  - assert (H4 : Rabs (y - y0) < Rabs (y0 / 2)). { apply Rlt_gt in H2. apply Rmin_Rgt_l in H2. solve_abs. } solve_abs.
+  - assert (H4 : |y - y0| < |y0 / 2|). { apply Rlt_gt in H2. apply Rmin_Rgt_l in H2. solve_abs. } solve_abs.
   - split.
     -- apply H3.
-    -- assert (H4 : Rabs (y - y0) < Rabs (y0 / 2)). { apply Rlt_gt in H2. apply Rmin_Rgt_l in H2. solve_abs. }
-       assert (H5 : Rabs (y - y0) < (eps * (Rabs y0)^2) / 2). { apply Rlt_gt in H2. apply Rmin_Rgt_l in H2. lra. }
-       assert (H6 : Rabs y > Rabs y0 / 2) by solve_abs.
-       assert (H7 : Rabs y > 0) by solve_abs. assert (H8 : Rabs y0 > 0) by solve_abs.
+    -- assert (H4 : |y - y0| < |y0 / 2|). { apply Rlt_gt in H2. apply Rmin_Rgt_l in H2. solve_abs. }
+       assert (H5 : |y - y0| < (eps * (|y0|)^2) / 2). { apply Rlt_gt in H2. apply Rmin_Rgt_l in H2. lra. }
+       assert (H6 : |y| > |y0| / 2) by solve_abs.
+       assert (H7 : |y| > 0) by solve_abs. assert (H8 : |y0| > 0) by solve_abs.
        assert (H9 : forall a b : R, a > 0 -> b > 0 -> a > b / 2 -> 1 / a < 2 / b).
        { 
-          intros a b H9 H10 H11. apply Rmult_lt_reg_r with (r := a). lra. replace (1 / a * a) with 1 by (field; lra).
-          apply Rmult_lt_reg_r with (r := b). lra. replace (2 / b * a * b) with (2 * a) by (field; lra). lra.
+         intros a b H9 H10 H11. apply Rmult_lt_reg_r with (r := a). lra. replace (1 / a * a) with 1 by (field; lra).
+         apply Rmult_lt_reg_r with (r := b). lra. replace (2 / b * a * b) with (2 * a) by (field; lra). lra.
        }
-       assert (H10 : 1 / Rabs y < 2 / Rabs y0). { apply H9. apply H7. apply H8. apply H6. } clear H9.
+       assert (H10 : 1 / |y| < 2 / |y0|). { apply H9. apply H7. apply H8. apply H6. } clear H9.
        replace (1 / y - 1 / y0) with ((y0 - y) / (y * y0)) by (field; lra). 
        unfold Rdiv. rewrite Rabs_mult. rewrite Rabs_inv. rewrite <- Rdiv_def. rewrite Rabs_mult.
-       rewrite Rabs_minus_sym. assert (H11 : 2 * Rabs (y - y0) < eps * Rabs y0 ^ 2). { lra. }
-       assert (H12 : (2 * Rabs (y - y0)) / (Rabs y0 ^ 2) < eps).
-       { apply Rmult_lt_reg_r with (r := Rabs y0 ^ 2). nra. apply Rmult_lt_reg_r with (r := / 2). nra.
-          replace (2 * Rabs (y - y0) / (Rabs y0 ^ 2) * Rabs y0 ^2 * / 2) with 
-          (2 * Rabs (y - y0) * / 2) by (field; lra). lra.
+       rewrite Rabs_minus_sym. assert (H11 : 2 * |y - y0| < eps * |y0| ^ 2). { lra. }
+       assert (H12 : (2 * |y - y0|) / (|y0| ^ 2) < eps).
+       { apply Rmult_lt_reg_r with (r := |y0| ^ 2). nra. apply Rmult_lt_reg_r with (r := / 2). nra.
+         replace (2 * |y - y0| / (|y0| ^ 2) * |y0| ^2 * / 2) with 
+         (2 * |y - y0| * / 2) by (field; lra). lra.
        }
-       replace (2 * Rabs (y - y0) / Rabs y0 ^ 2) with (Rabs (y - y0) / ((Rabs y0 / 2) * Rabs y0)) in H12 by (field; nra).
-       assert (H13 : (Rabs y0 / 2 * Rabs y0) < Rabs y * Rabs y0) by nra. 
+       replace (2 * |y - y0| / |y0| ^ 2) with (|y - y0| / ((|y0| / 2) * |y0|)) in H12 by (field; nra).
+       assert (H13 : (|y0| / 2 * |y0|) < |y| * |y0|) by nra. 
        assert (H14 : forall a b c, a > 0 -> b > 0 -> c >= 0 -> a > b -> c / a <= c / b).
        {
-          intros a b c H14 H15 H16 H17. apply Rmult_le_reg_r with (r := a). lra.
-          replace (c / a * a) with c by (field; lra). apply Rmult_le_reg_r with (r := b). lra.
-          replace (c / b * a * b) with (c * a) by (field; lra). nra.
+         intros a b c H14 H15 H16 H17. apply Rmult_le_reg_r with (r := a). lra.
+         replace (c / a * a) with c by (field; lra). apply Rmult_le_reg_r with (r := b). lra.
+         replace (c / b * a * b) with (c * a) by (field; lra). nra.
        }
-       assert (H15 : Rabs (y - y0) / (Rabs y0 / 2 * Rabs y0) >= Rabs (y - y0) / (Rabs y * Rabs y0)). 
+       assert (H15 : |y - y0| / (|y0| / 2 * |y0|) >= |y - y0| / (|y| * |y0|)). 
        { apply Rle_ge. apply H14. nra. nra. apply Rle_ge. apply Rabs_pos. nra. }
        nra.
-Qed. 
+Qed.
 
-Module Function_Notations.
+Lemma limit_eq : forall f1 f2 a L,
+  (exists δ, δ > 0 /\ forall x, 0 < |x - a| < δ -> f1 x = f2 x) ->
+  ⟦ lim a ⟧ f1 = L -> ⟦ lim a ⟧ f2 = L.
+Proof.
+  intros f1 f2 a L [δ1 [H1 H2]] H3 ε H4.
+  specialize (H3 ε H4) as [δ2 [H5 H6]].
+  exists (Rmin δ1 δ2). split; [solve_R |].
+  intros x H7. rewrite <- H2; [apply H6 |]; solve_R.
+Qed.
 
-  Delimit Scope function_scope with f.
+Lemma limit_left_eq : forall f1 f2 a L,
+  (exists δ, δ > 0 /\ forall x, 0 < a - x < δ -> f1 x = f2 x) ->
+  ⟦ lim a⁻ ⟧ f1 = L -> ⟦ lim a⁻ ⟧ f2 = L.
+Proof.
+  intros f1 f2 a L [δ1 [H1 H2]] H3 ε H4.
+  specialize (H3 ε H4) as [δ2 [H5 H6]].
+  exists (Rmin δ1 δ2). split; [solve_R |].
+  intros x H7. rewrite <- H2; [apply H6 |]; solve_R.
+Qed.
 
-  Notation "f ∘ g" := (compose f g) (at level 40, left associativity) : function_scope.
-  Notation "f + g" := (fun x : ℝ => f x + g x) (at level 50, left associativity) : function_scope.
-  Notation "f - g" := (fun x : ℝ => f x - g x) (at level 50, left associativity) : function_scope.
-  Notation "- f" := (fun x : ℝ => - f x) (at level 35) : function_scope.
-  Notation "f ∙ g" := (fun x : ℝ => f x * g x) (at level 40, left associativity) : function_scope. 
-  Notation "c * f" := (fun x : ℝ => c * f x) (at level 40, left associativity) : function_scope. 
-  Notation "f / g" := (fun x : ℝ => f x / g x) (at level 40, left associativity) : function_scope.
-  Notation "f ^ n" := (fun x : ℝ => (f x) ^ n) (at level 30, right associativity) : function_scope.
-  Notation "∕ f" := (fun x : ℝ => 1 / f x) (at level 40, left associativity) : function_scope.
+Lemma limit_right_eq : forall f1 f2 a L,
+  (exists δ, δ > 0 /\ forall x, 0 < x - a < δ -> f1 x = f2 x) ->
+  ⟦ lim a⁺ ⟧ f1 = L -> ⟦ lim a⁺ ⟧ f2 = L.
+Proof.
+  intros f1 f2 a L [δ1 [H1 H2]] H3 ε H4.
+  specialize (H3 ε H4) as [δ2 [H5 H6]].
+  exists (Rmin δ1 δ2). split; [solve_R |].
+  intros x H7. rewrite <- H2; [apply H6 |]; solve_R.
+Qed.
 
-End Function_Notations.
+Lemma limit_on_eq : forall f1 f2 D a L,
+  (forall x, x ∈ D -> f1 x = f2 x) ->
+  ⟦ lim a ⟧ f1 D = L -> ⟦ lim a ⟧ f2 D = L.
+Proof.
+  intros f1 f2 D a L H1 H2 ε H3.
+  specialize (H2 ε H3) as [δ [H4 H5]].
+  exists δ. split; [solve_R |].
+  intros x H6 H7. rewrite <- H1; [apply H5 |]; solve_R.
+Qed.
 
-Import Function_Notations.
+Lemma limit_subst : forall f a L1 L2,
+  L1 = L2 -> ⟦ lim a ⟧ f = L1 -> ⟦ lim a ⟧ f = L2.
+Proof. intros f a L1 L2 -> H. exact H. Qed.
 
-Lemma limit_of_function_unique : forall f a L1 L2,
+Lemma limit_unique : forall f a L1 L2,
   ⟦ lim a ⟧ f = L1 -> ⟦ lim a ⟧ f = L2 -> L1 = L2. 
 Proof.
   intros f a L1 L2 H1 H2. pose proof (classic (L1 = L2)) as [H3 | H3]; auto.
@@ -270,7 +274,7 @@ Proof.
   } lra.
 Qed.
 
-Lemma left_limit_of_function_unique : forall f a L1 L2,
+Lemma limit_left_unique : forall f a L1 L2,
   ⟦ lim a⁻ ⟧ f = L1 -> ⟦ lim a⁻ ⟧ f = L2 -> L1 = L2.
 Proof.
   intros f a L1 L2 H1 H2. pose proof (classic (L1 = L2)) as [H3 | H3]; auto.
@@ -289,7 +293,7 @@ Proof.
   } lra.
 Qed.
 
-Lemma right_limit_of_function_unique : forall f a L1 L2,
+Lemma limit_right_unique : forall f a L1 L2,
   ⟦ lim a⁺ ⟧ f = L1 -> ⟦ lim a⁺ ⟧ f = L2 -> L1 = L2.
 Proof.
   intros f a L1 L2 H1 H2. pose proof (classic (L1 = L2)) as [H3 | H3]; auto.
@@ -308,7 +312,82 @@ Proof.
   } lra.
 Qed.
 
-Lemma left_limit_plus : forall f1 f2 a L1 L2,
+Lemma limit_iff : forall f a L,
+  ⟦ lim a ⟧ f = L <-> ⟦ lim a⁻ ⟧ f = L ∧ ⟦ lim a⁺ ⟧ f = L.
+Proof.
+  intros f a L. split.
+  - intros H1. split.
+    -- intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5. specialize (H4 x). solve_R.
+    -- intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5. specialize (H4 x). solve_R.
+  - intros [H1 H2] ε H3. specialize (H1 ε H3) as [δ1 [H4 H5]]. specialize (H2 ε H3) as [δ2 [H6 H7]]. set (δ := Rmin δ1 δ2).
+    assert (δ > 0) as H8 by (unfold δ; solve_min). assert (δ <= δ1 /\ δ <= δ2) as [H9 H10] by (unfold δ; solve_min).
+    exists δ. split; auto. intros x H11. specialize (H5 x). specialize (H7 x). solve_R.
+Qed.
+
+Lemma limit_imp_limit_on : forall f L D a,
+  ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ f D = L.
+Proof.
+  intros f L D a H1 ε H2. 
+  specialize (H1 ε H2) as [δ [H3 H4]]. 
+  exists δ; split; auto. 
+Qed.
+
+Lemma limit_on_R_iff : forall f a L,
+  ⟦ lim a ⟧ f ℝ = L <-> ⟦ lim a ⟧ f = L.
+Proof.
+  intros f a L. split.
+  - intros H1 ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ; split; auto. intros x H5. specialize (H4 x ltac:(apply Full_intro)). solve_R.
+  - intros H1 ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ; split; auto.
+Qed.
+
+Lemma limit_const : forall a c, ⟦ lim a ⟧ (fun _ => c) = c.
+Proof. intros a c ε H1. exists 1. split; solve_abs. Qed.
+
+Lemma limit_left_const : forall a c, ⟦ lim a⁻ ⟧ (fun _ => c) = c.
+Proof. intros a c ε H1. exists 1. split; solve_abs. Qed.
+
+Lemma limit_right_const : forall a c, ⟦ lim a⁺ ⟧ (fun _ => c) = c.
+Proof. intros a c ε H1. exists 1. split; solve_abs. Qed.
+
+Lemma limit_on_const : forall a D c, ⟦ lim a ⟧ (fun _ => c) D = c.
+Proof. intros a D c ε H1. exists 1. split; solve_abs. Qed.
+
+Lemma limit_id : forall a, ⟦ lim a ⟧ (fun x => x) = a.
+Proof. intros a ε H1. exists ε. split; solve_abs. Qed.
+
+Lemma limit_left_id : forall a, ⟦ lim a⁻ ⟧ (fun x => x) = a.
+Proof. intros a ε H1. exists ε. split; solve_abs. Qed.
+
+Lemma limit_right_id : forall a, ⟦ lim a⁺ ⟧ (fun x => x) = a.
+Proof. intros a ε H1. exists ε. split; solve_abs. Qed.
+
+Lemma limit_on_id : forall a D, ⟦ lim a ⟧ (fun x => x) D = a.
+Proof. intros a D ε H1. exists ε. split; solve_abs. Qed.
+
+Lemma limit_left_neg : forall f a L,
+  ⟦ lim a⁻ ⟧ f = L -> ⟦ lim a⁻ ⟧ (- f) = - L.
+Proof.
+  intros f a L H1 ε H2. specialize (H1 ε ltac:(lra)) as [δ [H3 H4]].
+  exists δ. split; try lra. intros x H5. specialize (H4 x H5).
+  solve_R.
+Qed.
+
+Lemma limit_right_neg : forall f a L,
+  ⟦ lim a⁺ ⟧ f = L -> ⟦ lim a⁺ ⟧ (- f) = - L.
+Proof.
+  intros f a L H1 ε H2. specialize (H1 ε ltac:(lra)) as [δ [H3 H4]].
+  exists δ. split; try lra. intros x H5. specialize (H4 x H5).
+  solve_R.
+Qed.
+
+Lemma limit_neg : forall f a L,
+  ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ (- f) = - L.
+Proof.
+  intros f a L H1. apply limit_iff in H1 as [H2 H3].
+  apply limit_iff; split; [ apply limit_left_neg | apply limit_right_neg ]; auto.
+Qed.
+
+Lemma limit_left_plus : forall f1 f2 a L1 L2,
   ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> ⟦ lim a⁻ ⟧ (f1 + f2) = (L1 + L2).
 Proof.
   intros f1 f2 a L1 L2 H1 H2 ε H3. specialize (H1 (ε / 2) ltac:(lra)) as [δ1 [H4 H5]].
@@ -318,7 +397,7 @@ Proof.
   solve_R.
 Qed.
 
-Lemma right_limit_plus : forall f1 f2 a L1 L2,
+Lemma limit_right_plus : forall f1 f2 a L1 L2,
   ⟦ lim a⁺ ⟧ f1 = L1 -> ⟦ lim a⁺ ⟧ f2 = L2 -> ⟦ lim a⁺ ⟧ (f1 + f2) = (L1 + L2).
 Proof.
   intros f1 f2 a L1 L2 H1 H2 ε H3. specialize (H1 (ε / 2) ltac:(lra)) as [δ1 [H4 H5]].
@@ -331,14 +410,8 @@ Qed.
 Lemma limit_plus : forall f1 f2 a L1 L2,
   ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> ⟦ lim a ⟧ (f1 + f2) = (L1 + L2).
 Proof.
-  intros f1 f2 a L1 L2 H1 H2. apply left_right_iff in H1 as [H3 H4], H2 as [H5 H6].
-  apply left_right_iff; split; [ apply left_limit_plus | apply right_limit_plus ]; auto.
-Qed.
-
-Lemma limit_on_id : forall a D,
-  ⟦ lim a ⟧ (fun x => x) D = a.
-Proof.
-  intros a D ε H1. exists ε. split; solve_abs.
+  intros f1 f2 a L1 L2 H1 H2. apply limit_iff in H1 as [H3 H4], H2 as [H5 H6].
+  apply limit_iff; split; [ apply limit_left_plus | apply limit_right_plus ]; auto.
 Qed.
 
 Lemma limit_on_plus : forall f1 f2 a D L1 L2,
@@ -352,60 +425,18 @@ Proof.
   solve_R.
 Qed.
 
-Lemma left_limit_const : forall a c,
-  ⟦ lim a⁻ ⟧ (fun _ => c) = c.
-Proof.
-  intros a c ε H1. exists 1; split; solve_abs.
-Qed.
-
-Lemma right_limit_const : forall a c,
-  ⟦ lim a⁺ ⟧ (fun _ => c) = c.
-Proof.
-  intros a c ε H1. exists 1; split; solve_abs.
-Qed.
-
-Lemma limit_const : forall a c,
-  ⟦ lim a ⟧ (fun _ => c) = c.
-Proof.
-  intros a c ε H1. exists 1; split; solve_abs.
-Qed.
-
-Lemma limit_on_const : forall a D c,
-  ⟦ lim a ⟧ (fun _ => c) D = c.
-Proof.
-  intros a D c ε H1. exists 1; split; solve_abs.
-Qed.
-
-Lemma  left_limit_id : forall a,
-  ⟦ lim a⁻ ⟧ (fun x => x) = a.
-Proof.
-  intros a ε H1. exists ε. split; solve_abs.
-Qed.
-
-Lemma right_limit_id : forall a,
-  ⟦ lim a⁺ ⟧ (fun x => x) = a.
-Proof.
-  intros a ε H1. exists ε. split; solve_abs.
-Qed.
-
-Lemma limit_id : forall a,
-  ⟦ lim a ⟧ (fun x => x) = a.
-Proof.
-  intros a ε H1. exists ε. split; solve_abs.
-Qed.
-
-Lemma left_limit_minus : forall f1 f2 a L1 L2,
+Lemma limit_left_minus : forall f1 f2 a L1 L2,
   ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> ⟦ lim a⁻ ⟧ (f1 - f2) = (L1 - L2).
 Proof.
-  intros f1 f2 a L1 L2 H1 H2. unfold Rminus. apply left_limit_plus; auto.
+  intros f1 f2 a L1 L2 H1 H2. unfold Rminus. apply limit_left_plus; auto.
   intros ε H3. specialize (H2 ε H3) as [δ [H4 H5]].
   exists δ. split; auto. intros x H6. apply H5 in H6. solve_abs.
 Qed.
 
-Lemma right_limit_minus : forall f1 f2 a L1 L2,
+Lemma limit_right_minus : forall f1 f2 a L1 L2,
   ⟦ lim a⁺ ⟧ f1 = L1 -> ⟦ lim a⁺ ⟧ f2 = L2 -> ⟦ lim a⁺ ⟧ (f1 - f2) = (L1 - L2).
 Proof.
-  intros f1 f2 a L1 L2 H1 H2. unfold Rminus. apply right_limit_plus; auto.
+  intros f1 f2 a L1 L2 H1 H2. unfold Rminus. apply limit_right_plus; auto.
   intros ε H3. specialize (H2 ε H3) as [δ [H4 H5]].
   exists δ. split; auto. intros x H6. apply H5 in H6. solve_abs.
 Qed.
@@ -413,8 +444,8 @@ Qed.
 Lemma limit_minus : forall f1 f2 a L1 L2,
   ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> ⟦ lim a ⟧ (f1 - f2) = (L1 - L2).
 Proof.
-  intros f1 f2 a L1 L2 H1 H2. apply left_right_iff in H1 as [H3 H4], H2 as [H5 H6].
-  apply left_right_iff; split; [ apply left_limit_minus | apply right_limit_minus ]; auto.
+  intros f1 f2 a L1 L2 H1 H2. apply limit_iff in H1 as [H3 H4], H2 as [H5 H6].
+  apply limit_iff; split; [ apply limit_left_minus | apply limit_right_minus ]; auto.
 Qed.
 
 Lemma limit_on_minus : forall f1 f2 a D L1 L2,
@@ -428,7 +459,7 @@ Proof.
   solve_R.
 Qed.
 
-Lemma left_limit_mult : forall f1 f2 a L1 L2,
+Lemma limit_left_mult : forall f1 f2 a L1 L2,
   ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> ⟦ lim a⁻ ⟧ (f1 ∙ f2) = L1 * L2.
 Proof.
   intros f1 f2 a L1 L2 H1 H2 ε H3. assert (ε / (2 * ((|L2|) + 1)) > 0 /\ ε / (2 * ((|L1|) + 1)) > 0) as [H4 H5].
@@ -440,7 +471,7 @@ Proof.
   specialize (H7 x H12). specialize (H9 x H13). apply lemma_1_21; auto.
 Qed.
 
-Lemma right_limit_mult : forall f1 f2 a L1 L2,
+Lemma limit_right_mult : forall f1 f2 a L1 L2,
   ⟦ lim a⁺ ⟧ f1 = L1 -> ⟦ lim a⁺ ⟧ f2 = L2 -> ⟦ lim a⁺ ⟧ (f1 ∙ f2) = L1 * L2.
 Proof.
   intros f1 f2 a L1 L2 H1 H2 ε H3. assert (ε / (2 * ((|L2|) + 1)) > 0 /\ ε / (2 * ((|L1|) + 1)) > 0) as [H4 H5].
@@ -455,8 +486,8 @@ Qed.
 Lemma limit_mult : forall f1 f2 a L1 L2,
   ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> ⟦ lim a ⟧ (f1 ∙ f2) = L1 * L2.
 Proof.
-  intros f1 f2 a L1 L2 H1 H2. apply left_right_iff in H1 as [H3 H4], H2 as [H5 H6].
-  apply left_right_iff; split; [ apply left_limit_mult | apply right_limit_mult ]; auto.
+  intros f1 f2 a L1 L2 H1 H2. apply limit_iff in H1 as [H3 H4], H2 as [H5 H6].
+  apply limit_iff; split; [ apply limit_left_mult | apply limit_right_mult ]; auto.
 Qed.
 
 Lemma limit_on_mult : forall f1 f2 a D L1 L2,
@@ -471,15 +502,41 @@ Proof.
   specialize (H7 x H11 H13). specialize (H9 x H11 H14). apply lemma_1_21; auto. solve_R.
 Qed.
 
-Lemma limit_on_eq_f : forall f1 f2 D L x,
-  ⟦ lim x ⟧ f1 D = L -> (forall x, x ∈ D -> f1 x = f2 x) -> ⟦ lim x ⟧ f2 D = L.
+Lemma limit_left_pow : forall f a L n,
+  ⟦ lim a⁻ ⟧ f = L -> ⟦ lim a⁻ ⟧ (f ^ n) = L ^ n.
 Proof.
-  intros f1 f2 D L x H1 H2 ε H3. specialize (H1 ε H3) as [δ [H1 H4]].
-  exists δ; split; auto. intros x0 H5 H6. specialize (H4 x0 H5 H6).
-  rewrite <- H2; solve_R.
+  intros f a L n H1. induction n as [| n IH].
+  - rewrite pow_O. replace ((fun x => f x ^ 0)) with (fun _ : ℝ => 1).
+    2 : { extensionality x. rewrite pow_O. reflexivity. } apply limit_left_const; auto.
+  - simpl. apply limit_left_mult; auto.
 Qed.
 
-Lemma left_limit_inv : forall f a L,
+Lemma limit_right_pow : forall f a L n,
+  ⟦ lim a⁺ ⟧ f = L -> ⟦ lim a⁺ ⟧ (f ^ n) = L ^ n.
+Proof.
+  intros f a L n H1. induction n as [| n IH].
+  - rewrite pow_O. replace ((fun x => f x ^ 0)) with (fun _ : ℝ => 1).
+    2 : { extensionality x. rewrite pow_O. reflexivity. } apply limit_right_const; auto.
+  - simpl. apply limit_right_mult; auto.
+Qed.
+
+Lemma limit_pow : forall f a L n,
+  ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ (f ^ n) = L ^ n.
+Proof.
+  intros f a L n H1. apply limit_iff in H1 as [H2 H3].
+  apply limit_iff; split; [ apply limit_left_pow | apply limit_right_pow ]; auto.
+Qed.
+
+Lemma limit_on_pow : forall f a D L n,
+  ⟦ lim a ⟧ f D = L -> ⟦ lim a ⟧ (f ^ n) D = L ^ n.
+Proof.
+  intros f a D L n H1. induction n as [| n IH].
+  - rewrite pow_O. replace ((fun x => f x ^ 0)) with (fun _ : ℝ => 1).
+    2 : { extensionality x. rewrite pow_O. reflexivity. } apply limit_on_const; auto.
+  - simpl. apply limit_on_mult; auto.
+Qed.  
+
+Lemma limit_left_inv : forall f a L,
   ⟦ lim a⁻ ⟧ f = L -> L <> 0 -> ⟦ lim a⁻ ⟧ (∕ f) = / L.
 Proof.
   intros f a L H1 H2 ε H3. assert (|L| / 2 > 0) as H4 by solve_abs. assert (ε * |L|^2 / 2 > 0) as H5.
@@ -489,7 +546,7 @@ Proof.
   apply lemma_1_22; auto.
 Qed.
 
-Lemma right_limit_inv : forall f a L,
+Lemma limit_right_inv : forall f a L,
   ⟦ lim a⁺ ⟧ f = L -> L <> 0 -> ⟦ lim a⁺ ⟧ (∕ f) = / L.
 Proof.
   intros f a L H1 H2 ε H3. assert (|L| / 2 > 0) as H4 by solve_abs. assert (ε * |L|^2 / 2 > 0) as H5.
@@ -502,80 +559,50 @@ Qed.
 Lemma limit_inv : forall f a L,
   ⟦ lim a ⟧ f = L -> L <> 0 -> ⟦ lim a ⟧ (∕ f) = / L.
 Proof.
-  intros f a L H1 H2. apply left_right_iff in H1 as [H3 H4].
-  apply left_right_iff; split; [ apply left_limit_inv | apply right_limit_inv ]; auto.
+  intros f a L H1 H2. apply limit_iff in H1 as [H3 H4].
+  apply limit_iff; split; [ apply limit_left_inv | apply limit_right_inv ]; auto.
 Qed.
 
-Lemma left_limit_div : forall f1 f2 a L1 L2,
+Lemma limit_on_inv : forall f a D L,
+  ⟦ lim a ⟧ f D = L -> L <> 0 -> ⟦ lim a ⟧ (∕ f) D = / L.
+Proof.
+  intros f a D L H1 H2 ε H3. assert (|L| / 2 > 0) as H4 by solve_abs. assert (ε * |L|^2 / 2 > 0) as H5.
+  { apply Rmult_lt_0_compat. apply pow2_gt_0 in H2. solve_abs. apply Rinv_pos; lra. }
+  specialize (H1 (Rmin (|L| / 2) (ε * |L|^2 / 2)) ltac:(solve_min)) as [δ [H6 H7]].
+  exists δ. split; try lra. intros x H8 H9. specialize (H7 x H8 H9). repeat rewrite <- Rdiv_1_l.
+  apply lemma_1_22; auto.
+Qed.
+
+Lemma limit_left_div : forall f1 f2 a L1 L2,
   ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> L2 <> 0 -> ⟦ lim a⁻ ⟧ (f1 / f2) = L1 / L2.
 Proof.
   intros f1 f2 a L1 L2 H1 H2 H3. replace (f1 / f2)%function with (f1 ∙ (fun x => 1 / f2 x)).
   2 : { extensionality x. lra. }
-  unfold Rdiv. apply left_limit_mult; auto. apply left_limit_inv; auto.
+  unfold Rdiv. apply limit_left_mult; auto. apply limit_left_inv; auto.
 Qed.
 
-Lemma right_limit_div : forall f1 f2 a L1 L2,
+Lemma limit_right_div : forall f1 f2 a L1 L2,
   ⟦ lim a⁺ ⟧ f1 = L1 -> ⟦ lim a⁺ ⟧ f2 = L2 -> L2 <> 0 -> ⟦ lim a⁺ ⟧ (f1 / f2) = L1 / L2.
 Proof.
   intros f1 f2 a L1 L2 H1 H2 H3. replace (f1 / f2)%function with (f1 ∙ (fun x => 1 / f2 x)).
   2 : { extensionality x. lra. }
-  unfold Rdiv. apply right_limit_mult; auto. apply right_limit_inv; auto.
+  unfold Rdiv. apply limit_right_mult; auto. apply limit_right_inv; auto.
 Qed.
 
 Lemma limit_div : forall f1 f2 a L1 L2,
   ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> L2 <> 0 -> ⟦ lim a ⟧ (f1 / f2) = L1 / L2.
 Proof.
-  intros f1 f2 a L1 L2 H1 H2 H3. apply left_right_iff in H1 as [H4 H5], H2 as [H6 H7].
-  apply left_right_iff; split; [ apply left_limit_div | apply right_limit_div ]; auto.
+  intros f1 f2 a L1 L2 H1 H2 H3. apply limit_iff in H1 as [H4 H5], H2 as [H6 H7].
+  apply limit_iff; split; [ apply limit_left_div | apply limit_right_div ]; auto.
 Qed.
 
-Lemma left_limit_pow : forall f a L n,
-  ⟦ lim a⁻ ⟧ f = L -> ⟦ lim a⁻ ⟧ (f ^ n) = L ^ n.
+Lemma limit_on_div : forall f1 f2 a D L1 L2,
+  ⟦ lim a ⟧ f1 D = L1 -> ⟦ lim a ⟧ f2 D = L2 -> L2 <> 0 -> ⟦ lim a ⟧ (f1 / f2) D = L1 / L2.
 Proof.
-  intros f a L n H1. induction n as [| n IH].
-  - rewrite pow_O. replace ((fun x => f x ^ 0)) with (fun _ : ℝ => 1).
-    2 : { extensionality x. rewrite pow_O. reflexivity. } apply left_limit_const; auto.
-  - simpl. apply left_limit_mult; auto.
+  intros f1 f2 a D L1 L2 H1 H2 H3. replace (f1 / f2)%function with (f1 ∙ (fun x => 1 / f2 x)).
+  2 : { extensionality x. lra. }
+  unfold Rdiv. apply limit_on_mult; auto. apply limit_on_inv; auto.
 Qed.
-
-Lemma right_limit_pow : forall f a L n,
-  ⟦ lim a⁺ ⟧ f = L -> ⟦ lim a⁺ ⟧ (f ^ n) = L ^ n.
-Proof.
-  intros f a L n H1. induction n as [| n IH].
-  - rewrite pow_O. replace ((fun x => f x ^ 0)) with (fun _ : ℝ => 1).
-    2 : { extensionality x. rewrite pow_O. reflexivity. } apply right_limit_const; auto.
-  - simpl. apply right_limit_mult; auto.
-Qed.
-
-Lemma limit_pow : forall f a L n,
-  ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ (f ^ n) = L ^ n.
-Proof.
-  intros f a L n H1. apply left_right_iff in H1 as [H2 H3].
-  apply left_right_iff; split; [ apply left_limit_pow | apply right_limit_pow ]; auto.
-Qed.
-
-Lemma right_limit_neg : forall f a L,
-  ⟦ lim a⁺ ⟧ f = L -> ⟦ lim a⁺ ⟧ (- f) = - L.
-Proof.
-  intros f a L H1 ε H2. specialize (H1 ε ltac:(lra)) as [δ [H3 H4]].
-  exists δ. split; try lra. intros x H5. specialize (H4 x H5).
-  solve_R.
-Qed.
-
-Lemma left_limit_neg : forall f a L,
-  ⟦ lim a⁻ ⟧ f = L -> ⟦ lim a⁻ ⟧ (- f) = - L.
-Proof.
-  intros f a L H1 ε H2. specialize (H1 ε ltac:(lra)) as [δ [H3 H4]].
-  exists δ. split; try lra. intros x H5. specialize (H4 x H5).
-  solve_R.
-Qed.
-
-Lemma limit_neg : forall f a L,
-  ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ (- f) = - L.
-Proof.
-  intros f a L H1. apply left_right_iff in H1 as [H2 H3].
-  apply left_right_iff; split; [ apply left_limit_neg | apply right_limit_neg ]; auto.
-Qed.  
 
 Lemma sqrt_limit_helper_1 : forall x a,
   x >= 0 -> a >= 0 -> |√x - √a| = |x - a| / (√x + √a).  
@@ -602,40 +629,146 @@ Proof.
   - pose proof sqrt_lt_1_alt (a/2) x ltac:(lra) as H4. lra.
 Qed.
 
-Lemma limit_sqrt_x : forall a,
+Lemma limit_sqrt : forall a,
   ⟦ lim a ⟧ (fun x => √x) = √a.
 Proof.
-  intros a ε H1. assert (a <= 0 \/ a > 0) as [H2 | H2] by lra.
+  intros a ε H1. assert (a <= 0 \/ a > 0) as [H2 | H2] by solve_R.
   - exists (ε^2). split. nra. intros x H3. assert (x < a \/ x > a) as [H4 | H4] by solve_abs.
     -- repeat rewrite sqrt_neg_0; solve_abs.
     -- rewrite (sqrt_neg_0 a); try lra. replace (|x - a|) with (x - a) in H3 by solve_abs.
        assert (x < ε ^ 2) as H5 by nra. pose proof sqrt_pos x as H6. replace (|(√x - 0)|) with (√x) by solve_abs.
-       apply Rlt_pow_base with (n := 2%nat); try lra; try lia. assert (x <= 0 \/ x > 0) as [H7 | H7] by lra.
+       apply Rlt_pow_base with (n := 2%nat); try lra; try lia. assert (x <= 0 \/ x > 0) as [H7 | H7] by solve_R.
        apply sqrt_neg_0 in H7. rewrite H7. lra. rewrite pow2_sqrt; lra.
   - set (δ := Rmin (a / 2) ((√(a/2) + √a) * ε)). exists δ. split.
     -- unfold δ. pose proof sqrt_lt_R0 a ltac:(lra) as H3.
        pose proof sqrt_lt_R0 (a / 2) ltac:(apply Rdiv_pos_pos; lra) as H4. solve_min.
-    -- intros x H3. assert (|(x - a)| < a / 2) as H4 by (unfold δ in *; solve_R).
-       assert (|(x - a)| < (√(a / 2) + √a) * ε) as H5 by (unfold δ in *; solve_R).
-       assert (x < 0 \/ x >= 0) as [H6 | H6] by lra.
+    -- intros x H3. assert (|x - a| < a / 2) as H4 by (unfold δ in *; solve_R).
+       assert (|x - a| < (√(a / 2) + √a) * ε) as H5 by (unfold δ in *; solve_R).
+       assert (x < 0 \/ x >= 0) as [H6 | H6] by solve_R.
        * rewrite sqrt_neg_0; try lra. solve_abs.
        * pose proof sqrt_limit_helper_2 x a ltac:(lra) ltac:(lra) as H7.
          rewrite sqrt_limit_helper_1; try lra. apply Rmult_lt_reg_r with (r := √x + √a); try nra.
          field_simplify; nra.
 Qed.
 
-Lemma right_limit_sqrt_x : forall a,
+Lemma limit_left_sqrt : forall a,
+  ⟦ lim a⁻ ⟧ (fun x => √x) = √a.
+Proof. intros a. apply limit_iff. apply limit_sqrt. Qed.
+
+Lemma limit_right_sqrt : forall a,
   ⟦ lim a⁺ ⟧ (fun x => √x) = √a.
+Proof. intros a. apply limit_iff. apply limit_sqrt. Qed.
+
+Lemma limit_on_sqrt : forall a D,
+  ⟦ lim a ⟧ (fun x => √x) D = √a.
+Proof. intros a D. apply limit_imp_limit_on; apply limit_sqrt. Qed.
+
+Lemma limit_comp : ∀ (f g : ℝ → ℝ) (a b l : ℝ),
+  ⟦ lim a ⟧ g = b ->
+  ⟦ lim b ⟧ f = l ->
+  (∃ δ : ℝ, δ > 0 ∧ ∀ x, 0 < |x - a| < δ -> g x ≠ b) ->
+  ⟦ lim a ⟧ (λ x, f (g x)) = l.
 Proof.
-  intros a. pose proof limit_sqrt_x a as H1.
-  apply left_right_iff in H1 as [H2 H3]. auto.
+  intros f g a b l H1 H2 H3 ε H4.
+  specialize (H2 ε H4) as [δ1 [H5 H6]].
+  specialize (H1 δ1 H5) as [δ2 [H7 H8]].
+  destruct H3 as [δ3 [H9 H10]].
+  set (δ := Rmin δ2 δ3).
+  exists δ. split; [unfold δ; solve_min |].
+  intros x H12.
+  specialize (H8 x ltac:(unfold δ in *; solve_R)).
+  specialize (H6 (g x)).
+  assert (H13: 0 < |g x - b| < δ1).
+  { specialize (H10 x ltac:(unfold δ in *; solve_R)). solve_R. }
+  auto.
 Qed.
 
-Lemma left_limit_sqrt_x : forall a,
-  ⟦ lim a⁻ ⟧ (fun x => √x) = √a.
+Lemma limit_squeeze : ∀ f1 f2 f3 a b c L,
+  a < b -> c ∈ (a, b) -> 
+  ⟦ lim c ⟧ f1 = L -> ⟦ lim c ⟧ f3 = L -> 
+  (∀ x, x ∈ ((a, c) ⋃ (c, b)) -> f1 x <= f2 x <= f3 x) -> 
+  ⟦ lim c ⟧ f2 = L.
 Proof.
-  intros a. pose proof limit_sqrt_x a as H1.
-  apply left_right_iff in H1 as [H2 H3]. auto.
+  intros f1 f2 f3 a b c L H1 H2 H3 H4 H5 ε H6. specialize (H3 ε H6) as [δ1 [H7 H8]].
+  specialize (H4 ε H6) as [δ2 [H9 H10]]. set (δ := Rmin δ1 (Rmin δ2 (Rmin (b - c) (c - a)))).
+  assert (δ > 0) as H11 by (unfold δ; solve_R). exists δ. split; auto. intros x H12. specialize (H8 x ltac:(unfold δ in *; solve_R)).
+  specialize (H10 x ltac:(unfold δ in *; solve_R)).
+  assert (x ∈ ((a, c) ⋃ (c, b))) as H13. {
+    assert (x < c \/ x > c) as [H14 | H14] by solve_R.
+    - left. unfold δ in *; solve_R.
+    - right. unfold δ in *; solve_R.
+  }
+  specialize (H5 x H13). assert (f1 x <= f2 x <= f3 x) as H15 by auto. solve_R.
+Qed.
+
+Lemma limit_right_squeeze : forall f1 f2 f3 c b L,
+  c < b -> ⟦ lim c⁺ ⟧ f1 = L -> ⟦ lim c⁺ ⟧ f3 = L -> (forall x, x ∈ (c, b) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c⁺ ⟧ f2 = L.
+Proof.
+  intros f1 f2 f3 b c L H1 H2 H3 H4 ε H5. specialize (H3 ε H5) as [δ1 [H6 H7]].
+  specialize (H2 ε H5) as [δ2 [H8 H9]]. set (δ := Rmin δ1 (Rmin δ2 (c - b))). unfold Ensembles.In in *.
+  assert (δ > 0) as H10 by (unfold δ; solve_R). exists δ. split; auto. intros x H11. specialize (H7 x ltac:(unfold δ in *; solve_R)).
+  specialize (H9 x ltac:(unfold δ in *; solve_R)).
+  specialize (H4 x ltac:(unfold δ in *; solve_R)). 
+  solve_R.
+Qed.
+
+Lemma limit_left_squeeze : forall f1 f2 f3 a c L,
+  a < c -> ⟦ lim c⁻ ⟧ f1 = L -> ⟦ lim c⁻ ⟧ f3 = L -> (forall x, x ∈ (a, c) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c⁻ ⟧ f2 = L.
+Proof.
+  intros f1 f2 f3 a c L H1 H2 H3 H4 ε H5. specialize (H3 ε H5) as [δ1 [H6 H7]].
+  specialize (H2 ε H5) as [δ2 [H8 H9]]. set (δ := Rmin δ1 (Rmin δ2 (c - a))). unfold Ensembles.In in *.
+  assert (δ > 0) as H10 by (unfold δ; solve_R). exists δ. split; auto. intros x H11. specialize (H7 x ltac:(unfold δ in *; solve_R)).
+  specialize (H9 x ltac:(unfold δ in *; solve_R)).
+  specialize (H4 x ltac:(unfold δ in *; solve_R)). 
+  solve_R.
+Qed.
+
+Lemma limit_neq_neighborhood : forall f a L x,
+  ⟦ lim a ⟧ f = L -> L <> x -> 
+  exists δ, δ > 0 /\ forall y, 0 < |y - a| < δ -> f y <> x.
+Proof.
+  intros f a L x H1 H2.
+  specialize (H1 (|L - x| / 2) ltac:(solve_abs)).
+  destruct H1 as [δ [H4 H5]].
+  exists δ; split; auto.
+  intros y H6 H7. specialize (H5 y H6). rewrite H7 in H5. solve_abs.
+Qed.
+
+Lemma limit_shift : forall f a c L,
+  ⟦ lim a ⟧ (fun x => f (x + c)) = L <-> ⟦ lim (a + c) ⟧ f = L.
+Proof.
+   intros f a c L. split.
+  - intros H1 ε H2.
+    specialize (H1 ε H2) as [δ [H3 H4]].
+    exists δ; split; auto.
+    intros y H5.
+    replace y with ((y - c) + c) by lra.
+    apply H4.
+    replace (y - c - a) with (y - (a + c)) by lra. auto.
+  - intros H1 ε H2.
+    specialize (H1 ε H2) as [δ [H3 H4]].
+    exists δ; split; auto.
+    intros x H5.
+    apply H4.
+    replace (x + c - (a + c)) with (x - a) by lra. auto.
+Qed.
+
+Lemma limit_plus_const : forall f a L C,
+  ⟦ lim a ⟧ f = L <-> ⟦ lim a ⟧ (f + (fun _ => C)) = L + C.
+Proof.
+  intros f a L C. split; intro H.
+  - apply limit_plus; [exact H | apply limit_const].
+  - replace f with (((f + (fun _ => C))%f - (fun _ => C))%f) by (extensionality x; lra).
+    replace L with (L + C - C) by lra. apply limit_minus; [exact H | apply limit_const].
+Qed.
+
+Lemma limit_minus_const : forall f a L C,
+  ⟦ lim a ⟧ f = L <-> ⟦ lim a ⟧ (f - (fun _ => C)) = L - C.
+Proof.
+  intros f a L C. split; intro H.
+  - apply limit_minus; [exact H | apply limit_const].
+  - replace f with (((f - (fun _ => C))%f + (fun _ => C))%f) by (extensionality x; lra).
+    replace L with (L - C + C) by lra. apply limit_plus; [exact H | apply limit_const].
 Qed.
 
 Lemma limit_continuous_comp :
@@ -652,7 +785,7 @@ Proof.
   - specialize (H5 ltac:(solve_R)). auto.
 Qed.
 
-Lemma right_limit_continuous_comp :
+Lemma limit_right_continuous_comp :
   forall (f g : R -> R) (a L : R),
     ⟦ lim a⁺ ⟧ g = L ->
     ⟦ lim L ⟧ f = f L ->
@@ -666,7 +799,7 @@ Proof.
   - specialize (H5 ltac:(solve_R)). auto.
 Qed.
 
-Lemma left_limit_continuous_comp :
+Lemma limit_left_continuous_comp :
   forall (f g : R -> R) (a L : R),
     ⟦ lim a⁻ ⟧ g = L ->
     ⟦ lim L ⟧ f = f L ->
@@ -680,239 +813,31 @@ Proof.
   - specialize (H5 ltac:(solve_R)). auto.
 Qed.
 
-Lemma limit_comp : ∀ (f g : ℝ → ℝ) (a b l : ℝ),
-  ⟦ lim a ⟧ g = b ->
-  ⟦ lim b ⟧ f = l ->
-  (∃ δ : ℝ, δ > 0 ∧ ∀ x, 0 < |x -a| < δ -> g x ≠ b) ->
-  ⟦ lim a ⟧ (λ x, f (g x)) = l.
-Proof.
-  intros f g a b l H1 H2 H3 ε H4.
-  specialize (H2 ε H4) as [δ1 [H5 H6]].
-  specialize (H1 δ1 H5) as [δ2 [H7 H8]].
-  destruct H3 as [δ3 [H9 H10]].
-  set (δ := Rmin δ2 δ3).
-  assert (δ > 0) as H11 by (unfold δ; solve_min). 
-  exists δ. split; try lra.
-  intros x H12.
-  specialize (H8 x ltac:(unfold δ in *; solve_R)).
-  specialize (H6 (g x)).
-  assert (0 < |(g x - b)| < δ1) as H13.
-  { specialize (H10 x ltac:(unfold δ in *; solve_R)). unfold δ in H12. solve_R. }
-  specialize (H6 H13). auto.
-Qed.
-
 Lemma limit_sqrt_f_x : forall f a L,
   ⟦ lim a ⟧ f = L -> L >= 0 -> ⟦ lim a ⟧ (fun x => √(f x)) = √L.
 Proof.
-  intros f a L H1 H2. apply limit_continuous_comp; auto. apply limit_sqrt_x.
-Qed.
-
-Lemma limit_to_0_equiv : forall f1 f2 L,
-  (forall x, x <> 0 -> f1 x = f2 x) -> ⟦ lim 0 ⟧ f1 = L -> ⟦ lim 0 ⟧ f2 = L.
-Proof.
-  intros f1 f2 L H1 H2 ε H3. specialize (H2 ε H3) as [δ [H4 H5]]. exists δ. split; auto.
-  intros x H6. specialize (H5 x H6). rewrite <- H1; solve_R.
-Qed.
-
-Lemma right_limit_to_0_equiv : forall f1 f2 L,
-  (forall x, x <> 0 -> f1 x = f2 x) -> ⟦ lim 0⁺ ⟧ f1 = L -> ⟦ lim 0⁺ ⟧ f2 = L.
-Proof.
-  intros f1 f2 L H1 H2 ε H3. specialize (H2 ε H3) as [δ [H4 H5]]. exists δ. split; auto.
-  intros x H6. specialize (H5 x H6). rewrite <- H1; solve_R.
-Qed.
-
-Lemma left_limit_to_0_equiv : forall f1 f2 L,
-  (forall x, x <> 0 -> f1 x = f2 x) -> ⟦ lim 0⁻ ⟧ f1 = L -> ⟦ lim 0⁻ ⟧ f2 = L.
-Proof.
-  intros f1 f2 L H1 H2 ε H3. specialize (H2 ε H3) as [δ [H4 H5]]. exists δ. split; auto.
-  intros x H6. specialize (H5 x H6). rewrite <- H1; solve_R.
-Qed.
-
-Lemma limit_to_0_equiv' : forall f1 f2 L δ,
-  δ > 0 -> (forall x, (x <> 0 /\ |x| < δ) -> f1 x = f2 x) -> ⟦ lim 0 ⟧ f1 = L -> ⟦ lim 0 ⟧ f2 = L.
-Proof.
-  intros f1 f2 L δ H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ1 [H5 H6]].
-  exists (Rmin δ1 δ). split; [solve_R |].
-  intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
-Qed.
-
-Lemma limit_to_a_equiv : forall f1 f2 a L,
-  (forall x, x <> a -> f1 x = f2 x) -> ⟦ lim a ⟧ f1 = L -> ⟦ lim a ⟧ f2 = L.
-Proof.
-  intros f1 f2 a L H1 H2 ε H3. specialize (H2 ε H3) as [δ [H4 H5]]. exists δ. split; auto.
-  intros x H6. specialize (H5 x H6). rewrite <- H1; solve_R.
-Qed.
-
-Lemma limit_to_a_equiv' : forall f1 f2 a L δ,
-  δ > 0 -> (forall x, (x <> a /\ |x - a| < δ) -> f1 x = f2 x) -> ⟦ lim a ⟧ f1 = L -> ⟦ lim a ⟧ f2 = L.
-Proof.
-  intros f1 f2 a L δ H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ1 [H5 H6]].
-  exists (Rmin δ1 δ). split; [solve_R |].
-  intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
-Qed.
-
-Lemma right_limit_to_a_equiv : forall f1 f2 a L,
-  (forall x, x <> a -> f1 x = f2 x) -> ⟦ lim a⁺ ⟧ f1 = L -> ⟦ lim a⁺ ⟧ f2 = L.  
-Proof.
-  intros f1 f2 a L H1 H2 ε H3. specialize (H2 ε H3) as [δ [H4 H5]]. exists δ. split; auto.
-  intros x H6. specialize (H5 x H6). rewrite <- H1; solve_R.
-Qed.
-
-Lemma left_limit_to_a_equiv : forall f1 f2 a L,
-  (forall x, x <> a -> f1 x = f2 x) -> ⟦ lim a⁻ ⟧ f1 = L -> ⟦ lim a⁻ ⟧ f2 = L.
-Proof.
-  intros f1 f2 a L H1 H2 ε H3. specialize (H2 ε H3) as [δ [H4 H5]]. exists δ. split; auto.
-  intros x H6. specialize (H5 x H6). rewrite <- H1; solve_R.
-Qed.
-
-Lemma right_limit_to_a_equiv' : forall f1 f2 a L δ,
-  δ > 0 -> (forall x, x > a /\ |x - a| < δ -> f1 x = f2 x) -> ⟦ lim a⁺ ⟧ f1 = L -> ⟦ lim a⁺ ⟧ f2 = L.
-Proof.
-  intros f1 f2 a L δ H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ1 [H5 H6]].
-  exists (Rmin δ1 δ). split; [solve_R |].
-  intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
-Qed.
-
-Lemma left_limit_to_a_equiv' : forall f1 f2 a L δ,
-  δ > 0 -> (forall x, x < a /\ |x - a| < δ -> f1 x = f2 x) -> ⟦ lim a⁻ ⟧ f1 = L -> ⟦ lim a⁻ ⟧ f2 = L.
-Proof.
-  intros f1 f2 a L δ H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ1 [H5 H6]].
-  exists (Rmin δ1 δ). split; [solve_R |].
-  intros x H7. specialize (H6 x ltac:(split; solve_R)). rewrite <- H2; solve_R.
-Qed.
-
-Lemma squeeze_theorem : ∀ f1 f2 f3 a b c L,
-  a < b -> c ∈ (a, b) -> ⟦ lim c ⟧ f1 = L -> ⟦ lim c ⟧ f3 = L -> (∀ x, x ∈ ((a, c) ⋃ (c, b)) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c ⟧ f2 = L.
-Proof.
-  intros f1 f2 f3 a b c L H1 H2 H3 H4 H5 ε H6. specialize (H3 ε H6) as [δ1 [H7 H8]].
-  specialize (H4 ε H6) as [δ2 [H9 H10]]. set (δ := Rmin δ1 (Rmin δ2 (Rmin (b - c) (c - a)))). unfold Ensembles.In in *.
-  assert (δ > 0) as H11 by (unfold δ; solve_min). exists δ. split; auto. intros x H12. specialize (H8 x ltac:(unfold δ in *; solve_R)).
-  specialize (H10 x ltac:(unfold δ in *; solve_R)).
-  assert (x ∈ ((a, c) ⋃ (c, b))) as H13. {
-    assert (x < c \/ x > c) as [H14 | H14] by solve_R.
-    - left. unfold Ensembles.In in *. unfold δ in *; solve_R.
-    - right. unfold Ensembles.In in *. unfold δ in *; solve_R.
-  }
-  specialize (H5 x H13). assert (f1 x <= f2 x <= f3 x) as H15 by auto. solve_R.
-Qed.
-
-Lemma squeeze_theorem_right : forall f1 f2 f3 c b L,
-  c < b -> ⟦ lim c⁺ ⟧ f1 = L -> ⟦ lim c⁺ ⟧ f3 = L -> (forall x, x ∈ (c, b) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c⁺ ⟧ f2 = L.
-Proof.
-  intros f1 f2 f3 b c L H1 H2 H3 H4 ε H5. specialize (H3 ε H5) as [δ1 [H6 H7]].
-  specialize (H2 ε H5) as [δ2 [H8 H9]]. set (δ := Rmin δ1 (Rmin δ2 (c - b))). unfold Ensembles.In in *.
-  assert (δ > 0) as H10 by (unfold δ; solve_R). exists δ. split; auto. intros x H11. specialize (H7 x ltac:(unfold δ in *; solve_R)).
-  specialize (H9 x ltac:(unfold δ in *; solve_R)).
-  specialize (H4 x ltac:(unfold δ in *; solve_R)). 
-  solve_R.
-Qed.
-
-Lemma squeeze_theorem_left : forall f1 f2 f3 a c L,
-  a < c -> ⟦ lim c⁻ ⟧ f1 = L -> ⟦ lim c⁻ ⟧ f3 = L -> (forall x, x ∈ (a, c) -> f1 x <= f2 x <= f3 x) -> ⟦ lim c⁻ ⟧ f2 = L.
-Proof.
-  intros f1 f2 f3 a c L H1 H2 H3 H4 ε H5. specialize (H3 ε H5) as [δ1 [H6 H7]].
-  specialize (H2 ε H5) as [δ2 [H8 H9]]. set (δ := Rmin δ1 (Rmin δ2 (c - a))). unfold Ensembles.In in *.
-  assert (δ > 0) as H10 by (unfold δ; solve_R). exists δ. split; auto. intros x H11. specialize (H7 x ltac:(unfold δ in *; solve_R)).
-  specialize (H9 x ltac:(unfold δ in *; solve_R)).
-  specialize (H4 x ltac:(unfold δ in *; solve_R)). 
-  solve_R.
-Qed.
-
-Lemma right_lim_equality_substitution : forall f a L1 L2,
-  L1 = L2 -> ⟦ lim a⁺ ⟧ f = L1 -> ⟦ lim a⁺ ⟧ f = L2.
-Proof.
-  intros f a L1 L2 H1 H2 ε H4. specialize (H2 ε H4) as [δ [H5 H6]].
-  exists δ; split; auto. intros x. specialize (H6 x). solve_abs.
-Qed.
-
-Lemma left_lim_equality_substitution : forall f a L1 L2,
-  L1 = L2 -> ⟦ lim a⁻ ⟧ f = L1 -> ⟦ lim a⁻ ⟧ f = L2.
-Proof.
-  intros f a L1 L2 H1 H2 ε H4. specialize (H2 ε H4) as [δ [H5 H6]].
-  exists δ; split; auto. intros x. specialize (H6 x). solve_abs.
-Qed.
-
-Lemma lim_equality_substitution : forall f a L1 L2,
-  L1 = L2 -> ⟦ lim a ⟧ f = L1 -> ⟦ lim a ⟧ f = L2.
-Proof.
-  intros f a L1 L2 H1 H2 ε H4. specialize (H2 ε H4) as [δ [H5 H6]].
-  exists δ; split; auto. intros x. specialize (H6 x). solve_abs.
-Qed.
-
-Lemma limit_minus_constant : forall f a L C,
-  ⟦ lim a ⟧ f = L <-> ⟦ lim a ⟧ (f - (fun _ => C)) = L - C.
-Proof.
-  intros f a L C. split.
-  - intros H. apply limit_minus; auto. apply limit_const.
-  - intros H. replace f with (((f - (fun _ => C))%f + (fun _ => C))%f).
-    2 : { extensionality x. lra. }
-    replace L with (L - C + C) by lra.
-    apply limit_plus; auto. apply limit_const.
-Qed.
-
-Lemma limit_plus_constant : forall f a L C,
-  ⟦ lim a ⟧ f = L <-> ⟦ lim a ⟧ (f + (fun _ => C)) = L + C.
-Proof.
-  intros f a L C. split.
-  - intros H. apply limit_plus; auto. apply limit_const.
-  - intros H. replace f with (((f + (fun _ => C))%f - (fun _ => C))%f).
-    2 : { extensionality x. lra. }
-    replace L with (L + C - C) by lra.
-    apply limit_minus; auto. apply limit_const.
+  intros f a L H1 H2. apply limit_continuous_comp; auto. apply limit_sqrt.
 Qed.
 
 Ltac solve_lim :=
   try solve_R;
   match goal with
   | [ |- ⟦ lim ?a ⟧ ?f = ?rhs ] =>
-      let L2' := eval cbv beta in (f a) in
-      let L2 := eval simpl in L2' in
+      let L_eval := eval cbv beta in (f a) in
+      let L := eval simpl in L_eval in
       let H := fresh "H" in
-      assert (⟦ lim a ⟧ f = L2) as H by
+      assert (⟦ lim a ⟧ f = L) as H by
         (repeat (first [
-           apply limit_div
-         | apply limit_pow
-         | apply limit_mult
-         | apply limit_inv
-         | apply limit_plus
-         | apply limit_minus
-         | apply limit_sqrt_x
-         | apply limit_id
-         | apply limit_const
-         | solve_R
-         ])); apply (lim_equality_substitution f a L2 rhs);
-      solve_R; auto
+             apply limit_div 
+           | apply limit_pow 
+           | apply limit_mult 
+           | apply limit_inv 
+           | apply limit_plus 
+           | apply limit_minus 
+           | apply limit_sqrt 
+           | apply limit_id 
+           | apply limit_const 
+           | solve_R 
+           ])); 
+      apply (limit_subst f a L rhs); [solve_R | exact H]
   end.
-
-Lemma limit_shift : forall f a c L,
-  ⟦ lim a ⟧ (fun x => f (x + c)) = L <-> ⟦ lim (a + c) ⟧ f = L.
-Proof.
-  intros f a c L. split.
-  - intros H1 ε H2.
-    specialize (H1 ε H2) as [δ [H3 H4]].
-    exists δ; split; auto.
-    intros y H5.
-    replace y with ((y - c) + c) by lra.
-    apply H4.
-    replace (y - c - a) with (y - (a + c)) by lra. auto.
-  - intros H1 ε H2.
-    specialize (H1 ε H2) as [δ [H3 H4]].
-    exists δ; split; auto.
-    intros x H5.
-    apply H4.
-    replace (x + c - (a + c)) with (x - a) by lra. auto.
-Qed.
-
-Lemma limit_neq_x_exists_neighborhood : forall f a L x,
-  ⟦ lim a ⟧ f = L -> L <> x -> exists δ, δ > 0 /\ forall y, 0 < |y - a| < δ -> f y <> x.
-Proof.
-  intros f a L x H1 H2.
-  specialize (H1 (|L - x| / 2)).
-  assert (H3 : |L - x| / 2 > 0) by (apply Rdiv_pos_pos; solve_abs).
-  specialize (H1 H3) as [δ [H4 H5]].
-  exists δ; split; auto.
-  intros y H6 H7. specialize (H5 y H6).
-  rewrite H7 in H5.
-  replace (|x - L|) with (|L - x|) in H5 by solve_abs.
-  lra.
-Qed.

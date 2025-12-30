@@ -84,25 +84,3 @@ Notation "a >= b > c" := (a >= b /\ b > c)
   (at level 70, b at next level, c at next level) : R_scope.
 Notation "a ≥ b > c" := (a ≥ b /\ b > c)
   (at level 70, b at next level, c at next level) : R_scope.
-
-
-Declare Scope interval_scope.
-Delimit Scope interval_scope with interval.
-
-Module IntervalNotations.
-  Notation "[ a , b ]" := (fun x => a <= x <= b) : interval_scope.
-  Notation "[ a , b )" := (fun x => a <= x < b) : interval_scope.
-  Notation "( a , b ]" := (fun x => a < x <= b)  : interval_scope.
-  Notation "( a , b )" := (fun x => a < x < b) : interval_scope.
-
-  Notation "(-∞ , b )" := (fun x => x < b) : interval_scope.
-  Notation "( -∞ , b ]" := (fun x => x <= b) : interval_scope.
-  Notation "( a , ∞)" := (fun x => a < x) : interval_scope.
-  Notation "[ a , ∞)" := (fun x => a <= x) : interval_scope.
-
-  Notation "(-∞ , +∞)" := (Full_set _) : interval_scope.
-
-  Notation "( a , b )" := (fun x => a < x < b) : interval_scope.
-  Notation "[ a , b )" := (fun x => a <= x < b) : interval_scope.
-  Notation "( a , b ]" := (fun x => a < x <= b) : interval_scope.
-End IntervalNotations.

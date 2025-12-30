@@ -1,9 +1,27 @@
-From Lib Require Import Imports Sets.
+From Lib Require Import Imports Sets Notations.
 Import SetNotations.
 
 Local Notation In := Ensembles.In.
 
 Open Scope set_scope.
+
+Module Function_Notations.
+
+  Delimit Scope function_scope with f.
+
+  Notation "f ∘ g" := (compose f g) (at level 40, left associativity) : function_scope.
+  Notation "f + g" := (fun x : ℝ => f x + g x) (at level 50, left associativity) : function_scope.
+  Notation "f - g" := (fun x : ℝ => f x - g x) (at level 50, left associativity) : function_scope.
+  Notation "- f" := (fun x : ℝ => - f x) (at level 35) : function_scope.
+  Notation "f ∙ g" := (fun x : ℝ => f x * g x) (at level 40, left associativity) : function_scope. 
+  Notation "c * f" := (fun x : ℝ => c * f x) (at level 40, left associativity) : function_scope. 
+  Notation "f / g" := (fun x : ℝ => f x / g x) (at level 40, left associativity) : function_scope.
+  Notation "f ^ n" := (fun x : ℝ => (f x) ^ n) (at level 30, right associativity) : function_scope.
+  Notation "∕ f" := (fun x : ℝ => 1 / f x) (at level 40, left associativity) : function_scope.
+
+End Function_Notations.
+
+Import Function_Notations.
 
 Lemma f_subtype_independent {U V} (P : Ensemble U) (f : subType P -> V) (x : U) (H1 H2 : In _ P x) :
   f {| val := x; property := H1 |} = f {| val := x; property := H2 |}.

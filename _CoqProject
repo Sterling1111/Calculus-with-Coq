@@ -30,6 +30,7 @@ Lib/Derivative.v
 Lib/Sorted_Rlt.v
 Lib/Partition.v
 Lib/Integral.v
+Lib/Interval.v
 Lib/Notations.v
 Lib/Inverse.v
 Lib/Trigonometry.v
