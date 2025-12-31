@@ -21,6 +21,91 @@ Definition uniformly_continuous_on (f : ℝ -> ℝ) (D : Ensemble ℝ) : Prop :=
 Definition continuous (f : ℝ -> ℝ) : Prop :=
   forall a, continuous_at f a.
 
+Lemma continuous_on_subset : forall A1 A2 f,
+  A1 ⊆ A2 -> continuous_on f A2 -> continuous_on f A1.
+Proof.
+  intros A1 A2 f H1 H2. unfold continuous_on. intros a H3. specialize (H2 a ltac:(autoset)). 
+  intros ε H4. specialize (H2 ε H4) as [δ [H5 H6]]. exists δ. split; auto.
+Qed.
+
+Lemma continuous_on_subset_closed : forall a b c d f,
+  a <= c <= d <= b -> continuous_on f [a, b] -> continuous_on f [c, d].
+Proof.
+  intros a b c d f H1 H2. apply continuous_on_subset with (A2 := [a, b]); auto.
+  intros x H3. solve_R.
+Qed.
+
+Lemma continuous_on_subset_open : forall a b c d f,
+  a <= c <= d <= b -> continuous_on f (a, b) -> continuous_on f (c, d).
+Proof.
+  intros a b c d f H1 H2. apply continuous_on_subset with (A2 := (a, b)); auto.
+  intros x H3. solve_R.
+Qed.
+
+Lemma continuous_at_imp_continuous_on : forall f D,
+  (forall x, x ∈ D -> continuous_at f x) ->
+  continuous_on f D.
+Proof.
+  intros f D H1 a H2.
+  specialize (H1 a H2).
+  unfold continuous_at in H1.
+  unfold continuous_on, limit_on.
+  unfold limit in H1.
+  intros ε H3.
+  specialize (H1 ε H3) as [δ [H4 H5]].
+  exists δ. split; auto.
+Qed.
+
+Lemma continuous_imp_continuous_on : forall f D,
+  continuous f -> continuous_on f D.
+Proof.
+  intros f D H1. apply continuous_at_imp_continuous_on.
+  intros x _. apply H1.
+Qed.
+
+Lemma continuous_on_eq : forall f1 f2 D,
+  (forall x, x ∈ D -> f1 x = f2 x) ->
+  continuous_on f1 D -> continuous_on f2 D.
+Proof.
+  intros f1 f2 D H1 H2 a H3.
+  specialize (H2 a H3).
+  unfold limit_on in *. intros ε H4.
+  specialize (H2 ε H4) as [δ [H5 H6]].
+  exists δ. split; auto.
+  intros x H7 H8.
+  rewrite <- H1; auto.
+  rewrite <- H1; [|auto].
+  apply H6; auto.
+Qed.
+
+Lemma continuous_at_right_imp_continuous_on : forall f D a,
+  (exists δ, δ > 0 /\ forall x, x ∈ D -> |x - a| < δ -> a <= x) ->
+  continuous_at_right f a ->
+  ⟦ lim a ⟧ f D = f a.
+Proof.
+  intros f D a [d [H1 H2]] H3.
+  unfold continuous_at_right, right_limit in H3.
+  unfold limit_on. intros ε H4.
+  specialize (H3 ε H4) as [δ' [H5 H6]].
+  exists (Rmin d δ'). split; [ solve_R | ].
+  intros x H7 H8. apply H6. specialize (H2 x H7 ltac:(solve_R)).
+  solve_R.
+Qed.
+
+Lemma continuous_at_left_imp_continuous_on : forall f D a,
+  (exists δ, δ > 0 /\ forall x, x ∈ D -> |x - a| < δ -> x <= a) ->
+  continuous_at_left f a ->
+  ⟦ lim a ⟧ f D = f a.
+Proof.
+  intros f D a [d [H1 H2]] H3.
+  unfold continuous_at_left, left_limit in H3.
+  unfold limit_on. intros ε H4.
+  specialize (H3 ε H4) as [δ' [H5 H6]].
+  exists (Rmin d δ'). split; [ solve_R | ].
+  intros x H7 H8. apply H6. specialize (H2 x H7 ltac:(solve_R)).
+  solve_R.
+Qed.
+
 Lemma continuous_at_const : forall a c,
   continuous_at (fun _ => c) a.
 Proof. intros a c. unfold continuous_at. apply limit_const. Qed.
@@ -213,6 +298,80 @@ Proof.
   apply continuous_at_mult; auto.
 Qed.
 
+Lemma continuous_at_mult_const_l : forall f c a,
+  continuous_at f a -> continuous_at (fun x => c * f x) a.
+Proof.
+  intros f c a H1. unfold continuous_at in *.
+  apply limit_mult_const_l; auto.
+Qed.
+
+Lemma continuous_at_right_mult_const_l : forall f c a,
+  continuous_at_right f a -> continuous_at_right (fun x => c * f x) a.
+Proof.
+  intros f c a H1. unfold continuous_at_right in *.
+  apply limit_right_mult_const_l; auto.
+Qed.
+
+Lemma continuous_at_left_mult_const_l : forall f c a,
+  continuous_at_left f a -> continuous_at_left (fun x => c * f x) a.
+Proof.
+  intros f c a H1. unfold continuous_at_left in *.
+  apply limit_left_mult_const_l; auto.
+Qed.
+
+Lemma continuous_on_mult_const_l : forall f c D,
+  continuous_on f D -> continuous_on (fun x => c * f x) D.
+Proof.
+  intros f c D H1 a H2.
+  specialize (H1 a H2).
+  apply limit_on_mult_const_l; auto.
+Qed.
+
+Lemma continuous_mult_const_l : forall f c,
+  continuous f -> continuous (fun x => c * f x).
+Proof.
+  intros f c H1 a.
+  specialize (H1 a).
+  apply continuous_at_mult_const_l; auto.
+Qed.
+
+Lemma continuous_at_mult_const_r : forall f c a,
+  continuous_at f a -> continuous_at (fun x => f x * c) a.
+Proof.
+  intros f c a H1. unfold continuous_at in *.
+  apply limit_mult_const_r; auto.
+Qed.
+
+Lemma continuous_at_right_mult_const_r : forall f c a,
+  continuous_at_right f a -> continuous_at_right (fun x => f x * c) a.
+Proof.
+  intros f c a H1. unfold continuous_at_right in *.
+  apply limit_right_mult_const_r; auto.
+Qed.
+
+Lemma continuous_at_left_mult_const_r : forall f c a,
+  continuous_at_left f a -> continuous_at_left (fun x => f x * c) a.
+Proof.
+  intros f c a H1. unfold continuous_at_left in *.
+  apply limit_left_mult_const_r; auto.
+Qed.
+
+Lemma continuous_on_mult_const_r : forall f c D,
+  continuous_on f D -> continuous_on (fun x => f x * c) D.
+Proof.
+  intros f c D H1 a H2.
+  specialize (H1 a H2).
+  apply limit_on_mult_const_r; auto.
+Qed.
+
+Lemma continuous_mult_const_r : forall f c,
+  continuous f -> continuous (fun x => f x * c).
+Proof.
+  intros f c H1 a.
+  specialize (H1 a).
+  apply continuous_at_mult_const_r; auto.
+Qed.
+
 Lemma continuous_at_inv : forall f a,
   f a ≠ 0 -> continuous_at f a -> continuous_at (∕ f) a.
 Proof.
@@ -361,14 +520,6 @@ Proof.
        exists δ. split; auto.
 Qed.
 
-Lemma continuous_imp_continuous_on : forall f A,
-  continuous f -> continuous_on f A.
-Proof.
-  intros f A H a Hin.
-  apply limit_imp_limit_on.
-  apply H.
-Qed.
-
 Definition polynomial (l : list R) : R -> R :=
   fun x => sum_f 0 (length l - 1) (fun i => nth i l 0 * x^(length l - 1 - i)).
 
@@ -468,6 +619,89 @@ Proof.
   apply continuous_at_comp.
   - apply H1.
   - apply H2.
+Qed.
+
+Lemma continuous_at_sqrt : forall a,
+  continuous_at (fun x => sqrt x) a.
+Proof.
+  intros a. unfold continuous_at. apply limit_sqrt.
+Qed.
+
+Lemma continuous_at_right_sqrt : forall a,
+  continuous_at_right (fun x => sqrt x) a.
+Proof.
+  intros a. unfold continuous_at_right. apply limit_right_sqrt.
+Qed.
+
+Lemma continuous_at_left_sqrt : forall a,
+  continuous_at_left (fun x => sqrt x) a.
+Proof.
+  intros a. unfold continuous_at_left. apply limit_left_sqrt.
+Qed.
+
+Theorem continuous_sqrt : continuous (fun x => sqrt x).
+Proof.
+  intros a. apply continuous_at_sqrt.
+Qed.
+
+Theorem continuous_on_sqrt : forall D,
+  continuous_on (fun x => sqrt x) D.
+Proof.
+  intros D. apply continuous_at_imp_continuous_on.
+  intros x _. apply continuous_at_sqrt.
+Qed.
+
+Lemma continuous_on_sqrt_open : forall a b,
+  continuous_on (fun x => sqrt x) (a, b).
+Proof.
+  intros a b. apply continuous_on_sqrt.
+Qed.
+
+Lemma continuous_on_sqrt_closed : forall a b,
+  continuous_on (fun x => sqrt x) [a, b].
+Proof.
+  intros a b. apply continuous_on_sqrt.
+Qed.
+
+
+Theorem continuous_at_sqrt_comp : forall f a,
+  continuous_at f a ->
+  continuous_at (fun x => sqrt (f x)) a.
+Proof.
+  intros f a H1.
+  replace (fun x => sqrt (f x)) with (sqrt ∘ f) by reflexivity.
+  apply continuous_at_comp; auto.
+  apply continuous_at_sqrt.
+Qed.
+
+Theorem continuous_at_right_sqrt_comp : forall f a,
+  continuous_at_right f a ->
+  continuous_at_right (fun x => sqrt (f x)) a.
+Proof.
+  intros f a H1.
+  replace (fun x => sqrt (f x)) with (sqrt ∘ f) by reflexivity.
+  apply continuous_at_right_comp; auto.
+  apply continuous_at_sqrt.
+Qed.
+
+Theorem continuous_at_left_sqrt_comp : forall f a,
+  continuous_at_left f a ->
+  continuous_at_left (fun x => sqrt (f x)) a.
+Proof.
+  intros f a H1.
+  replace (fun x => sqrt (f x)) with (sqrt ∘ f) by reflexivity.
+  apply continuous_at_left_comp; auto.
+  apply continuous_at_sqrt.
+Qed.
+
+Theorem continuous_on_sqrt_comp : forall f D,
+  continuous_on f D ->
+  continuous_on (fun x => sqrt (f x)) D.
+Proof.
+  intros f D H1.
+  replace (fun x => sqrt (f x)) with (sqrt ∘ f) by reflexivity.
+  apply continuous_on_comp_continuous; auto.
+  apply continuous_sqrt.
 Qed.
 
 Theorem continuous_at_locally_pos : forall f a,
@@ -902,25 +1136,6 @@ Proof.
     exists x. apply H5.
 Qed.
 
-Lemma continuous_on_subset : forall A1 A2 f,
-  A1 ⊆ A2 -> continuous_on f A2 -> continuous_on f A1.
-Proof.
-  intros A1 A2 f H1 H2. unfold continuous_on. intros a H3. specialize (H2 a ltac:(autoset)). 
-  intros ε H4. specialize (H2 ε H4) as [δ [H5 H6]]. exists δ. split; auto.
-Qed.
-
-Lemma continuous_sqrt_comp : forall f,
-  continuous f -> continuous (fun x => √(f x)).
-Proof.
-  intros f H1 a. replace (fun x => √(f x)) with (sqrt ∘ f) by reflexivity.
-  apply continuous_at_comp; auto. apply limit_sqrt.
-Qed.
-
-Lemma continuous_sqrt : continuous (fun x => √x).
-Proof.
-  apply continuous_sqrt_comp. intro a. unfold continuous_at. solve_lim.
-Qed.
-
 Lemma uniform_continuity_interval_union : forall f a b c ε,
   a < b < c -> continuous_on f [a, c] -> ε > 0 -> 
   (exists δ1, δ1 > 0 /\ forall x y, x ∈ [a, b] -> y ∈ [a, b] -> |x - y| < δ1 -> |f x - f y| < ε) ->
@@ -937,7 +1152,7 @@ Proof.
   - specialize (H9 y ltac:(solve_R)) as H14. specialize (H9 x ltac:(solve_R)) as H15. solve_R.
 Qed.
 
-Theorem continuous_on_interval_is_uniformly_continuous : forall f a b,
+Theorem continuous_on_imp_uniformly_continuous_on : forall f a b,
   a <= b -> continuous_on f [a, b] -> uniformly_continuous_on f [a, b].
 Proof.
   intros f a b H1 H2. assert (a = b \/ a < b) as [H3 | H3] by lra.
@@ -1118,4 +1333,34 @@ Proof.
   { specialize (H1 a (x - a)). replace (a + (x - a)) with x in H1 by lra. lra. }
   specialize (H5 (x - a) ltac:(solve_R)). rewrite H7, <- H8 in H5.
   rewrite Rminus_0_r in H5. auto.
+Qed.
+
+Lemma limit_diff_zero_iff_continuous : forall f a,
+  ⟦ lim 0 ⟧ (fun h => (f (a + h) - f a)) = 0 <-> ⟦ lim a ⟧ f = f a.
+Proof.
+  intros f a. split; intros H1 ε H2.
+  - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
+    specialize (H4 (x - a) ltac:(solve_R)). replace (a + (x - a)) with x in H4; solve_R.
+  - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
+    specialize (H4 (a + x) ltac:(solve_R)). replace (a + x - a) with x in H4; solve_R.
+Qed.
+
+Lemma limit_right_diff_zero_iff_continuous_at_right : forall f a,
+  ⟦ lim 0⁺ ⟧ (fun h => (f (a + h) - f a)) = 0 <-> continuous_at_right f a.
+Proof.
+  intros f a. split; intros H1 ε H2.
+  - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
+    specialize (H4 (x - a) ltac:(solve_R)). replace (a + (x - a)) with x in H4; solve_R.
+  - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
+    specialize (H4 (a + x) ltac:(solve_R)). replace (a + x - a) with x in H4; solve_R.
+Qed.
+
+Lemma limit_left_diff_zero_iff_continuous_at_left : forall f a,
+  ⟦ lim 0⁻ ⟧ (fun h => (f (a + h) - f a)) = 0 <-> continuous_at_left f a.
+Proof.
+  intros f a. split; intros H1 ε H2.
+  - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
+    specialize (H4 (x - a) ltac:(solve_R)). replace (a + (x - a)) with x in H4; solve_R.
+  - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
+    specialize (H4 (a + x) ltac:(solve_R)). replace (a + x - a) with x in H4; solve_R.
 Qed.

@@ -64,8 +64,32 @@ Definition nth_derivative_at (n : nat) (f fn' : R -> R) (a : R) : Prop :=
              derivative_at fk fn' a
   end.
 
+Definition nth_derivative_at_right (n : nat) (f fn' : R -> R) (a : R) : Prop :=
+  match n with
+  | 0   => f a = fn' a
+  | S k => exists δ (fk : R -> R),
+             δ > 0 /\
+             nth_derivative_on k f fk (fun x => a <= x < a + δ) /\
+             derivative_at_right fk fn' a
+  end.
+
+Definition nth_derivative_at_left (n : nat) (f fn' : R -> R) (a : R) : Prop :=
+  match n with
+  | 0   => f a = fn' a
+  | S k => exists δ (fk : R -> R),
+             δ > 0 /\
+             nth_derivative_on k f fk (fun x => a - δ < x <= a) /\
+             derivative_at_left fk fn' a
+  end.
+
 Definition nth_differentiable_at (n : nat) (f : R -> R) (a : R) : Prop :=
   exists fn', nth_derivative_at n f fn' a.
+
+Definition nth_differentiable_at_right (n : nat) (f : R -> R) (a : R) : Prop :=
+  exists fn', nth_derivative_at_right n f fn' a.
+
+Definition nth_differentiable_at_left (n : nat) (f : R -> R) (a : R) : Prop :=
+  exists fn', nth_derivative_at_left n f fn' a.
 
 Definition nth_differentiable_on (n : nat) (f : R -> R) (D : Ensemble R) : Prop :=
   exists fn', nth_derivative_on n f fn' D.
@@ -140,6 +164,14 @@ Module DerivativeNotations.
     (at level 70, n at level 0, f at level 0, no associativity,
     format "⟦  'der' ^ n  a  ⟧  f  =  fn'") : derivative_scope.
 
+  Notation "⟦ 'der' ^ n a ⁺ ⟧ f = fn'" := (nth_derivative_at_right n f fn' a)
+    (at level 70, n at level 0, f at level 0, no associativity,
+    format "⟦  'der' ^ n  a ⁺  ⟧  f  =  fn'") : derivative_scope.
+
+  Notation "⟦ 'der' ^ n a ⁻ ⟧ f = fn'" := (nth_derivative_at_left n f fn' a)
+    (at level 70, n at level 0, f at level 0, no associativity,
+    format "⟦  'der' ^ n  a ⁻  ⟧  f  =  fn'") : derivative_scope.
+
   Notation "⟦ 'Der' ⟧ f" := (Derive f)
     (at level 70, f at level 0, no associativity, format "⟦  'Der'  ⟧  f") : derivative_scope.
 
@@ -168,6 +200,191 @@ Import DerivativeNotations.
 
 Open Scope derivative_scope.
 
+Lemma differentiable_domain_open : forall a b,
+  a < b -> differentiable_domain (a, b).
+Proof.
+  intros a b H1 x H2.
+  left. auto_interval.
+Qed.
+
+Lemma differentiable_domain_closed : forall a b,
+  a < b -> differentiable_domain [a, b].
+Proof.
+  intros a b H1 x H2. auto_interval.
+Qed.
+
+Lemma derivative_at_iff : forall f f' a,
+  ⟦ der a ⟧ f = f' <-> ⟦ der a⁺ ⟧ f = f' /\ ⟦ der a⁻ ⟧ f = f'.
+Proof.
+  intros f f' a.
+  split; intros H1.
+  - unfold derivative_at in *. split.
+    -- unfold derivative_at_right, derivative_at_left in *.
+       apply limit_iff in H1. tauto.
+    -- unfold derivative_at_right, derivative_at_left in *.
+       apply limit_iff in H1. tauto.
+  - unfold derivative_at. apply limit_iff. split; tauto.
+Qed.
+
+Lemma derivative_on_subset : forall f f' D1 D2,
+  ⟦ der ⟧ f D1 = f' -> differentiable_domain D2 -> D2 ⊆ D1 -> ⟦ der ⟧ f D2 = f'.
+Proof.
+  intros f f' D1 D2 H1 H2 H3 a H4.
+  specialize (H1 a (H3 _ H4)).
+  specialize (H2 a H4) as [H2 | [H2 | H2]].
+  - left. split; auto. destruct H2 as [d [H5 H6]].
+    assert (H7 : interior_point D1 a) by (exists d; split; auto).
+    destruct H1 as [[_ H1] | [[H1 _] | [H1 _]]]; auto_interval.
+  - right; left. split; auto. destruct H1 as [[H1 H5] | [[H1 H5] | [H1 H5]]]; auto_interval.
+    -- apply derivative_at_iff in H5. tauto.
+    -- destruct H1 as [δ1 [H6 H7]]. destruct H2 as [δ2 [H8 H9]].
+       specialize (H7 (a + Rmin δ1 δ2 / 2)) as [H7 _].
+       specialize (H9 (a + Rmin δ1 δ2 / 2)) as [_ H9].
+       assert (H10 : (a + Rmin δ1 δ2 / 2) ∈ D2) by (apply H9; solve_R).
+       apply H3 in H10. specialize (H7 ltac:(solve_R)). contradiction.
+  - right; right. split; auto. destruct H1 as [[H1 H5] | [[H1 H5] | [H1 H5]]]; auto_interval.
+    -- apply derivative_at_iff in H5. tauto.
+    -- destruct H1 as [δ1 [H6 H7]]. destruct H2 as [δ2 [H8 H9]].
+       specialize (H7 (a - Rmin δ1 δ2 / 2)) as [H7 _].
+       specialize (H9 (a - Rmin δ1 δ2 / 2)) as [_ H9].
+       assert (H10 : (a - Rmin δ1 δ2 / 2) ∈ D2) by (apply H9; solve_R).
+       apply H3 in H10. specialize (H7 ltac:(solve_R)). contradiction.
+Qed.
+
+Lemma derivative_on_subset_closed : forall f f' a b c d,
+  a <= c < d <= b -> ⟦ der ⟧ f [a, b] = f' -> ⟦ der ⟧ f [c, d] = f'.
+Proof.
+  intros f f' a b c d H1 H2. apply derivative_on_subset with (D1 := [a, b]); auto.  
+  - apply differentiable_domain_closed; solve_R.
+  - intros x H3. solve_R.
+Qed.
+
+Lemma derivative_on_subset_open : forall f f' a b c d,
+  a <= c < d <= b -> ⟦ der ⟧ f (a, b) = f' -> ⟦ der ⟧ f (c, d) = f'.
+Proof.
+  intros f f' a b c d H1 H2. apply derivative_on_subset with (D1 := (a, b)); auto.
+  - apply differentiable_domain_open; solve_R.
+  - intros x H3. solve_R.
+Qed.
+
+Lemma derivative_at_eq : forall f1 f2 f' a,
+  (exists δ, δ > 0 /\ forall x, |x - a| < δ -> f1 x = f2 x) ->
+  ⟦ der a ⟧ f1 = f' -> ⟦ der a ⟧ f2 = f'.
+Proof.
+  intros f1 f2 f' a [δ [H1 H2]] H3.
+  apply limit_eq with (f1 := fun h => (f1 (a + h) - f1 a) / h).
+  - exists δ. split; auto. intros h H4.
+    rewrite H2; [| replace ((a + h) - a) with h by lra; solve_abs].
+    rewrite H2; [| rewrite Rminus_diag, Rabs_R0; auto].
+    reflexivity.
+  - apply H3.
+Qed.
+
+Lemma derivative_at_right_eq : forall f1 f2 f' a,
+  (exists δ, δ > 0 /\ forall x, a <= x < a + δ -> f1 x = f2 x) ->
+  ⟦ der a ⁺ ⟧ f1 = f' -> ⟦ der a ⁺ ⟧ f2 = f'.
+Proof.
+  intros f1 f2 f' a [δ [H1 H2]] H3.
+  apply limit_right_eq with (f1 := fun h => (f1 (a + h) - f1 a) / h).
+  - exists δ. split; auto. intros h H4.
+    rewrite H2; [| lra].
+    rewrite H2; [| lra].
+    reflexivity.
+  - apply H3.
+Qed.
+
+Lemma derivative_at_left_eq : forall f1 f2 f' a,
+  (exists δ, δ > 0 /\ forall x, a - δ < x <= a -> f1 x = f2 x) ->
+  ⟦ der a ⁻ ⟧ f1 = f' -> ⟦ der a ⁻ ⟧ f2 = f'.
+Proof.
+  intros f1 f2 f' a [δ [H1 H2]] H3.
+  apply limit_left_eq with (f1 := fun h => (f1 (a + h) - f1 a) / h).
+  - exists δ. split; auto. intros h H4.
+    rewrite H2; [| lra].
+    rewrite H2; [| lra].
+    reflexivity.
+  - apply H3.
+Qed.
+
+Lemma derivative_on_eq : forall f1 f2 f' D,
+  (forall x, x ∈ D -> f1 x = f2 x) -> 
+  ⟦ der ⟧ f1 D = f' -> ⟦ der ⟧ f2 D = f'.
+Proof.
+  intros f1 f2 f' D H1 H2 a H3. specialize (H2 a H3).
+  destruct H2 as [[H4 H5] | [[H4 H5] | [H4 H5]]].
+  - left. split; auto. eapply derivative_at_eq; eauto.
+    destruct H4 as [δ [H6 H7]]. exists δ. split; auto.
+    intros x H8. apply H1. apply H7. solve_R.
+  - right; left. split; auto. eapply derivative_at_right_eq; eauto.
+    destruct H4 as [δ [H6 H7]]. exists δ. split; auto.
+    intros x H8. apply H1. apply H7. solve_R.
+  - right; right. split; auto. eapply derivative_at_left_eq; eauto.
+    destruct H4 as [δ [H6 H7]]. exists δ. split; auto.
+    intros x H8. apply H1. apply H7. solve_R.
+Qed.
+
+Lemma derivative_eq : forall f1 f2 f',
+  (forall x, f1 x = f2 x) -> 
+  ⟦ der ⟧ f1 = f' -> ⟦ der ⟧ f2 = f'.
+Proof.
+  intros f1 f2 f' H1 H2.
+  intros a. specialize (H2 a).
+  apply derivative_at_eq with (f1 := f1); auto.
+  exists 1; split; [ lra |]. intros x H3. apply H1.
+Qed.
+
+Lemma derivative_on_ext : forall f f1' f2' D,
+  (forall x, x ∈ D -> f1' x = f2' x) -> 
+  ⟦ der ⟧ f D = f1' -> ⟦ der ⟧ f D = f2'.
+Proof.
+  intros f f1' f2' D H1 H2 a H3. specialize (H2 a H3).
+  destruct H2 as [[H4 H5] | [[H4 H5] | [H4 H5]]];
+  [ left | right; left | right; right ]; split; auto.
+  - unfold derivative_at in *. rewrite <- H1; auto.
+  - unfold derivative_at_right in *. rewrite <- H1; auto.
+  - unfold derivative_at_left in *. rewrite <- H1; auto.
+Qed.
+
+Lemma differentiable_at_eq : forall f1 f2 a,
+  (exists δ, δ > 0 /\ forall x, |x - a| < δ -> f1 x = f2 x) ->
+  differentiable_at f1 a -> differentiable_at f2 a.
+Proof.
+  intros f1 f2 a [δ [H1 H2]] [L H3]. exists L.
+  apply limit_eq with (f1 := fun h => (f1 (a + h) - f1 a) / h); auto.
+  exists δ. split; auto. intros h H4. specialize (H2 (a + h) ltac:(solve_R)) as H5.
+  specialize (H2 a ltac:(solve_R)) as H6. rewrite H5, H6. reflexivity.
+Qed.
+
+Lemma differentiable_at_right_eq : forall f1 f2 a,
+  (exists δ, δ > 0 /\ forall x, a <= x < a + δ -> f1 x = f2 x) ->
+  differentiable_at_right f1 a -> differentiable_at_right f2 a.
+Proof.
+  intros f1 f2 a [δ [H1 H2]] [L H3]. exists L.
+  apply limit_right_eq with (f1 := fun h => (f1 (a + h) - f1 a) / h); auto.
+  exists δ. split; auto. intros h H4.
+  rewrite H2; [| lra]. rewrite H2; [| lra]. reflexivity.
+Qed.
+
+Lemma differentiable_at_left_eq : forall f1 f2 a,
+  (exists δ, δ > 0 /\ forall x, a - δ < x <= a -> f1 x = f2 x) ->
+  differentiable_at_left f1 a -> differentiable_at_left f2 a.
+Proof.
+  intros f1 f2 a [δ [H1 H2]] [L H3]. exists L.
+  apply limit_left_eq with (f1 := fun h => (f1 (a + h) - f1 a) / h); auto.
+  exists δ. split; auto. intros h H4.
+  rewrite H2; [| lra]. rewrite H2; [| lra]. reflexivity.
+Qed.
+
+Lemma differentiable_at_imp_left_right : forall f a,
+  differentiable_at f a -> differentiable_at_right f a /\ differentiable_at_left f a.
+Proof.
+  intros f a [L H1]. split.
+  - exists L. intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto.
+    intros x H5. specialize (H4 x ltac:(solve_R)). auto.
+  - exists L. intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto.
+    intros x H5. specialize (H4 x ltac:(solve_R)). auto.
+Qed.
+
 Theorem derivative_at_unique : forall f f1' f2' x,
   ⟦ der x ⟧ f = f1' -> ⟦ der x ⟧ f = f2' -> f1' x = f2' x.
 Proof.
@@ -189,6 +406,48 @@ Proof.
   apply (limit_right_unique (fun h => (f (x + h) - f x) / h) 0 (f1' x) (f2' x)); auto.
 Qed.
 
+Lemma derivative_on_unique : forall f f1' f2' D,
+  ⟦ der ⟧ f D = f1' -> ⟦ der ⟧ f D = f2' -> forall x, x ∈ D -> f1' x = f2' x.
+Proof.
+  intros f f1' f2' D H1 H2 x H3.
+  specialize (H1 x H3). specialize (H2 x H3).
+  destruct H1 as [[H4 H5] | [[H4 H5] | [H4 H5]]]; destruct H2 as [[H6 H7] | [[H6 H7] | [H6 H7]]]; auto_interval.
+  - eapply derivative_at_unique; eauto.
+  - eapply derivative_at_right_unique; eauto.
+  - eapply derivative_at_left_unique; eauto.
+Qed.
+
+Lemma derivative_on_all_closed_imp_derivative : forall f f',
+  (forall a b, a < b -> ⟦ der ⟧ f [a, b] = f') -> ⟦ der ⟧ f = f'.
+Proof.
+  intros f f' H1 x ε H2. specialize (H1 (x - ε) (x + ε) ltac:(solve_R)) as H3.
+  specialize (H3 x ltac:(solve_R)) as [[H4  H5] | [[H4 _] | [H4 _]]]; auto_interval.
+Qed.
+
+Lemma derivative_on_imp_derivative_at : forall f f' D a,
+  interior_point D a -> ⟦ der ⟧ f D = f' -> ⟦ der a ⟧ f = f'.
+Proof.
+  intros f f' D a H1 H2.
+  assert (H3 : a ∈ D) by (destruct H1 as [δ [H3 H4]]; apply H4; solve_R).
+  specialize (H2 a H3) as [[H4 H5] | [[H4 H5] | [H4 H5]]]; auto_interval.
+Qed.
+
+Lemma derivative_on_imp_derivative_at_right : forall f f' D a,
+  left_endpoint D a -> ⟦ der ⟧ f D = f' -> ⟦ der a ⁺ ⟧ f = f'.
+Proof.
+  intros f f' D a H1 H2.
+  assert (H3 : a ∈ D) by (destruct H1 as [δ [H3 H4]]; apply H4; solve_R).
+  specialize (H2 a H3) as [[H4 H5] | [[H4 H5] | [H4 H5]]]; auto_interval.
+Qed.
+
+Lemma derivative_on_imp_derivative_at_left : forall f f' D a,
+  right_endpoint D a -> ⟦ der ⟧ f D = f' -> ⟦ der a ⁻ ⟧ f = f'.
+Proof.
+  intros f f' D a H1 H2.
+  assert (H3 : a ∈ D) by (destruct H1 as [δ [H3 H4]]; apply H4; solve_R).
+  specialize (H2 a H3) as [[H4 H5] | [[H4 H5] | [H4 H5]]]; auto_interval.
+Qed.
+
 Theorem derivative_unique : forall f f1' f2',
   ⟦ der ⟧ f = f1' -> ⟦ der ⟧ f = f2' -> f1' = f2'.
 Proof.
@@ -196,120 +455,104 @@ Proof.
   apply (derivative_at_unique f f1' f2' x); auto.
 Qed.
 
-Lemma derivative_on_unique : forall f f1' f2' D,
-  ⟦ der ⟧ f D = f1' -> ⟦ der ⟧ f D = f2' -> forall x, x ∈ D -> f1' x = f2' x.
+Lemma derivative_at_imp_differentiable_at : forall f f' a,
+  ⟦ der a ⟧ f = f' -> differentiable_at f a.
 Proof.
-  intros f f1' f2' D H1 H2 x H3.
-  specialize (H1 x H3).
-  specialize (H2 x H3).
-  destruct H1 as [[H4 H5] | [[H4 H5] | [H4 H5]]]; destruct H2 as [[H6 H7] | [[H6 H7] | [H6 H7]]].
-  - eapply derivative_at_unique; eauto.
-  - exfalso. apply (interior_not_endpoint D x H4). left; auto.
-  - exfalso. apply (interior_not_endpoint D x H4). right; auto.
-  - exfalso. apply (interior_not_endpoint D x H6). left; auto.
-  - eapply derivative_at_right_unique; eauto.
-  - exfalso. destruct H4 as [δ1 [H8 H9]]. destruct H6 as [δ2 [H10 H11]].
-    set (y := x + Rmin δ1 δ2 / 2).
-    specialize (H9 y). assert (H12: y ∈ [x, x + δ1)) by (unfold y in *; solve_R).
-    destruct H9 as [_ H9]. specialize (H9 H12).
-    specialize (H11 y). assert (H13: y ∈ (x, x + δ2]) by (unfold y in *; solve_R).
-    destruct H11 as [H11 _]. specialize (H11 H13).
-    contradiction.
-  - exfalso. apply (interior_not_endpoint D x H6). right; auto.
-  - destruct H4 as [δ1 [H8 H9]]. destruct H6 as [δ2 [H10 H11]].
-    set (y := x - Rmin δ1 δ2 / 2).
-    specialize (H9 y). assert (H12: y ∈ (x - δ1, x]) by (unfold y in *; solve_R).
-    destruct H9 as [_ H9]. specialize (H9 H12).
-    specialize (H11 y). assert (H13: y ∈ [x - δ2, x)) by (unfold y in *; solve_R).
-    destruct H11 as [H11 _]. specialize (H11 H13).
-    contradiction.
-  - eapply derivative_at_left_unique; eauto.
+  intros f f' a H1. exists (f' a). apply H1.
 Qed.
 
-Lemma nth_derivative_unique : forall n f fn1' fn2',
-  ⟦ der ^ n ⟧ f = fn1' -> ⟦ der ^ n ⟧ f = fn2' -> fn1' = fn2'.
-Proof.
-  induction n as [| k IH]; intros f fn1' fn2' H1 H2.
-  - simpl in H1, H2. subst. reflexivity.
-  - destruct H1 as [f1' [H1 H3]], H2 as [f2' [H2 H4]].
-    pose proof (derivative_unique f f1' f2' H1 H2) as H5.
-    subst f2'.
-    apply (IH f1' fn1' fn2'); auto.
-Qed.
-
-Theorem derivative_on_ext : forall f f1' f2' D,
-  (forall x, x ∈ D -> f1' x = f2' x) -> 
-  ⟦ der ⟧ f D = f1' -> 
-  ⟦ der ⟧ f D = f2'.
-Proof.
-  intros f f1' f2' D H1 H2 x H3.
-  specialize (H2 x H3).
-  destruct H2 as [[H4 H5] | [[H4 H5] | [H4 H5]]];
-  [ left | right; left | right; right ]; split; auto.
-  - unfold derivative_at in *. rewrite <- H1; auto.
-  - unfold derivative_at_right in *. rewrite <- H1; auto.
-  - unfold derivative_at_left in *. rewrite <- H1; auto.
-Qed.
-
-Lemma limit_diff_zero_iff_continuous : forall f a,
-  ⟦ lim 0 ⟧ (fun h => (f (a + h) - f a)) = 0 <-> ⟦ lim a ⟧ f = f a.
-Proof.
-  intros f a. split; intros H1 ε H2.
-  - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
-    specialize (H4 (x - a) ltac:(solve_R)). replace (a + (x - a)) with x in H4; solve_R.
-  - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
-    specialize (H4 (a + x) ltac:(solve_R)). replace (a + x - a) with x in H4; solve_R.
-Qed.
-
-Lemma limit_right_diff_zero_iff_continuous : forall f a,
-  ⟦ lim 0⁺ ⟧ (fun h => (f (a + h) - f a)) = 0 <-> ⟦ lim a⁺ ⟧ f = f a.
-Proof.
-  intros f a. split; intros H1 ε H2.
-  - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
-    specialize (H4 (x - a) ltac:(solve_R)). replace (a + (x - a)) with x in H4; solve_R.
-  - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
-    specialize (H4 (a + x) ltac:(solve_R)). replace (a + x - a) with x in H4; solve_R.
-Qed.
-
-Lemma limit_left_diff_zero_iff_continuous : forall f a,
-  ⟦ lim 0⁻ ⟧ (fun h => (f (a + h) - f a)) = 0 <-> ⟦ lim a⁻ ⟧ f = f a.
-Proof.
-  intros f a. split; intros H1 ε H2.
-  - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
-    specialize (H4 (x - a) ltac:(solve_R)). replace (a + (x - a)) with x in H4; solve_R.
-  - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
-    specialize (H4 (a + x) ltac:(solve_R)). replace (a + x - a) with x in H4; solve_R.
-Qed.
-
-Lemma derivative_at_iff : forall f f' a,
-  ⟦ der a ⟧ f = f' <-> ⟦ der a⁺ ⟧ f = f' /\ ⟦ der a⁻ ⟧ f = f'.
-Proof.
-  intros f f' a.
-  split; intros H1.
-  - unfold derivative_at in *. split.
-    -- unfold derivative_at_right, derivative_at_left in *.
-       apply limit_iff in H1. tauto.
-    -- unfold derivative_at_right, derivative_at_left in *.
-       apply limit_iff in H1. tauto.
-  - unfold derivative_at. apply limit_iff. split; tauto.
-Qed.
-
-Lemma differentiable_at_imp_left_right : forall f a,
-  differentiable_at f a -> differentiable_at_right f a /\ differentiable_at_left f a.
-Proof.
-  intros f a [L H1]. split.
-  - exists L. intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto.
-    intros x H5. specialize (H4 x ltac:(solve_R)). auto.
-  - exists L. intros ε H2. specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto.
-    intros x H5. specialize (H4 x ltac:(solve_R)). auto.
-Qed.
-
-Lemma differentiable_at_imp_exists_derivative : forall f a,
+Lemma differentiable_at_imp_derivative_at : forall f a,
   differentiable_at f a -> exists f', ⟦ der a ⟧ f = f'.
 Proof.
-  intros f a [L H1]. 
-  exists (fun _ => L). 
+  intros f a [L H1]. exists (fun _ => L). apply H1.
+Qed.
+
+Lemma derivative_on_imp_differentiable_on : forall f f' D,
+  ⟦ der ⟧ f D = f' -> differentiable_on f D.
+Proof.
+  intros f f' D H1 x H2. specialize (H1 x H2).
+  destruct H1 as [[H3 H4] | [[H3 H4] | [H3 H4]]].
+  - left. split; auto. exists (f' x). apply H4.
+  - right; left. split; auto. exists (f' x). apply H4.
+  - right; right. split; auto. exists (f' x). apply H4.
+Qed.
+
+Lemma differentiable_on_imp_derivative_on : forall f D,
+  differentiable_on f D -> exists f', ⟦ der ⟧ f D = f'.
+Proof.
+  intros f D H1.
+  assert (H2 : forall x, exists y, (x ∈ D -> 
+    (interior_point D x /\ ⟦ der x ⟧ f = (fun _ => y)) \/
+    (left_endpoint D x /\ ⟦ der x ⁺ ⟧ f = (fun _ => y)) \/
+    (right_endpoint D x /\ ⟦ der x ⁻ ⟧ f = (fun _ => y))) /\ (~ x ∈ D -> y = 0)).
+  {
+    intros x. destruct (classic (x ∈ D)) as [H2 | H2].
+    - specialize (H1 x H2) as [[H3 [L H4]] | [[H3 [L H4]] | [H3 [L H4]]]]; exists L; split; tauto.
+    - exists 0; split; tauto.
+  }
+  apply choice in H2 as [f' H3]. exists f'.
+  intros x H4. specialize (H3 x) as [H3 _]. apply H3; auto.
+Qed.
+
+Lemma derivative_imp_differentiable : forall f f',
+  ⟦ der ⟧ f = f' -> differentiable f.
+Proof.
+  intros f f' H1 x. unfold differentiable_at. exists (f' x). intros ε H2.
+  specialize (H1 x ε) as [δ [H3 H4]]; auto. exists δ. split; auto.
+Qed.
+
+Lemma differentiable_imp_derivative : forall f,
+  differentiable f -> exists f', ⟦ der ⟧ f = f'.
+Proof.
+  intros f H1.
+  unfold derivative.
+  apply choice with (A := R) (B := R) (R := fun x y => ⟦ lim 0 ⟧ (fun h => (f (x + h) - f x) / h) = y).
+  intros x.
+  specialize (H1 x).
+  unfold differentiable_at in H1.
+  destruct H1 as [L H1].
+  exists L.
+  unfold derivative_at.
   apply H1.
+Qed.
+
+Lemma differentiable_on_subset : forall f D1 D2,
+  differentiable_on f D1 -> differentiable_domain D2 -> D2 ⊆ D1 -> differentiable_on f D2.
+Proof.
+  intros f D1 D2 H1 H2 H3.
+  apply differentiable_on_imp_derivative_on in H1 as [f' H1].
+  apply derivative_on_imp_differentiable_on with (f' := f').
+  apply derivative_on_subset with (D1 := D1); auto.
+Qed.
+
+Lemma differentiable_on_subset_closed : forall a b c d f,
+  a <= c < d <= b ->
+  differentiable_on f [a, b] -> differentiable_on f [c, d].
+Proof.
+  intros a b c d f H1 H2.
+  apply differentiable_on_subset with (D1 := [a, b]); auto.
+  - intros x H3. auto_interval.
+  - intros x H3. solve_R.
+Qed.
+
+Lemma differentiable_on_subset_open : forall a b c d f,
+  a <= c < d <= b ->
+  differentiable_on f (a, b) -> differentiable_on f (c, d).
+Proof.
+  intros a b c d f H1 H2.
+  apply differentiable_on_subset with (D1 := (a, b)); auto.
+  - intros x H3. auto_interval.
+  - intros x H3. solve_R.
+Qed.
+
+Lemma differentiable_on_eq : forall f1 f2 D,
+  (forall x, x ∈ D -> f1 x = f2 x) -> 
+  differentiable_on f1 D -> differentiable_on f2 D.
+Proof.
+  intros f1 f2 D H1 H2.
+  apply differentiable_on_imp_derivative_on in H2 as [f' H2].
+  apply derivative_on_imp_differentiable_on with (f' := f').
+  apply derivative_on_eq with (f1 := f1); auto.
 Qed.
 
 Lemma derivative_imp_derivative_on : forall f f' D,
@@ -327,7 +570,7 @@ Lemma derivative_imp_derivative_on_closed : forall f f' a b,
   ⟦ der ⟧ f = f' -> ⟦ der ⟧ f [a, b] = f'.
 Proof.
   intros f f' a b H1 H2. apply derivative_imp_derivative_on; auto.
-  intros x H3. pose proof unique_classification_closed x a b H1 H3. tauto.
+  intros x H3.  auto_interval.
 Qed.
 
 Lemma derivative_imp_derivative_on_open : forall f f' a b,
@@ -335,7 +578,20 @@ Lemma derivative_imp_derivative_on_open : forall f f' a b,
   ⟦ der ⟧ f = f' -> ⟦ der ⟧ f (a, b) = f'.
 Proof.
   intros f f' a b H1 H2. apply derivative_imp_derivative_on; auto.
-  intros x H3. left. apply open_interior_iff; auto.
+  intros x H3. auto_interval.
+Qed.
+
+Lemma derivative_at_imp_derivative_on : forall f f' D,
+  differentiable_domain D ->
+  (forall x, x ∈ D -> ⟦ der x ⟧ f = f') ->
+  ⟦ der ⟧ f D = f'.
+Proof.
+  intros f f' D H1 H2 x H3.
+  specialize (H1 x H3); specialize (H2 x H3).
+  destruct H1 as [H1 | [H1 | H1]].
+  - left. split; auto.
+  - right; left. split; auto. apply derivative_at_iff in H2; tauto.
+  - right; right. split; auto. apply derivative_at_iff in H2; tauto.
 Qed.
 
 Theorem differentiable_at_imp_continuous_at : forall f a,
@@ -351,7 +607,7 @@ Qed.
 Theorem differentiable_at_right_imp_continuous_at_right : forall f a,
   differentiable_at_right f a -> continuous_at_right f a.
 Proof.
-  intros f a [L H1]. apply limit_right_diff_zero_iff_continuous.
+  intros f a [L H1]. apply limit_right_diff_zero_iff_continuous_at_right.
   assert (⟦ lim 0⁺ ⟧ (fun h => (f (a + h) - f a) / h * h) = 0) as H2.
   { replace 0 with (L * 0) at 2 by lra. apply limit_right_mult. 2 : { apply limit_right_id. } auto. }
   apply limit_right_eq with (f1 := fun h => (f (a + h) - f a) / h * h); auto.
@@ -361,7 +617,7 @@ Qed.
 Theorem differentiable_at_left_imp_continuous_at_left : forall f a,
   differentiable_at_left f a -> continuous_at_left f a.
 Proof.
-  intros f a [L H1]. apply limit_left_diff_zero_iff_continuous.
+  intros f a [L H1]. apply limit_left_diff_zero_iff_continuous_at_left.
   assert (⟦ lim 0⁻ ⟧ (fun h => (f (a + h) - f a) / h * h) = 0) as H2.
   { replace 0 with (L * 0) at 2 by lra. apply limit_left_mult. 2 : { apply limit_left_id. } auto. }
   apply limit_left_eq with (f1 := fun h => (f (a + h) - f a) / h * h); auto.
@@ -374,100 +630,60 @@ Proof.
   intros f H1 x. apply differentiable_at_imp_continuous_at. apply H1.
 Qed.
 
+Theorem differentiable_on_imp_continuous_on : forall f D,
+  differentiable_on f D -> continuous_on f D.
+Proof.
+  intros f D H1 x H2.
+  specialize (H1 x H2) as [[H3 H4] | [[H3 H4] | [H3 H4]]].
+  - apply limit_imp_limit_on.
+    apply differentiable_at_imp_continuous_at; auto.
+  - apply continuous_at_right_imp_continuous_on; auto.
+    -- destruct H3 as [δ [H5 H6]]. exists δ. split; auto.
+       intros y H7 H8.
+       destruct (classic (x <= y)); auto.
+       exfalso. apply (H6 y); auto. solve_R.
+    -- apply differentiable_at_right_imp_continuous_at_right; auto.
+  - apply continuous_at_left_imp_continuous_on; auto.
+    -- destruct H3 as [δ [H5 H6]]. exists δ. split; auto.
+       intros y H7 H8.
+       destruct (classic (y <= x)); auto.
+       exfalso. apply (H6 y); auto. solve_R.
+    -- apply differentiable_at_left_imp_continuous_at_left; auto.
+Qed.
+
+Lemma differentiable_on_imp_continuous_on_subset : forall f D1 D2,
+  differentiable_on f D1 -> differentiable_domain D2 -> D2 ⊆ D1 -> continuous_on f D2.
+Proof.
+  intros f D1 D2 H1 H2 H3.
+  apply differentiable_on_imp_continuous_on.
+  apply differentiable_on_subset with (D1 := D1); auto.
+Qed.
+
 Theorem differentiable_on_imp_continuous_on_closed : forall f a b,
   a < b -> differentiable_on f [a, b] -> continuous_on f [a, b].
 Proof.
-  intros f a b H1 H2. apply continuous_on_closed_interval_iff; auto. repeat split.
-  - intros x H3. specialize (H2 x ltac:(solve_R)) as [H2 | [H2 | H2]].
-    -- apply differentiable_at_imp_continuous_at; tauto.
-    -- exfalso. apply (closed_not_left_pt_interior a b x H1 H3); tauto.
-    -- exfalso. apply (closed_not_right_pt_interior a b x H1 H3); tauto.
-  - specialize (H2 a ltac:(solve_R)) as [H2 | [H2 | H2]].
-    -- exfalso. apply (closed_not_interior_a a b H1); tauto.
-    -- apply differentiable_at_right_imp_continuous_at_right; tauto.
-    -- exfalso. apply (closed_not_right_pt_a a b H1); tauto.
-  - specialize (H2 b ltac:(solve_R)) as [H2 | [H2 | H2]].
-    -- exfalso. apply (closed_not_interior_b a b H1); tauto.
-    -- exfalso. apply (closed_not_left_pt_b a b H1); tauto.
-    -- apply differentiable_at_left_imp_continuous_at_left; tauto.
+  intros f a b H1 H2. apply differentiable_on_imp_continuous_on_subset with (D1 := [a, b]); auto.
+  intros x H3. auto_interval.
+  intros x H3. solve_R.
 Qed.
 
 Theorem differentiable_on_imp_continuous_on_open : forall f a b,
   a < b -> differentiable_on f (a, b) -> continuous_on f (a, b).
 Proof.
-  intros f a b H1 H2 x H3. specialize (H2 x H3) as [[H2 H4] | [[H2 _] | [H2 _]]].
-    -- apply differentiable_at_imp_continuous_at in H4. unfold continuous_at in H4. intros ε H5.
-       specialize (H4 ε H5) as [δ [H6 H7]]. exists δ; split; auto.
-    -- exfalso. apply (open_not_left_pt a b x H1); auto.
-    -- exfalso. apply (open_not_right_pt a b x H1); auto.
+  intros f a b H1 H2. apply differentiable_on_imp_continuous_on_subset with (D1 := (a, b)); auto.
+  intros x H3. auto_interval.
+  intros x H3. solve_R.
 Qed.
 
-Lemma differentiable_on_closed_interval_subset : forall f a b c d,
-  a <= c < d <= b -> differentiable_on f [a, b] -> differentiable_on f [c, d].
+Lemma differentiable_imp_differentiable_on : forall f D,
+  differentiable f -> differentiable_domain D -> differentiable_on f D.
 Proof.
-  intros f a b c d H1 H2 x H4. specialize (H2 x ltac:(solve_R)) as [[H5 H6] | [[H5 H6] | [H5 H6]]].
-  - apply unique_classification_closed in H4 as [H7 | [H7 | H7]]; solve_R.
-    -- right. left. split; auto. apply differentiable_at_imp_left_right; auto.
-    -- right; right; split; auto. apply differentiable_at_imp_left_right; auto.
-  - right. left. split; auto. apply closed_left_pt_iff; apply closed_left_pt_iff in H5; solve_R.
-  - right; right; split; auto. apply closed_right_pt_iff; apply closed_right_pt_iff in H5; solve_R.
-Qed.
-
-Lemma differentiable_on_open_interval_subset : forall f a b c d,
-  a <= c < d <= b -> differentiable_on f [a, b] -> differentiable_on f (c, d).
-Proof.
-  intros f a b c d H1 H2 x H4. specialize (H2 x ltac:(solve_R)) as [[H5 H6] | [[H5 H6] | [H5 H6]]].
-  - left. split; auto. apply open_interior_iff; solve_R.
-  - apply closed_left_pt_iff in H5; solve_R.
-  - apply closed_right_pt_iff in H5; solve_R.
-Qed.
-
-Lemma continuous_on_closed_interval_subset : forall f a b c d,
-a <= c < d <= b -> continuous_on f [a, b] -> continuous_on f [c, d].
-Proof.
-  intros f a b c d H1 H2. apply continuous_on_closed_interval_iff in H2 as [H3 [H5 H6]]; solve_R.
-  apply continuous_on_closed_interval_iff; solve_R. repeat split.
-  - intros x H7. apply H3. solve_R.
-  - assert (a < c \/ a = c) as [H7 | H7] by solve_R.
-    -- specialize (H3 c ltac:(solve_R)). apply limit_iff in H3. tauto.
-    -- subst. auto.
-  - assert (b > d \/ b = d) as [H7 | H7] by solve_R.
-    -- specialize (H3 d ltac:(solve_R)). apply limit_iff in H3. tauto.
-    -- subst. tauto.
-Qed.
-
-Lemma differentiable_imp_differentiable_on : forall f a b,
-  a < b -> differentiable f -> differentiable_on f [a, b].
-Proof.
-  intros f  a b H1 H2 x H3. assert (x = a \/ x = b \/ (a < x < b)) as [H4 | [H4 | H4]] by solve_R.
-  - right; left. split. subst. apply closed_left_pt_iff; auto.
-    apply differentiable_at_imp_left_right. auto.
-  - right; right. split. subst. apply closed_right_pt_iff; auto.
-    apply differentiable_at_imp_left_right. auto.
-  - left. split. apply closed_interior_iff; solve_R.
-    apply H2.
-Qed.
-
-Lemma derivative_imp_differentiable : forall f f',
-  ⟦ der ⟧ f = f' -> differentiable f.
-Proof.
-  intros f f' H1 x. unfold differentiable_at. exists (f' x). intros ε H2.
-  specialize (H1 x ε) as [δ [H3 H4]]; auto. exists δ. split; auto.
-Qed.
-
-Lemma differentiable_imp_exists_derivative : forall f,
-  differentiable f -> exists f', ⟦ der ⟧ f = f'.
-Proof.
-  intros f H1.
-  unfold derivative.
-  apply choice with (A := R) (B := R) (R := fun x y => ⟦ lim 0 ⟧ (fun h => (f (x + h) - f x) / h) = y).
-  intros x.
-  specialize (H1 x).
-  unfold differentiable_at in H1.
-  destruct H1 as [L H1].
-  exists L.
-  unfold derivative_at.
-  apply H1.
+  intros f D H1 H2 a H3.
+  specialize (H2 a H3). specialize (H1 a).
+  destruct H2 as [H2 | [H2 | H2]];
+  [ left | right; left | right; right ]; split; auto.
+  - apply differentiable_at_imp_left_right in H1; tauto.
+  - apply differentiable_at_imp_left_right in H1; tauto.
 Qed.
 
 Lemma differentiable_on_imp_differentiable_at : forall f D a,
@@ -477,15 +693,23 @@ Lemma differentiable_on_imp_differentiable_at : forall f D a,
   differentiable_at f a.
 Proof.
   intros f D a H1 H2 H3.
-  specialize (H3 a H1) as [[H4 H5] | [[H4 H5] | [H4 H5]]]; auto.
-  - exfalso. apply interior_not_endpoint in H2. tauto.
-  - exfalso. apply interior_not_endpoint in H2. tauto.
+  specialize (H3 a H1) as [[H4 H5] | [[H4 H5] | [H4 H5]]]; auto_interval.
 Qed.
 
-Lemma derivative_at_imp_differentiable_at : forall a f f',
-  ⟦ der a ⟧ f = f' -> differentiable_at f a.
+Lemma differentiable_on_imp_differentiable_at_right : forall f D a,
+  left_endpoint D a -> differentiable_on f D -> differentiable_at_right f a.
 Proof.
-  intros a f f' H1. exists (f' a). auto.
+  intros f D a H1 H2.
+  apply differentiable_on_imp_derivative_on in H2 as [f' H2].
+  exists (f' a). eapply derivative_on_imp_derivative_at_right; eauto.
+Qed.
+
+Lemma differentiable_on_imp_differentiable_at_left : forall f D a,
+  right_endpoint D a -> differentiable_on f D -> differentiable_at_left f a.
+Proof.
+  intros f D a H1 H2.
+  apply differentiable_on_imp_derivative_on in H2 as [f' H2].
+  exists (f' a). eapply derivative_on_imp_derivative_at_left; eauto.
 Qed.
 
 Lemma derivative_at_right_imp_differentiable_at_right : forall a f f',
@@ -500,27 +724,13 @@ Proof.
   intros a f f' H1. exists (f' a). auto.
 Qed.
 
-Lemma derivative_on_imp_differentiable_on : forall f f' A,
-  ⟦ der ⟧ f A = f' -> differentiable_on f A.
+Lemma differentiable_on_open_iff : forall f D,
+  (forall x, x ∈ D -> interior_point D x) ->
+  (differentiable_on f D <-> forall x, x ∈ D -> differentiable_at f x).
 Proof.
-  intros f f' A H1 x H2. specialize (H1 x H2) as [H3 | [H3 | H3]].
-  - left. split; try tauto. apply (derivative_at_imp_differentiable_at x f f'); tauto.
-  - right. left. split; try tauto. apply (derivative_at_right_imp_differentiable_at_right x f f'); tauto.
-  - right. right. split; try tauto. apply (derivative_at_left_imp_differentiable_at_left x f f'); tauto.
-Qed.
-
-Lemma differentiable_domain_open : forall a b,
-  a < b -> differentiable_domain (a, b).
-Proof.
-  intros a b H1 x H2.
-  left. apply open_interior_iff; solve_R.
-Qed.
-
-Lemma differentiable_domain_closed : forall a b,
-  a < b -> differentiable_domain [a, b].
-Proof.
-  intros a b H1 x H2.
-  pose proof unique_classification_closed x a b H1 H2. tauto.
+  intros f D H1. split.
+  - intros H2 x H3. eapply differentiable_on_imp_differentiable_at; eauto.
+  - intros H2 x H3. left. split; auto.
 Qed.
 
 Lemma derivative_at_const : forall c a,
@@ -667,35 +877,28 @@ Proof.
   apply limit_left_plus; auto.
 Qed.
 
-Theorem derivative_plus : forall f g f' g',
-  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' ->
-  ⟦ der ⟧ (f + g) = f' + g'.
-Proof.
-  intros f g f' g' H1 H2 a. apply derivative_at_plus; auto. 
-Qed.
-
-Ltac contradict_interval D a H :=
-  exfalso;
-  first [ apply (interior_not_endpoint D a H); tauto
-        | apply (left_endpoint_not_interior D a H); tauto
-        | apply (right_endpoint_not_interior D a H); tauto
-        | apply (left_endpoint_not_right_endpoint D a H); tauto
-        | apply (right_endpoint_not_left_endpoint D a H); tauto
-        ].
-
 Theorem derivative_on_plus : forall f g f' g' D,
   differentiable_domain D ->
   ⟦ der ⟧ f D = f' -> ⟦ der ⟧ g D = g' ->
   ⟦ der ⟧ (f + g) D = f' + g'.
 Proof.
   intros f g f' g' D H1 H2 H3 a H4.
-  specialize (H1 a H4) as [H5 | [H5 | H5]];
-  specialize (H2 a H4) as [H6 | [H6 | H6]];
-  specialize (H3 a H4) as [H7 | [H7 | H7]];
-  try (left; split; auto; apply derivative_at_plus; tauto);
-  try (right; left; split; auto; apply derivative_at_right_plus; tauto);
-  try (right; right; split; auto; apply derivative_at_left_plus; tauto);
-  contradict_interval D a H5.
+  specialize (H1 a H4) as H1; specialize (H2 a H4) as H2; specialize (H3 a H4) as H3.
+  
+  destruct H1 as [H1 | [H1 | H1]];
+  destruct H2 as [H2 | [H2 | H2]];
+  destruct H3 as [H3 | [H3 | H3]];
+  try auto_interval.
+  - left; split; auto. apply derivative_at_plus; auto.
+  - right; left; split; auto. apply derivative_at_right_plus; auto.
+  - right; right; split; auto. apply derivative_at_left_plus; auto.
+Qed.
+
+Theorem derivative_plus : forall f g f' g',
+  ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = g' ->
+  ⟦ der ⟧ (f + g) = f' + g'.
+Proof.
+  intros f g f' g' H1 H2 a. apply derivative_at_plus; auto. 
 Qed.
 
 Lemma derivative_on_plus_open : forall f g f' g' a b,
@@ -761,13 +964,14 @@ Theorem derivative_on_minus : forall f g f' g' D,
   ⟦ der ⟧ (f - g) D = f' - g'.
 Proof.
   intros f g f' g' D H1 H2 H3 a H4.
-  specialize (H1 a H4) as [H5 | [H5 | H5]];
-  specialize (H2 a H4) as [H6 | [H6 | H6]];
-  specialize (H3 a H4) as [H7 | [H7 | H7]];
-  try (left; split; auto; apply derivative_at_minus; tauto);
-  try (right; left; split; auto; apply derivative_at_right_minus; tauto);
-  try (right; right; split; auto; apply derivative_at_left_minus; tauto);
-  contradict_interval D a H5.
+  specialize (H1 a H4); specialize (H2 a H4); specialize (H3 a H4).
+  destruct H1 as [H1 | [H1 | H1]];
+  destruct H2 as [H2 | [H2 | H2]];
+  destruct H3 as [H3 | [H3 | H3]];
+  try auto_interval.
+  - left. split; auto. apply derivative_at_minus; tauto.
+  - right; left. split; auto. apply derivative_at_right_minus; tauto.
+  - right; right. split; auto. apply derivative_at_left_minus; tauto.
 Qed.
 
 Lemma derivative_on_minus_open : forall f g f' g' a b,
@@ -860,16 +1064,17 @@ Qed.
 Theorem derivative_on_mult : forall f g f' g' D,
   differentiable_domain D ->
   ⟦ der ⟧ f D = f' -> ⟦ der ⟧ g D = g' ->
-  ⟦ der ⟧ (f ∙ g) D = f' ∙ g + f ∙ g'.
+  ⟦ der ⟧ (f ∙ g) D = (f' ∙ g + f ∙ g').
 Proof.
   intros f g f' g' D H1 H2 H3 a H4.
-  specialize (H1 a H4) as [H5 | [H5 | H5]];
-  specialize (H2 a H4) as [H6 | [H6 | H6]];
-  specialize (H3 a H4) as [H7 | [H7 | H7]];
-  try (left; split; auto; apply derivative_at_mult; tauto);
-  try (right; left; split; auto; apply derivative_at_right_mult; tauto);
-  try (right; right; split; auto; apply derivative_at_left_mult; tauto);
-  contradict_interval D a H5.
+  specialize (H1 a H4); specialize (H2 a H4); specialize (H3 a H4).
+  destruct H1 as [H1 | [H1 | H1]];
+  destruct H2 as [H2 | [H2 | H2]];
+  destruct H3 as [H3 | [H3 | H3]];
+  try auto_interval.
+  - left. split; auto. apply derivative_at_mult; tauto.
+  - right; left. split; auto. apply derivative_at_right_mult; tauto.
+  - right; right. split; auto. apply derivative_at_left_mult; tauto.
 Qed.
 
 Lemma derivative_on_mult_open : forall f g f' g' a b,
@@ -936,15 +1141,17 @@ Qed.
 
 Theorem derivative_on_mult_const_l : forall f f' D c,
   differentiable_domain D ->
-  ⟦ der ⟧ f D = f' -> ⟦ der ⟧ (c * f) D = c * f'.
+  ⟦ der ⟧ f D = f' ->
+  ⟦ der ⟧ (fun x => c * f x) D = (fun x => c * f' x).
 Proof.
   intros f f' D c H1 H2 a H3.
-  specialize (H1 a H3) as [H4 | [H4 | H4]];
-  specialize (H2 a H3) as [H5 | [H5 | H5]];
-  try (left; split; auto; apply derivative_at_mult_const_l; tauto);
-  try (right; left; split; auto; apply derivative_at_right_mult_const_l; tauto);
-  try (right; right; split; auto; apply derivative_at_left_mult_const_l; tauto);
-  contradict_interval D a H4.
+  specialize (H1 a H3); specialize (H2 a H3).
+  destruct H1 as [H1 | [H1 | H1]];
+  destruct H2 as [H2 | [H2 | H2]];
+  try auto_interval.
+  - left. split; auto. apply derivative_at_mult_const_l; tauto.
+  - right; left. split; auto. apply derivative_at_right_mult_const_l; tauto.
+  - right; right. split; auto. apply derivative_at_left_mult_const_l; tauto.
 Qed.
 
 Lemma derivative_on_mult_const_l_open : forall f f' a b c,
@@ -1248,12 +1455,13 @@ Theorem derivative_on_inv : forall f f' D,
   ⟦ der ⟧ (fun x => / f x) D = (fun x => -1 * f' x) / (fun x => f x ^ 2).
 Proof.
   intros f f' D H1 H2 H3 a H4.
-  specialize (H1 a H4) as [H5 | [H5 | H5]];
-  specialize (H3 a H4) as [H6 | [H6 | H6]];
-  try (left; split; auto; apply derivative_at_inv; [tauto | apply H2; auto]);
-  try (right; left; split; auto; apply derivative_at_right_inv; [tauto | apply H2; auto]);
-  try (right; right; split; auto; apply derivative_at_left_inv; [tauto | apply H2; auto]);
-  contradict_interval D a H5.
+  specialize (H1 a H4); specialize (H2 a H4); specialize (H3 a H4).
+  destruct H1 as [H1 | [H1 | H1]];
+  destruct H3 as [H3 | [H3 | H3]];
+  try auto_interval.
+  - left. split; auto. apply derivative_at_inv; tauto.
+  - right; left. split; auto. apply derivative_at_right_inv; tauto.
+  - right; right. split; auto. apply derivative_at_left_inv; tauto.
 Qed.
 
 Lemma derivative_on_inv_open : forall f f' a b,
@@ -1322,13 +1530,14 @@ Theorem derivative_on_div : forall f f' g g' D,
   ⟦ der ⟧ (f / g) D = (g ∙ f' - f ∙ g')%f / (g ∙ g).
 Proof.
   intros f f' g g' D H1 H2 H3 H4 a H5.
-  specialize (H1 a H5) as [H6 | [H6 | H6]];
-  specialize (H2 a H5) as [H7 | [H7 | H7]];
-  specialize (H3 a H5) as [H8 | [H8 | H8]];
-  try (left; split; auto; apply derivative_at_div; [tauto | tauto | apply H4; auto]);
-  try (right; left; split; auto; apply derivative_at_right_div; [tauto | tauto | apply H4; auto]);
-  try (right; right; split; auto; apply derivative_at_left_div; [tauto | tauto | apply H4; auto]);
-  contradict_interval D a H6.
+  specialize (H1 a H5); specialize (H2 a H5); specialize (H3 a H5); specialize (H4 a H5).
+  destruct H1 as [H1 | [H1 | H1]];
+  destruct H2 as [H2 | [H2 | H2]];
+  destruct H3 as [H3 | [H3 | H3]];
+  try auto_interval.
+  - left. split; auto. apply derivative_at_div; tauto.
+  - right; left. split; auto. apply derivative_at_right_div; tauto.
+  - right; right. split; auto. apply derivative_at_left_div; tauto.
 Qed.
 
 Lemma derivative_on_div_open : forall f f' g g' a b,
@@ -1451,18 +1660,13 @@ Theorem derivative_on_comp : forall f g f' g' D,
   ⟦ der ⟧ (g ∘ f) D = (g' ∘ f)%f ∙ f'.
 Proof.
   intros f g f' g' D H1 H2 H3 a H4.
-  specialize (H1 a H4) as [H5 | [H5 | H5]];
-  specialize (H2 a H4) as [H6 | [H6 | H6]];
-  specialize (H3 a H4).
-  - destruct H6 as [H6 H7]. left. split; auto. apply derivative_at_comp; auto.
-  - destruct H6 as [H6 H7]. exfalso. apply (interior_not_endpoint D a H5). left; auto.
-  - destruct H6 as [H6 H7]. exfalso. apply (interior_not_endpoint D a H5). right; auto.
-  - destruct H6 as [H6 H7]. exfalso. apply (interior_not_endpoint D a H6). left; auto.
-  - destruct H6 as [H6 H7]. right; left. split; auto. apply derivative_at_right_comp; auto.
-  - destruct H6 as [H6 H7]. exfalso. apply (left_endpoint_not_right_endpoint D a H5). auto.
-  - destruct H6 as [H6 H7]. exfalso. apply (interior_not_endpoint D a H6). right; auto.
-  - destruct H6 as [H6 H7]. exfalso. apply (right_endpoint_not_left_endpoint D a H5). auto.
-  - destruct H6 as [H6 H7]. right; right. split; auto. apply derivative_at_left_comp; auto.
+  specialize (H1 a H4); specialize (H2 a H4); specialize (H3 a H4).
+  destruct H1 as [H1 | [H1 | H1]];
+  destruct H2 as [H2 | [H2 | H2]];
+  try auto_interval.
+  - left. split; auto. apply derivative_at_comp; tauto.
+  - right; left. split; auto. apply derivative_at_right_comp; tauto.
+  - right; right. split; auto. apply derivative_at_left_comp; tauto.
 Qed.
 
 Lemma derivative_on_comp_open : forall f g f' g' a b,
@@ -1485,6 +1689,123 @@ Proof.
   intros f g f' g' a b H1 H2 H3.
   apply derivative_on_comp; auto.
   apply differentiable_domain_closed; auto.
+Qed.
+
+Lemma derivative_at_sqrt : forall a,
+  a > 0 ->
+  ⟦ der a ⟧ (fun x => sqrt x) = (fun x => 1 / (2 * sqrt x)).
+Proof.
+  intros a H1. unfold derivative_at.
+  apply limit_eq with (f1 := fun h => 1 / (sqrt (a + h) + sqrt a)).
+  - exists a; split; auto. intros h H2.
+    assert (sqrt (a + h) > 0) as H3 by (apply sqrt_lt_R0; solve_R).
+    assert (sqrt a > 0) as H4 by (apply sqrt_lt_R0; auto).
+    apply Rmult_eq_reg_r with (r := sqrt (a + h) + sqrt a); try lra.
+    field_simplify; try solve [solve_R].
+    repeat rewrite pow2_sqrt; solve_R.
+  - replace (1 / (2 * sqrt a)) with (1 / (sqrt a + sqrt a)).
+    2 : { pose proof sqrt_lt_R0 a H1 as H2. solve_R. }
+    apply limit_div; try solve_lim.
+    -- apply limit_plus; try solve_lim.
+       apply limit_sqrt_f_x; solve_lim.
+    -- pose proof sqrt_lt_R0 a H1. lra.
+Qed.
+
+Lemma derivative_at_right_sqrt : forall a,
+  a > 0 ->
+  ⟦ der a ⁺ ⟧ (fun x => sqrt x) = (fun x => 1 / (2 * sqrt x)).
+Proof.
+  intros a H1. apply derivative_at_iff. apply derivative_at_sqrt; auto.
+Qed.
+
+Lemma derivative_at_left_sqrt : forall a,
+  a > 0 ->
+  ⟦ der a ⁻ ⟧ (fun x => sqrt x) = (fun x => 1 / (2 * sqrt x)).
+Proof.
+  intros a H1. apply derivative_at_iff. apply derivative_at_sqrt; auto.
+Qed.
+
+Theorem derivative_on_sqrt : forall D,
+  differentiable_domain D ->
+  (forall x, x ∈ D -> x > 0) ->
+  ⟦ der ⟧ (fun x => sqrt x) D = (fun x => 1 / (2 * sqrt x)).
+Proof.
+  intros D H1 H2 a H3.
+  specialize (H1 a H3); specialize (H2 a H3).
+  destruct H1 as [H1 | [H1 | H1]];
+  try auto_interval.
+  - left. split; auto. apply derivative_at_sqrt; auto.
+  - right; left. split; auto. apply derivative_at_right_sqrt; auto.
+  - right; right. split; auto. apply derivative_at_left_sqrt; auto.
+Qed.
+
+Lemma derivative_on_sqrt_open : forall a b,
+  0 <= a < b ->
+  ⟦ der ⟧ (fun x => sqrt x) (a, b) = (fun x => 1 / (2 * sqrt x)).
+Proof.
+  intros a b H1.
+  apply derivative_on_sqrt.
+  - apply differentiable_domain_open; lra.
+  - intros x H2. solve_R.
+Qed.
+
+Lemma derivative_on_sqrt_closed : forall a b,
+  0 < a < b ->
+  ⟦ der ⟧ (fun x => sqrt x) [a, b] = (fun x => 1 / (2 * sqrt x)).
+Proof.
+  intros a b H1.
+  apply derivative_on_sqrt.
+  - apply differentiable_domain_closed; lra.
+  - intros x H2. solve_R.
+Qed.
+
+Theorem derivative_at_sqrt_comp : forall f f' a,
+  f a > 0 ->
+  ⟦ der a ⟧ f = f' ->
+  ⟦ der a ⟧ (fun x => sqrt (f x)) = (fun x => f' x / (2 * sqrt (f x))).
+Proof.
+  intros f f' a H1 H2.
+  replace (fun x => f' x / (2 * sqrt (f x))) with ((fun y => (1 / (2 * sqrt y))%R) ∘ f ∙ f')%f.
+  2 : { extensionality x. unfold compose. lra. }
+  apply derivative_at_comp; auto.
+  apply derivative_at_sqrt; auto.
+Qed.
+
+Theorem derivative_at_right_sqrt_comp : forall f f' a,
+  f a > 0 ->
+  ⟦ der a ⁺ ⟧ f = f' ->
+  ⟦ der a ⁺ ⟧ (fun x => sqrt (f x)) = (fun x => f' x / (2 * sqrt (f x))).
+Proof.
+  intros f f' a H1 H2.
+  replace (fun x => f' x / (2 * sqrt (f x))) with ((fun y => (1 / (2 * sqrt y))%R) ∘ f ∙ f')%f.
+  2 : { extensionality x. unfold compose. lra. }
+  apply derivative_at_right_comp; auto.
+  apply derivative_at_sqrt; auto.
+Qed.
+
+Theorem derivative_at_left_sqrt_comp : forall f f' a,
+  f a > 0 ->
+  ⟦ der a ⁻ ⟧ f = f' ->
+  ⟦ der a ⁻ ⟧ (fun x => sqrt (f x)) = (fun x => f' x / (2 * sqrt (f x))).
+Proof.
+  intros f f' a H1 H2.
+  replace (fun x => f' x / (2 * sqrt (f x))) with ((fun y => (1 / (2 * sqrt y))%R) ∘ f ∙ f')%f.
+  2 : { extensionality x. unfold compose. lra. }
+  apply derivative_at_left_comp; auto.
+  apply derivative_at_sqrt; auto.
+Qed.
+
+Theorem derivative_on_sqrt_comp : forall f f' D,
+  differentiable_domain D ->
+  (forall x, x ∈ D -> f x > 0) ->
+  ⟦ der ⟧ f D = f' ->
+  ⟦ der ⟧ (fun x => sqrt (f x)) D = (fun x => f' x / (2 * sqrt (f x))).
+Proof.
+  intros f f' D H1 H2 H3.
+  replace (fun x => f' x / (2 * sqrt (f x))) with ((fun y => (1 / (2 * sqrt y))%R) ∘ f ∙ f')%f.
+  2 : { extensionality x. unfold compose. lra. }
+  apply derivative_on_comp; auto.
+  intros x H4. apply derivative_at_sqrt. apply H2; auto.
 Qed.
 
 Definition maximum_point (f: ℝ -> ℝ) (A : Ensemble ℝ) (x : ℝ) :=
@@ -1619,10 +1940,10 @@ Proof.
   assert (x1 ∈ (a, b) \/ x2 ∈ (a, b) \/ ((x1 = a \/ x1 = b) /\ (x2 = a \/ x2 = b))) as [H13 | [H13 | [H13 H14]]] by (solve_R).
   - exists x1. split; auto. apply derivative_at_maximum_point_eq_zero with (a := a) (b := b); auto. 
     unfold maximum_point. split; auto. intros y H14. apply H8. solve_R. 
-    apply differentiable_on_imp_differentiable_at with (D := (a, b)); auto. apply open_interior_iff; solve_R.
+    apply differentiable_on_imp_differentiable_at with (D := (a, b)); auto. auto_interval.
   - exists x2. split; auto. apply derivative_at_minimum_point_zero with (a := a) (b := b); auto. 
     unfold minimum_point. split; auto. intros y H14. apply H11. solve_R. 
-    apply differentiable_on_imp_differentiable_at with (D := (a, b)); auto. apply open_interior_iff; solve_R.
+    apply differentiable_on_imp_differentiable_at with (D := (a, b)); auto. auto_interval.
   - assert (y1 = y2) as H15. { destruct H13 as [H13 | H13], H14 as [H14 | H14]; subst; auto. }
     pose proof min_max_equal_imp_const f a b y1 y2 H5 H6 H15 as H16. 
     exists ((a + b) / 2). split. solve_R. 
@@ -1650,13 +1971,11 @@ Proof.
   }
   assert (differentiable_on h (a, b)) as H5.
   {
-    intros x. left. destruct (H3 x ltac:(auto)) as [[H6 [L H7]] | [[H6 _] | [H6 H7]]].
-    - split; auto. exists (L - (f b - f a) / (b - a)). unfold h.
-      apply limit_eq with (f1 := (fun h => (f (x + h) - f x) / h - (f b - f a) / (b - a))).
-      exists 1. split; try lra. solve_R.
-      apply limit_minus; auto. solve_lim.
-    - exfalso. apply (open_not_left_pt a b x); auto.
-    - exfalso. apply (open_not_right_pt a b x); auto.
+    intros x. left. destruct (H3 x ltac:(auto)) as [[H6 [L H7]] | [[H6 _] | [H6 H7]]]; auto_interval.
+    split; auto. exists (L - (f b - f a) / (b - a)). unfold h.
+    apply limit_eq with (f1 := (fun h => (f (x + h) - f x) / h - (f b - f a) / (b - a))).
+    exists 1. split; try lra. solve_R.
+    apply limit_minus; auto. solve_lim.
   }
   assert (h a = f a) as H6 by (unfold h; lra).
   assert (h b = f a) as H7 by (unfold h; solve_R).
@@ -1679,43 +1998,29 @@ Proof.
     - intros x0 H6. apply differentiable_at_imp_continuous_at. 
       assert (H7 : x0 ∈ (a, b)). { solve_R. } 
       specialize (H2 x0 ltac:(solve_R)). 
-      destruct H2 as [H2 | [H2 | H2]].
-      -- destruct H2 as [_ H2]. exists 0; auto.
-      -- exfalso. apply (closed_not_left_pt_interior a b x0 H1 H7 ltac:(tauto)).
-      -- exfalso. apply (closed_not_right_pt_interior a b x0 H1 H7 ltac:(tauto)).
-    - specialize (H2 a ltac:(solve_R)). destruct H2 as [H2 | [H2 | H2]].
-      -- exfalso. apply (closed_not_interior_a a b H1 ltac:(tauto)).
-      -- apply differentiable_at_right_imp_continuous_at_right. destruct H2 as [_ H2]. unfold differentiable_at_right. exists 0; auto.
-      -- exfalso. apply (closed_not_right_pt_a a b H1 ltac:(tauto)).
+      destruct H2 as [H2 | [H2 | H2]]; auto_interval.
+      exists 0; auto.
+    - specialize (H2 a ltac:(solve_R)). destruct H2 as [H2 | [H2 | H2]]; auto_interval.
+      apply differentiable_at_right_imp_continuous_at_right. exists 0; auto.
     - assert (x = b \/ x < b) as [H6 | H6] by (solve_R).
-      -- subst. apply differentiable_at_left_imp_continuous_at_left. specialize (H2 b ltac:(solve_R)). destruct H2 as [H2 | [H2 | H2]].
-        + exfalso. apply (closed_not_interior_b a b H1 ltac:(tauto)).
-        + exfalso. apply (closed_not_left_pt_b a b H1 ltac:(tauto)).
-        + destruct H2 as [_ H2]. unfold differentiable_at_left. exists 0; auto. 
+      -- subst. apply differentiable_at_left_imp_continuous_at_left. specialize (H2 b ltac:(solve_R)). destruct H2 as [H2 | [H2 | H2]]; auto_interval.
+          exists 0; auto.
       -- apply differentiable_at_left_imp_continuous_at_left. 
          assert (H7 : x ∈ (a, b)). { solve_R. }
-         specialize (H2 x ltac:(solve_R)). destruct H2 as [H2 | [H2 | H2]].
-        + destruct H2 as [_ H2]. exists 0. apply derivative_at_iff in H2; tauto.
-        + exfalso. apply (closed_not_left_pt_interior a b x H1 H7 ltac:(tauto)).
-        + exfalso. apply (closed_not_right_pt_interior a b x H1 H7 ltac:(tauto)).
+         specialize (H2 x ltac:(solve_R)). destruct H2 as [H2 | [H2 | H2]]; auto_interval.
+         apply derivative_at_iff in H0; destruct H0 as [_ H0]. exists 0; auto.
   }
   assert (differentiable_on f (a, x)) as H7.
   {
-    intros x0 H7. left. split.
-    - apply open_interior_iff; solve_R.
-    - assert (H8 : x0 ∈ (a, b)). { solve_R. }
-      specialize (H2 x0 ltac:(solve_R)) as [H2 | [H2 | H2]].
-      -- destruct H2 as [_ H2]. exists 0. auto.
-      -- exfalso. apply (closed_not_left_pt_interior a b x0 H1 H8 ltac:(tauto)).
-      -- exfalso. apply (closed_not_right_pt_interior a b x0 H1 H8 ltac:(tauto)).
+    intros x0 H7. left. split; auto_interval.
+    assert (H8 : x0 ∈ (a, b)). { solve_R. }
+    specialize (H2 x0 ltac:(solve_R)) as [H2 | [H2 | H2]]; auto_interval. exists 0; auto.
   }
   pose proof mean_value_theorem f a x H5 H6 H7 as [c [H8 H9]]. specialize (H2 c ltac:(solve_R)). 
   set (f1 := (λ _ : ℝ, (f x - f a) / (x - a))). set (f2 := (λ _ : ℝ, 0)). assert (f1 c = f2 c) as H10.
   {
-    destruct H2 as [H2 | [H2 | H2]].
-    - apply derivative_at_unique with (f := f); tauto.
-    - exfalso. apply (closed_not_left_pt_interior a b c H1); solve_R.
-    - exfalso. apply (closed_not_right_pt_interior a b c H1); solve_R.
+    destruct H2 as [H2 | [H2 | H2]]; auto_interval.
+    apply derivative_at_unique with (f := f); tauto.
   } unfold f1, f2 in H10.
   apply Rmult_eq_compat_r with (r := (x - a)) in H10. field_simplify in H10; lra.
 Qed.
@@ -1725,25 +2030,16 @@ Corollary corollary_11_2 : forall f f' g g' a b,
 Proof.
   intros f f' g g' a b H1 H2 H3 H4. set (h := fun x => f x - g x). assert (⟦ der ⟧ h [a, b] = (λ x, f' x - g' x)) as H6.
   {
-    intros x0 H6. unfold h. assert (x0 = a \/ x0 = b \/ (x0 > a /\ x0 < b)) as [H7 | [H7 | H7]] by (unfold Ensembles.In in *; lra).
-    - right; left. split.
-      -- subst. apply closed_left_pt_iff; auto.
-      -- specialize (H2 x0 H6) as [H2 | [H2 | H2]]; specialize (H3 x0 H6) as [H3 | [H3 | H3]]; subst;
-         try (exfalso; apply (closed_not_interior_a a b H1); tauto); 
-         try (exfalso; apply (closed_not_right_pt_a a b H1); tauto); 
-         apply derivative_at_right_minus; tauto.
-    - right; right. split.
-      -- subst. apply closed_right_pt_iff; auto.
-      -- specialize (H2 x0 H6) as [H2 | [H2 | H2]]; specialize (H3 x0 H6) as [H3 | [H3 | H3]]; subst;
-         try (exfalso; apply (closed_not_interior_b a b H1); tauto); 
-         try (exfalso; apply (closed_not_left_pt_b a b H1); tauto); 
-         apply derivative_at_left_minus; tauto.
-    - left. split.
-      -- apply closed_interior_iff; solve_R.
-      -- specialize (H2 x0 H6) as [H2 | [H2 | H2]]; specialize (H3 x0 H6) as [H3 | [H3 | H3]];
-         try (exfalso; apply (closed_not_left_pt_interior a b x0 H1 H7); tauto);
-         try (exfalso; apply (closed_not_right_pt_interior a b x0 H1 H7); tauto);
-         apply derivative_at_minus; tauto.
+    intros x0 H6. unfold h. assert (x0 = a \/ x0 = b \/ (x0 > a /\ x0 < b)) as [H7 | [H7 | H7]] by (solve_R).
+    - right; left. split; auto_interval.
+      specialize (H2 x0 H6) as [H2 | [H2 | H2]]; specialize (H3 x0 H6) as [H3 | [H3 | H3]]; subst; auto_interval.
+      apply derivative_at_right_minus; tauto.
+    - right; right. split; auto_interval.
+      specialize (H2 x0 H6) as [H2 | [H2 | H2]]; specialize (H3 x0 H6) as [H3 | [H3 | H3]]; subst; auto_interval.
+      apply derivative_at_left_minus; tauto.
+    - left. split; auto_interval.
+      specialize (H2 x0 H6) as [H2 | [H2 | H2]]; specialize (H3 x0 H6) as [H3 | [H3 | H3]]; auto_interval.
+      apply derivative_at_minus; tauto.
   }
   assert (⟦ der ⟧ h [a, b] = (λ _, 0)) as H7.
   { apply derivative_on_ext with (f1' := (f' - g')%f); auto; try lra. intros x H7. specialize (H4 x H7). lra. }
@@ -1778,288 +2074,124 @@ Proof.
   intros f A H1 a b H2 H3 H4. specialize (H1 a b H2 H3 H4). lra.
 Qed.
 
-Lemma nth_differentiable_on_imp_differentiable_at : forall n f D a,
-  (n > 0)%nat ->
-  a ∈ D -> 
-  interior_point D a ->
-  nth_differentiable_on n f D -> 
-  differentiable_at f a.
-Proof.
-  intros n f D a H H0 H1 [fn' H2].
-  destruct n; [lia|].
-  simpl in H2.
-  destruct H2 as [f' [H2 H3]].
-  specialize (H2 a H0) as [[H4 H5] | [[H4 H5] | [H4 H5]]].
-  - exists (f' a). apply H5.
-  - exfalso. apply interior_not_endpoint in H1. tauto.
-  - exfalso. apply interior_not_endpoint in H1. tauto.
-Qed.
-
-Lemma nth_differentiable_on_imp_differentiable_on : forall n f D,
-  (n > 0)%nat ->
-  nth_differentiable_on n f D -> 
-  differentiable_on f D.
-Proof.
-  intros n f D H [fn' H0].
-  destruct n; [lia|].
-  simpl in H0.
-  destruct H0 as [f' [H0 H1]].
-  intros a H2.
-  specialize (H0 a H2).
-  destruct H0 as [[H3 H4] | [[H3 H4] | [H3 H4]]].
-  - left. split; [apply H3 | exists (f' a); apply H4].
-  - right; left. split; [apply H3 | exists (f' a); apply H4].
-  - right; right. split; [apply H3 | exists (f' a); apply H4].
-Qed.
-
-Lemma derivative_on_imp_derivative_at : forall a b x f f',
-  a < b -> x ∈ (a, b) -> ⟦ der ⟧ f (a, b) = f' -> ⟦ der x ⟧ f = f'.
-Proof.
-  intros a b x f f' H1 H2 H3. specialize (H3 x H2) as [[_ H3] | [[H3 _] | [H3 _]]]; auto.
-  - apply left_interval_endpoint_open in H3; tauto.
-  - apply right_interval_endpoint_open in H3; tauto.
-Qed.
-
-Lemma derivative_on_imp_derivative_at' : forall a D f f',
-  interior_point D a -> ⟦ der ⟧ f D = f' -> ⟦ der a ⟧ f = f'.
-Proof.
-  intros a D f f' H1 H2. assert (H3 : a ∈ D). { destruct H1 as [δ [H3 H4]]. specialize (H4 a ltac:(solve_R)). auto. }
-   specialize (H2 a H3). destruct H2 as [[_ H2] | [[H2 _] | [H2 _]]]; auto.
-  - exfalso. apply (interior_point_not_endpoint D a H1); tauto.
-  - exfalso. apply (interior_point_not_endpoint D a H1); tauto.
-Qed.
-  
-Lemma derivative_on_closed_imp_open : forall a b f f',
-  ⟦ der ⟧ f [a, b] = f' ->  ⟦ der ⟧ f (a, b) = f'.
-Proof.
-  intros a b f f' H1 x H2. left. split.
-  - apply is_interior_point_open; solve_R.
-  - specialize (H1 x ltac:(solve_R)) as [[_ H1] | [[H1 _] | [H1 _]]]; auto.
-    -- pose proof not_left_endpoint a b x ltac:(solve_R) ltac:(solve_R) as H3; tauto.
-    -- pose proof not_right_endpoint a b x ltac:(solve_R) ltac:(solve_R) as H3; tauto.
-Qed.
-
-Lemma derivative_at_eq_f : forall f1 f2 f' c a b,
-  a < c < b -> (forall x, a < x < b -> f1 x = f2 x) ->  ⟦ der c ⟧ f1 = f' -> ⟦ der c ⟧ f2 = f'.
-Proof.
-  intros f1 f2 f' c a b H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ [H3 H5]].
-  exists (Rmin (Rmin δ (b - c)) (c - a)); split. solve_R. intros x H6. repeat rewrite <- H2; auto.
-  2 : { solve_R. } specialize (H5 x ltac:(solve_R)). auto.
-Qed.
-
-Lemma derivative_at_eq_eventually : forall f1 f2 f' c,
-  (exists δ, δ > 0 /\ forall x, |x - c| < δ -> f1 x = f2 x) ->
-    ⟦ der c ⟧ f1 = f' -> ⟦ der c ⟧ f2 = f'.
-Proof.
-  intros f1 f2 f' c [δ [H1 H2]] H3.
-  apply derivative_at_eq_f with (a := c - δ) (b := c + δ) (f1 := f1).
-  - solve_R.
-  - intros x H4. apply H2; solve_R.
-  - solve_R.
-Qed.
-
-Lemma derivative_at_eq_f' : forall f f1' f2' c,
-  (forall x, f1' x = f2' x) ->  ⟦ der c ⟧ f = f1' -> ⟦ der c ⟧ f = f2'.
-Proof.
-  intros f f1' f2' c H1 H2 ε H3. specialize (H2 ε H3) as [δ [H2 H4]].
-  exists δ; split; auto. intros x H5. specialize (H4 x H5). rewrite <- H1.
-  auto.
-Qed.
-
-Lemma derivative_at_eq_f'' : forall f f1' f2' a b c,
-  a < c < b -> (forall x, a < x < b -> f1' x = f2' x) -> ⟦ der c ⟧ f = f1' -> ⟦ der c ⟧ f = f2'.
-Proof.
-  intros f f1' f2' a b c H1 H2 H3 ε H4. specialize (H3 ε H4) as [δ [H3 H5]].
-  exists (Rmin (Rmin δ (b - c)) (c - a)); split. solve_R. intros x H6. repeat rewrite <- H2; auto.
-  specialize (H5 x ltac:(solve_R)). auto.
-Qed.
-
-Lemma derivative_at_right_eq : forall f f1' f2' c,
-  (forall x, f1' x = f2' x) ->  ⟦ der c⁺ ⟧ f = f1' -> ⟦ der c⁺ ⟧ f = f2'.
-Proof.
-  intros f f1' f2' c H1 H2 ε H3. specialize (H2 ε H3) as [δ [H2 H4]].
-  exists δ; split; auto. intros x H5. specialize (H4 x H5). rewrite <- H1.
-  auto.
-Qed.
-
-Lemma derivative_at_left_eq :  forall f f1' f2' c,
-  (forall x, f1' x = f2' x) ->  ⟦ der c⁻ ⟧ f = f1' -> ⟦ der c⁻ ⟧ f = f2'.
-Proof.
-  intros f f1' f2' c H1 H2 ε H3. specialize (H2 ε H3) as [δ [H2 H4]].
-  exists δ; split; auto. intros x H5. specialize (H4 x H5). rewrite <- H1.
-  auto.
-Qed.
-
-Lemma derivative_replace_eq : forall f g f',
-  (forall x, f x = g x) -> ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = f'.
-Proof.
-  intros f g f' H1 H2 x. specialize (H2 x).
-  replace g with f in *. 2 : { extensionality x'. apply H1. }
-  auto.
-Qed.
-
-Lemma derivative_at_replace_eq : forall f g f' a,
-  (forall x, f x = g x) -> ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = f'.
-Proof.
-  intros f g f' a H1 H2.
-  replace g with f; auto.
-  extensionality x. apply H1.
-Qed.
-
 Theorem MVT : forall f f' a b,
   a < b -> continuous_on f [a, b] -> ⟦ der ⟧ f (a, b) = f' ->
   exists x, x ∈ (a, b) /\ f' x = (f b - f a) / (b - a).
 Proof.
-  intros f f' a b H1 H2 H3. pose proof theorem_11_4 f a b H1 H2 as [x [H4 H5]].
+  intros f f' a b H1 H2 H3. pose proof mean_value_theorem f a b H1 H2 as [x [H4 H5]].
   - apply derivative_on_imp_differentiable_on with (f' := f') in H3 as H6; auto.
-  - exists x; split; auto. specialize (H3 x ltac:(solve_R)). destruct H3 as [[_ H3] | [[H3 _] | [H3 _]]]; auto.
-    -- pose proof derivative_of_function_at_x_unique f f' (fun _ => (f b - f a) / (b - a)) x H3 H5. auto.
-    -- exfalso. apply (left_interval_endpoint_open a b x); auto.
-    -- exfalso. apply (right_interval_endpoint_open a b x); auto.
+  - exists x; split; auto. specialize (H3 x ltac:(solve_R)). destruct H3 as [[_ H3] | [[H3 _] | [H3 _]]]; auto_interval.
+   pose proof derivative_at_unique f f' (fun _ => (f b - f a) / (b - a)) x H3 H5 as H6; rewrite H6; solve_R.
 Qed.
-  
-Corollary corollary_11_3_a : forall f f' a b, 
+
+Corollary derivative_on_pos_imp_increasing_on : forall f f' a b, 
   a < b -> ⟦ der ⟧ f [a, b] = f' -> (forall x, x ∈ [a, b] -> f' x > 0) -> increasing_on f [a, b].
 Proof.
-  intros f f' a b H1 H2 H3 x1 x2 H4 H5 H6. assert (H7 : continuous_on f [x1, x2]).
+  intros f f' a b H1 H2 H3 x1 x2 H4 H5 H6. 
+  assert (H7 : continuous_on f [x1, x2]).
   {
-    apply continuous_on_closed_interval_subset with (a := a) (b := b); solve_R.
-    apply theorem_9_1_d; auto. apply derivative_on_imp_differentiable_on with (f' := f'); auto.
+    apply continuous_on_subset_closed with (a := a) (b := b); try solve_R.
+    apply differentiable_on_imp_continuous_on_closed; auto.
+    apply derivative_on_imp_differentiable_on with (f' := f'); auto.
   }
   assert (H8 : differentiable_on f (x1, x2)).
   {
-    apply differentiable_on_open_interval_subset with (a := a) (b := b); solve_R.
-    apply derivative_on_imp_differentiable_on with (f' := f'); auto. 
+    apply differentiable_on_subset_open with (a := a) (b := b); try solve_R.
+    apply derivative_on_imp_differentiable_on with (f' := f'); auto.
+    apply derivative_on_subset with (D1 := [a, b]); auto.
+    - apply differentiable_domain_open; solve_R.
+    - intros y H8; solve_R.
   }
-  
-  pose proof theorem_11_4 f x1 x2 H6 H7 H8 as [x [H9 H10]]. 
+  pose proof mean_value_theorem f x1 x2 H6 H7 H8 as [x [H9 H10]]. 
   set (h := λ _ : ℝ, (f x2 - f x1) / (x2 - x1)). assert (h x = f' x) as H11.
   {
-    apply derivative_of_function_at_x_unique with (f := f); auto. specialize (H2 x ltac:(solve_R)) as [H2 | [H2 | H2]].
-    - apply H2.
-    - destruct H2 as [H2 _]. apply is_left_endpoint_closed in H2; solve_R.
-    - destruct H2 as [H2 _]. apply is_right_endpoint_closed in H2; solve_R.
+    apply derivative_at_unique with (f := f) (x := x); auto. 
+    apply derivative_on_imp_derivative_at with (D := (x1, x2)); auto_interval.
+    apply derivative_on_subset with (D1 := [a, b]); auto.
+    - apply differentiable_domain_open; solve_R.
+    - intros y H11; solve_R.
   }
-  specialize (H3 x ltac:(unfold Ensembles.In in *; lra)). unfold h in H11. 
-  unfold h in H11. assert (H12 : (f x2 - f x1) / (x2 - x1) > 0) by lra.
+  specialize (H3 x ltac:(auto_interval)). unfold h in H11. 
+  assert (H12 : (f x2 - f x1) / (x2 - x1) > 0) by lra.
   apply Rmult_gt_compat_r with (r := (x2 - x1)) in H12; field_simplify in H12; lra.
 Qed.
 
-Corollary corollary_11_3_b : forall f f' a b, 
+Corollary derivative_on_neg_imp_decreasing_on : forall f f' a b, 
   a < b -> ⟦ der ⟧ f [a, b] = f' -> (forall x, x ∈ [a, b] -> f' x < 0) -> decreasing_on f [a, b].
 Proof.
-  intros f f' a b H1 H2 H3 x1 x2 H4 H5 H6. assert (H7 : continuous_on f [x1, x2]).
+  intros f f' a b H1 H2 H3 x1 x2 H4 H5 H6. 
+  assert (H7 : continuous_on f [x1, x2]).
   {
-    apply continuous_on_closed_interval_subset with (a := a) (b := b); solve_R.
-    apply theorem_9_1_d; auto. apply derivative_on_imp_differentiable_on with (f' := f'); auto.
+    apply continuous_on_subset_closed with (a := a) (b := b); try solve_R.
+    apply differentiable_on_imp_continuous_on_closed; auto.
+    apply derivative_on_imp_differentiable_on with (f' := f'); auto.
   }
   assert (H8 : differentiable_on f (x1, x2)).
   {
-    apply differentiable_on_open_interval_subset with (a := a) (b := b); solve_R.
+    apply differentiable_on_subset_open with (a := a) (b := b); try solve_R.
     apply derivative_on_imp_differentiable_on with (f' := f'); auto.
+    apply derivative_on_subset with (D1 := [a, b]); auto.
+    - apply differentiable_domain_open; solve_R.
+    - intros y H8; solve_R.
   }
-  pose proof theorem_11_4 f x1 x2 H6 H7 H8 as [x [H9 H10]]. 
+  pose proof mean_value_theorem f x1 x2 H6 H7 H8 as [x [H9 H10]]. 
   set (h := λ _ : ℝ, (f x2 - f x1) / (x2 - x1)). assert (h x = f' x) as H11.
   {
-     apply derivative_of_function_at_x_unique with (f := f); auto. specialize (H2 x ltac:(solve_R)) as [H2 | [H2 | H2]].
-    - apply H2.
-    - destruct H2 as [H2 _]. apply is_left_endpoint_closed in H2; solve_R.
-    - destruct H2 as [H2 _]. apply is_right_endpoint_closed in H2; solve_R.
+    apply derivative_at_unique with (f := f) (x := x); auto. 
+    apply derivative_on_imp_derivative_at with (D := (x1, x2)); try auto_interval.
+    apply derivative_on_subset with (D1 := [a, b]); auto.
+    - apply differentiable_domain_open; solve_R.
+    - intros y H11; solve_R.
   }
-  specialize (H3 x ltac:(unfold Ensembles.In in *; lra)). unfold h in H11. 
-  unfold h in H11. assert (H12 : (f x2 - f x1) / (x2 - x1) < 0) by lra.
+  specialize (H3 x ltac:(auto_interval)). unfold h in H11. 
+  assert (H12 : (f x2 - f x1) / (x2 - x1) < 0) by lra.
   apply Rmult_lt_compat_r with (r := (x2 - x1)) in H12; field_simplify in H12; lra.
 Qed.
 
-Corollary corollary_11_3_b' : forall f f' a b,
-  a < b -> continuous_on f [a, b] -> ⟦ der ⟧ f (a, b) = f' ->
-  (forall x, x ∈ (a, b) -> f' x < 0) ->
-  decreasing_on f [a, b].
-Proof.
-  intros f f' a b H1 H2 H3 H4 x1 x2 H5 H6 H7.
-  assert (H8 : differentiable_on f (x1, x2)).
-  {
-    intros x H8. left. split. apply is_interior_point_open; solve_R.
-    specialize (H3 x ltac:(solve_R)) as [[_ H3] | [[H3 _] | [H3 _]]].
-    - exists (f' x). auto.
-    - apply left_interval_endpoint_open in H3; solve_R.
-    - apply right_interval_endpoint_open in H3; solve_R.
-  }
-
-  assert (H9 : continuous_on f [x1, x2]).
-  { apply continuous_on_subset with (A2 := [a, b]); auto. intros x H9. solve_R. }
-
-  pose proof (theorem_11_4 f x1 x2 H7 H9 H8) as [c [H10 H11]].
-  
-  specialize (H3 c).
-  set (h := fun _ : R => (f x2 - f x1) / (x2 - x1)). assert (h c = f' c) as H12.
-  {
-    apply derivative_of_function_at_x_unique with (f := f); auto. specialize (H3 ltac:(solve_R)) as [[_ H3] | [[H3 _] | [H3 _]]].
-    - apply H3.
-    - apply left_interval_endpoint_open in H3; solve_R.
-    - apply right_interval_endpoint_open in H3; solve_R.
-  }
-  specialize (H4 c ltac:(solve_R)). unfold h in H12.
-  assert (H13 : (f x2 - f x1) / (x2 - x1) < 0) by lra.
-  apply Rmult_lt_compat_r with (r := (x2 - x1)) in H13; field_simplify in H13; lra.
-Qed.
-
-Theorem theorem_11_8 : forall f f' g g' a b,
+Theorem cauchy_mean_value_theorem : forall f f' g g' a b,
   a < b -> continuous_on f [a, b] -> continuous_on g [a, b] -> ⟦ der ⟧ f (a, b) = f' -> ⟦ der ⟧ g (a, b) = g' ->
     exists x, x ∈ (a, b) /\ (f b - f a) * g' x = (g b - g a) * f' x.
 Proof.
-  intros f f' g g' a b H1 H2 H3 H4 H5. set (h := λ x, (g b - g a) * f x - (f b - f a) * g x).
+  intros f f' g g' a b H1 H2 H3 H4 H5. 
+  set (h := λ x, (g b - g a) * f x - (f b - f a) * g x).
   assert (continuous_on h [a, b]) as H6.
   {
-    intros x H6. specialize (H2 x H6). specialize (H3 x H6). unfold h.
-    apply limit_on_minus; apply limit_on_mult; auto; apply limit_on_minus; apply limit_on_const.
+    unfold h.
+    apply continuous_on_minus.
+    - apply continuous_on_mult_const_l; auto.
+    - apply continuous_on_mult_const_l; auto.
   }
   assert (differentiable_on h (a, b)) as H7.
   {
-    intros x H7. left. split. apply is_interior_point_open; solve_R. specialize (H4 x H7). specialize (H5 x H7). unfold derivative_at in H4, H5.
-    assert (H8 : ⟦ lim 0 ⟧ (λ h : ℝ, (f (x + h) - f x) / h) = f' x).
-    {
-      destruct H4 as [[_ H4] | [[H4 _] | [H4 _]]]; auto.
-      - exfalso. apply (left_interval_endpoint_open a b x H1); auto.
-      - exfalso. apply (right_interval_endpoint_open a b x H1); auto.
-    }
-    assert (H9 : ⟦ lim 0 ⟧ (λ h : ℝ, (g (x + h) - g x) / h) = g' x).
-    {
-       destruct H5 as [[_ H5] | [[H5 _] | [H5 _]]]; auto.
-      - exfalso. apply (left_interval_endpoint_open a b x H1); auto.
-      - exfalso. apply (right_interval_endpoint_open a b x H1); auto.
-    }
-    clear H4 H5. rename H8 into H4, H9 into H5.
-    unfold h, differentiable_at. exists ((g b - g a) * f' x - (f b - f a) * g' x).
-    apply limit_to_0_equiv with (f1 := (λ h, ((g b - g a) * ((f (x + h) - f x)/h)) - ((f b - f a) * ((g (x + h) - g x)/h)))).
-    - intros h0 H8. solve_R.
-    - apply limit_minus; apply limit_mult; solve_lim.
+    unfold h.
+    apply derivative_on_imp_differentiable_on with (f' := (λ x, (g b - g a) * f' x - (f b - f a) * g' x)).
+    apply derivative_on_minus; auto.
+    - apply differentiable_domain_open; auto.
+    - apply derivative_on_mult_const_l; auto; apply differentiable_domain_open; auto.
+    - apply derivative_on_mult_const_l; auto; apply differentiable_domain_open; auto.
   }
   assert (h a = f a * g b - g a * f b) as H8. { unfold h. lra. }
   assert (h b = f a * g b - g a * f b) as H9. { unfold h. lra. }
-  assert (h a = h b) as H10 by lra. pose proof theorem_11_3 h a b H1 H6 H7 H10 as [x [H11 H12]].
+  assert (h a = h b) as H10 by lra. 
+  pose proof rolles_theorem h a b H1 H6 H7 H10 as [x [H11 H12]].
   assert (⟦ der x ⟧ h = (λ x, (g b - g a) * f' x - (f b - f a) * g' x)) as H13.
-  { apply theorem_10_3_c; apply theorem_10_5; auto; try (apply derivative_on_imp_derivative_at with (a := a) (b := b); auto). }
-  exists x; split; auto. set (h1' := (λ x, (g b - g a) * f' x - (f b - f a) * g' x)). set (h2' := (λ _ : R, 0)).
-  assert (h1' x = h2' x) as H14. { apply derivative_of_function_at_x_unique with (f := h); auto. }
-  unfold h1', h2' in H14. lra.
+  { 
+    unfold h. apply derivative_at_minus; apply derivative_at_mult_const_l;
+    apply derivative_on_imp_derivative_at with (D := (a, b)); auto_interval.
+  }
+  exists x; split; auto. 
+  pose proof (derivative_at_unique h _ _ x H12 H13) as H14. simpl in H14. lra.
 Qed.
 
 Theorem cauchy_mvt : forall f f' g g' a b,
   a < b -> continuous_on f [a, b] -> continuous_on g [a, b] -> ⟦ der ⟧ f (a, b) = f' -> ⟦ der ⟧ g (a, b) = g' -> 
     (forall x, x ∈ (a, b) -> g' x <> 0) -> g b <> g a -> exists x, x ∈ (a, b) /\ (f b - f a) / (g b - g a) = f' x / g' x.
 Proof.
-  intros f f' g g' a b H1 H2 H3 H4 H5 H6 H7. pose proof theorem_11_8 f f' g g' a b H1 H2 H3 H4 H5 as [x [H8 H9]].
+  intros f f' g g' a b H1 H2 H3 H4 H5 H6 H7. pose proof cauchy_mean_value_theorem f f' g g' a b H1 H2 H3 H4 H5 as [x [H8 H9]].
   exists x; split; auto. solve_R; split; solve_R.
 Qed.
 
-Lemma deriv_test : der (λ x : ℝ, x^2) = (λ x : ℝ, 2 * x).
-Proof.
-  intros x. replace ((λ x : ℝ, 2 * x)) with ((λ x : ℝ, 2 * x^(2-1))).
-  2 : { extensionality y. simpl. lra. } apply power_rule'; auto.
-Qed.
-
-Theorem theorem_11_9 : forall f f' g g' a L,
+Theorem lhopital_0_0_strong : forall f f' g g' a L,
   ⟦ lim a ⟧ f = 0 -> ⟦ lim a ⟧ g = 0 ->
   ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = g' ->
   (exists δ, δ > 0 /\ forall x, x ∈ (a - δ, a + δ) -> x <> a -> ⟦ der x ⟧ f = f') ->
@@ -2070,38 +2202,44 @@ Theorem theorem_11_9 : forall f f' g g' a L,
 Proof.
   intros f f' g g' a L H1 H2 H3 H4 [δ1 [H5 H6]] [δ2 [H7 H8]] [δ3 [H9 H10]] H11.
   assert (H12 : f a = 0).
-  { apply limit_of_function_unique with (f := f) (a := a); auto. apply theorem_9_1_a. exists (f' a); apply H3. }
+  {
+    apply derivative_at_imp_differentiable_at in H3.
+    apply differentiable_at_imp_continuous_at in H3.
+    apply limit_unique with (f := f) (a := a) (L1 := f a) (L2 := 0); auto.
+  }
   assert (H13 : g a = 0).
-  { apply limit_of_function_unique with (f := g) (a := a); auto. apply theorem_9_1_a. exists (g' a); apply H4. }
+  {
+    apply derivative_at_imp_differentiable_at in H4.
+    apply differentiable_at_imp_continuous_at in H4.
+    apply limit_unique with (f := g) (a := a) (L1 := g a) (L2 := 0); auto.
+  }
   intros ε H14. specialize (H11 ε H14) as [δ4 [H15 H16]].
   set (δ := Rmin (Rmin δ1 (Rmin δ2 δ3)) δ4). exists δ; split; [solve_R|].
   intros x H17. assert (a < x \/ x < a) as [H18 | H18] by solve_R.
   - assert (H19 : continuous_on f [a, x]).
     { 
       intros y H19. destruct (Req_dec_T y a) as [H20 | H20].
-      - subst y. apply limit_imp_limit_on. apply theorem_9_1_a. exists (f' a). apply H3.
-      - apply limit_imp_limit_on. apply theorem_9_1_a. exists (f' y). apply H6; unfold δ in *; solve_R. 
+      - subst y. apply limit_imp_limit_on. apply differentiable_at_imp_continuous_at. exists (f' a). apply H3.
+      - apply limit_imp_limit_on. apply differentiable_at_imp_continuous_at. exists (f' y). apply H6; unfold δ in *; solve_R. 
     }
     assert (H20 : continuous_on g [a, x]).
     {
       intros y H20. destruct (Req_dec_T y a) as [H21 | H21].
-      - subst y. apply limit_imp_limit_on. apply theorem_9_1_a. exists (g' a). apply H4.
-      - apply limit_imp_limit_on. apply theorem_9_1_a. exists (g' y). apply H8; unfold δ in *; solve_R. 
+      - subst y. apply limit_imp_limit_on. apply differentiable_at_imp_continuous_at. exists (g' a). apply H4.
+      - apply limit_imp_limit_on. apply differentiable_at_imp_continuous_at. exists (g' y). apply H8; unfold δ in *; solve_R.
     }
     assert (H21 : ⟦ der ⟧ f (a, x) = f').
-    { intros y H21. left. split. apply is_interior_point_open; solve_R. apply H6; unfold δ in *; solve_R. }
+    { intros y H21. left. split. auto_interval. apply H6; unfold δ in *; solve_R. }
     assert (H22 : ⟦ der ⟧ g (a, x) = g').
-    { intros y H22. left. split. apply is_interior_point_open; solve_R. apply H8; unfold δ in *; solve_R. }
+    { intros y H22. left. split. auto_interval. apply H8; unfold δ in *; solve_R. }
     assert (H23 : forall y, y ∈ (a, x) -> g' y <> 0).
     { intros y H23. apply H10; unfold δ in *; solve_R. }
     assert (H24 : g x <> g a).
     {
-      intro H24. pose proof (theorem_11_3 g a x H18 H20) as [c [H25 H26]]; auto.
+      intro H24. pose proof (rolles_theorem g a x H18 H20) as [c [H25 H26]]; auto.
       - apply derivative_on_imp_differentiable_on with (f' := g'); auto.
-      - specialize (H23 c H25). specialize (H22 c H25) as [[ _ H22 ] | [ [ H22 _ ] | [ H22 _ ] ] ].
-        -- pose proof derivative_of_function_at_x_unique g g' (fun _ => 0) c H22 H26 as H27; auto.
-        -- apply left_interval_endpoint_open in H22; solve_R.
-        -- apply right_interval_endpoint_open in H22; solve_R.
+      - specialize (H23 c H25). specialize (H22 c H25) as [[ _ H22 ] | [ [ H22 _ ] | [ H22 _ ] ] ]; try solve [ auto_interval ]. 
+        pose proof derivative_at_unique g g' (fun _ => 0) c H22 H26 as H27; auto.
     }
     pose proof cauchy_mvt f f' g g' a x H18 H19 H20 H21 H22 H23 H24 as [c [H25 H26]].
     rewrite H12, H13 in H26. rewrite Rminus_0_r, Rminus_0_r in H26.
@@ -2109,36 +2247,34 @@ Proof.
   - assert (H19 : continuous_on f [x, a]).
     { 
       intros y H19. destruct (Req_dec_T y a) as [H20 | H20].
-      - subst y. apply limit_imp_limit_on. apply theorem_9_1_a. exists (f' a). apply H3.
-      - apply limit_imp_limit_on. apply theorem_9_1_a. exists (f' y). apply H6; unfold δ in *; solve_R. 
+      - subst y. apply limit_imp_limit_on. apply differentiable_at_imp_continuous_at. exists (f' a). apply H3.
+      - apply limit_imp_limit_on. apply differentiable_at_imp_continuous_at. exists (f' y). apply H6; unfold δ in *; solve_R. 
     }
     assert (H20 : continuous_on g [x, a]).
     {
       intros y H20. destruct (Req_dec_T y a) as [H21 | H21].
-      - subst y. apply limit_imp_limit_on. apply theorem_9_1_a. exists (g' a). apply H4.
-      - apply limit_imp_limit_on. apply theorem_9_1_a. exists (g' y). apply H8; unfold δ in *; solve_R. 
+      - subst y. apply limit_imp_limit_on. apply differentiable_at_imp_continuous_at. exists (g' a). apply H4.
+      - apply limit_imp_limit_on. apply differentiable_at_imp_continuous_at. exists (g' y). apply H8; unfold δ in *; solve_R. 
     }
     assert (H21 : ⟦ der ⟧ f (x, a) = f').
-    { intros y H21. left. split. apply is_interior_point_open; solve_R. apply H6; unfold δ in *; solve_R. }
+    { intros y H21. left. split. auto_interval. apply H6; unfold δ in *; solve_R. }
     assert (H22 : ⟦ der ⟧ g (x, a) = g').
-    { intros y H22. left. split. apply is_interior_point_open; solve_R. apply H8; unfold δ in *; solve_R. }
+    { intros y H22. left. split. auto_interval. apply H8; unfold δ in *; solve_R. }
     assert (H23 : forall y, y ∈ (x, a) -> g' y <> 0).
     { intros y H23. apply H10; unfold δ in *; solve_R. }
     assert (H24 : g a <> g x).
     {
-      intro H24. pose proof (theorem_11_3 g x a H18 H20) as [c [H25 H26]]; auto.
+      intro H24. pose proof (rolles_theorem g x a H18 H20) as [c [H25 H26]]; auto.
       - apply derivative_on_imp_differentiable_on with (f' := g'); auto.
-      - specialize (H23 c H25). specialize (H22 c H25) as [[ _ H22 ] | [ [ H22 _ ] | [ H22 _ ] ] ].
-        -- pose proof derivative_of_function_at_x_unique g g' (fun _ => 0) c H22 H26 as H27; auto.
-        -- apply left_interval_endpoint_open in H22; solve_R.
-        -- apply right_interval_endpoint_open in H22; solve_R.
+      - specialize (H23 c H25). specialize (H22 c H25) as [[ _ H22 ] | [ [ H22 _ ] | [ H22 _ ] ] ]; try solve [ auto_interval ]. 
+        pose proof derivative_at_unique g g' (fun _ => 0) c H22 H26 as H27; auto.
     }
     pose proof cauchy_mvt f f' g g' x a H18 H19 H20 H21 H22 H23 H24 as [c [H25 H26]].
     rewrite H12, H13 in H26. rewrite Rminus_0_l, Rminus_0_l, Rdiv_neg_neg_eq in H26.
     specialize (H16 c ltac:(unfold δ in *; solve_R)). solve_R.
 Qed.
 
-Theorem lhopitals_rule : forall f g f' g' a,
+Theorem lhopital_0_0_weak : forall f g f' g' a,
   ⟦ lim a ⟧ f = 0 ->
   ⟦ lim a ⟧ g = 0 ->
   ⟦ der a ⟧ f = f' ->
@@ -2148,191 +2284,322 @@ Theorem lhopitals_rule : forall f g f' g' a,
 Proof.
   intros f g f' g' a H1 H2 H3 H4 H5.
   assert (H6 : f a = 0).
-  { apply limit_of_function_unique with (f := f) (a := a); auto. apply theorem_9_1_a. exists (f' a). apply H3. }
+  {
+    apply derivative_at_imp_differentiable_at in H3.
+    apply differentiable_at_imp_continuous_at in H3.
+    apply limit_unique with (f := f) (a := a) (L1 := f a) (L2 := 0); auto.
+  }
   assert (H7 : g a = 0).
-  { apply limit_of_function_unique with (f := g) (a := a); auto. apply theorem_9_1_a. exists (g' a). apply H4. }
+  {
+    apply derivative_at_imp_differentiable_at in H4.
+    apply differentiable_at_imp_continuous_at in H4.
+    apply limit_unique with (f := g) (a := a) (L1 := g a) (L2 := 0); auto.
+  }
   assert (H8 : ⟦ lim a ⟧ (λ x : ℝ, (g x - g a) / (x - a)) = g' a).
   { 
     replace a with (0 + a) at 1 by lra. rewrite <- limit_shift with (a := 0) (c := a).
-    apply limit_to_a_equiv with (f1 := fun h => (g (a + h) - g a) / h); auto.
+    apply limit_eq with (f1 := fun h => (g (a + h) - g a) / h); auto.
+    exists 1. split; [lra|].
     intros h H9. replace (h + a - a) with h by lra. rewrite Rplus_comm. reflexivity.
   }
   assert (H9 : ⟦ lim a ⟧ (λ x : ℝ, (f x - f a) / (x - a)) = f' a).
   { 
     replace a with (0 + a) at 1 by lra. rewrite <- limit_shift with (a := 0) (c := a).
-    apply limit_to_a_equiv with (f1 := fun h => (f (a + h) - f a) / h); auto.
+    apply limit_eq with (f1 := fun h => (f (a + h) - f a) / h); auto.
+    exists 1. split; [lra|].
     intros h H9. replace (h + a - a) with h by lra. rewrite Rplus_comm. reflexivity.
   }
-  pose proof limit_neq_x_exists_neighborhood (fun x => (g x - g a) / (x - a)) a (g' a) 0 H8 H5 as [δ [H10 H11]].
-  apply limit_to_a_equiv' with (f1 := fun x => ((f x - f a) / (x - a)) / ((g x - g a) / (x - a))) (δ := δ); auto.
-  - intros x [H12 H13]. specialize (H11 x ltac:(solve_R)). solve_R.
+  pose proof limit_neq_neighborhood (fun x => (g x - g a) / (x - a)) a (g' a) 0 H8 H5 as [δ [H10 H11]].
+  apply limit_eq with (f1 := fun x => ((f x - f a) / (x - a)) / ((g x - g a) / (x - a))); auto.
+  - exists δ. split; auto. intros x [H12 H13]. specialize (H11 x ltac:(solve_R)). solve_R.
   - apply limit_div; auto.
 Qed.
+
+Lemma nth_derivative_0 : forall f,
+  ⟦ der ^ 0 ⟧ f = f.
+Proof.
+  intros f. simpl. reflexivity.
+Qed.
+
+Lemma nth_derivative_on_0 : forall f D,
+  ⟦ der ^ 0 ⟧ f D = f.
+Proof.
+  intros f D. simpl. intros x H1. reflexivity.
+Qed.
+
+Lemma nth_derivative_1 : forall f f',
+  ⟦ der ⟧ f = f' -> ⟦ der ^ 1 ⟧ f = f'.
+Proof.
+  intros f f' H1. simpl. exists f'. split; auto. 
+Qed.
+
+Lemma nth_derivative_on_1 : forall f f' D,
+  ⟦ der ⟧ f D = f' -> ⟦ der ^ 1 ⟧ f D = f'.
+Proof.
+  intros f f' D H1. simpl. exists f'. split; auto.
+Qed.
+
+Lemma nth_derivative_on_subset : forall n f fn' D1 D2,
+  ⟦ der ^ n ⟧ f D1 = fn' -> differentiable_domain D2 -> D2 ⊆ D1 -> ⟦ der ^ n ⟧ f D2 = fn'.
+Proof.
+  induction n as [| k IH]; intros f fn' D1 D2 H1 H2 H3.
+  - simpl in *. intros x H4. apply H1. apply H3; auto.
+  - simpl in *. destruct H1 as [f' [H1 H4]].
+    exists f'. split.
+    + apply derivative_on_subset with (D1 := D1); auto.
+    + apply IH with (D1 := D1); auto.
+Qed.
+
+Lemma nth_derivative_imp_nth_derivative_on : forall n f fn' D,
+  differentiable_domain D ->
+  ⟦ der ^ n ⟧ f = fn' -> ⟦ der ^ n ⟧ f D = fn'.
+Proof.
+  induction n as [| k IH]; intros f fn' D H1 H2.
+  - simpl in *. intros x H3. rewrite H2. reflexivity.
+  - simpl in *. destruct H2 as [f' [H2 H3]].
+    exists f'. split.
+    + apply derivative_imp_derivative_on; auto.
+    + apply IH; auto.
+Qed.
+
+Lemma nth_derivative_on_eq : forall n f1 f2 fn' D,
+  (forall x, x ∈ D -> f1 x = f2 x) ->
+  ⟦ der ^ n ⟧ f1 D = fn' -> ⟦ der ^ n ⟧ f2 D = fn'.
+Proof.
+  induction n as [| k IH]; intros f1 f2 fn' D H1 H2.
+  - simpl in *. intros x H3. specialize (H2 x H3). specialize (H1 x H3). lra.
+  - destruct H2 as [fk' [H2 H3]].
+    simpl. exists fk'. split.
+    -- eapply derivative_on_eq; eauto.
+    -- eapply IH; eauto.
+Qed.
+
+Lemma nth_derivative_at_eq : forall n f1 f2 fn' a,
+  (exists δ, δ > 0 /\ forall x, |x - a| < δ -> f1 x = f2 x) ->
+  ⟦ der ^ n a ⟧ f1 = fn' -> ⟦ der ^ n a ⟧ f2 = fn'.
+Proof.
+  induction n as [| k IH]; intros f1 f2 fn' a [δ [H1 H2]] H3.
+  - simpl in *. rewrite <- H3. symmetry. apply H2. solve_R.
+  - destruct H3 as [δ1 [fk' [H3 [H4 H5]]]].
+    exists (Rmin δ δ1), fk'. repeat split; try solve [ solve_R ].
+    apply nth_derivative_on_eq with (f1 := f1).
+    -- intros x H6. apply H2. solve_R.
+    -- apply nth_derivative_on_subset with (D1 := (a - δ1, a + δ1)); auto.
+       + intros x H6. auto_interval.
+       + intros x H6. solve_R.
+Qed.
+
+Lemma nth_derivative_on_ext : forall n f f1' f2' D,
+  (forall x, x ∈ D -> f1' x = f2' x) -> 
+  ⟦ der ^ n ⟧ f D = f1' -> ⟦ der ^ n ⟧ f D = f2'.
+Proof.
+  induction n as [| k IH]; intros f f1' f2' D H1 H2.
+  - simpl in *. intros x H3. specialize (H1 x H3). specialize (H2 x H3). rewrite <- H1. auto.
+  - simpl in *. destruct H2 as [f' [H2 H3]].
+    exists f'. split; auto.
+    eapply IH; eauto.
+Qed.
+
+Lemma nth_derivative_on_unique : forall n f fn1' fn2' D,
+  ⟦ der ^ n ⟧ f D = fn1' -> ⟦ der ^ n ⟧ f D = fn2' -> forall x, x ∈ D -> fn1' x = fn2' x.
+Proof.
+  induction n as [| k IH]; intros f fn1' fn2' D H1 H2 x H3.
+  - simpl in *. rewrite <- H2; auto. specialize (H1 x H3). specialize (H2 x H3). lra.
+  - simpl in *. destruct H1 as [f1' [H1 H4]].
+    destruct H2 as [f2' [H2 H5]].
+    assert (H6 : forall y, y ∈ D -> f1' y = f2' y).
+    { eapply derivative_on_unique; eauto. }
+    eapply IH; eauto.
+    apply nth_derivative_on_eq with (f1 := f2'); auto.
+    intros y Hy. symmetry. apply H6; auto.
+Qed.
+
+Lemma nth_derivative_unique : forall n f fn1' fn2',
+  ⟦ der ^ n ⟧ f = fn1' -> ⟦ der ^ n ⟧ f = fn2' -> fn1' = fn2'.
+Proof.
+  induction n as [| k IH]; intros f fn1' fn2' H1 H2.
+  - simpl in H1, H2. subst. reflexivity.
+  - destruct H1 as [f1' [H1 H3]], H2 as [f2' [H2 H4]].
+    pose proof (derivative_unique f f1' f2' H1 H2) as H5.
+    subst f2'.
+    apply (IH f1' fn1' fn2'); auto.
+Qed.
+
+Lemma nth_differentiable_imp_differentiable : forall n f,
+  (n > 0)%nat -> nth_differentiable n f -> differentiable f.
+Proof.
+  intros n f H1 [fn H2].
+  destruct n; try lia.
+  simpl in H2. destruct H2 as [f' [H2 H3]].
+  eapply derivative_imp_differentiable; eauto.
+Qed.
+
+Lemma nth_differentiable_on_imp_differentiable_on : forall n f D,
+  (n > 0)%nat ->
+  nth_differentiable_on n f D -> 
+  differentiable_on f D.
+Proof.
+  intros n f D H1 [fn' H2].
+  destruct n; [lia|].
+  simpl in H2.
+  destruct H2 as [f' [H2 H3]].
+  intros a H4.
+  specialize (H2 a H4).
+  destruct H2 as [[H5 H6] | [[H5 H6] | [H5 H6]]].
+  - left. split; [apply H5 | exists (f' a); apply H6].
+  - right; left. split; [apply H5 | exists (f' a); apply H6].
+  - right; right. split; [apply H5 | exists (f' a); apply H6].
+Qed.
+
+Lemma nth_differentiable_on_imp_differentiable_at : forall n f D a,
+  (n > 0)%nat ->
+  a ∈ D -> 
+  interior_point D a ->
+  nth_differentiable_on n f D -> 
+  differentiable_at f a.
+Proof.
+  intros n f D a H1 H2 H3 [fn' H4].
+  destruct n; [lia|].
+  simpl in H4.
+  destruct H4 as [f' [H4 H5]].
+  specialize (H4 a H2) as [[H6 H7] | [[H6 H7] | [H6 H7]]]; auto_interval.
+  exists (f' a). apply H7.
+Qed.
+
+Lemma nth_derivative_le_differentiable : forall n m f fn,
+  (m <= n)%nat -> ⟦ der ^ n ⟧ f = fn -> nth_differentiable m f.
+Proof.
+  induction n as [| k IH]; intros m f fn H1 H2.
+  - assert (m = 0)%nat by lia. subst. exists f. simpl. reflexivity.
+  - assert ((m = S k)%nat \/ (m <= k)%nat) as [H3 | H3] by lia.
+    + exists fn. subst. auto.
+    + destruct H2 as [f' [H2 H4]]. destruct m as [| m'].
+      * subst. exists f. reflexivity.
+      * specialize (IH m' f' fn ltac:(lia) H4). destruct IH as [fm H5].
+        exists fm. simpl. exists f'. split; auto.
+Qed.
+
+Lemma nth_derivative_on_le_differentiable : forall n m f fn D,
+  (m <= n)%nat -> ⟦ der ^ n ⟧ f D = fn -> nth_differentiable_on m f D.
+Proof.
+  induction n as [| k IH]; intros m f fn D H1 H2.
+  - assert (m = 0)%nat by lia. subst. exists f. simpl. intros x H3. reflexivity.
+  - assert ((m = S k)%nat \/ (m <= k)%nat) as [H3 | H3] by lia.
+    + exists fn. subst. auto.
+    + destruct H2 as [f' [H2 H4]]. destruct m as [| m'].
+      * exists f. simpl. intros x H5. reflexivity.
+      * specialize (IH m' f' fn D ltac:(lia) H4). destruct IH as [fm H5].
+        exists fm. simpl. exists f'. split; auto.
+Qed.
+
+Lemma nth_differentiable_succ_imp_differentiable : forall n f,
+  nth_differentiable (S n) f -> nth_differentiable n f.
+Proof.
+  intros n f [fn H1].
+  eapply nth_derivative_le_differentiable with (n := S n) (fn := fn); auto.
+Qed.
+
+Lemma nth_differentiable_on_succ_imp_differentiable_on : forall n f D,
+  nth_differentiable_on (S n) f D -> nth_differentiable_on n f D.
+Proof.
+  intros n f D [fn H1].
+  eapply nth_derivative_on_le_differentiable with (n := S n) (fn := fn); auto.
+Qed.
+
+Lemma nth_derivative_split_end : forall n f fn',
+  ⟦ der ^ (S n) ⟧ f = fn' -> exists fn, ⟦ der ^ n ⟧ f = fn /\ ⟦ der ⟧ fn = fn'.
+Proof.
+  induction n as [| k IH]; intros f fn' H.
+  - simpl in H. destruct H as [f' [H1 H2]]. subst.
+    exists f. split; simpl; auto.
+  - simpl in H. destruct H as [f' [H1 H2]].
+    specialize (IH f' fn' H2).
+    destruct IH as [fk [H3 H4]].
+    exists fk. split; auto.
+    simpl. exists f'. split; auto.
+Qed.
+
+Lemma nth_differentiable_imp_nth_differentiable_at : forall n f a,
+  nth_differentiable n f -> nth_differentiable_at n f a.
+Proof.
+  intros n f a [fn' H1].
+  exists fn'.
+  destruct n as [| k].
+  - simpl in *. rewrite H1. reflexivity.
+  - apply nth_derivative_split_end in H1.
+    destruct H1 as [fk [H1 H2]].
+    exists 1, fk. split; [lra |].
+    split.
+    + apply nth_derivative_imp_nth_derivative_on with (fn' := fk).
+      * intros x H3. left. auto_interval.
+      * exact H1.
+    + apply H2.
+Qed.
+
+Lemma nth_derivative_at_unique : forall n f fn1' fn2' a,
+  ⟦ der ^ n a ⟧ f = fn1' -> ⟦ der ^ n a ⟧ f = fn2' -> fn1' a = fn2' a.
+Proof.
+  induction n as [| k IH]; intros f fn1' fn2' a H1 H2.
+  - simpl in *. lra.
+  - destruct H1 as [δ1 [fk1 [H1 [H3 H4]]]].
+    destruct H2 as [δ2 [fk2 [H5 [H6 H7]]]].
+    assert (H8: forall x, |x - a| < Rmin δ1 δ2 -> fk1 x = fk2 x).
+    {
+      intros x H8.
+      apply nth_derivative_on_unique with (n := k) (f := f) (D := (a - Rmin δ1 δ2, a + Rmin δ1 δ2)).
+      - apply nth_derivative_on_subset with (D1 := (a - δ1, a + δ1)); eauto.
+        + intros y Hy. auto_interval.
+        + intros y Hy. solve_R.
+      - apply nth_derivative_on_subset with (D1 := (a - δ2, a + δ2)); auto.
+        + intros y Hy. auto_interval.
+        + intros y Hy. solve_R.
+      - solve_R. 
+    }
+    apply derivative_at_unique with (f := fk1); auto.
+    apply derivative_at_eq with (f1 := fk1).
+    + exists (Rmin δ1 δ2). split; solve_R.
+    + apply derivative_at_eq with (f1 := fk2); auto.
+      exists (Rmin δ1 δ2). split; [solve_R |].
+      intros x H9. symmetry. apply H8; auto.
+Qed.
+
+Lemma nth_derivative_succ_iff : forall n f fn',
+  ⟦ der ^ (S n) ⟧ f = fn' <-> exists f', ⟦ der ⟧ f = f' /\ ⟦ der ^ n ⟧ f' = fn'.
+Proof.
+  intros n f fn'. simpl. split.
+  - intros [f' [H1 H2]]. exists f'. split; auto.
+  - intros [f' [H1 H2]]. exists f'. split; auto.
+Qed.
+
+Lemma nth_derivative_on_succ_iff : forall n f fn' D,
+  ⟦ der ^ (S n) ⟧ f D = fn' <-> exists f', ⟦ der ⟧ f D = f' /\ ⟦ der ^ n ⟧ f' D = fn'.
+Proof.
+  intros n f fn' D. simpl. split.
+  - intros [f' [H1 H2]]. exists f'. split; auto.
+  - intros [f' [H1 H2]]. exists f'. split; auto.
+Qed.
+
+Lemma nth_differentiable_at_imp_differentiable_at : forall n f a,
+  (n > 0)%nat ->
+  nth_differentiable_at n f a ->
+  differentiable_at f a.
+Proof.
+  intros n f a H1 [fn' H2].
+  destruct n; [lia |].
+  simpl in H2.
+  destruct H2 as [δ [fk [H2 [H3 H4]]]].
+  destruct n.
+  - simpl in H3.
+    apply derivative_at_imp_differentiable_at with (f' := fn').
+    eapply derivative_at_eq with (f1 := fk); auto.
+    exists δ. split; auto. intros x H5. specialize (H3 x ltac:(solve_R)). solve_R.
+  - apply nth_differentiable_on_imp_differentiable_at with (n := S n) (D := (a - δ, a + δ)); auto_interval.
+    exists fk. auto.
+Qed.
+
+
+
   
-Lemma derivative_on_all_imp_derivative : forall f f',
-  (forall a b, a < b -> ⟦ der ⟧ f [a, b] = f') -> ⟦ der ⟧ f = f'.
-Proof.
-  intros f f' H1 x ε H2. specialize (H1 (x - ε) (x + ε) ltac:(solve_R)) as H3.
-  specialize (H3 x ltac:(solve_R)) as [[H4  H5] | [[H4 _] | [H4 _]]].
-  - specialize (H5 ε H2); auto.
-  - exfalso. apply (not_left_endpoint (x - ε) (x + ε) x); solve_R.
-  - exfalso. apply (not_right_endpoint (x - ε) (x + ε) x); solve_R.
-Qed.
-
-Lemma derivative_on_sub_interval : forall f f' a b c d,
-  a <= c < d <= b -> ⟦ der ⟧ f [a, b] = f' -> ⟦ der ⟧ f [c, d] = f'.
-Proof.
-  intros f f' a b c d H1 H2 x H3.
-  assert (H4 : x ∈ [a, b]) by solve_R.
-  specialize (H2 x H4) as [[H6 H7] | [[H6 H7] | [H6 H7]]].
-  - assert (x = c \/ x = d \/ (c < x < d)) as [H8 | [H8 | H8]] by solve_R.
-    -- subst x. right; left; split.
-      --- apply left_interval_enpoint_closed; lra.
-      --- apply derivative_at_iff in H7; tauto.
-    -- subst x. right; right; split.
-      --- apply right_interval_enpoint_closed; lra.
-      --- apply derivative_at_iff in H7; tauto.
-    -- left; split.
-      --- apply is_interior_point_closed; solve_R.
-      --- assumption.
-  - assert (H8: x = c) by (apply is_left_endpoint_closed in H6; solve_R).
-    subst x. right; left; split.
-    -- apply left_interval_enpoint_closed; lra.
-    -- assumption.
-  - assert (H8: x = d) by (apply is_right_endpoint_closed in H6; solve_R).
-    subst x; right; right; split.
-    -- apply right_interval_enpoint_closed; lra.
-    -- assumption.
-Qed.
-
-Lemma derivative_on_closed_eq : forall a b f1 f2 f',
-  a < b -> (forall x, a <= x <= b -> f1 x = f2 x) -> ⟦ der ⟧ f1 [a, b] = f' -> ⟦ der ⟧ f2 [a, b] = f'.
-Proof.
-  intros a b f1 f2 f' H1 H2 H3 c H4. specialize (H3 c H4) as [[H3 H5] | [[H3 H5] | [H3 H5]]].
-  - left; split; auto. intros ε H6. specialize (H5 ε H6) as [δ [H7 H8]].
-    apply is_interior_point_closed in H3; auto.
-    exists (Rmin δ (Rmin (b - c) (c - a))). split. solve_R.
-    intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
-  - right; left; split; auto. apply is_left_endpoint_closed in H3; auto.
-    intros ε H6. specialize (H5 ε H6) as [δ [H7 H8]]. 
-    exists (Rmin δ (b - c)). split. solve_R.
-    intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
-  - right; right; split; auto. apply is_right_endpoint_closed in H3; auto.
-    intros ε H6. specialize (H5 ε H6) as [δ [H7 H8]].
-    exists (Rmin δ (c - a)). split. solve_R.
-    intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
-Qed.
-
-Lemma derivative_on_closed_eq' : forall a b f f1' f2',
-  a < b -> (forall x, a <= x <= b -> f1' x = f2' x) -> ⟦ der ⟧ f [a, b] = f1' -> ⟦ der ⟧ f [a, b] = f2'.
-Proof.
-  intros a b f f1' f2' H1 H2 H3 c H4. specialize (H3 c H4) as [[H3 H5] | [[H3 H5] | [H3 H5]]].
-  - left; split; auto. intros ε H6. specialize (H5 ε H6) as [δ [H7 H8]].
-    apply is_interior_point_closed in H3; auto.
-    exists (Rmin δ (Rmin (b - c) (c - a))). split. solve_R.
-    intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
-  - right; left; split; auto. apply is_left_endpoint_closed in H3; auto.
-    intros ε H6. specialize (H5 ε H6) as [δ [H7 H8]]. 
-    exists (Rmin δ (b - c)). split. solve_R.
-    intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
-  - right; right; split; auto. apply is_right_endpoint_closed in H3; auto.
-    intros ε H6. specialize (H5 ε H6) as [δ [H7 H8]].
-    exists (Rmin δ (c - a)). split. solve_R.
-    intros x H9. specialize (H8 x ltac:(solve_R)). repeat rewrite <- H2; solve_R.
-Qed.
-
-Lemma derivative_on_eq : forall f1 f2 f' D,
-  (forall x, x ∈ D -> f1 x = f2 x) -> ⟦ der ⟧ f1 D = f' -> ⟦ der ⟧ f2 D = f'.
-Proof.
-  intros f1 f2 f' D H1 H2 c H3. specialize (H2 c H3) as [[H4 H5] | [[H4 H5] | [H4 H5]]].
-  - left. split; auto. destruct H4 as [δD [H6 H7]].
-    intros ε H8. specialize (H5 ε H8) as [δ [H9 H10]].
-    exists (Rmin δ δD). split. solve_R. intros h H11.
-    assert (H12 : (c + h) ∈ D). { apply H7. solve_R. }
-    specialize (H1 (c + h) H12) as H13. specialize (H1 c H3).
-    rewrite <- H1, <- H13. apply H10. solve_R.
-  - right; left. split; auto. destruct H4 as [δD [H6 H7]].
-    intros ε H8. specialize (H5 ε H8) as [δ [H9 H10]].
-    exists (Rmin δ δD). split. solve_R. intros h H11.
-    assert (H12 : (c + h) ∈ D). { apply H7. split; unfold Ensembles.In; solve_R. }
-    specialize (H1 (c + h) H12) as H13. specialize (H1 c H3).
-    rewrite <- H1, <- H13. apply H10. solve_R.
-  - right; right. split; auto. destruct H4 as [δD [H6 H7]].
-    intros ε H8. specialize (H5 ε H8) as [δ [H9 H10]].
-    exists (Rmin δ δD). split. solve_R. intros h H11.
-    assert (H12 : (c + h) ∈ D). { apply H7. split; unfold Ensembles.In; solve_R. }
-    specialize (H1 (c + h) H12) as H13. specialize (H1 c H3).
-    rewrite <- H1, <- H13. apply H10. solve_R.
-Qed.
-
-Lemma derivative_on_eq' : forall f f1' f2' D,
-  (forall x, x ∈ D -> f1' x = f2' x) -> ⟦ der ⟧ f D = f1' -> ⟦ der ⟧ f D = f2'.
-Proof.
-  intros f f1' f2' D H1 H2 c H3. specialize (H2 c H3).
-  destruct H2 as [[H4 H5] | [[H4 H5] | [H4 H5]]].
-  - left. split; auto.
-    unfold derivative_at in *. rewrite <- H1; auto.
-  - right; left. split; auto.
-    unfold derivative_at_right in *. rewrite <- H1; auto.
-  - right; right. split; auto.
-    unfold derivative_at_left in *. rewrite <- H1; auto.
-Qed.
-
-Lemma derivative_sqrt_x : forall x,
-  x > 0 ->
-  ⟦ der x ⟧ (λ x, √x) = (λ x, 1 / (2 * √ x)).
-Proof.
-  intros x H1. unfold derivative_at. apply limit_to_0_equiv' with (f1 := fun h => 1 / (sqrt (x + h) + sqrt x)).
-  - exists x; split; auto. intros h H2 H3. assert (√(x+h) > 0) as H4 by (apply sqrt_lt_R0; solve_R).
-    assert (√x > 0) as H5 by (apply sqrt_lt_R0; auto).
-    apply Rmult_eq_reg_r with (r := √(x+h) + √x); try lra. field_simplify; try lra.
-    repeat rewrite pow2_sqrt; solve_R.
-  - replace (1 / (2 * √x)) with (1 / (√x + √x)).
-    2 : { pose proof sqrt_lt_R0 x H1 as H2. solve_R. }
-    apply limit_div. apply limit_const. apply limit_plus.
-    2 : { apply limit_const. } pose proof sqrt_f_continuous (fun h => x + h) as H2.
-    assert (H3 : continuous (λ h : ℝ, x + h)). { intros a. unfold continuous_at. solve_lim. }
-    specialize (H2 H3). specialize (H2 0). unfold continuous_at in H2.
-    rewrite Rplus_0_r in H2. apply H2. pose proof sqrt_lt_R0 x H1 as H4. lra.
-Qed.
-
-Lemma derivative_sqrt_x_on : forall a b,
-  0 < a < b ->
-  ⟦ der ⟧ (λ x, √x) [a, b] = (λ x, 1 / (2 * √ x)). 
-Proof.
-  intros a b H1 x H2. assert (x = a \/ x = b \/ (a < x < b)) as [H3 | [H3 | H3]] by solve_R.
-  - subst x. right; left; split. apply left_interval_enpoint_closed; lra.
-    apply derivative_at_iff. apply derivative_sqrt_x; lra.
-  - subst x. right; right; split. apply right_interval_enpoint_closed; lra.
-    apply derivative_at_iff. apply derivative_sqrt_x; lra.
-  - left; split. apply is_interior_point_closed; solve_R.
-    apply derivative_sqrt_x; lra.
-Qed.
-
-Lemma derivative_sqrt_f : forall f f' x,
-  f x > 0 ->
-  ⟦ der x ⟧ f = f' ->
-  ⟦ der x ⟧ (λ x, √(f x)) = (λ x, (f' x) / (2 * √(f x))).
-Proof.
-  intros f f' x H1 H2. set (g := sqrt). set (g' := λ x, 1 / (2 * √ x)).
-  assert (H3 : forall x, x > 0 -> ⟦ der x ⟧ g = g'). { unfold g, g'. intros y H3. apply derivative_sqrt_x; auto. }
-  replace (λ x0 : ℝ, f' x0 / (2 * g (f x0))) with (g' ∘ f ∙ f').
-  2 : { extensionality y. unfold g, g', compose. lra. }
-  assert (H4 : ⟦ der f x ⟧ g = g'). { apply H3. apply H1. }
-  apply (theorem_10_9 g f g' f' x H2 H4).
-Qed.
-
-Lemma nth_derivative_test : ⟦ der ^ 2 ⟧ (λ x : ℝ, x^3) = (λ x : ℝ, 6 * x).
-Proof.
-  exists (λ x : ℝ, 3 * x^2). split.
-  - apply power_rule'; solve_R.
-  - exists (λ x : ℝ, 6 * x). split.
-    -- replace (λ x : ℝ, 6 * x) with (λ x : ℝ, 3 * (2 * x^(2-1))).
-       2 : { extensionality y. simpl. lra. }
-       apply theorem_10_5'. apply power_rule'; solve_R. 
-    -- simpl. reflexivity.
-Qed.
-
 Lemma Derive_eq : forall f f',
   ⟦ der ⟧ f = f' -> ⟦ Der ⟧ f = f'.
 Proof.

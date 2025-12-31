@@ -502,6 +502,78 @@ Proof.
   specialize (H7 x H11 H13). specialize (H9 x H11 H14). apply lemma_1_21; auto. solve_R.
 Qed.
 
+Lemma limit_left_mult_const_l : forall f c a L,
+  ⟦ lim a ⁻ ⟧ f = L -> ⟦ lim a ⁻ ⟧ (fun x => c * f x) = c * L.
+Proof.
+  intros f c a L H1.
+  apply limit_left_eq with (f1 := (fun _ => c) ∙ f).
+  - exists 1. split; solve_R.
+  - apply limit_left_mult; auto. apply limit_left_const.
+Qed.
+
+Lemma limit_right_mult_const_l : forall f c a L,
+  ⟦ lim a ⁺ ⟧ f = L -> ⟦ lim a ⁺ ⟧ (fun x => c * f x) = c * L.
+Proof.
+  intros f c a L H1.
+  apply limit_right_eq with (f1 := (fun _ => c) ∙ f).
+  - exists 1. split; solve_R.
+  - apply limit_right_mult; auto. apply limit_right_const.
+Qed.
+
+Lemma limit_mult_const_l : forall f c a L,
+  ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ (fun x => c * f x) = c * L.
+Proof.
+  intros f c a L H1.
+  apply limit_eq with (f1 := (fun _ => c) ∙ f).
+  - exists 1. split; solve_R.
+  - apply limit_mult; auto. apply limit_const.
+Qed.
+
+Lemma limit_on_mult_const_l : forall f c a D L,
+  ⟦ lim a ⟧ f D = L -> ⟦ lim a ⟧ (fun x => c * f x) D = c * L.
+Proof.
+  intros f c a D L H1.
+  apply limit_on_eq with (f1 := (fun _ => c) ∙ f).
+  - intros x H2. reflexivity.
+  - apply limit_on_mult; auto. apply limit_on_const.
+Qed.
+
+Lemma limit_left_mult_const_r : forall f c a L,
+  ⟦ lim a ⁻ ⟧ f = L -> ⟦ lim a ⁻ ⟧ (fun x => f x * c) = L * c.
+Proof.
+  intros f c a L H1.
+  apply limit_left_eq with (f1 := f ∙ (fun _ => c)).
+  - exists 1. split; solve_R.
+  - apply limit_left_mult; auto. apply limit_left_const.
+Qed.
+
+Lemma limit_right_mult_const_r : forall f c a L,
+  ⟦ lim a ⁺ ⟧ f = L -> ⟦ lim a ⁺ ⟧ (fun x => f x * c) = L * c.
+Proof.
+  intros f c a L H1.
+  apply limit_right_eq with (f1 := f ∙ (fun _ => c)).
+  - exists 1. split; solve_R.
+  - apply limit_right_mult; auto. apply limit_right_const.
+Qed.
+
+Lemma limit_mult_const_r : forall f c a L,
+  ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ (fun x => f x * c) = L * c.
+Proof.
+  intros f c a L H1.
+  apply limit_eq with (f1 := f ∙ (fun _ => c)).
+  - exists 1. split; solve_R.
+  - apply limit_mult; auto. apply limit_const.
+Qed.
+
+Lemma limit_on_mult_const_r : forall f c a D L,
+  ⟦ lim a ⟧ f D = L -> ⟦ lim a ⟧ (fun x => f x * c) D = L * c.
+Proof.
+  intros f c a D L H1.
+  apply limit_on_eq with (f1 := f ∙ (fun _ => c)).
+  - intros x H2. reflexivity.
+  - apply limit_on_mult; auto. apply limit_on_const.
+Qed.
+
 Lemma limit_left_pow : forall f a L n,
   ⟦ lim a⁻ ⟧ f = L -> ⟦ lim a⁻ ⟧ (f ^ n) = L ^ n.
 Proof.
