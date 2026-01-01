@@ -2597,7 +2597,98 @@ Proof.
     exists fk. auto.
 Qed.
 
+Lemma nth_derivative_imp_nth_differentiable : forall n f fn,
+  ⟦ der ^ n ⟧ f = fn -> nth_differentiable n f.
+Proof.
+  intros n f fn H1. exists fn. apply H1.
+Qed.
 
+Lemma nth_derivative_on_imp_nth_differentiable_on : forall n f fn D,
+  ⟦ der ^ n ⟧ f D = fn -> nth_differentiable_on n f D.
+Proof.
+  intros n f fn D H1. exists fn. apply H1.
+Qed.
+
+Lemma nth_derivative_at_imp_nth_differentiable_at : forall n f a fn',
+  ⟦ der ^ n a ⟧ f = fn' -> nth_differentiable_at n f a.
+Proof.
+  intros n f a fn' H1. exists fn'. apply H1.
+Qed.
+
+Lemma nth_derivative_const : forall n c,
+  (n > 0)%nat -> ⟦ der ^ n ⟧ (fun _ => c) = (fun _ => 0).
+Proof.
+  induction n as [| k IH]; intros c H1.
+  - lia.
+  - destruct k.
+    + simpl. exists (fun _ => 0). split; [apply derivative_const | reflexivity].
+    + simpl. exists (fun _ => 0). split.
+      * apply derivative_const.
+      * apply IH. lia.
+Qed.
+
+Lemma nth_derivative_on_const : forall n c D,
+  (n > 0)%nat ->
+  differentiable_domain D ->
+  ⟦ der ^ n ⟧ (fun _ => c) D = (fun _ => 0).
+Proof.
+  induction n as [| k IH]; intros c D H1 H2.
+  - lia.
+  - destruct k.
+    + simpl. exists (fun _ => 0). split; [apply derivative_on_const; auto | intros x H3; reflexivity].
+    + simpl. exists (fun _ => 0). split.
+      * apply derivative_on_const; auto.
+      * apply IH; auto. lia.
+Qed.
+
+Lemma nth_derivative_on_const_open : forall n c a b,
+  (n > 0)%nat ->
+  a < b ->
+  ⟦ der ^ n ⟧ (fun _ => c) (a, b) = (fun _ => 0).
+Proof.
+  intros n c a b H1 H2.
+  apply nth_derivative_on_const; auto.
+  apply differentiable_domain_open; auto.
+Qed.
+
+Lemma nth_derivative_on_const_closed : forall n c a b,
+  (n > 0)%nat ->
+  a < b ->
+  ⟦ der ^ n ⟧ (fun _ => c) [a, b] = (fun _ => 0).
+Proof.
+  intros n c a b H1 H2.
+  apply nth_derivative_on_const; auto.
+  apply differentiable_domain_closed; auto.
+Qed.
+
+Lemma nth_differentiable_const : forall n c,
+  (n > 0)%nat -> nth_differentiable n (fun _ => c).
+Proof.
+  intros n c H1. apply nth_derivative_imp_nth_differentiable with (fn := fun _ => 0).
+  apply nth_derivative_const; auto.
+Qed.
+
+Lemma nth_differentiable_on_const : forall n c D,
+  (n > 0)%nat ->
+  differentiable_domain D ->
+  nth_differentiable_on n (fun _ => c) D.
+Proof.
+  intros n c D H1 H2. apply nth_derivative_on_imp_nth_differentiable_on with (fn := fun _ => 0).
+  apply nth_derivative_on_const; auto.
+Qed.
+
+Lemma nth_derivative_at_const : forall n c a,
+  (n > 0)%nat -> ⟦ der ^ n a ⟧ (fun _ => c) = (fun _ => 0).
+Proof.
+  intros n c a H1. apply nth_derivative_at_imp_nth_differentiable_at with (L := 0).
+  destruct n as [| k]; try lia. assert ((k = 0)%nat \/ (k > 0)%nat) as [H2 | H2] by lia.
+  - subst. simpl. exists 1, (fun _ => c). split; [lra |]. 
+    split; try apply derivative_at_const. auto. 
+  - simpl. exists 1, (fun _ => 0). split; [lra |]. split.
+    + apply nth_derivative_on_const; auto.
+      apply differentiable_domain_open; lra.
+    + apply derivative_at_const.
+Qed.
 
   
 Lemma Derive_eq : forall f f',
