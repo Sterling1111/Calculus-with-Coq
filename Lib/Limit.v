@@ -891,6 +891,18 @@ Proof.
   intros f a L H1 H2. apply limit_continuous_comp; auto. apply limit_sqrt.
 Qed.
 
+Lemma limit_right_sqrt_f_x : forall f a L,
+  ⟦ lim a⁺ ⟧ f = L -> L >= 0 -> ⟦ lim a⁺ ⟧ (fun x => √(f x)) = √L.
+Proof.
+  intros f a L H1 H2. apply limit_right_continuous_comp; auto. apply limit_sqrt.
+Qed.
+
+Lemma limit_left_sqrt_f_x : forall f a L,
+  ⟦ lim a⁻ ⟧ f = L -> L >= 0 -> ⟦ lim a⁻ ⟧ (fun x => √(f x)) = √L.
+Proof.
+  intros f a L H1 H2. apply limit_left_continuous_comp; auto. apply limit_sqrt.
+Qed.
+
 Ltac solve_lim :=
   try solve_R;
   match goal with

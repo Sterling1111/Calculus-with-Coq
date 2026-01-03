@@ -16,6 +16,6 @@ Proof.
     unfold h. specialize (H2 0 ltac:(solve_R)) as H6.
     specialize (H2 1 ltac:(solve_R)). solve_R.
   }
-  pose proof theorem_7_4 h 0 1 0 ltac:(solve_R) H5 H6 as [x [H7 H8]].
+  pose proof intermediate_value_theorem h 0 1 0 ltac:(solve_R) H5 H6 as [x [H7 H8]].
   exists x; split; auto; unfold h in *; solve_R.
 Qed.

@@ -560,6 +560,22 @@ Proof.
   intros l a. apply continuous_at_polynomial.
 Qed.
 
+Lemma continuous_on_polynomial : forall l D,
+  continuous_on (polynomial l) D.
+Proof.
+  intros l D a H1. induction l as [| h t IH].
+  - replace (polynomial []) with (fun _ : ℝ => 0).
+    2 : { extensionality x. rewrite poly_nil. reflexivity. }
+    apply limit_on_const.
+  - replace (polynomial (h :: t)) with (fun x : ℝ => h * x^(length t) + polynomial t x).
+    2 : { extensionality x. rewrite poly_cons. reflexivity. }
+    apply limit_on_plus.
+    + apply limit_on_mult.
+      * apply limit_on_const.
+      * apply limit_on_pow. apply limit_on_id.
+    + apply IH. 
+Qed.
+
 Lemma continuous_at_comp : forall f g a,
   continuous_at g a -> continuous_at f (g a) -> continuous_at (f ∘ g) a.
 Proof.

@@ -5,7 +5,7 @@ Lemma lemma_10_5_i : ∀ f f' x,
 Proof.
   intros f f' x H1 H2 H3.
   assert (H4 : ⟦ der x ⟧ f = (λ x, -1 / x^2)) by (subst; auto_diff).
-  rewrite (derivative_of_function_at_x_unique f f' (λ x : ℝ, -1 / x ^ 2) x H3 H4), H1. field; auto.
+  rewrite (derivative_at_unique f f' (λ x, -1 / x^2) x H3 H4), H1. field; auto.
 Qed.
 
 Lemma lemma_10_5_ii : ∀ f f',
@@ -13,7 +13,7 @@ Lemma lemma_10_5_ii : ∀ f f',
 Proof.
   intros f f' H1 H2 x.
   assert (H3 : ⟦ der ⟧ f = (λ x, 2 * x)) by (subst; auto_diff).
-  rewrite (derivative_of_function_unique f f' (λ x, 2 * x) H2 H3), H1. field; auto.
+  rewrite (derivative_at_unique f f' (λ x, 2 * x) x ltac:(auto) ltac:(auto)), H1. lra.
 Qed.
 
 Lemma lemma_10_5_iii : ∀ f f',
@@ -21,7 +21,7 @@ Lemma lemma_10_5_iii : ∀ f f',
 Proof.
   intros f f' H1 H2 x.
   assert (H3 : ⟦ der ⟧ f = (λ _ : ℝ, 0)) by (subst; auto_diff).
-  rewrite (derivative_of_function_unique f f' (λ _ : ℝ, 0) H2 H3), H1. simpl. lra.
+  rewrite (derivative_at_unique f f' (λ _ : ℝ, 0) ltac:(auto) ltac:(auto)), H1; auto.
 Qed.
 
 Lemma lemma_10_5_iv : ∀ f f',
@@ -29,5 +29,5 @@ Lemma lemma_10_5_iv : ∀ f f',
 Proof.
   intros f f' H1 H2 x.
   assert (H3 : ⟦ der ⟧ f = (λ _ : ℝ, 17)) by (subst; auto_diff).
-  rewrite (derivative_of_function_unique f f' (λ _ : ℝ, 17) H2 H3), H1. field; auto.
+  rewrite (derivative_at_unique f f' (λ _ : ℝ, 17) ltac:(auto) ltac:(auto)), H1; auto. lra.
 Qed.

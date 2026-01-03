@@ -13,6 +13,6 @@ Proof.
     specialize (H3 x H6). apply limit_on_minus; auto. 
   }
   assert (h a < 0 < h b) as H7 by (unfold h; lra).
-  pose proof theorem_7_4 h a b 0 H1 H6 H7 as [x [H9 H10]].
+  pose proof intermediate_value_theorem h a b 0 H1 H6 H7 as [x [H9 H10]].
   exists x. split; auto. unfold h in H10. lra.
 Qed.

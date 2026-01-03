@@ -35,10 +35,10 @@ Proof.
     apply not_all_ex_not in H7 as [x2 H9].
     assert (H10 : h x2 = -1). { specialize (H6 x2). tauto. }
     pose proof Rtotal_order x1 x2 as [H11 | [H11 | H11]].
-    - pose proof theorem_7_5 h x1 x2 0 H11 ltac:(apply continuous_imp_continuous_on; auto) ltac:(lra) as [c [H12 H13]].
+    - pose proof intermediate_value_theorem_decreasing h x1 x2 0 H11 ltac:(apply continuous_imp_continuous_on; auto) ltac:(lra) as [c [H12 H13]].
       specialize (H6 c). lra.
     - subst. lra.
-    - pose proof theorem_7_4 h x2 x1 0 H11 ltac:(apply continuous_imp_continuous_on; auto) ltac:(lra) as [c [H12 H13]].
+    - pose proof intermediate_value_theorem h x2 x1 0 H11 ltac:(apply continuous_imp_continuous_on; auto) ltac:(lra) as [c [H12 H13]].
       specialize (H6 c). lra.
   }
   destruct H_const as [H7 | H7].

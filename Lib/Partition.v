@@ -1,4 +1,4 @@
-From Lib Require Import Imports Notations Sorted_Rlt Completeness Continuity Sets Reals_util.
+From Lib Require Import Imports Notations Sorted_Rlt Completeness Continuity Sets Reals_util Interval.
 Import IntervalNotations SetNotations.
 
 Local Notation length := List.length.

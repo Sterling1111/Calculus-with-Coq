@@ -14,11 +14,11 @@ Proof.
   - pose proof exists_irrational_between (f x) (f a) H6 as [c [H7 H8]].
     assert (H10 : a < x). { pose proof Rtotal_order a x as [H9 | [H9 | H9]]; subst; solve_R. }
     assert (H11 : continuous_on f [a, x]). { apply continuous_on_subset with (A2 := [a, b]); auto. intros y. solve_R. }
-    pose proof theorem_7_5 f a x c H10 H11 H7 as [d [H12 H13]]. specialize (H3 d).
+    pose proof intermediate_value_theorem_decreasing f a x c H10 H11 H7 as [d [H12 H13]]. specialize (H3 d).
     subst. unfold irrational in H8. contradiction.
   - pose proof exists_irrational_between (f a) (f x) H6 as [c [H7 H8]].
     assert (H10 : a < x). { pose proof Rtotal_order a x as [H9 | [H9 | H9]]; subst; solve_R. }
     assert (H11 : continuous_on f [a, x]). { apply continuous_on_subset with (A2 := [a, b]); auto. intros y. solve_R. }
-    pose proof theorem_7_4 f a x c H10 H11 H7 as [d [H12 H13]]. specialize (H3 d).
+    pose proof intermediate_value_theorem f a x c H10 H11 H7 as [d [H12 H13]]. specialize (H3 d).
     subst. unfold irrational in H8. contradiction.
 Qed.

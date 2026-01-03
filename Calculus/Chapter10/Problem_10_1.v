@@ -10,14 +10,14 @@ Proof.
   replace (λ x, f (x + x^2)) with (f ∘ g) by reflexivity.
   replace (λ x : ℝ, f' (x + x ^ 2) * (1 + 2 * x)) with ((f' ∘ g) ∙ g') by reflexivity.
   
-  assert (H1 : ⟦ der ⟧ f = f') by apply sin_derivative.
+  assert (H1 : ⟦ der ⟧ f = f') by apply derivative_sin.
   assert (H2 : ⟦ der ⟧ g = g').
   {
     unfold g, g'.
-    apply theorem_10_3_b. apply theorem_10_2. replace (Rmult 2) with (fun x => INR 2 * x^(2-1)).
-    2 : { extensionality x. simpl. lra. } apply power_rule.
+    apply derivative_plus. apply derivative_id. replace (Rmult 2) with (fun x => INR 2 * x^(2-1)).
+    2 : { extensionality x. simpl. lra. } apply derivative_pow.
   }
-  apply chain_rule; auto.
+  apply derivative_comp; auto.
 Qed.
 
 Lemma lemma_10_1_i' : ⟦ der ⟧ (λ x, sin (x + x^2)) = (λ x, cos (x + x^2) * (1 + 2 * x)).

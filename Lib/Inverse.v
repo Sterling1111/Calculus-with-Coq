@@ -1,4 +1,4 @@
-From Lib Require Import Imports Sets Notations Functions Limit Continuity Derivative Reals_util.
+From Lib Require Import Imports Sets Notations Functions Limit Continuity Derivative Reals_util Interval.
 Import SetNotations IntervalNotations Function_Notations LimitNotations DerivativeNotations.
 
 Definition one_to_one_on (f : ℝ -> ℝ) (D : Ensemble ℝ) :=
@@ -94,16 +94,16 @@ Proof.
     try (exfalso; specialize (H4 x y ltac:(solve_R) H6); auto);
     try (exfalso; specialize (H4 y z ltac:(solve_R) H7); auto);
     try (exfalso; specialize (H4 x z ltac:(solve_R) H8); auto).
-    - pose proof theorem_7_4 f x y (f z) ltac:(lra) 
+    - pose proof intermediate_value_theorem f x y (f z) ltac:(lra) 
       ltac:(apply continuous_on_subset with (A2 := [a, b]); auto; intros w; solve_R) ltac:(lra) as [w [H9 H10]].
       exfalso. apply (H4 w z ltac:(solve_R) H10).
-    - pose proof theorem_7_5 f y z (f x) ltac:(lra) 
+    - pose proof intermediate_value_theorem_decreasing f y z (f x) ltac:(lra) 
       ltac:(apply continuous_on_subset with (A2 := [a, b]); auto; intros w; solve_R) ltac:(lra) as [w [H9 H10]].
       exfalso. apply (H4 x w ltac:(solve_R) (eq_sym H10)).
-    - pose proof theorem_7_4 f y z (f x) ltac:(lra) 
+    - pose proof intermediate_value_theorem f y z (f x) ltac:(lra) 
       ltac:(apply continuous_on_subset with (A2 := [a, b]); auto; intros w; solve_R) ltac:(lra) as [w [H9 H10]].
       exfalso. apply (H4 x w ltac:(solve_R) (eq_sym H10)).
-    - pose proof theorem_7_5 f x y (f z) ltac:(lra) 
+    - pose proof intermediate_value_theorem_decreasing f x y (f z) ltac:(lra) 
       ltac:(apply continuous_on_subset with (A2 := [a, b]); auto; intros w; solve_R) ltac:(lra) as [w [H9 H10]].
       exfalso. apply (H4 w z ltac:(solve_R) H10).
   }
@@ -136,7 +136,7 @@ Proof.
       assert (x = f a \/ x = f b \/ x ∈ (f a, f b)) as [H10 | [H10 | H10]] by solve_R.
       - exists a. split; solve_R.
       - exists b. split; solve_R.
-      - pose proof theorem_7_4 f a b x H1 H2 ltac:(solve_R) as [y Hy]. exists y. auto.
+      - pose proof intermediate_value_theorem f a b x H1 H2 ltac:(solve_R) as [y Hy]. exists y. auto.
     }
     assert (y = a \/ y = b \/ y ∈ (a, b)) as [H10 | [H10 | H10]] by solve_R.
     + subst. set (η := Rmin ((b - a) / 2) (ε /2)). set (δ := f (a + η) - f a).
@@ -147,7 +147,7 @@ Proof.
       assert (f a < x < f (a + η)) as H14 by (unfold δ in *; solve_R).
       assert (continuous_on f [a, a + η]) as H15.
       { unfold η in *. apply continuous_on_subset with (A2 := [a, b]); auto. intros y z. solve_R. }
-      pose proof theorem_7_4 f a (a + η) x ltac:(unfold η; solve_R) H15 H14 as [y [H16 H17]].
+      pose proof intermediate_value_theorem f a (a + η) x ltac:(unfold η; solve_R) H15 H14 as [y [H16 H17]].
       rewrite <- H17, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
     + subst. set (η := Rmin ((b - a) / 2) (ε /2)). set (δ := f b - f (b - η)).
       exists δ. assert (δ > 0) as H9.
@@ -157,7 +157,7 @@ Proof.
       assert (f (b - η) < x < f b) as H14 by (unfold δ in *; solve_R).
       assert (continuous_on f [b - η, b]) as H15.
       { unfold η in *. apply continuous_on_subset with (A2 := [a, b]); auto. intros y z. solve_R. }
-      pose proof theorem_7_4 f (b - η) b x ltac:(unfold η; solve_R) H15 H14 as [y [H16 H17]].
+      pose proof intermediate_value_theorem f (b - η) b x ltac:(unfold η; solve_R) H15 H14 as [y [H16 H17]].
       rewrite <- H17, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
     + subst. set (η := Rmin ((Rmin (y - a) (b - y)) / 2) (ε / 2)).
       set (δ := Rmin (f (y + η) - f y) (f y - f (y - η))).
@@ -172,7 +172,7 @@ Proof.
       assert (f (y - η) < x0 < f (y + η)) as H15 by (unfold δ in *; solve_R).
       assert (continuous_on f [y - η, y + η]) as H16.
       { unfold η in *. apply continuous_on_subset with (A2 := [a, b]); auto. intros z Hz. solve_R. }
-      pose proof theorem_7_4 f (y - η) (y + η) x0 ltac:(unfold η; solve_R) H16 H15 as [z [H17 H18]].
+      pose proof intermediate_value_theorem f (y - η) (y + η) x0 ltac:(unfold η; solve_R) H16 H15 as [z [H17 H18]].
       rewrite <- H18, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
   - intros x H6 ε H7. assert (∃ y, y ∈ [a, b] /\ f y = x) as [y [H8 H9]].
     {
@@ -180,7 +180,7 @@ Proof.
       assert (x = f a \/ x = f b \/ x ∈ (f b, f a)) as [H10 | [H10 | H10]] by solve_R.
       - exists a. split; solve_R.
       - exists b. split; solve_R.
-      - pose proof theorem_7_5 f a b x H1 H2 ltac:(solve_R) as [y Hy]. exists y. auto.
+      - pose proof intermediate_value_theorem_decreasing f a b x H1 H2 ltac:(solve_R) as [y Hy]. exists y. auto.
     }
     assert (y = a \/ y = b \/ y ∈ (a, b)) as [H10 | [H10 | H10]] by solve_R.
     + subst. set (η := Rmin ((b - a) / 2) (ε / 2)). set (δ := f a - f (a + η)).
@@ -191,7 +191,7 @@ Proof.
       assert (f (a + η) < x < f a) as H14 by (unfold δ in *; solve_R).
       assert (continuous_on f [a, a + η]) as H15.
       { unfold η in *. apply continuous_on_subset with (A2 := [a, b]); auto. intros y z. solve_R. }
-      pose proof theorem_7_5 f a (a + η) x ltac:(unfold η; solve_R) H15 H14 as [y [H16 H17]].
+      pose proof intermediate_value_theorem_decreasing f a (a + η) x ltac:(unfold η; solve_R) H15 H14 as [y [H16 H17]].
       rewrite <- H17, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
     + subst. set (η := Rmin ((b - a) / 2) (ε / 2)). set (δ := f (b - η) - f b).
       exists δ. assert (δ > 0) as H9.
@@ -201,7 +201,7 @@ Proof.
       assert (f b < x < f (b - η)) as H14 by (unfold δ in *; solve_R).
       assert (continuous_on f [b - η, b]) as H15.
       { unfold η in *. apply continuous_on_subset with (A2 := [a, b]); auto. intros y z. solve_R. }
-      pose proof theorem_7_5 f (b - η) b x ltac:(unfold η; solve_R) H15 H14 as [y [H16 H17]].
+      pose proof intermediate_value_theorem_decreasing f (b - η) b x ltac:(unfold η; solve_R) H15 H14 as [y [H16 H17]].
       rewrite <- H17, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
     + subst. set (η := Rmin ((Rmin (y - a) (b - y)) / 2) (ε / 2)).
       set (δ := Rmin (f y - f (y + η)) (f (y - η) - f y)).
@@ -216,7 +216,7 @@ Proof.
       assert (f (y + η) < x0 < f (y - η)) as H15 by (unfold δ in *; solve_R).
       assert (continuous_on f [y - η, y + η]) as H16.
       { unfold η in *. apply continuous_on_subset with (A2 := [a, b]); auto. intros z Hz. solve_R. }
-      pose proof theorem_7_5 f (y - η) (y + η) x0 ltac:(unfold η; solve_R) H16 H15 as [z [H17 H18]].
+      pose proof intermediate_value_theorem_decreasing f (y - η) (y + η) x0 ltac:(unfold η; solve_R) H16 H15 as [z [H17 H18]].
       rewrite <- H18, H4. 2 : { unfold η in *; solve_R. } unfold η in *. solve_R.
 Qed.
 
@@ -241,29 +241,27 @@ Theorem theorem_12_4 : forall f f_inv f' a b y,
     inverse_on f f_inv [a, b] [Rmin (f a) (f b), Rmax (f a) (f b)] -> 
       y ∈ (Rmin (f a) (f b), Rmax (f a) (f b)) ->
         ⟦ der ⟧ f [a, b] = f' -> f' (f_inv y) = 0 ->
-          ¬ differentiable_at f_inv y.
+          ~ differentiable_at f_inv y.
 Proof.
   intros f f_inv f' a b y H1 H2 H3 H4 H5 H6 H7 H8.
   assert (f (f_inv y) = y) as H9.
-  { destruct H4 as [_ [_ [_ H4]]]. apply H4;  solve_R. }
-  pose proof differentiable_at_exists_f' f_inv y H8 as [f_inv' H10].
+  { destruct H4 as [_ [_ [_ H4]]]. apply H4; solve_R. }
+  pose proof differentiable_at_imp_derivative_at f_inv y H8 as [f_inv' H10].
   specialize (H6 (f_inv y)). assert (⟦ der (f_inv y) ⟧ f = f') as H11.
   {
-    destruct H4 as [_ [H4 [_ H4']]]. specialize (H4 y ltac:(solve_R)). 
-    specialize (H6 H4) as [[_ H6] | [[H6 _] | [H6 _]]]; auto;
-    first [apply is_left_endpoint_closed in H6 | apply is_right_endpoint_closed in H6]; auto;
-    specialize (H4' y ltac:(solve_R)); rewrite <- H6, H4' in H5; solve_R.
+    destruct H4 as [_ [H4 [_ H4']]]. specialize (H4 y ltac:(solve_R)). specialize (H4' y ltac:(solve_R)).
+    specialize (H6 H4) as [[_ H6] | [[H6 _] | [H6 _]]]; auto_interval; rewrite <- H6, H4' in H5; solve_R.
   }
-  pose proof theorem_10_9 f f_inv f' f_inv' y H10 H11 as H12.
+  pose proof derivative_at_comp f_inv f f_inv' f' y H10 H11 as H12.
   assert (H13 : ⟦ der y ⟧ (f ∘ f_inv) = (λ _ : ℝ, 1)).
   {
-    apply (derivative_at_eq_eventually (fun x => x) (f ∘ f_inv) (fun _ => 1) y).
-    2 : { apply theorem_10_2. }
+    apply (derivative_at_eq (fun x => x) (f ∘ f_inv) (fun _ => 1) y).
+    2 : { apply derivative_at_id. }
     set (δ := Rmin (y - Rmin (f a) (f b)) (Rmax (f a) (f b) - y)).
     assert (δ > 0) as H13 by (unfold δ; solve_R).
-    exists δ; split; auto. intros x H14. unfold δ in *. destruct H4 as [_ [_ [_ H4]]]. unfold compose in *. rewrite H4; solve_R.
+    exists δ; split; auto. intros x H14. unfold δ in *. destruct H4 as [_ [_ [_ H4]]]. unfold compose. rewrite H4; solve_R.
   }
-  pose proof derivative_of_function_at_x_unique (f ∘ f_inv) (f' ∘ f_inv ∙ f_inv') (λ _ : ℝ, 1) y H12 H13 as H14.
+  pose proof derivative_at_unique (f ∘ f_inv) ((f' ∘ f_inv) ∙ f_inv')%f (λ _ : ℝ, 1) y H12 H13 as H14.
   simpl in H14. unfold compose in *. rewrite H7 in H14. lra.
 Qed.
 
@@ -292,44 +290,43 @@ Proof.
   assert (H10 : continuous_at f_inv y).
   {
     pose proof (theorem_12_3 f f_inv a b H1 H2 H3 H4) as H10.
-    pose proof continuous_on_interval_closed f_inv c d ltac:(solve_R) as H11.
+    pose proof continuous_on_closed_interval_iff f_inv c d ltac:(solve_R) as H11.
     apply H11 in H10 as [H10 _]. specialize (H10 y ltac:(solve_R)).
     auto.
   }
   set (g := (λ h : ℝ, (f_inv (y + h) - x0) / h)).
   set (δ := Rmin (y - c) (d - y)).
 
-  apply limit_to_a_equiv' with (f1 := (∕ ∕ g)) (δ := Rmin (y - c) (d - y)); [solve_R | |].
+  apply limit_eq with (f1 := (∕ ∕ g)); [ exists (Rmin (y - c) (d - y)); split; [ solve_R | ] |].
   {
-    intros x [H11 H12]. unfold g. field; split; auto.
+    intros x [H11 H12]. unfold g. field; split; [ solve_R | ].
     assert (one_to_one_on f_inv [c, d]) as H13.
     { 
       pose proof exists_inverse_on_iff f_inv [c, d] [a, b] as H13.
       apply H13. exists f. apply inverse_symmetric; auto.
     }
     unfold x0. intros H14.
-    specialize (H13 y (y + x) ltac:(solve_R) ltac:(solve_R)). lra.
+    specialize (H13 y (y + x) ltac:(solve_R) ltac:(solve_R)). solve_R.
   }
   apply limit_inv; auto. unfold g.
-  apply limit_to_a_equiv' with (f1 := (λ x : ℝ, (f (f_inv (y + x)) - f x0) / ((f_inv (y + x) - x0)))) (δ := Rmin (y - c) (d - y)); [solve_R | | ].
+  apply limit_eq with (f1 := (λ x : ℝ, (f (f_inv (y + x)) - f x0) / ((f_inv (y + x) - x0)))); [ exists (Rmin (y - c) (d - y)); split; [solve_R |] | ].
   {
     intros x [H11 H12]. pose proof H4 as H13. destruct H4 as [_ [_ [_ H4]]]. unfold x0.
     repeat rewrite H4; unfold c, d, δ in *; [ |solve_R | solve_R].
-    field; split; auto. 
+    field; split; [ solve_R | ].
     assert (one_to_one_on f_inv [c, d]) as H14.
     { 
       pose proof exists_inverse_on_iff f_inv [c, d] [a, b] as H14.
       apply H14. exists f. apply inverse_symmetric; auto.
     }
-    specialize (H14 y (y + x) ltac:(unfold c, d, δ in *; solve_R) ltac:(unfold c, d, δ in *; solve_R)). lra.
+    specialize (H14 y (y + x) ltac:(unfold c, d, δ in *; solve_R) ltac:(unfold c, d, δ in *; solve_R)); solve_R.
   }
   assert (H11 : ⟦ lim 0 ⟧ (λ x, f_inv (y + x)) = x0).
   { apply limit_continuous_comp; solve_lim. }
-  specialize (H6 x0 H9) as [[_ H12] | [[H12 _] | [H12 _]]];
-  [| exfalso; apply (left_interval_endpoint_open a b x0) | exfalso; apply (right_interval_endpoint_open a b x0) ]; auto.
+  specialize (H6 x0 H9) as [[_ H12] | [[H12 _] | [H12 _]]]; try solve [auto_interval].
   unfold derivative_at in H12.
   set (k := (λ x, f_inv (y + x) - x0)).
-  apply limit_to_a_equiv' with (f1 := (λ x : ℝ, (f (x0 + k x) - f x0) / k x))(δ := Rmin (y - c) (d - y)); [solve_R | | ].
+  apply limit_eq with (f1 := (λ x : ℝ, (f (x0 + k x) - f x0) / k x)); [ exists (Rmin (y - c) (d - y)); split; [  solve_R | ] | ].
   {
     intros x [H13 H14]. unfold k. replace (x0 + (f_inv (y + x) - x0)) with (f_inv (y + x)) by lra.
     field.
@@ -339,7 +336,7 @@ Proof.
       apply H15. exists f. apply inverse_symmetric; auto.
     }
     unfold x0. intros H16.
-    specialize (H15 y (y + x) ltac:(solve_R) ltac:(solve_R)). lra.
+    specialize (H15 y (y + x) ltac:(solve_R) ltac:(solve_R)). solve_R.
   }
   apply limit_comp with (f := λ h, (f (x0 + h) - f x0) / h) (g := k) (b := 0); auto.
   2 : {
