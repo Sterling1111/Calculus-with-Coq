@@ -1,5 +1,5 @@
 From Lib Require Import Imports Notations Integral Derivative Functions Continuity 
-                          Limit Sets Reals_util Inverse Trigonometry Sums Rational Binomial Tactics.
+                          Limit Sets Reals_util Inverse Trigonometry Sums Rational Binomial Tactics Interval.
 Import IntervalNotations SetNotations Function_Notations DerivativeNotations LimitNotations Choose_Notations.
 
 Open Scope R_scope.
@@ -80,9 +80,9 @@ Qed.
 Lemma nth_Derive_f_n_0 : ∀ n k,
   (k > 2 * n)%nat -> ⟦ Der ^ k ⟧ (f n) = (fun _ => 0).
 Proof.
-  intros n k H1.
+  intros n k H1. apply nth_derivative_imp_nth_derive.
   rewrite f_n_is_polynomial.
-  rewrite nth_Derive_mult_const.
+  apply nth_derivative_mult_const_l.
   rewrite nth_Derive_sum; try lia.
   extensionality x. apply Rmult_eq_0_compat_l.
   rewrite sum_f_reindex with (s := n); try lia.
