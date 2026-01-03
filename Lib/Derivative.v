@@ -4275,6 +4275,48 @@ Lemma lhopital_nth : forall (n : nat) f g a L,
   ⟦ lim a ⟧ ( (⟦ Der^n ⟧ f) / (⟦ Der^n ⟧ g) ) = L ->
   ⟦ lim a ⟧ ( f / g ) = L.
 Proof.
+  induction n as [| k IH]; intros f g a L Hn Hnz Hdf Hdg Hlf Hlg Hlim; [lia|].
+  assert (k = 0 \/ k > 0)%nat as [Hz | Hz] by lia.
+  - (* Base Case: n = 1 *)
+    subst k. simpl in *.
+    eapply lhopital_0_0_strong with (f' := ⟦ Der ⟧ f) (g' := ⟦ Der ⟧ g); auto.
+    + apply (Hlf 0%nat); lia.
+    + apply (Hlg 0%nat); lia.
+    + apply Derive_spec. apply nth_differentiable_imp_differentiable with (n := 1); [lia | apply Hdf; lia].
+    + apply Derive_spec. apply nth_differentiable_imp_differentiable with (n := 1); [lia | apply Hdg; lia].
+    + apply (Hnz 0); lia.
+  - (* Inductive Step: n > 1 *)
+    eapply lhopital with (f' := ⟦ Der ⟧ f) (g' := ⟦ Der ⟧ g); auto.
+    + apply (Hlf 0); lia.
+    + apply (Hlg 0); lia.
+    + apply Derive_spec. apply nth_differentiable_imp_differentiable with (n := 1); [lia | apply Hdf; lia].
+    + apply Derive_spec. apply nth_differentiable_imp_differentiable with (n := 1); [lia | apply Hdg; lia].
+    + apply (Hnz 0); lia.
+    + apply IH; try lia.
+      * intros i Hi. specialize (Hnz (S i) ltac:(lia)).
+        destruct Hnz as [δ [Hδ1 Hδ2]]. exists δ. split; auto.
+        intros x Hx1 Hx2.
+        rewrite nth_Derive_Derive_comm, Derive_nth_Derive; auto.
+        -- apply nth_differentiable_succ_imp_differentiable. apply Hdg. lia.
+        -- apply nth_differentiable_succ_imp_differentiable. apply Hdg. lia.
+      * intros i Hi. apply nth_differentiable_Derive. apply Hdf. lia.
+      * intros i Hi. apply nth_differentiable_Derive. apply Hdg. lia.
+      * intros i Hi. rewrite nth_Derive_Derive_comm. apply Hlf. lia.
+      * intros i Hi. rewrite nth_Derive_Derive_comm. apply Hlg. lia.
+      * rewrite <- Hlim. apply limit_eq_func.
+        intros x. repeat rewrite nth_Derive_Derive_comm. reflexivity.
+Qed.
+
+Lemma lhopital_nth : forall (n : nat) f g a L,
+  (n > 0)%nat ->
+  (forall k, (k < n)%nat -> exists δ, δ > 0 /\ forall x, x ∈ (a - δ, a + δ) -> x <> a -> ⟦ Der^(S k) x ⟧ g <> 0) ->
+  (forall k, (k <= n)%nat -> nth_differentiable k f) ->
+  (forall k, (k <= n)%nat -> nth_differentiable k g) ->
+  (forall k, (k < n)%nat -> ⟦ lim a ⟧ (⟦ Der^k ⟧ f) = 0) ->
+  (forall k, (k < n)%nat -> ⟦ lim a ⟧ (⟦ Der^k ⟧ g) = 0) ->
+  ⟦ lim a ⟧ ( (⟦ Der^n ⟧ f) / (⟦ Der^n ⟧ g) ) = L ->
+  ⟦ lim a ⟧ ( f / g ) = L.
+Proof.
   intros n. 
   induction n as [| k IH]; try lia.
   intros f g a L H0 H1 H2 H3 H4 H5 H6.
