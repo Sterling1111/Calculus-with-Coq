@@ -1,4 +1,4 @@
-From Lib Require Import Imports Notations Reals_util Functions Sums Sets Limit Continuity Derivative Trigonometry.
+From Lib Require Import Imports Notations Reals_util Functions Sums Sets Limit Continuity Derivative Trigonometry Interval.
 Import Function_Notations LimitNotations DerivativeNotations SetNotations IntervalNotations.
 
 Open Scope R_scope.

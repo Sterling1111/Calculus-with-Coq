@@ -5,7 +5,7 @@ Lemma lemma_10_6_i : ∀ f g f' g' a,
 Proof.
   intros f g f' g' a H1 H2 H3.
   assert (H4 : ⟦ der ⟧ (λ x : ℝ, g (x + g a)) = (λ x : ℝ, g' (x + g a))) by auto_diff.
-  rewrite (derivative_of_function_unique f f' (λ x : ℝ, g' (x + g a)) H2 ltac:(subst; auto)). reflexivity.
+  rewrite (derivative_unique f f' (λ x : ℝ, g' (x + g a)) H2 ltac:(subst; auto)). reflexivity.
 Qed.
 
 Lemma lemma_10_6_ii : ∀ f g f' g' a,
@@ -13,7 +13,7 @@ Lemma lemma_10_6_ii : ∀ f g f' g' a,
 Proof. 
   intros f g f' g' a H1 H2 H3.
   assert (H4 : ⟦ der ⟧ (λ x : ℝ, g (x * g a)) = (λ x : ℝ, g' (x * g a) * g a)) by auto_diff.
-  rewrite (derivative_of_function_unique f f' (λ x : ℝ, g' (x * g a) * g a) H2 ltac:(subst; auto)). reflexivity.
+  rewrite (derivative_unique f f' (λ x : ℝ, g' (x * g a) * g a) H2 ltac:(subst; auto)). reflexivity.
 Qed.
 
 Lemma lemma_10_6_iii : ∀ f g f' g',
@@ -21,7 +21,7 @@ Lemma lemma_10_6_iii : ∀ f g f' g',
 Proof.
   intros f g f' g' H1 H2 H3.
   assert (H4 : ⟦ der ⟧ (λ x : ℝ, g (x + g x)) = (λ x : ℝ, g' (x + g x) * (1 + g' x))) by auto_diff.
-  rewrite (derivative_of_function_unique f f' (λ x : ℝ, g' (x + g x) * (1 + g' x)) H2 ltac:(subst; auto)). reflexivity.
+  rewrite (derivative_unique f f' (λ x : ℝ, g' (x + g x) * (1 + g' x)) H2 ltac:(subst; auto)). reflexivity.
 Qed.
 
 Lemma lemma_10_6_iv : ∀ f g f' g' a,
@@ -29,7 +29,7 @@ Lemma lemma_10_6_iv : ∀ f g f' g' a,
 Proof.
   intros f g f' g' a H1 H2 H3.
   assert (H4 : ⟦ der ⟧ (λ x : ℝ, g x * (x - a)) = (λ x : ℝ, g' x * (x - a) + g x)) by auto_diff.
-  rewrite (derivative_of_function_unique f f' (λ x : ℝ, g' x * (x - a) + g x) H2 ltac:(subst; auto)). reflexivity.
+  rewrite (derivative_unique f f' (λ x : ℝ, g' x * (x - a) + g x) H2 ltac:(subst; auto)). reflexivity.
 Qed.
 
 Lemma lemma_10_6_v : ∀ f g f' a,
@@ -37,7 +37,7 @@ Lemma lemma_10_6_v : ∀ f g f' a,
 Proof.
   intros f g f' a H1 H2.
   assert (H3 : ⟦ der ⟧ (λ x : ℝ, g a * (x - a)) = (λ x : ℝ, g a)) by auto_diff.
-  rewrite (derivative_of_function_unique f f' (λ x : ℝ, g a) H2 ltac:(subst; auto)). reflexivity.
+  rewrite (derivative_unique f f' (λ x : ℝ, g a) H2 ltac:(subst; auto)). reflexivity.
 Qed.
 
 Lemma lemma_10_6_vi : ∀ f g f' g',
@@ -45,5 +45,5 @@ Lemma lemma_10_6_vi : ∀ f g f' g',
 Proof.
   intros f g f' g' H1 H2 H3.
   assert (H4 : ⟦ der ⟧ (λ x : ℝ, g ((x - 3)^2)) = (λ x : ℝ, g' ((x - 3)^2) * (2 * (x - 3)))) by auto_diff.
-  rewrite (derivative_of_function_unique f f' (λ x : ℝ, g' ((x - 3)^2) * (2 * (x - 3)) ) H2 ltac:(subst; auto)). reflexivity.
+  rewrite (derivative_unique f f' (λ x : ℝ, g' ((x - 3)^2) * (2 * (x - 3)) ) H2 ltac:(subst; auto)). reflexivity.
 Qed.

@@ -62,7 +62,20 @@ ATTAM/Chapter36.v
 # Calculus (depends on Lib only)
 # =========================
 Calculus/Chapter1/Prelude.v
+Calculus/Chapter1/Problem_1_1.v
+Calculus/Chapter1/Problem_1_6.v
+Calculus/Chapter1/Problem_1_12.v
+Calculus/Chapter1/Problem_1_15.v
+Calculus/Chapter1/Problem_1_18.v
+Calculus/Chapter1/Problem_1_21.v
+Calculus/Chapter1/Problem_1_22.v
+
+
 Calculus/Chapter2/Prelude.v
+Calculus/Chapter2/Problem_2_1.v
+Calculus/Chapter2/Problem_2_3.v
+Calculus/Chapter2/Problem_2_12.v
+Calculus/Chapter2/Problem_2_13.v
 Calculus/Chapter3/Prelude.v
 Calculus/Chapter5/Prelude.v
 Calculus/Chapter6/Prelude.v

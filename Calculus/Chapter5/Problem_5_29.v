@@ -13,5 +13,5 @@ Qed.
 Lemma lemma_5_29' : ∀ f a L,
   ⟦ lim a⁺ ⟧ f = L → ⟦ lim a⁻ ⟧ f = L → ⟦ lim a ⟧ f = L.
 Proof.
-  intros f a L H1 H2. apply left_right_iff; auto.
+  intros f a L H1 H2. apply limit_iff; auto.
 Qed.

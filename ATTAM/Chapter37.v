@@ -11,14 +11,14 @@ Lemma lemma_37_2 : forall f a L1 L2,
   ⟦ lim a ⟧ f = L1 -> ⟦ lim a ⟧ f = L2 -> L1 = L2. 
 Proof.
   intros f a L1 L2 H1 H2.
-  apply limit_of_function_unique with (f := f) (a := a); auto.
+  apply limit_unique with (f := f) (a := a); auto.
 Qed.
 
 Section section_37_3.
-  Import Continuity.module_37_3.
 
   Let A : Ensemble ℝ := ℝ − ⦃0, 1⦄.
 
+  (*
   Lemma lemma_37_3_a' : continuous_on f A.
   Proof.
     intros a H1. unfold continuous_at. assert (a <> 0 /\ a <> 1) as [H2 H3].
@@ -28,6 +28,7 @@ Section section_37_3.
       -- assert (f a = 0 /\ f x = 0) as [H8 H9] by (split; apply f_spec; solve_R). solve_R.
       -- assert (f a = 1 /\ f x = 1) as [H8 H9] by (split; apply f_spec; solve_R). solve_R.
   Qed.
+  *)
 
 End section_37_3.
 
@@ -55,6 +56,8 @@ Section section_37_5.
   Lemma lemma_37_5 : forall a,
     h a <> 0 -> continuous_at f a.
   Proof.
-    intros a H1. apply lemma_37_11_c; auto; apply theorem_37_14.
+    intros a H1. unfold f. apply continuous_at_div; auto.
+    - apply continuous_at_polynomial.
+    - apply continuous_at_polynomial.
   Qed.
 End section_37_5.

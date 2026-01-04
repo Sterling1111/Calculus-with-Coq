@@ -1,4 +1,4 @@
-From Lib Require Import Imports Sets Limit Continuity Derivative Notations Reals_util Inverse.
+From Lib Require Import Imports Sets Limit Continuity Derivative Notations Reals_util Inverse Interval Functions.
 Import LimitNotations IntervalNotations SetNotations DerivativeNotations Function_Notations.
 Open Scope R_scope.
 

@@ -7,10 +7,11 @@ Proof.
   assert (H4 : ⟦ der a ⟧ f = (λ x, -1 / (x ^ 2))).
   {
     rewrite H2. unfold derivative_at. 
-    apply limit_to_a_equiv' with (f1 := (λ h : ℝ, -1 / ((a + h) * a))) (δ := |a/2|); solve_R.
-    auto_limit.
+    apply limit_eq with (f1 := (λ h : ℝ, -1 / ((a + h) * a))).
+    - exists (|a/2|). split; [| intros h H5 ]; solve_R.
+    - auto_limit.
   }
-  rewrite (derivative_of_function_at_x_unique f f' (λ x, -1 / (x ^ 2)) a H3 H4); auto.
+  rewrite (derivative_at_unique f f' (λ x, -1 / (x ^ 2)) a H3 H4); auto.
 Qed.
 
 Lemma lemma_9_1_a' : ∀ a f f',
@@ -18,7 +19,7 @@ Lemma lemma_9_1_a' : ∀ a f f',
 Proof.
   intros a f f' H1 H2 H3. 
   assert (H4 : ⟦ der a ⟧ f = (λ x, -1 / (x ^ 2))) by (subst; auto_diff).
-  rewrite (derivative_of_function_at_x_unique f f' (λ x, -1 / (x ^ 2)) a H3 H4); auto.
+  rewrite (derivative_at_unique f f' (λ x, -1 / (x ^ 2)) a H3 H4); auto.
 Qed.
 
 Lemma lemma_9_1_b : ∀ (a : R) (f f' : R -> R),

@@ -7,10 +7,11 @@ Proof.
   assert (H4 : ⟦ der a ⟧ f = (λ x, -2 / (x ^ 3))).
   {
     rewrite H2. unfold derivative_at.
-    apply limit_to_a_equiv' with (f1 := (λ h, ((-2 * a - h) / (a^2 * (a + h)^2))) ) (δ := |a/2|); solve_R.
-    auto_limit; rewrite Rplus_0_r, Rmult_1_r; repeat apply Rmult_integral_contrapositive; auto.
+    apply limit_eq with (f1 := (λ h, ((-2 * a - h) / (a^2 * (a + h)^2))) ).
+    - exists (|a/2|). split; [| intros h H5 ]; solve_R.
+    - auto_limit; rewrite Rplus_0_r, Rmult_1_r; repeat apply Rmult_integral_contrapositive; auto.
   }
-  rewrite (derivative_of_function_at_x_unique f f' (λ x, -2 / (x ^ 3)) a H3 H4); auto.
+  rewrite (derivative_at_unique f f' (λ x, -2 / (x ^ 3)) a H3 H4); auto.
 Qed.
 
 Lemma lemma_9_2_b : ∀ (a : R) (f f' : R -> R),

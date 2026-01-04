@@ -221,6 +221,12 @@ Proof.
   intros x H7. rewrite <- H2; [apply H6 |]; solve_R.
 Qed.
 
+Lemma limit_eq' : forall f1 f2 a L,
+  (forall x, f1 x = f2 x) -> ⟦ lim a ⟧ f1 = L -> ⟦ lim a ⟧ f2 = L.
+Proof.
+  intros f1 f2 a L H1 H2. replace f2 with f1 by (extensionality x; apply H1). exact H2.
+Qed.
+
 Lemma limit_left_eq : forall f1 f2 a L,
   (exists δ, δ > 0 /\ forall x, 0 < a - x < δ -> f1 x = f2 x) ->
   ⟦ lim a⁻ ⟧ f1 = L -> ⟦ lim a⁻ ⟧ f2 = L.
