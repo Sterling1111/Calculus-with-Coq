@@ -1,6 +1,12 @@
 From Lib Require Import Imports Sums Reals_util Rational.
 Open Scope nat_scope.
 
+Lemma fact_1 : fact 1 = 1%nat.
+Proof. reflexivity. Qed.
+
+Lemma fact_0 : fact 0 = 1%nat.
+Proof. reflexivity. Qed.
+
 Lemma is_natural_sum_n_nat : forall n : nat,
   (n >= 1)%nat -> is_natural (sum_f 1 n (fun i => INR i)).
 Proof.
