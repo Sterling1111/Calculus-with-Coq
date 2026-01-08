@@ -1,4 +1,4 @@
-From Lib Require Import Imports Notations Integral Derivative Functions Continuity Limit Sets Reals_util Inverse.
+From Lib Require Import Imports Notations Integral Derivative Functions Continuity Limit Sets Reals_util Inverse Interval.
 Import IntervalNotations SetNotations Function_Notations DerivativeNotations LimitNotations.
 
 Definition log (x : R) :=
@@ -16,16 +16,14 @@ Qed.
 Lemma log_1 : log 1 = 0.
 Proof.
   rewrite log_spec; try lra. rewrite integral_n_n; reflexivity.
-Qed. 
+Qed.
 
 Lemma derivative_log_x : forall x, 
   x > 0 -> ⟦ der x ⟧ log = (fun x => 1 / x).
 Proof.
   intros x H1. pose proof Rtotal_order x 1 as [H2 | [H2 | H2]].
-  - apply derivative_at_eq_f with (f1 := fun x => ∫ 1 x (λ t, 1 / t)) (a := 0.5 * x)(b := 1); try lra.
-    {intros y H3. rewrite log_spec; lra. }
-    apply derivative_on_imp_derivative_at with (a := 0.5 * x) (b := 1); solve_R.
-    apply derivative_on_closed_imp_open.
+  - apply derivative_on_imp_derivative_at with (D := [0.5 * x, 1]); auto_interval. apply derivative_on_eq with (f1 := fun x => ∫ 1 x (λ t, 1 / t)).
+    {intros y H3. rewrite log_spec; solve_R. }
     set (h := λ t : ℝ, -1 / t).
     replace (λ x0 : ℝ, ∫ 1 x0 (λ t : ℝ, 1 / t)) with (λ x : ℝ, ∫ x 1 h).
     2 : {
@@ -33,51 +31,43 @@ Proof.
         replace (- Rdiv 1)%f with (λ t : ℝ, - 1 / t).
         2 : { extensionality t. lra. } auto.
     }
-    apply derivative_on_eq' with (f1' := (-h)%f); try lra.
-    { intros z H6. unfold h. lra. }
-    apply FTC1'; try lra. unfold h. intros c H6. apply limit_imp_limit_on. auto_limit.
-  - apply derivative_at_eq_f with (f1 := fun y => ∫ 1 0.5 (fun t => 1/t) + ∫ 0.5 y (fun t => 1/t)) (a := 0.5) (b := 2); try lra.
-    { 
+    replace (λ x0 : ℝ, 1 / x0) with (λ x0 : ℝ, - (h)%f x0).
+    2 : { extensionality z. unfold h. lra. }
+    apply FTC1'; try lra. unfold h. intros c H6. apply limit_imp_limit_on. apply limit_div; solve_R. apply limit_const. apply limit_id.
+  - apply derivative_on_imp_derivative_at with (D := [0.5, 2]); auto_interval. 
+    apply derivative_on_eq with (f1 := fun x => ∫ 1 0.5 (fun t => 1/t) + ∫ 0.5 x (fun t => 1/t)).
+    {
       intros y H3.
-      rewrite log_spec; try lra.
+      rewrite log_spec; solve_R.
       rewrite <- integral_plus' with (c := 0.5); auto.
       assert (H4 : continuous_on (λ t : ℝ, 1 / t) [0.5, 2]).
-      { intros z H4. apply limit_imp_limit_on. auto_limit. }
+      { intros z H4. apply limit_imp_limit_on. solve_lim. }
         apply theorem_13_3; [ solve_R | ].
         apply continuous_on_subset with (A2 := [0.5, 2]); auto.
         intros z H5. solve_R.
     }
-
-    apply derivative_at_eq_f'' with (f1' := λ x0 : ℝ, 0 + 1 / x0) (a := 0.5)(b := 2); try lra.
-    { intros y H3. lra. }
-    
-    apply theorem_10_3_a.
-    -- apply theorem_10_1.
-    -- replace (Rdiv 1) with (fun x0 => 1 / x0) by auto.
-       apply derivative_on_imp_derivative_at with (a := 0.5) (b := 2); solve_R.
-       apply derivative_on_closed_imp_open.
-       apply FTC1; try lra.
-       intros c H3. apply limit_imp_limit_on; auto_limit.
-  - apply derivative_at_eq_f with (f1 := fun x => ∫ 1 x (λ t, 1 / t)) (a := 1)(b := 2 * x); try lra.
-    { intros y H3. rewrite log_spec; lra. }
-    apply derivative_on_imp_derivative_at with (a := 1) (b := (2 * x)); solve_R.
-    apply derivative_on_closed_imp_open.
-    apply FTC1; try lra. intros c H3. apply limit_imp_limit_on; auto_limit.
+    apply derivative_on_ext with (f1' := λ x, 0 + 1/x).
+    { intros t Ht. lra. }
+    apply derivative_on_plus.
+    + apply differentiable_domain_closed; lra.
+    + apply derivative_on_const; apply differentiable_domain_closed; lra.
+    + apply FTC1; try lra. intros c H3. apply limit_imp_limit_on. apply limit_div; solve_R. apply limit_const. apply limit_id.
+  - apply derivative_on_imp_derivative_at with (D := [1, 2 * x]); auto_interval. apply derivative_on_eq with (f1 := fun x => ∫ 1 x (λ t, 1 / t)).
+    {intros y H3. rewrite log_spec; solve_R. }
+    apply FTC1; try lra. intros c H6. apply limit_imp_limit_on. apply limit_div; solve_R. apply limit_const. apply limit_id.
 Qed.
 
 Lemma derivative_log_on : forall a b, 
   0 < a < b -> ⟦ der ⟧ log [a, b] = (λ x : ℝ, 1 / x).
 Proof.
-  intros a b H1.
-  apply derivative_on_eq with  (f1 := log); solve_R.
-  intros x H2. assert (x = a \/ x = b \/ x ∈ (a, b)) as [H3 | [H3 | H3]] by solve_R.
-  - right; left. split. apply is_left_endpoint_closed; lra.
+  intros a b H1 x H2. assert (x = a \/ x = b \/ x ∈ (a, b)) as [H3 | [H3 | H3]] by solve_R.
+  - right; left. split; auto_interval.
     pose proof derivative_at_iff log (fun x0 => 1 / x0) x as H4.
     assert (H5 : ⟦ der x ⟧ log = (λ x0 : ℝ, 1 / x0)) by (apply derivative_log_x; lra). tauto.
-  - right; right; split. apply is_right_endpoint_closed; lra.
+  - right; right; split; auto_interval.
     pose proof derivative_at_iff log (fun x0 => 1 / x0) x as H4.
     assert (H5 : ⟦ der x ⟧ log = (λ x0 : ℝ, 1 / x0)) by (apply derivative_log_x; lra). tauto.
-  - left. split. apply is_interior_point_closed; solve_R.
+  - left. split; auto_interval.
     pose proof derivative_at_iff log (fun x0 => 1 / x0) x as H4.
     assert (H5 : ⟦ der x ⟧ log = (λ x0 : ℝ, 1 / x0)) by (apply derivative_log_x; solve_R). tauto.
 Qed.
@@ -93,50 +83,38 @@ Proof.
     assert (H4 : a < b). { unfold a, b. solve_R. }
     assert (H5 : ⟦ der ⟧ log [a, b] = log').
     {
-      apply derivative_on_eq with  (f1 := fun x => ∫ 1 x (λ t, 1 / t)); auto.
-      intros x0 H5. rewrite log_spec; auto. unfold a, b in *. solve_R.
+      apply derivative_on_eq with (f1 := fun x => ∫ 1 x (λ t, 1 / t)); auto.
+      { intros x0 H5. rewrite log_spec; auto. unfold a, b in *. solve_R. }
       assert (x < 1 \/ x > 1) as [H5 | H5] by lra.
       - unfold log'. replace 1 with b by solve_R.
-        pose proof FTC1'.
         set (h := λ t : ℝ, -b / t).
-        replace (λ x0 : ℝ, ∫ b x0 (λ t : ℝ, b / t)) with (λ x : ℝ, ∫ x b h).
+        replace (λ x0 : ℝ, ∫ b x0 (λ t : ℝ, b / t)) with (λ x : ℝ, ∫ x 1 h).
         2 : {
-           extensionality z. apply eq_sym. unfold h. rewrite integral_b_a_neg'; auto.
-           replace (- Rdiv b)%f with (λ t : ℝ, - b / t).
-           2 : { extensionality t. lra. } auto.
+            extensionality z. apply eq_sym. unfold h. rewrite integral_b_a_neg'; auto.
+            replace (- Rdiv b)%f with (λ t : ℝ, - b / t).
+            2 : { extensionality t. lra. } solve_R.
         }
-        apply derivative_on_eq' with (f1' := (-h)%f); auto.
+        apply derivative_on_ext with (f1' := (-h)%f); auto.
         { intros z H6. unfold h. lra. }
-        apply FTC1'; auto. unfold h. intros c H6. apply limit_imp_limit_on. unfold a, b in *. solve_lim.
+        replace b with 1 by solve_R.
+        apply FTC1'; solve_R. unfold h. intros c H6. apply limit_imp_limit_on. unfold a, b in *. solve_lim.
       - unfold log'. replace 1 with a by solve_R. apply FTC1; auto.
-        intros c H6. apply limit_imp_limit_on. unfold a, b in *. auto_limit.
+        intros c H6. apply limit_imp_limit_on. unfold a, b in *. solve_lim.
     }
     pose proof derivative_log_x as H6.
     assert (H7: ⟦ der ⟧ f [a, b] = log').
     {
-      apply derivative_on_eq' with (f1' := (log' ∘ g) ∙ (fun _ => y * 1)); auto.
-      intros z H7. unfold log', g, compose, a, b in *; solve_R.
-      intros z H7. assert (z = a \/ z = b \/ z ∈ (a, b)) as [H8 | [H8 | H8]] by solve_R.
-      - right; left. split. apply is_left_endpoint_closed; auto.
-        apply derivative_at_iff. 
-        apply theorem_10_9 with (g' := fun _ => y * 1) (f' := log').
-        -- unfold g. apply theorem_10_5''. apply theorem_10_2.
-        -- unfold g, a, b in *. apply H6; solve_R.
-      - right; right; split. apply is_right_endpoint_closed; auto.
-        apply derivative_at_iff.
-        apply theorem_10_9 with (g' := fun _ => y * 1) (f' := log').
-        -- unfold g. apply theorem_10_5''. apply theorem_10_2.
-        -- unfold g, a, b in *. apply H6; solve_R.
-      - left. split. apply is_interior_point_closed; auto.
-        apply theorem_10_9 with (g' := fun _ => y * 1) (f' := log').
-        -- unfold g. apply theorem_10_5''. apply theorem_10_2.
-        -- unfold g, a, b in *. apply H6; solve_R.
+      apply derivative_on_ext with (f1' := (log' ∘ g) ∙ (fun _ => y * 1)); auto.
+      { intros z H7. unfold log', g, compose, a, b in *; solve_R. }
+      apply derivative_on_comp.
+      - apply differentiable_domain_closed; auto.
+      - apply derivative_on_mult_const_l.
+        + apply differentiable_domain_closed; auto.
+        + apply derivative_on_id; apply differentiable_domain_closed; auto.
+      - intros z H7. apply H6. unfold g. unfold a, b in H7. solve_R.
     }
-
     pose proof (corollary_11_2 log log' f log' a b H4 H5 H7 ltac:(auto)) as [c H8].
-
     assert (H9: forall z, z ∈ [a, b] -> z > 0). { intros z H9. unfold a, b in *. solve_R. }
-    
     assert (H10: 1 ∈ [a, b]). { unfold a, b. solve_R. }
     specialize (H8 1 H10) as H11.
     rewrite log_1 in H11.
@@ -175,7 +153,7 @@ Lemma log_pos : forall x,
 Proof.
   intros x H1. rewrite log_spec; try lra.
   assert (H2 : continuous_on (λ t : ℝ, 1 / t) [1, x]).
-  { intros c H2. apply limit_imp_limit_on. auto_limit. }
+  { intros c H2. apply limit_imp_limit_on. solve_lim. }
   apply integral_pos; auto.
   - intros x0 H3. apply Rdiv_pos_pos; solve_R.
   - apply theorem_13_3; solve_R.
@@ -186,7 +164,7 @@ Lemma log_neg : forall x,
 Proof.
   intros x H1. rewrite log_spec; try lra.
   assert (H2 : continuous_on (λ t : ℝ, -1 / t) [x, 1]).
-  { intros c H2. apply limit_imp_limit_on. auto_limit. }
+  { intros c H2. apply limit_imp_limit_on. solve_lim. }
   rewrite integral_b_a_neg'; try lra. replace (- Rdiv 1)%f with (λ t : ℝ, -1 / t).
   2 : { extensionality t. lra. }
   apply integral_neg; solve_R.
@@ -220,7 +198,8 @@ Lemma log_continuous_on : forall a b,
   0 < a < b -> continuous_on log [a, b].
 Proof.
   intros a b H1.
-  apply theorem_9_1_d; try lra. apply derivative_on_imp_differentiable_on with (f' := fun x => 1 / x).
+  apply differentiable_on_imp_continuous_on.
+  apply derivative_on_imp_differentiable_on with (f' := fun x => 1 / x).
   apply derivative_log_on; try lra.
 Qed.
 
@@ -235,7 +214,7 @@ Proof.
   intros y _.
   assert (exists x, x ∈ (0, 1) /\ log x < y) as [x1 [H1 H2]] by admit.
   assert (exists x, x ∈ (1, ∞) /\ log x > y) as [x2 [H3 H4]] by admit.
-  pose proof theorem_7_4 log x1 x2 y ltac:(solve_R) ltac:(apply log_continuous_on; solve_R) ltac:(lra) as [c [H5 H6]].
+  pose proof intermediate_value_theorem log x1 x2 y ltac:(solve_R) ltac:(apply log_continuous_on; solve_R) ltac:(lra) as [c [H5 H6]].
   exists c. solve_R.
 Admitted.
 
@@ -308,14 +287,19 @@ Proof.
   assert (H4 : x ∈ (Rmin (log a) (log b), Rmax (log a) (log b))) by admit.
   
   assert (H5 : ⟦ der ⟧ log (a, b) = (λ t : ℝ, 1 / t)).
-  { apply derivative_on_closed_imp_open. apply derivative_log_on; unfold a, b; solve_R. }
+  {
+    apply derivative_on_subset with (D1 := [a, b]).
+    - apply derivative_log_on; unfold a, b; solve_R.
+    - apply differentiable_domain_open; unfold a, b; lra.
+    - intros y H5. solve_R.
+  }
   
   assert (H6 : (λ t : ℝ, 1 / t) (exp x) ≠ 0).
   { intros H6. pose proof exp_pos x. pose proof Rdiv_pos_pos 1 (exp x) ltac:(lra) ltac:(lra). lra. }
 
   specialize (H H2 H3 H4 H5 H6).
-  apply derivative_at_eq_f'' with (f1' := λ x : ℝ, / (λ t : ℝ, 1 / t) (exp x))(a := x - 1)(b := x + 1); try lra; auto.
-  intros x0 H7. field. pose proof exp_pos x0. lra.
+  apply derivative_at_ext with (f1 := λ x : ℝ, / (λ t : ℝ, 1 / t) (exp x)); auto.
+  intros x0. field. pose proof exp_pos x0. lra.
 Admitted.
 
 Theorem theorem_18_3 : forall x y,

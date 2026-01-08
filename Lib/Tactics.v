@@ -157,46 +157,6 @@ Proof.
   intros e H1 x. apply derive_correct; auto.
 Qed.
 
-(* --- Helper Lemmas for Extensionality --- *)
-
-Lemma limit_ext : forall f g a L, 
-  (forall x, f x = g x) -> ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ g = L.
-Proof.
-  intros f g a L H H0. eapply limit_eq; eauto. exists 1. split; [lra|intros; apply H].
-Qed.
-
-Lemma right_limit_ext : forall f g a L, 
-  (forall x, f x = g x) -> ⟦ lim a ⁺ ⟧ f = L -> ⟦ lim a ⁺ ⟧ g = L.
-Proof.
-  intros f g a L H H0. eapply limit_right_eq; eauto. exists 1. split; [lra|intros; apply H].
-Qed.
-
-Lemma left_limit_ext : forall f g a L, 
-  (forall x, f x = g x) -> ⟦ lim a ⁻ ⟧ f = L -> ⟦ lim a ⁻ ⟧ g = L.
-Proof.
-  intros f g a L H H0. eapply limit_left_eq; eauto. exists 1. split; [lra|intros; apply H].
-Qed.
-
-Lemma continuous_at_ext : forall f g a, 
-  (forall x, f x = g x) -> continuous_at f a -> continuous_at g a.
-Proof.
-  intros f g a H H0. unfold continuous_at in *. rewrite <- (H a). eapply limit_ext; eauto.
-Qed.
-
-Lemma derivative_ext : forall f g f', 
-  (forall x, f x = g x) -> ⟦ der ⟧ f = f' -> ⟦ der ⟧ g = f'.
-Proof.
-  intros f g f' H H0. eapply derivative_eq; eauto.
-Qed.
-
-Lemma derivative_at_ext : forall f g a f', 
-  (forall x, f x = g x) -> ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = f'.
-Proof.
-  intros f g a f' H H0. eapply derivative_at_eq; eauto. exists 1. split; [lra|intros; apply H].
-Qed.
-
-(* --- Reification Tactics --- *)
-
 Ltac reify_constant c :=
   lazymatch type of c with
   | R => constr:(EConst c)
@@ -249,9 +209,9 @@ Ltac change_fun_to_expr :=
 
 Ltac change_deriv_to_eval :=
   match goal with
-  | [ |- ⟦ der ⟧ _ = _ ] => eapply derivative_ext
-  | [ |- ⟦ der ⟧ _ _ = _ ] => apply derivative_imp_derivative_on; [ try apply differentiable_domain_open; try apply differentiable_domain_closed; solve_R | eapply derivative_ext ]
-  | [ |- ⟦ der _ ⟧ _ = _ ] => eapply derivative_at_ext
+  | [ |- ⟦ der ⟧ _ = _ ] => eapply derivative_eq
+  | [ |- ⟦ der ⟧ _ _ = _ ] => apply derivative_imp_derivative_on; [ try apply differentiable_domain_open; try apply differentiable_domain_closed; solve_R | eapply derivative_eq ]
+  | [ |- ⟦ der _ ⟧ _ = _ ] => eapply derivative_at_eq'
   end;
   [ let x := fresh "x" in intros x;
     match goal with 

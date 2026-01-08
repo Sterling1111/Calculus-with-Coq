@@ -674,3 +674,19 @@ Proof.
     -- rewrite sum_f_i_Sn_f; try lia. rewrite IH; try lia. rewrite H2; try lra; try lia.
        intros m H4. apply H2; lia.
 Qed.  
+
+Lemma sum_single_index : forall f i n k, 
+  (i <= k <= n)%nat -> 
+  (forall j, (i <= j <= n)%nat -> j <> k -> f j = 0) -> 
+  ∑ i n f = f k.
+Proof.
+  intros f i n k H1 H2. induction n as [|n' IH].
+  - assert (i=0 /\ k=0)%nat by lia. subst. replace i with 0%nat by lia. rewrite sum_f_0_0. replace k with 0%nat by lia. lra.
+  - assert (k = S n' \/ k <= n')%nat as [H3|H3] by lia.
+    + subst. assert (i = S n' \/ i <= n')%nat as [H4|H4] by lia.
+      * rewrite H4. rewrite sum_f_n_n. auto.
+      * rewrite sum_f_i_Sn_f; try lia. rewrite sum_f_0; try lia; try lra. intros k H5. apply H2; try lia.
+    + rewrite sum_f_i_Sn_f; try lia. rewrite IH; try lia.
+      * replace (f (S n')) with 0; try lra. rewrite H2; try lra; try lia.
+      * intros j H4 H5. apply H2; lia.
+Qed.

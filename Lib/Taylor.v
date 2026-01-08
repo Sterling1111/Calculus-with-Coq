@@ -20,63 +20,87 @@ Notation "'R(' n ',' a ',' f ')'" := (Taylor_remainder n f a)
 Lemma nth_derive_taylor_poly_const : forall n a f,
   ⟦ Der ^ n ⟧ (P(n, a, f)) = (fun _ => ⟦ Der ^ n a ⟧ f).
 Proof.
-  intros n a f.
-  extensionality x.
-  unfold Taylor_polynomial.
-  
+  intros n a f. extensionality x. unfold Taylor_polynomial.
   rewrite nth_derive_sum; try lia.
-  2: { 
-    intros k. assert ((k < n)%nat \/ (k >= n)%nat) as [H1 | H1] by lia.
-    - apply nth_derivative_imp_nth_differentiable with (fn := λ _, ((⟦ Der^k a ⟧ f) / k!) * 0).
+  2: {
+    intros k. destruct (lt_dec k n) as [H1 | H1].
+    - apply nth_derivative_imp_nth_differentiable with (fn := λ _, ⟦ Der^k a ⟧ f / k! * 0).
       apply nth_derivative_mult_const_l. apply nth_derivative_pow_shift_gt; lia.
-    - apply nth_derivative_imp_nth_differentiable with (fn := λ x, ((⟦ Der^k a ⟧ f) / k!) * ((INR (fact k) / INR (fact (k - n))) * (x - a) ^ (k - n))).
+    - apply nth_derivative_imp_nth_differentiable with (fn := λ x, (⟦ Der^k a ⟧ f / k!) * (k! / (k - n)! * (x - a) ^ (k - n))).
       apply nth_derivative_mult_const_l. apply nth_derivative_pow_shift; lia.
   }
-
   destruct n.
   - simpl. rewrite sum_f_n_n. simpl. lra.
-  - rewrite sum_f_i_Sn_f; try lia.
-    rewrite Rplus_comm.
+  - rewrite sum_f_i_Sn_f; try lia. rewrite Rplus_comm.
     replace (∑ 0 n (λ k : ℕ, (⟦ Der ^ (S n) ⟧ (λ x0 : ℝ, ⟦ Der ^ k a ⟧ f / k! * (x0 - a) ^ k)) x)) with 0.
     2: {
       rewrite sum_f_0; try lia; try lra. intros k H1.
-      (* 1. Define the constant C to simplify the expression *)
-set (C := (⟦ Der^k a ⟧ f) / k!).
-
-rewrite (nth_derivative_imp_nth_derive (S n) _ (λ _, 0)); auto.
-replace ( λ _ : ℝ, 0) with  (λ _ : ℝ, C * 0) by (extensionality t; lra).
-apply nth_derivative_mult_const_l.
-  apply nth_derivative_pow_shift_gt; lia.
+      rewrite nth_derivative_imp_nth_derive with (f' := λ _, (⟦ Der^k a ⟧ f / k!) * 0); try lra.
+      apply nth_derivative_mult_const_l. apply nth_derivative_pow_shift_gt; lia.
     }
-    set (C := (⟦ Der^(S n) a ⟧ f) / (S n)!).
+    rewrite Rplus_0_r.
+    rewrite nth_derivative_imp_nth_derive with (f' := λ _, (⟦ Der^(S n) a ⟧ f / (S n)!) * (S n)!); try lra.
+    + field. apply INR_fact_neq_0.
+    + apply nth_derivative_mult_const_l.
+      replace (λ _ : ℝ, INR (fact (S n))) with (λ x : ℝ, INR (fact (S n)) / INR (fact (S n - S n)) * (x - a) ^ (S n - S n)).
+      2 : { extensionality t. rewrite Nat.sub_diag, fact_0, pow_O, Rdiv_1_r. lra. }
+      apply nth_derivative_pow_shift; lia.
+Qed.
 
-replace (⟦ Der^(S n) a ⟧ f) with (C * (S n)!).
-2: {
-  unfold C, Rdiv.
-  rewrite Rmult_assoc.
-  rewrite Rinv_l; [| apply INR_fact_neq_0].
-  rewrite Rmult_1_r. reflexivity.
-}
+Lemma nth_derive_taylor_poly_at_const : forall n a f,
+  ⟦ Der ^ n a ⟧ (P(n, a, f)) = ⟦ Der ^ n a ⟧ f.
+Proof.
+  intros n a f.
+  rewrite nth_derive_taylor_poly_const.
+  reflexivity.
+Qed.
 
-replace (λ x0, C * (x0 - a) ^ S n) with (fun x0 => C * (x0 - a) ^ S n).
-2: { extensionality t. reflexivity. }
+Lemma nth_derive_taylor_poly_eq : forall n k a f,
+  (k <= n)%nat ->
+  ⟦ Der ^ k a ⟧ (P(n, a, f)) = ⟦ Der ^ k a ⟧ f.
+Proof.
+  intros n k a f H1.
+  unfold Taylor_polynomial.
+  rewrite nth_derive_sum; try lia.
+  2: { intros i. apply nth_differentiable_mult_const_l. apply nth_differentiable_pow_shift. }
+  rewrite sum_single_index with (k := k); try lia.
+  - rewrite nth_derive_mult_const_l; [|apply nth_differentiable_pow_shift].
+    rewrite nth_derive_pow_shift; try lia. replace (k - k)%nat with 0%nat by lia. rewrite pow_O, Rmult_1_r, fact_0, Rdiv_1_r.
+     field. apply INR_fact_neq_0.
+  - intros j H2 H3.
+    rewrite nth_derive_mult_const_l; [|apply nth_differentiable_pow_shift].
+    assert ((j < k)%nat \/ (j > k)%nat) as [H4 | H4] by lia.
+    + rewrite nth_derive_pow_shift_gt; try lia; try lra.
+    + rewrite nth_derive_pow_shift; try lia.
+      rewrite Rminus_diag. rewrite pow_i; try lia. lra.
+Qed.
 
-(* 3. Compute the derivative using the link to 'der' lemmas *)
-rewrite (nth_derivative_imp_nth_derive (S n) _ (λ _, C * (S n)!)); try lra.
-  apply nth_derivative_mult_const_l.
-  replace (λ _ : ℝ, INR (fact (S n)))
-   with (λ x : ℝ, INR (fact (S n)) / INR (fact (S n - S n)) * (x - a) ^ (S n - S n)).
-2: {
-  extensionality t.
-  (* Simplify the algebra: S n - S n = 0 *)
-  rewrite Nat.sub_diag.
-  (* 0! = 1, (x-a)^0 = 1 *)
-  rewrite fact_0, pow_O, Rdiv_1_r. lra.
-}
-
-(* 2. Now the goal matches the lemma exactly *)
-apply nth_derivative_pow_shift.
-lia. (* Prove S n <= S n *)
+Lemma derive_at_f_minus_Q_zero : forall n a f,
+  (n > 1)%nat ->
+  differentiable_at f a ->
+  let Q := P(n - 1, a, f) in
+  ⟦ Der a ⟧ (f - Q) = 0.
+Proof.
+  intros n a f H1 H2 Q.
+  rewrite derive_at_minus; auto.
+  2: { 
+    unfold Q, Taylor_polynomial. apply differentiable_at_sum; try lia.
+    intros k H3. apply differentiable_at_mult_const_l, differentiable_at_pow_shift.
+  }
+  unfold Q, Taylor_polynomial.
+  rewrite derive_at_sum; try lia. 
+  2: { intros k H3. apply differentiable_at_mult_const_l, differentiable_at_pow_shift. }
+  rewrite sum_single_index with (k := 1%nat); try lia.
+  - rewrite derive_at_mult_const_l; [|apply differentiable_at_pow_shift].
+    rewrite fact_1, Rdiv_1_r. replace (λ x : ℝ, (x - a) ^ 1) with (λ x : ℝ, x - a) by (extensionality x; lra).
+    rewrite derive_at_minus; try apply differentiable_at_id; try apply differentiable_at_const.
+    replace (⟦ Der^1 a ⟧ f) with (⟦ Der a ⟧ f) by auto.
+    rewrite derive_at_id, derive_at_const; try lra.
+  - intros j H3 H4.
+    rewrite derive_at_mult_const_l; [|apply differentiable_at_pow_shift].
+    assert (j = 0 \/ j > 1)%nat as [H5 | H5] by lia.
+    + subst. simpl. rewrite derive_at_const. lra.
+    + rewrite derive_at_pow_shift_zero; try lia. lra.
 Qed.
 
 Theorem theorem_20_1 : forall n a f,
@@ -85,7 +109,6 @@ Theorem theorem_20_1 : forall n a f,
   ⟦ lim a ⟧ (λ x, (f x - P(n, a, f) x) / ((x - a)^n)) = 0.
 Proof.
   intros n a f H1 H2.
-
   assert ((n = 1)%nat \/ (n > 1)%nat) as [H3 | H3] by lia; subst.
   - clear H1. rename H2 into H1. unfold Taylor_polynomial.
     apply limit_eq with (f1 := fun x => (f x - f a)/(x - a) - ⟦ Der a ⟧ f).
@@ -122,11 +145,30 @@ Proof.
     replace 0 with (C - C) by lra.
     apply limit_minus_const.
     apply lhopital_nth_neighborhood with (n := (n-1)%nat).
-    + exists δ. split; auto. admit.
+    + exists δ. split; auto. 
+      destruct H5 as [fn H5].
+      assert (nth_differentiable_on (n - 1) Q (a - δ, a + δ)) as [Qn HQ].
+      {
+        unfold Q, Taylor_polynomial.
+        apply nth_differentiable_on_sum; try lia.
+        - apply differentiable_domain_open; lra.
+        - intros k H6.
+          apply nth_differentiable_on_mult_const_l. apply nth_differentiable_on_pow_shift. apply differentiable_domain_open; lra.
+      }
+      exists (fn - Qn)%f.
+      apply nth_derivative_on_minus; auto.
+      apply differentiable_domain_open; lra.
     + exists δ. split; auto. apply nth_derivative_on_imp_nth_differentiable_on with (fn := fun x => (n! / (n - (n-1))!) * (x - a)^(n - (n-1))).
       apply nth_derivative_imp_nth_derivative_on. apply differentiable_domain_open; lra.
       apply nth_derivative_pow_shift; lia.
-    + intros k H6. admit.
+    + intros k H6. rewrite nth_derive_at_minus; auto.
+      2 : { apply nth_differentiable_at_le with (m := n); auto; lia. }
+      2 : { 
+        unfold Q, Taylor_polynomial.
+        apply nth_differentiable_at_sum; try lia.
+        intros k0 H7. apply nth_differentiable_at_mult_const_l. apply nth_differentiable_at_pow_shift; lia.
+      }
+      unfold Q. rewrite nth_derive_taylor_poly_eq; try lia. lra.
     + intros k H6. set (fn := fun x : R => 0). replace 0 with (fn a) by (auto). apply nth_derivative_at_imp_nth_derive_at.
       unfold fn. apply nth_derivative_at_pow_shift_zero; lia.
     + intros k H6. exists δ. split; auto. intros x H7 H8.
@@ -150,8 +192,10 @@ Proof.
           - apply nth_derivative_imp_at. apply nth_derivative_pow_shift; lia.
           - simpl. replace (n - (n - 1))%nat with 1%nat by lia. rewrite fact_1, pow_1, Rdiv_1_r. auto.
         }
-        rewrite nth_derive_minus. do 2 f_equal. unfold Q. rewrite nth_derive_taylor_poly_const; auto.
-        admit. admit.
+        rewrite nth_derive_at_minus. do 2 f_equal. unfold Q. rewrite nth_derive_taylor_poly_const; auto.
+        apply nth_differentiable_on_imp_nth_differentiable_at with (D := (a - δ, a + δ)); auto_interval.
+        unfold Q, Taylor_polynomial. apply nth_differentiable_at_sum; try lia.
+        intros k H7. apply nth_differentiable_at_mult_const_l. apply nth_differentiable_at_pow_shift; lia.
       }
 
       replace (λ x : ℝ, ((⟦ Der^(n - 1) ⟧ f) x - (⟦ Der^(n - 1) a ⟧ f)) / (n! * (x - a))) with (λ x : ℝ, (((⟦ Der^(n - 1) x ⟧ f) - (⟦ Der^(n - 1) a ⟧ f)) / (x - a)) * (1 / n!)).
@@ -165,8 +209,24 @@ Proof.
 
       apply limit_mult_const_r.
 
+  set (fn := λ x, ⟦ Der^(n - 1) x ⟧ f).
+  set (fn' := (⟦ Der^n ⟧ f)).
 
-Admitted.
+  replace ((⟦ Der^n a ⟧ f)) with (fn' a) by auto.
+
+  assert (H6 : ⟦ der a ⟧ fn = fn').
+  {
+    apply derive_at_spec.
+    2 : { unfold fn, fn'. rewrite nth_derive_at_comm. rewrite <- nth_derive_at_succ. replace (S (n - 1)) with n by lia. reflexivity. }
+    apply nth_differentiable_at_imp_differentiable_at_derive_pred; auto.
+  }
+
+  replace a with (0 + a) at 1 by lra.
+
+  rewrite <- limit_shift with (a := 0)(c := a).
+  replace (λ x : ℝ, (fn (x + a) - fn a) / (x + a - a)) with (λ x, ((fn (a + x) - fn a) / x)); auto.
+  extensionality x. replace ((x + a) - a) with x by lra. rewrite Rplus_comm. reflexivity.
+Qed.
 
 Theorem theorem_20_2 : forall n a f, 
   nth_differentiable_at n f a ->
@@ -220,4 +280,47 @@ Theorem Taylors_Theorem : forall n a x f,
 Proof.
   intros n a x f H1 H2.
   admit.
+Admitted.
+
+Lemma cos_1_bounds : 0.5 < cos 1 < 0.542.
+Proof.
+  pose proof (Taylors_Theorem 3 0 1 cos) as H_thm.
+  
+  assert (H_lt : 0 < 1) by lra.
+  assert (H_diff : nth_differentiable_on (3 + 1) cos [0, 1]).
+  {
+    admit. 
+  }
+  
+  specialize (H_thm H_lt H_diff).
+  destruct H_thm as [t [H_t_range H_eq]].
+  assert (H_poly : P(3, 0, cos) 1 = 1/2).
+  {
+     unfold Taylor_polynomial.
+     admit.
+  }
+
+  unfold Taylor_remainder in H_eq.
+  rewrite H_poly in H_eq.
+  
+  assert (H_deriv_4 : ⟦ Der ^ (3 + 1) t ⟧ cos = cos t).
+  { 
+    replace (3 + 1)%nat with 4%nat by lia.
+    admit. 
+  }
+  
+  rewrite H_deriv_4 in H_eq.
+  replace ((3 + 1)!) with (24%nat) in H_eq by reflexivity.
+  Set Printing Coercions.
+  replace (INR 24%nat) with 24 in H_eq by (simpl; lra).
+  
+  replace (1 - 0) with 1 in H_eq by lra.
+  rewrite pow1 in H_eq.
+  rewrite Rmult_1_r in H_eq.
+  
+  assert (H_bound : 0 < cos t < 1).
+  {
+    split; admit.
+  }
+  lra.
 Admitted.

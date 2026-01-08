@@ -257,6 +257,24 @@ Proof.
   intros x H6 H7. rewrite <- H1; [apply H5 |]; solve_R.
 Qed.
 
+Lemma limit_ext : forall f g a L, 
+  (forall x, f x = g x) -> ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ g = L.
+Proof.
+  intros f g a L H H0. eapply limit_eq; eauto. exists 1. split; [lra|intros; apply H].
+Qed.
+
+Lemma right_limit_ext : forall f g a L, 
+  (forall x, f x = g x) -> ⟦ lim a ⁺ ⟧ f = L -> ⟦ lim a ⁺ ⟧ g = L.
+Proof.
+  intros f g a L H H0. eapply limit_right_eq; eauto. exists 1. split; [lra|intros; apply H].
+Qed.
+
+Lemma left_limit_ext : forall f g a L, 
+  (forall x, f x = g x) -> ⟦ lim a ⁻ ⟧ f = L -> ⟦ lim a ⁻ ⟧ g = L.
+Proof.
+  intros f g a L H H0. eapply limit_left_eq; eauto. exists 1. split; [lra|intros; apply H].
+Qed.
+
 Lemma limit_subst : forall f a L1 L2,
   L1 = L2 -> ⟦ lim a ⟧ f = L1 -> ⟦ lim a ⟧ f = L2.
 Proof. intros f a L1 L2 -> H. exact H. Qed.

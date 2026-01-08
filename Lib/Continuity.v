@@ -28,6 +28,12 @@ Proof.
   intros ε H4. specialize (H2 ε H4) as [δ [H5 H6]]. exists δ. split; auto.
 Qed.
 
+Lemma continuous_at_ext : forall f g a, 
+  (forall x, f x = g x) -> continuous_at f a -> continuous_at g a.
+Proof.
+  intros f g a H H0. unfold continuous_at in *. rewrite <- (H a). eapply limit_ext; eauto.
+Qed.
+
 Lemma continuous_on_subset_closed : forall a b c d f,
   a <= c <= d <= b -> continuous_on f [a, b] -> continuous_on f [c, d].
 Proof.
