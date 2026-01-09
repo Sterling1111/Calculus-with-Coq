@@ -150,6 +150,22 @@ Proof.
     -- assert (r ^ S k > 1) by (apply IH; lia). nra.
 Qed.
 
+Lemma Rpow_even_gt_0 : forall r n,
+  r <> 0 -> (Nat.Even n) -> r ^ n > 0.
+Proof.
+  intros r n H1 [k H2].
+  rewrite H2. rewrite pow_mult. apply Rpow_gt_0. apply pow2_gt_0. auto.
+Qed.
+
+Lemma Rpow_odd_lt_0 : forall r n,
+  r < 0 -> (Nat.Odd n) -> r ^ n < 0.
+Proof.
+  intros r n H1 [k H2].
+  rewrite H2. rewrite pow_add, pow_mult. rewrite pow_1. 
+  assert (H3 : r^2 > 0). { apply pow2_gt_0; lra. }
+  assert (H4 : (r^2)^k > 0). { apply Rpow_gt_0; auto. } nra.
+Qed.
+
 Lemma Rdiv_pow_distr : forall r1 r2 n,
   r2 > 0 -> (r1 / r2) ^ n = r1 ^ n / r2 ^ n.
 Proof.
@@ -336,4 +352,44 @@ Proof.
   intros r1 r2. destruct (Req_dec_T r1 0) as [H1 | H1]; destruct (Req_dec_T r2 0) as [H2 | H2]; try nra.
   - rewrite H2, Ropp_0, Rdiv_0_r, Rdiv_0_r. reflexivity.
   - field; auto.
+Qed.
+
+Lemma Rdiv_neq_0 : forall r1 r2,
+  r2 <> 0 -> r1 / r2 <> 0 <-> r1 <> 0.
+Proof.
+  intros r1 r2 H1. split; intros H2.
+  - intros H3. rewrite H3 in H2. lra.
+  - intros H3. pose proof Rtotal_order r1 0 as [H4 | [H4 | H4]]; pose proof Rtotal_order r2 0 as [H5 | [H5 | H5]]; try nra.
+    + pose proof Rdiv_neg_neg r1 r2 ltac:(lra) ltac:(lra). nra.
+    + pose proof Rdiv_neg_pos r1 r2 ltac:(lra) ltac:(lra). nra.
+    + pose proof Rdiv_pos_neg r1 r2 ltac:(lra) ltac:(lra). nra.
+    + pose proof Rdiv_pos_pos r1 r2 ltac:(lra) ltac:(lra). nra.
+Qed.
+
+Lemma Rdiv_pos_pos_rev : forall r1 r2,
+  r1 / r2 > 0 -> r2 > 0 -> r1 > 0.
+Proof.
+  intros r1 r2 H1 H2. pose proof Rtotal_order r1 0 as [H3 | [H3 | H3]]; try nra.
+  pose proof Rdiv_neg_pos r1 r2 ltac:(lra) ltac:(lra). nra.
+Qed.
+
+Lemma Rdiv_neg_pos_rev : forall r1 r2,
+  r1 / r2 < 0 -> r2 > 0 -> r1 < 0.
+Proof.
+  intros r1 r2 H1 H2. pose proof Rtotal_order r1 0 as [H3 | [H3 | H3]]; try nra.
+  pose proof Rdiv_pos_pos r1 r2 ltac:(lra) ltac:(lra). nra.
+Qed.
+
+Lemma Rdiv_pos_neg_rev : forall r1 r2,
+  r1 / r2 < 0 -> r2 < 0 -> r1 > 0.
+Proof.
+  intros r1 r2 H1 H2. pose proof Rtotal_order r1 0 as [H3 | [H3 | H3]]; try nra.
+  pose proof Rdiv_neg_neg r1 r2 ltac:(lra) ltac:(lra). nra.
+Qed.
+
+Lemma Rdiv_pos_neg_rev' : forall r1 r2,
+  r1 / r2 > 0 -> r2 < 0 -> r1 < 0.
+Proof.
+  intros r1 r2 H1 H2. pose proof Rtotal_order r1 0 as [H3 | [H3 | H3]]; try nra.
+  pose proof Rdiv_pos_neg r1 r2 ltac:(lra) ltac:(lra). nra.
 Qed.

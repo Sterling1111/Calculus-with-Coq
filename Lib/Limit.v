@@ -927,6 +927,26 @@ Proof.
   intros f a L H1 H2. apply limit_left_continuous_comp; auto. apply limit_sqrt.
 Qed.
 
+Lemma limit_pos_neighborhood : forall f a L,
+  ⟦ lim a ⟧ f = L -> L > 0 ->
+  exists δ, δ > 0 /\ forall x, 0 < |x - a| < δ -> f x > 0.
+Proof.
+  intros f a L H1 H2.
+  specialize (H1 (L/2) ltac:(lra)) as [δ [H3 H4]].
+  exists δ. split; auto.
+  intros x H5. specialize (H4 x H5). solve_R.
+Qed.
+
+Lemma limit_neg_neighborhood : forall f a L,
+  ⟦ lim a ⟧ f = L -> L < 0 ->
+  exists δ, δ > 0 /\ forall x, 0 < |x - a| < δ -> f x < 0.
+Proof.
+  intros f a L H1 H2.
+  specialize (H1 (-L/2) ltac:(lra)) as [δ [H3 H4]].
+  exists δ. split; auto.
+  intros x H5. specialize (H4 x H5). solve_R.
+Qed.
+
 Ltac solve_lim :=
   try solve_R;
   match goal with

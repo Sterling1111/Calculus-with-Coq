@@ -229,15 +229,111 @@ Proof.
 Qed.
 
 Theorem theorem_20_2 : forall n a f, 
+  (n > 0)%nat ->
   nth_differentiable_at n f a ->
   (forall k, (1 <= k < n)%nat -> ⟦ Der ^ k a ⟧ f = 0) -> 
   ⟦ Der ^ n a ⟧ f <> 0 -> 
-  ( (Nat.Even n /\ ⟦ Der ^ n a ⟧ f > 0 -> local_minimum_point f ℝ a) \/ 
-    (Nat.Even n /\ ⟦ Der ^ n a ⟧ f < 0 -> local_maximum_point f ℝ a) \/
+  ( (Nat.Even n /\ ⟦ Der ^ n a ⟧ f > 0 -> local_minimum_point f ℝ a) /\ 
+    (Nat.Even n /\ ⟦ Der ^ n a ⟧ f < 0 -> local_maximum_point f ℝ a) /\
     (Nat.Odd n -> ~ local_maximum_point f ℝ a /\ ~ local_minimum_point f ℝ a) ).
 Proof.
-  intros n a f H1 H2 H3. admit.
-Admitted.
+  intros n a f H1 H2 H3 H4.
+
+  assert (H5 : forall x, P(n, a, f) x = f a + (⟦ Der ^ n a ⟧ f) / n! * (x - a) ^ n).
+  {
+    intro x. unfold Taylor_polynomial.
+    destruct (Nat.eq_dec n 1) as [H5 | H5].
+    - subst n. rewrite sum_f_i_Sn_f; try lia.
+      rewrite sum_f_0_0. simpl. lra.
+    - replace n with (S (n - 1))%nat by lia.
+      rewrite sum_f_i_Sn_f; try lia. rewrite sum_f_Si; try lia.
+      rewrite sum_f_0; try lia.
+      2 :
+      {
+        intros k H6. rewrite H3; try lia.
+        unfold Rdiv. rewrite Rmult_0_l, Rmult_0_l. reflexivity.
+      }
+      replace (⟦ Der ^ 0 a ⟧ f / 0! * (x - a) ^ 0) with (f a); simpl; lra.
+  }
+
+  pose proof (theorem_20_1 n a f H1 H2) as H6.
+
+  assert (H7 : ⟦ lim a ⟧ (fun x => (f x - f a) / (x - a)^n) = ⟦ Der ^ n a ⟧ f / n!).
+  {
+    apply limit_eq with (f1 := fun x => (f x - P(n, a, f) x) / (x - a)^n + (⟦ Der ^ n a ⟧ f / INR (fact n))).
+    - exists 1. split; [lra|]. intros x H7.
+      rewrite H5. field. split. apply pow_nonzero. solve_R. apply INR_fact_neq_0.
+    - rewrite <- Rplus_0_l.
+      replace ((⟦ Der^n a ⟧ f) / n!) with (0 + (⟦ Der^n a ⟧ f) / n!) by lra.
+      apply limit_plus_const. apply H6.
+  }
+
+  set (C := ⟦ Der ^ n a ⟧ f / n!).
+
+  assert (H8 : C <> 0).
+  { unfold C. apply Rdiv_neq_0; try lra. apply INR_fact_neq_0. }
+
+  assert (exists δ, δ > 0 /\ forall x, 0 < |x - a| < δ -> ((f x - f a) / (x - a) ^ n) * C > 0) as [δ1 [H9 H10]].
+  {
+    destruct (Rtotal_order C 0) as [H9 | [H9 | H9]]; try lra.
+    - pose proof limit_neg_neighborhood _ _ _ H7 H9 as [δ [H10 H11]].
+      exists δ. split; auto. intros x H12. specialize (H11 x H12).
+      apply Rmult_neg_neg; auto.
+    - pose proof limit_pos_neighborhood _ _ _ H7 H9 as [δ [H10 H11]].
+      exists δ. split; auto. intros x H12. specialize (H11 x H12).
+      apply Rmult_pos_pos; auto.
+  }
+
+  split; [| split].
+  - intros [H11 H12]. 
+    assert (H13 : C > 0). { unfold C. apply Rdiv_pos_pos; try lra. apply INR_fact_lt_0. }
+    split; [ apply Full_intro | exists δ1; split; auto ].
+    replace (ℝ ⋂ (a - δ1, a + δ1)) with ((a - δ1, a + δ1)).
+    2 : { rewrite Intersection_comm, Intersection_Identity. auto. }
+    split; [ solve_R | ].
+    intros x H14. assert (x = a \/ x <> a) as [H15 | H15] by lra; subst; try lra.
+    specialize (H10 x ltac:(solve_R)). 
+    assert (H16 : (x - a) ^ n > 0) by (apply Rpow_even_gt_0; solve_R).
+    pose proof (Rdiv_pos_pos_rev ((f x - f a)) ((x - a)^n) ltac:(nra)) H16. nra.
+  - intros [H11 H12].
+    assert (H13 : C < 0). { unfold C. apply Rdiv_neg_pos; try lra. apply INR_fact_lt_0. }
+    split; [ apply Full_intro | exists δ1; split; auto ].
+    replace (ℝ ⋂ (a - δ1, a + δ1)) with ((a - δ1, a + δ1)).
+    2 : { rewrite Intersection_comm, Intersection_Identity. auto. }
+    split; [ solve_R | ].
+    intros x H14. assert (x = a \/ x <> a) as [H15 | H15] by lra; subst; try lra.
+    specialize (H10 x ltac:(solve_R)). 
+    assert (H16 : (x - a) ^ n > 0) by (apply Rpow_even_gt_0; solve_R).
+    pose proof (Rdiv_neg_pos_rev ((f x - f a)) ((x - a)^n) ltac:(nra)) H16. nra.
+  - intros H11.
+    split; intros [H12 [δ2 [H13 [_ H14]]]]. 
+    + rewrite Intersection_comm, Intersection_Identity in H14.
+      set (δ := Rmin δ1 δ2).
+      assert (C > 0 \/ C < 0) as [H15 | H15] by lra.
+      * set (x := a + δ / 2).
+        specialize (H10 x ltac:(unfold x, δ; solve_R)).
+        assert (H16 : ( (x - a) ^ n) > 0). { apply Rpow_gt_0; unfold x, δ; solve_R. }
+        pose proof (Rdiv_pos_pos_rev ((f x - f a)) ((x - a) ^ n) ltac:(nra)) H16 as H17.
+        specialize (H14 x ltac:(unfold x, δ; solve_R)). lra.
+      * set (x := a - δ / 2).
+        specialize (H10 x ltac:(unfold x, δ; solve_R)).
+        assert (H16 : ( (x - a) ^ n) < 0). { apply Rpow_odd_lt_0; unfold x, δ; solve_R. }
+        pose proof (Rdiv_pos_neg_rev ((f x - f a)) ((x - a) ^ n) ltac:(nra)) H16 as H17.
+        specialize (H14 x ltac:(unfold x, δ; solve_R)). lra.
+    + rewrite Intersection_comm, Intersection_Identity in H14.
+      set (δ := Rmin δ1 δ2).
+      assert (C > 0 \/ C < 0) as [H15 | H15] by lra.
+      * set (x := a - δ / 2).
+        specialize (H10 x ltac:(unfold x, δ; solve_R)).
+        assert (H16 : ( (x - a) ^ n) < 0). { apply Rpow_odd_lt_0; unfold x, δ; solve_R. }
+        pose proof (Rdiv_pos_neg_rev' ((f x - f a)) ((x - a) ^ n) ltac:(nra)) H16 as H17.
+        specialize (H14 x ltac:(unfold x, δ; solve_R)). lra.
+      * set (x := a + δ / 2).
+        specialize (H10 x ltac:(unfold x, δ; solve_R)).
+        assert (H16 : ( (x - a) ^ n) > 0). { apply Rpow_gt_0; unfold x, δ; solve_R. }
+        pose proof (Rdiv_neg_pos_rev ((f x - f a)) ((x - a) ^ n) ltac:(nra)) H16 as H17.
+        specialize (H14 x ltac:(unfold x, δ; solve_R)). lra.
+Qed.
 
 Definition equal_up_to_order (n : nat) (f g : R -> R) (a : R) : Prop :=
   ⟦ lim a ⟧ (fun x => (f x - g x) / ((x - a) ^ n)) = 0.
@@ -249,7 +345,16 @@ Theorem theorem_20_3 : forall n a pl ql,
   equal_up_to_order n P Q a ->
   P = Q.
 Proof.
-  intros n a pl ql P Q H1 H2 H3. admit.
+  intros n a pl ql P Q H1 H2 H3.
+  generalize dependent ql.
+  generalize dependent pl.
+
+  induction n as [| k IH].
+  - intros pl P H1 ql Q H2 H3. unfold equal_up_to_order in H3.
+    replace (λ x : ℝ, (P x - Q x) / (x - a) ^ 0) with (λ x : ℝ, P x - Q x) in H3.
+    2 : { extensionality x. rewrite pow_O. lra. }
+    simpl in H1, H2.j
+    simpl. lra. 
 Admitted.
 
 Corollary corollary_20_1 : forall n a f l,

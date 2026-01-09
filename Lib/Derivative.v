@@ -4788,8 +4788,6 @@ Proof.
   - rewrite pow_i. lra. lia.
 Qed.
 
-Lemma derive_at_pow_
-
 Lemma nth_differentiable_at_pow_shift : forall n k c x,
   nth_differentiable_at k (fun y => (y - c) ^ n) x.
 Proof.
