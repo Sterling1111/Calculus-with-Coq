@@ -29,6 +29,7 @@ Lib/Continuity.v
 Lib/Derivative.v
 Lib/Sorted_Rlt.v
 Lib/Partition.v
+Lib/Polynomial.v
 Lib/Integral.v
 Lib/Interval.v
 Lib/Notations.v

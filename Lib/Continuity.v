@@ -526,62 +526,6 @@ Proof.
        exists δ. split; auto.
 Qed.
 
-Definition polynomial (l : list R) : R -> R :=
-  fun x => sum_f 0 (length l - 1) (fun i => nth i l 0 * x^(length l - 1 - i)).
-
-Lemma poly_nil : forall x, polynomial ([] : list R) x = 0.
-Proof.
-  intro; compute. rewrite Rmult_1_r. reflexivity.
-Qed.
-
-Lemma poly_cons : forall h t x, polynomial (h :: t) x = h * x^(length t) + polynomial t x.
-Proof.
-  intros h t x. unfold polynomial. assert (length t = 0 \/ length t > 0)%nat as [H1 | H1] by lia.
-  - rewrite length_zero_iff_nil in H1. subst; simpl; repeat rewrite sum_f_0_0; lra.
-  - replace (length (h :: t) - 1)%nat with (length t) by (simpl; lia). rewrite sum_f_nth_cons_8; try lia.
-    replace (x ^ (length t - 0) * h) with (h * x ^ (length t)). 2 : { rewrite Nat.sub_0_r; lra. }
-    apply Rplus_eq_compat_l. apply sum_f_equiv; try lia. intros k H2.
-    replace (length t - (k + 1))%nat with (length t - 1 - k)%nat by lia. reflexivity.
-Qed.
-
-Theorem continuous_at_polynomial : forall l a,
-  continuous_at (polynomial l) a.
-Proof.
-  intros l a. induction l as [| h t IH].
-  - replace (polynomial []) with (fun _ : ℝ => 0).
-    2 : { extensionality x. rewrite poly_nil. reflexivity. }
-    apply continuous_at_const.
-  - replace (polynomial (h :: t)) with (fun x : ℝ => h * x^(length t) + polynomial t x).
-    2 : { extensionality x. rewrite poly_cons. reflexivity. }
-    apply continuous_at_plus.
-    + apply continuous_at_mult.
-      * apply continuous_at_const.
-      * apply continuous_at_pow.
-    + apply IH.
-Qed.
-
-Theorem continuous_polynomial : forall l,
-  continuous (polynomial l).
-Proof.
-  intros l a. apply continuous_at_polynomial.
-Qed.
-
-Lemma continuous_on_polynomial : forall l D,
-  continuous_on (polynomial l) D.
-Proof.
-  intros l D a H1. induction l as [| h t IH].
-  - replace (polynomial []) with (fun _ : ℝ => 0).
-    2 : { extensionality x. rewrite poly_nil. reflexivity. }
-    apply limit_on_const.
-  - replace (polynomial (h :: t)) with (fun x : ℝ => h * x^(length t) + polynomial t x).
-    2 : { extensionality x. rewrite poly_cons. reflexivity. }
-    apply limit_on_plus.
-    + apply limit_on_mult.
-      * apply limit_on_const.
-      * apply limit_on_pow. apply limit_on_id.
-    + apply IH. 
-Qed.
-
 Lemma continuous_at_comp : forall f g a,
   continuous_at g a -> continuous_at f (g a) -> continuous_at (f ∘ g) a.
 Proof.
@@ -643,6 +587,19 @@ Proof.
   - apply H2.
 Qed.
 
+Lemma continuous_on_pow_shift : forall n a D,
+  continuous_on (fun x => (x - a) ^ n) D.
+Proof.
+  intros n a D.
+  replace (fun x => (x - a) ^ n) with ((fun x => x ^ n) ∘ (fun x => x - a)).
+  2: { extensionality x. reflexivity. }
+  apply continuous_on_comp_continuous.
+  - apply continuous_on_minus.
+    + apply continuous_on_id.
+    + apply continuous_on_const.
+  - apply continuous_pow.
+Qed.
+
 Lemma continuous_at_sqrt : forall a,
   continuous_at (fun x => sqrt x) a.
 Proof.
@@ -684,7 +641,6 @@ Lemma continuous_on_sqrt_closed : forall a b,
 Proof.
   intros a b. apply continuous_on_sqrt.
 Qed.
-
 
 Theorem continuous_at_sqrt_comp : forall f a,
   continuous_at f a ->

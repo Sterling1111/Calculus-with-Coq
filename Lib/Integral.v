@@ -1,6 +1,6 @@
 From Lib Require Import Imports Notations Completeness Sets Functions Sums 
                Reals_util Continuity Derivative Limit Pigeonhole 
-               Partition Sorted_Rlt Interval.
+               Partition Sorted_Rlt Interval Polynomial.
 Import SetNotations IntervalNotations Function_Notations LimitNotations DerivativeNotations.
 
 Local Notation length := List.length.

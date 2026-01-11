@@ -1,4 +1,5 @@
-From Lib Require Import Imports Notations Reals_util Functions Sums Sets Limit Continuity Derivative Trigonometry Interval Binomial.
+From Lib Require Import Imports Notations Reals_util Functions Sums Sets 
+                        Limit Continuity Derivative Trigonometry Interval Binomial Polynomial.
 Import Function_Notations LimitNotations DerivativeNotations SetNotations IntervalNotations.
 
 Open Scope R_scope.
@@ -348,42 +349,200 @@ Proof.
   intros n a pl ql P Q H1 H2 H3.
   generalize dependent ql.
   generalize dependent pl.
+  induction n as [| k IH]. intros pl P H1 ql Q H2 H3.
+  - destruct (poly_decompose pl) as [l1 [c1 [H4 H5]]].
+    destruct (poly_decompose ql) as [l2 [c2 [H6 H7]]].
+    assert (length l1 = 0%nat /\ length l2 = 0%nat) as [H8 H9] by lia.
+    apply length_zero_iff_nil in H8, H9; subst. simpl in *.
+    assert (H8 : c1 = c2).
+    {
+      unfold equal_up_to_order in H3.
+      replace (fun x => (P x - Q x) / (x - a) ^ 0) with (fun x => P x - Q x) in H3 by (extensionality x; solve_R).
+      assert (H8 : ⟦ lim a ⟧ (fun x => P x - Q x) = c1 - c2).
+      {
+        apply limit_eq' with (f1 := fun x => c1 - c2); [ | solve_lim ].
+        intros x. unfold P, Q. rewrite H4, H6, poly_nil. lra.
+      }
+      apply limit_unique with (f := fun x => P x - Q x) (a := a) (L1 := c1 - c2) (L2 := 0) in H3; auto; lra.
+    }
+    extensionality x. unfold P, Q. rewrite H4, H6, poly_nil, Rmult_0_r, Rplus_0_l, Rplus_0_l. auto.
+  - intros pl P H1 ql Q H2 H3.
+    destruct (poly_decompose pl) as [l1 [c1 [H4 H5]]].
+    destruct (poly_decompose ql) as [l2 [c2 [H6 H7]]].
+    assert (H8 : c1 = c2).
+    {
+      unfold equal_up_to_order in H3.
+      assert (H8 : ⟦ lim a ⟧ (fun x => P x - Q x) = 0).
+      {
+        apply limit_eq with (f1 := fun x => ((P x - Q x) / (x - a) ^ S k) * (x - a) ^ S k).
+        - exists 1. split; [lra|]. intros x H8. field. apply pow_nonzero. solve_R.
+        - replace 0 with (0 * ((a - a) ^ S k)) by lra. apply limit_mult; solve_lim.
+      }
+      assert (H9 : ⟦ lim a ⟧ (fun x => P x - Q x) = c1 - c2).
+      {
+        apply limit_eq' with (f1 := fun x => (x - a) * polynomial l1 (x - a) + c1 - ((x - a) * polynomial l2 (x - a) + c2)).
+        - intros x. unfold P, Q. rewrite H4, H6. reflexivity.
+        - replace (c1 - c2) with (0 + (c1 - c2)) by lra.
+          replace (fun x => (x - a) * polynomial l1 (x - a) + c1 - ((x - a) * polynomial l2 (x - a) + c2))
+          with (fun x => (x - a) * (polynomial l1 (x - a) - polynomial l2 (x - a)) + (c1 - c2)) by (extensionality x; lra).
+          apply limit_plus; [ | solve_lim ].
+          replace 0 with ((a - a) * (polynomial l1 (a - a) - polynomial l2 (a - a))) by lra.
+          apply limit_mult; [ solve_lim | ].
+          apply limit_minus; (apply limit_continuous_comp; [ solve_lim | apply continuous_at_polynomial ]).
+      }
+      apply limit_unique with (f := fun x => P x - Q x) (a := a) (L1 := c1 - c2) (L2 := 0) in H8; auto. lra.
+    }
+    subst c2.
+    assert (H11 : (fun x => polynomial l1 (x - a)) = (fun x => polynomial l2 (x - a))).
+    {
+      apply IH; try lia.
+      unfold equal_up_to_order in *.
+      apply limit_eq with (f1 := fun x => (P x - Q x) / (x - a) ^ S k); auto.
+      exists 1. split; [lra|]. intros x H8. unfold P, Q. rewrite H4, H6. simpl. field; split; [apply pow_nonzero|]; solve_R.
+    }
+    extensionality x. unfold P, Q. rewrite H4, H6. rewrite <- (equal_f H11 x). reflexivity.
+Qed.
 
+Lemma Taylor_is_polynomial : forall n a f, 
+  exists l, length l = S n /\ (forall x, polynomial l (x - a) = P(n, a, f) x).
+Proof.
+  intros n a f.
   induction n as [| k IH].
-  - intros pl P H1 ql Q H2 H3. unfold equal_up_to_order in H3.
-    replace (λ x : ℝ, (P x - Q x) / (x - a) ^ 0) with (λ x : ℝ, P x - Q x) in H3.
-    2 : { extensionality x. rewrite pow_O. lra. }
-    simpl in H1, H2.j
-    simpl. lra. 
-Admitted.
+  - exists [f a]. split; simpl; try lia.
+    intro x. unfold Taylor_polynomial. rewrite sum_f_0_0.
+    rewrite fact_0, Rdiv_1_r, pow_O, Rmult_1_r. simpl. rewrite poly_cons, poly_nil; solve_R.
+  - destruct IH as [l [H1 H2]].
+    exists ((⟦ Der ^ (S k) a ⟧ f / (S k)!) :: l). split.
+    + simpl. lia.
+    + intro x. rewrite poly_cons. rewrite H1. rewrite H2.
+      unfold Taylor_polynomial. rewrite sum_f_i_Sn_f; try lia.
+      rewrite Rplus_comm. reflexivity. 
+Qed.
 
 Corollary corollary_20_1 : forall n a f l,
   let P := fun x => polynomial l (x - a) in
-  nth_differentiable n f ->
+  (n > 0)%nat ->
+  nth_differentiable_at n f a ->
   (length l <= n + 1)%nat ->
   equal_up_to_order n f P a ->
   P = P(n, a, f).
 Proof.
-  intros n a f l P H1 H2 H3. admit.
-Admitted.
+  intros n a f l P H1 H2 H3 H4.
+  destruct (Taylor_is_polynomial n a f) as [ql [H5 H6]].
+  set (Q := fun x => polynomial ql (x - a)).
+  assert (H7 : P(n, a, f) = Q).
+  { extensionality x. symmetry. apply H6. }
+  assert (H8 : equal_up_to_order n f Q a).
+  {
+    unfold equal_up_to_order.
+    rewrite <- H7.
+    apply theorem_20_1; auto.
+  }
+  assert (H9 : equal_up_to_order n P Q a).
+  {
+    unfold equal_up_to_order in *.
+    apply limit_eq with (f1 := fun x => ((P x - f x) / (x - a) ^ n) + ((f x - Q x) / (x - a) ^ n)).
+    - exists 1. split; [lra|]. intros x H9. field. apply pow_nonzero. solve_R.
+    - replace 0 with (0 + 0) by lra. apply limit_plus; auto.
+      apply limit_eq' with (f1 := fun x => -1 * ((f x - P x) / (x - a)^n)); solve_R.
+      replace 0 with (-1 * 0) by lra. apply limit_mult_const_l; auto.
+  }
+  rewrite H7. apply theorem_20_3 with (n := n) (a := a) (pl := l) (ql := ql); solve_R.
+Qed.
 
-Lemma lemma_20_1 : forall n a b f,
+Lemma lemma_20_1 : forall n a b R,
   a < b ->
-  nth_differentiable_on (S n) (R(n, a, f)) [a, b] ->
-  (forall k, (k <= n)%nat -> ⟦ Der ^ k a ⟧ (R(n, a, f)) = 0) ->
+  nth_differentiable_on (S n) R [a, b] ->
+  (forall k, (k <= n)%nat -> ⟦ Der ^ k a ⟧ R = 0) ->
   forall x, x ∈ (a, b] ->
   exists t, t ∈ (a, x) /\
-    (R(n, a, f) x) / (x - a) ^ (S n) = (⟦ Der ^ (S n) t ⟧ (R(n, a, f))) / (S n)!.
+    R x / (x - a) ^ (S n) = (⟦ Der ^ (S n) t ⟧ R) / (S n)!.
 Proof.
-  intros n a b f H1 H2 H3 x H4. admit.
+  induction n as [| k IH].
+  - intros a b R H1 H2 H3 x H4.
+    assert (H5 : R a = 0) by (apply (H3 0%nat ltac:(lia))).
+    assert (H6 : continuous_on R [a, x]).
+    {
+      apply differentiable_on_imp_continuous_on_subset with (D1 := [a, b]).
+      - apply nth_differentiable_on_imp_differentiable_on with (n := 1%nat); auto.
+      - apply differentiable_domain_closed; solve_R.
+      - intros y Hy. solve_R.
+    }
+    assert (H7 : differentiable_on R (a, x)).
+    {
+      apply differentiable_on_subset_open with (a := a) (b := b); try solve_R.
+      apply nth_differentiable_on_imp_differentiable_on with (n := 1%nat); auto.
+      apply nth_differentiable_on_subset with (D1 := [a, b]); auto.
+      - apply differentiable_domain_open; lra.
+      - intros y H7. solve_R.
+    }
+    pose proof (mean_value_theorem R a x (ltac:(solve_R)) H6 H7) as [t [H8 H9]].
+    exists t. split; auto.
+    rewrite H5, Rminus_0_r in H9.
+    rewrite fact_1, pow_1, Rdiv_1_r. symmetry. rewrite nth_derive_at_1.
+    apply derive_at_spec in H9; auto.
+    apply differentiable_on_imp_differentiable_at with (D := (a, x)); auto_interval.
+  - intros a b R H1 H2 H3 x H4.
+    set (n := S k).
+    set (h := fun y => (y - a) ^ (S n)).
+    assert (H5 : continuous_on R [a, x]).
+    {
+      apply differentiable_on_imp_continuous_on_subset with (D1 := [a, b]).
+      - apply nth_differentiable_on_imp_differentiable_on with (n := S n); auto; lia.
+      - apply differentiable_domain_closed; solve_R.
+      - intros y Hy. solve_R.
+    }
+    assert (H6 : continuous_on h [a, x]).
+    { unfold h. apply continuous_on_pow_shift. }
+    assert (H7 : differentiable_on R (a, x)).
+    {
+      apply differentiable_on_subset_open with (a := a) (b := b); try solve_R.
+      apply nth_differentiable_on_imp_differentiable_on with (n := S n); auto; solve_R.
+      apply nth_differentiable_on_subset with (D1 := [a, b]); auto.
+      - apply differentiable_domain_open; lra.
+      - intros y H7. solve_R.
+    }
+    assert (H8 : differentiable_on h (a, x)).
+    { unfold h. apply differentiable_on_pow_shift. apply differentiable_domain_open; solve_R. }
+    assert (H9 : ∀ x0 : ℝ, x0 ∈ (a, x) → (⟦ Der ⟧ h (a, x)) x0 ≠ 0).
+    { intros y H9. unfold h. admit. }
+    assert (H10 : h x <> h a).
+    {
+      unfold h. replace (a - a) with 0 by lra.
+      rewrite pow_i; try (unfold n; lia).
+      apply pow_nonzero; solve_R.
+    }
+    
+    pose proof (cauchy_mvt R (⟦ Der ⟧ R (a, x)) h (⟦ Der ⟧ h (a, x)) a x (ltac:(solve_R)) H5 H6) as H11.
+    assert (H12 : ⟦ der ⟧ R (a, x) = ⟦ Der ⟧ R (a, x)).
+    { apply derive_on_spec. auto. }
+    assert (H13 : ⟦ der ⟧ h (a, x) = ⟦ Der ⟧ h (a, x)).
+    { apply derive_on_spec. auto. }
+    specialize (H11 H12 H13 H9 H10) as [z [H11 H14]].
+    
+    assert (H15 : nth_differentiable_on (S k) (⟦ Der ⟧ R) [a, z]).
+    {
+       apply nth_differentiable_on_subset with (D1 := [a, b]).
+       - admit.
+       - apply differentiable_domain_closed; solve_R.
+       - intros y H15. solve_R.
+    }
+    assert (H16 : ∀ j : ℕ, (j <= k)%nat → (⟦ Der^j a ⟧ (⟦ Der ⟧ R)) = 0).
+    { intros j H16. rewrite <- nth_derive_succ. apply H3. lia. }
+    assert (H17 : z ∈ (a, z]). { split; solve_R. }
+    
+    specialize (IH a z (⟦ Der ⟧ R) ltac:(solve_R) H15 H16 z H17) as [t [H18 H19]].
+
+    exists t. split; [solve_R | ]. admit.
 Admitted.
 
 Theorem Taylors_Theorem : forall n a x f,
   a < x ->
-  nth_differentiable_on (n + 1) f [a, x] ->
+  nth_differentiable_on (S n) f [a, x] ->
   exists t, t ∈ (a, x) /\ R(n, a, f) x = (⟦ Der ^ (n + 1) t ⟧ f) / ((n + 1)!) * (x - a) ^ (n + 1).
 Proof.
-  intros n a x f H1 H2.
+  intros n a x f H1 H2. 
+  pose proof (lemma_20_1 n a x f H1 H2). ltac:(intros k Hk; unfold R; rewrite nth_derive_taylor_poly_eq; try lia; lra) x ltac:(solve_R)) as [t [H3 H4]].
   admit.
 Admitted.
 
