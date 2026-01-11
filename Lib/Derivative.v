@@ -2734,6 +2734,15 @@ Proof.
       exists δ. split; auto.
 Qed.
 
+Lemma inf_differentiable_imp_nth_differentiable : forall f,
+  inf_differentiable f -> forall n, nth_differentiable n f.
+Proof.
+  intros f H1 n.
+  unfold inf_differentiable in H1.
+  unfold nth_differentiable.
+  apply H1.
+Qed.
+
 Lemma nth_differentiable_imp_differentiable : forall n f,
   (n > 0)%nat -> nth_differentiable n f -> differentiable f.
 Proof.
@@ -2854,6 +2863,21 @@ Proof.
       * apply differentiable_domain_open; lra.
       * apply H1.
     + apply H2.
+Qed.
+
+Lemma nth_differentiable_imp_nth_differentiable_on : forall n f D,
+  differentiable_domain D ->
+  nth_differentiable n f -> nth_differentiable_on n f D.
+Proof.
+  intros n f D H1 [fn H2].
+  exists fn.
+  generalize dependent fn.
+  induction n as [| k IH].
+  - simpl. intros fn H2 x H3. rewrite H2. reflexivity.
+  - simpl. intros fn [fk [H3 H4]].
+    exists fk. split.
+    + apply IH; auto.
+    + apply derivative_imp_derivative_on; auto.
 Qed.
 
 Lemma nth_derivative_at_unique : forall n f fn1' fn2' a,
@@ -4715,6 +4739,32 @@ Proof.
   intros y H6. symmetry. apply nth_derivative_on_imp_nth_derive_on; auto.
 Qed.
 
+Lemma nth_derive_on_minus : forall n f g D x,
+  differentiable_domain D ->
+  x ∈ D ->
+  nth_differentiable_on n f D ->
+  nth_differentiable_on n g D ->
+  ⟦ Der ^ n ⟧ (fun x0 => f x0 - g x0) D x = (⟦ Der ^ n ⟧ f D x - ⟦ Der ^ n ⟧ g D x).
+Proof.
+  intros n f g D x H1 H2 H3 H4.
+  apply nth_derivative_on_imp_nth_derive_on with (f' := fun x0 => ⟦ Der ^ n ⟧ f D x0 - ⟦ Der ^ n ⟧ g D x0); auto.
+  apply nth_derivative_on_minus; auto.
+  - apply nth_derive_on_spec; auto.
+  - apply nth_derive_on_spec; auto.
+Qed.
+
+Lemma nth_derive_on_mult_const_l : forall n c f D x,
+  differentiable_domain D ->
+  x ∈ D ->
+  nth_differentiable_on n f D ->
+  ⟦ Der ^ n ⟧ (fun x0 => c * f x0) D x = c * (⟦ Der ^ n ⟧ f D x).
+Proof.
+  intros n c f D x H1 H2 H3.
+  apply nth_derivative_on_imp_nth_derive_on with (f' := fun x0 => c * (⟦ Der ^ n ⟧ f D x0)); auto.
+  apply nth_derivative_on_mult_const_l; auto.
+  apply nth_derive_on_spec; auto.
+Qed.
+
 Lemma derivative_shift : forall f f' c,
   ⟦ der ⟧ f = f' -> ⟦ der ⟧ (λ x, f (x - c)) = (λ x, f' (x - c)).
 Proof.
@@ -4785,6 +4835,30 @@ Proof.
   intros. pose proof derivative_at_pow a n as H1. 
   apply derive_at_spec in H1; auto.
   apply derivative_at_imp_differentiable_at in H1; auto.
+Qed.
+
+Lemma nth_derivative_on_pow_shift : forall (n k : nat) (c : R) (D : Ensemble R),
+  differentiable_domain D ->
+  (k <= n)%nat ->
+  ⟦ der^k ⟧ (fun x => (x - c) ^ n) D = (fun x => (INR (fact n) / INR (fact (n - k))) * (x - c) ^ (n - k)).
+Proof.
+  intros n k c D H1 H2.
+  induction k as [| k IH].
+  - simpl. intros x H3.
+    replace (n - 0)%nat with n by lia. field. apply INR_fact_neq_0.
+  - exists (fun x => (INR (fact n) / INR (fact (n - k))) * (x - c) ^ (n - k)).
+    split; [ apply IH; lia | ].
+    apply derivative_on_ext with (f1' := fun x => (INR (fact n) / INR (fact (n - k))) * (INR (n - k) * (x - c) ^ (n - k - 1))).
+    2 : { apply derivative_on_mult_const_l; auto. apply derivative_on_pow_shift; auto. }
+    intros x H3. rewrite <- Rmult_assoc. f_equal.
+    + replace (n - S k)%nat with (n - k - 1)%nat by lia.
+      replace (fact (n - k)) with (fact (n - k - 1) * (n - k))%nat.
+      2 : {
+         rewrite Nat.mul_comm. replace (n - k)%nat with (S (n - k - 1))%nat at 1 by lia.
+         rewrite <- fact_simpl. replace (S (n - k - 1))%nat with (n - k)%nat by lia. reflexivity.
+      }
+    rewrite mult_INR. field. split; apply not_0_INR; [apply fact_neq_0 | lia].
+  + replace (n - S k)%nat with (n - k - 1)%nat by lia. reflexivity.
 Qed.
 
 Lemma differentiable_at_id : forall a,
