@@ -3860,18 +3860,6 @@ Proof.
   apply derivative_on_imp_derive_on with (f' := g); auto.
 Qed.
 
-Lemma derive_at_pow : forall f n a,
-  differentiable_at f a ->
-  ⟦ Der a ⟧ (fun x => (f x) ^ n) = n * (f a) ^ (n - 1) * ⟦ Der a ⟧ f.
-Proof.
-  intros f n a H1.
-  apply differentiable_at_imp_derivative_at in H1 as [f' H1].
-  rewrite (derivative_at_imp_derive_at f f' a); auto.
-  rewrite (derivative_at_imp_derive_at (fun x => (f x) ^ n) (fun x => n * (f x) ^ (n - 1) * f' x) a).
-  - reflexivity.
-  - apply derivative_at_pow; auto.
-Qed.
-
 Lemma nth_derive_0 : forall f,
   ⟦ Der ^ 0 ⟧ f = f.
 Proof.
@@ -4731,6 +4719,14 @@ Proof.
   apply derivative_pow_shift.
 Qed.
 
+Lemma derive_at_pow_shift : forall n c a,
+  ⟦ Der a ⟧ (fun x => (x - c) ^ n) = INR n * (a - c) ^ (n - 1).
+Proof.
+  intros n c a.
+  apply derivative_at_imp_derive_at with (f' := fun x => INR n * (x - c) ^ (n - 1)).
+  apply derivative_pow_shift.
+Qed.
+
 Lemma differentiable_at_pow_shift : forall n c a,
   differentiable_at (fun x => (x - c) ^ n) a.
 Proof.
@@ -4746,6 +4742,14 @@ Lemma differentiable_on_pow_shift : forall n c D,
 Proof.
   intros n c D H1. pose proof derivative_on_pow_shift n c as H2.
   apply derivative_on_imp_differentiable_on with (f' := λ x, INR n * (x - c) ^ (n - 1)); auto.  
+Qed.
+
+Lemma derive_at_pow : forall n a,
+  ⟦ Der a ⟧ (fun x => x ^ n) = INR n * a ^ (n - 1).
+Proof.
+  intros. pose proof derivative_at_pow a n as H1. 
+  apply derive_at_spec in H1; auto.
+  apply derivative_at_imp_differentiable_at in H1; auto.
 Qed.
 
 Lemma differentiable_at_id : forall a,

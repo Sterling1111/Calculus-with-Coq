@@ -505,7 +505,13 @@ Proof.
     assert (H8 : differentiable_on h (a, x)).
     { unfold h. apply differentiable_on_pow_shift. apply differentiable_domain_open; solve_R. }
     assert (H9 : ∀ x0 : ℝ, x0 ∈ (a, x) → (⟦ Der ⟧ h (a, x)) x0 ≠ 0).
-    { intros y H9. unfold h. admit. }
+    {
+      intros y H9. unfold h. pose proof (derive_at_pow_shift (S n) a y) as H10.
+      rewrite derive_on_eq_derive_at_interior; [ | auto_interval ].
+      replace ((⟦ Der ⟧ (λ x : ℝ, (x - a) ^ S n)) y) with (⟦ Der y ⟧ (λ x : ℝ, (x - a) ^ S n)) by auto.
+      rewrite H10. replace (S n - 1)%nat with n by lia. pose proof pow_nonzero (y - a) n ltac:(solve_R) as H11.
+      pose proof not_0_INR (S n) ltac:(lia) as H12. nra.
+    }
     assert (H10 : h x <> h a).
     {
       unfold h. replace (a - a) with 0 by lra.
@@ -523,7 +529,7 @@ Proof.
     assert (H15 : nth_differentiable_on (S k) (⟦ Der ⟧ R) [a, z]).
     {
        apply nth_differentiable_on_subset with (D1 := [a, b]).
-       - admit.
+       - eapply nth_differentiable_on_eq. 
        - apply differentiable_domain_closed; solve_R.
        - intros y H15. solve_R.
     }
