@@ -450,25 +450,26 @@ Proof.
   rewrite H7. apply theorem_20_3 with (n := n) (a := a) (pl := l) (ql := ql); solve_R.
 Qed.
 
-Lemma lemma_20_1 : forall n a b R,
+Lemma lemma_20_1 : forall n a b g,
   a < b ->
-  nth_differentiable_on (S n) R [a, b] ->
-  (forall k, (k <= n)%nat -> ⟦ Der ^ k a ⟧ R = 0) ->
+  nth_differentiable_on (S n) g [a, b] ->
+  (forall k, (k <= n)%nat -> ⟦ Der ^ k ⟧ g [a, b] a = 0) ->
   forall x, x ∈ (a, b] ->
   exists t, t ∈ (a, x) /\
-    R x / (x - a) ^ (S n) = (⟦ Der ^ (S n) t ⟧ R) / (S n)!.
+    g x / (x - a) ^ (S n) = (⟦ Der ^ (S n) t ⟧ g) / (S n)!.
 Proof.
   induction n as [| k IH].
-  - intros a b R H1 H2 H3 x H4.
-    assert (H5 : R a = 0) by (apply (H3 0%nat ltac:(lia))).
-    assert (H6 : continuous_on R [a, x]).
+  - intros a b g H1 H2 H3 x H4.
+    assert (H5 : g a = 0).
+    { specialize (H3 0%nat ltac:(lia)). simpl in H3. auto. }
+    assert (H6 : continuous_on g [a, x]).
     {
       apply differentiable_on_imp_continuous_on_subset with (D1 := [a, b]).
       - apply nth_differentiable_on_imp_differentiable_on with (n := 1%nat); auto.
       - apply differentiable_domain_closed; solve_R.
       - intros y Hy. solve_R.
     }
-    assert (H7 : differentiable_on R (a, x)).
+    assert (H7 : differentiable_on g (a, x)).
     {
       apply differentiable_on_subset_open with (a := a) (b := b); try solve_R.
       apply nth_differentiable_on_imp_differentiable_on with (n := 1%nat); auto.
@@ -476,16 +477,17 @@ Proof.
       - apply differentiable_domain_open; lra.
       - intros y H7. solve_R.
     }
-    pose proof (mean_value_theorem R a x (ltac:(solve_R)) H6 H7) as [t [H8 H9]].
+    pose proof (mean_value_theorem g a x (ltac:(solve_R)) H6 H7) as [t [H8 H9]].
     exists t. split; auto.
     rewrite H5, Rminus_0_r in H9.
-    rewrite fact_1, pow_1, Rdiv_1_r. symmetry. rewrite nth_derive_at_1.
-    apply derive_at_spec in H9; auto.
+    rewrite fact_1, pow_1, Rdiv_1_r, nth_derive_1.
+    replace ((⟦ Der ⟧ g) t) with (⟦ Der t ⟧ g) by auto.
+    symmetry. apply derive_at_spec in H9; auto.
     apply differentiable_on_imp_differentiable_at with (D := (a, x)); auto_interval.
-  - intros a b R H1 H2 H3 x H4.
+  - intros a b g H1 H2 H3 x H4.
     set (n := S k).
     set (h := fun y => (y - a) ^ (S n)).
-    assert (H5 : continuous_on R [a, x]).
+    assert (H5 : continuous_on g [a, x]).
     {
       apply differentiable_on_imp_continuous_on_subset with (D1 := [a, b]).
       - apply nth_differentiable_on_imp_differentiable_on with (n := S n); auto; lia.
@@ -494,10 +496,10 @@ Proof.
     }
     assert (H6 : continuous_on h [a, x]).
     { unfold h. apply continuous_on_pow_shift. }
-    assert (H7 : differentiable_on R (a, x)).
+    assert (H7 : differentiable_on g (a, x)).
     {
       apply differentiable_on_subset_open with (a := a) (b := b); try solve_R.
-      apply nth_differentiable_on_imp_differentiable_on with (n := S n); auto; solve_R.
+      apply nth_differentiable_on_imp_differentiable_on with (n := S n); auto; try solve_R.
       apply nth_differentiable_on_subset with (D1 := [a, b]); auto.
       - apply differentiable_domain_open; lra.
       - intros y H7. solve_R.
@@ -519,38 +521,168 @@ Proof.
       apply pow_nonzero; solve_R.
     }
     
-    pose proof (cauchy_mvt R (⟦ Der ⟧ R (a, x)) h (⟦ Der ⟧ h (a, x)) a x (ltac:(solve_R)) H5 H6) as H11.
-    assert (H12 : ⟦ der ⟧ R (a, x) = ⟦ Der ⟧ R (a, x)).
+    pose proof (cauchy_mvt g (⟦ Der ⟧ g (a, x)) h (⟦ Der ⟧ h (a, x)) a x (ltac:(solve_R)) H5 H6) as H11.
+    assert (H12 : ⟦ der ⟧ g (a, x) = ⟦ Der ⟧ g (a, x)).
     { apply derive_on_spec. auto. }
     assert (H13 : ⟦ der ⟧ h (a, x) = ⟦ Der ⟧ h (a, x)).
     { apply derive_on_spec. auto. }
-    specialize (H11 H12 H13 H9 H10) as [z [H11 H14]].
+    specialize (H11 H12 H13 H9 H10) as [z [H14 H15]].
     
-    assert (H15 : nth_differentiable_on (S k) (⟦ Der ⟧ R) [a, z]).
-    {
-       apply nth_differentiable_on_subset with (D1 := [a, b]).
-       - eapply nth_differentiable_on_eq. 
-       - apply differentiable_domain_closed; solve_R.
-       - intros y H15. solve_R.
-    }
-    assert (H16 : ∀ j : ℕ, (j <= k)%nat → (⟦ Der^j a ⟧ (⟦ Der ⟧ R)) = 0).
-    { intros j H16. rewrite <- nth_derive_succ. apply H3. lia. }
-    assert (H17 : z ∈ (a, z]). { split; solve_R. }
-    
-    specialize (IH a z (⟦ Der ⟧ R) ltac:(solve_R) H15 H16 z H17) as [t [H18 H19]].
+    set (g' := ⟦ Der ⟧ g [a, b]).
 
-    exists t. split; [solve_R | ]. admit.
-Admitted.
+    specialize (IH a z g' (ltac:(solve_R))).
+
+    assert (H16 : nth_differentiable_on (S k) g' [a, z]).
+    {
+        unfold g'.
+        apply nth_differentiable_on_subset with (D1 := [a, b]).
+        - apply nth_differentiable_on_derive; auto.
+          apply differentiable_domain_closed; solve_R.
+        - apply differentiable_domain_closed; solve_R.
+        - intros y H16. solve_R.
+    }
+    assert (H17 : forall j, (j <= k)%nat -> ⟦ Der ^ j ⟧ g' [a, z] a = 0).
+    {
+      intros j H18. unfold g' in *.
+
+      rewrite nth_derive_on_subset with (D1 := [a, b]).
+      - rewrite <- nth_derive_on_succ. apply H3. lia.
+      - apply differentiable_domain_closed; solve_R.
+      - intros y H19. solve_R.
+      - solve_R.
+      - apply nth_differentiable_on_le with (m := S k); try lia.
+        apply nth_differentiable_on_derive; auto.
+        apply differentiable_domain_closed; solve_R.
+    }
+    assert (H18 : z ∈ (a, z]). { split; solve_R. }
+    
+    specialize (IH H16 H17 z H18) as [t [H19 H20]].
+
+    exists t. split; [solve_R | ].
+    
+    rewrite derive_on_open_eq_derive with (D := (a, x)) (x := z) in H15; try solve [auto_interval].
+    rewrite derive_on_open_eq_derive with (D := (a, x)) (x := z) in H15; try solve [auto_interval].
+    
+    unfold h in H15. rewrite derive_at_pow_shift in H15.
+    unfold n in H15. replace (S (S k) - 1)%nat with (S k) in H15 by lia.
+    
+    assert (H21 : g' z = ⟦ Der z ⟧ g).
+    { unfold g'. apply derive_on_eq_derive_at_interior with (D := [a, b]); auto_interval. }
+    replace ((⟦ Der ⟧ g) z) with (⟦ Der z ⟧ g) in H15 by auto.
+    rewrite <- H21, Rminus_diag, pow_i, Rminus_0_r in H15; try lia.
+    replace (g' z / (S (S k) * (z - a) ^ S k)) with ((g' z / (z - a) ^ S k) / S (S k)) in H15.
+    2 : { field. split. apply pow_nonzero; solve_R. apply not_0_INR; lia. }
+    
+    rewrite H20 in H15.
+    
+    assert (H22 : ⟦ Der ^ (S k) t ⟧ g' = ⟦ Der ^ (S n) t ⟧ g).
+    {
+      unfold g', n. repeat rewrite nth_derive_at_succ.
+      apply nth_derive_at_eq with (δ := Rmin (t - a) (b - t)); [ solve_R | ].
+      intros y H22. apply derive_at_eq. exists (Rmin (y - a) (b - y)).
+      split; [ solve_R | ].
+      intros w H23.
+      apply derive_on_eq_derive_at_interior. auto_interval.
+    }
+    rewrite H22 in H15. replace (g a) with 0 in H15 by (specialize (H3 0%nat ltac:(lia)); auto).
+    rewrite Rminus_0_r in H15. unfold n in *. rewrite H15.
+    repeat rewrite fact_simpl.
+    assert (H23 : INR (k!) <> 0). { apply not_0_INR. apply fact_neq_0. }
+    pose proof (pos_INR k) as H24. solve_R.
+Qed.
 
 Theorem Taylors_Theorem : forall n a x f,
   a < x ->
   nth_differentiable_on (S n) f [a, x] ->
   exists t, t ∈ (a, x) /\ R(n, a, f) x = (⟦ Der ^ (n + 1) t ⟧ f) / ((n + 1)!) * (x - a) ^ (n + 1).
 Proof.
-  intros n a x f H1 H2. 
-  pose proof (lemma_20_1 n a x f H1 H2). ltac:(intros k Hk; unfold R; rewrite nth_derive_taylor_poly_eq; try lia; lra) x ltac:(solve_R)) as [t [H3 H4]].
-  admit.
-Admitted.
+  intros n a x f H1 H2.
+  replace (n + 1)%nat with (S n) by lia.
+  
+  (* Define the remainder function g(t) *)
+  set (g := R(n, a, f)).
+
+  (* Step 1: Show g is (n+1)-times differentiable on [a, x] *)
+  assert (H3 : nth_differentiable_on (S n) g [a, x]).
+  {
+    unfold g, Taylor_remainder.
+    apply nth_differentiable_on_minus; auto; try lia.
+    unfold Taylor_polynomial.
+    apply nth_differentiable_on_sum; try lia.
+    - apply differentiable_domain_closed; lra.
+    - intros k H3.
+      apply nth_differentiable_on_mult_const_l.
+      apply nth_differentiable_on_pow_shift.
+      apply differentiable_domain_closed; lra.
+  }
+
+  (* Step 2: Show the first n derivatives of g at a are 0 *)
+  assert (H4 : forall k, (k <= n)%nat -> ⟦ Der ^ k a ⟧ g = 0).
+  {
+    intros k H4.
+    unfold g, Taylor_remainder.
+    (* We use the property that Der^k(P) = Der^k(f) at a for k <= n *)
+    rewrite nth_derive_at_minus.
+    2: {
+      apply nth_differentiable_at_le with (m := S n); try lia; auto.
+      (* Since we are at endpoint a, we rely on the fact that f is differentiable on [a, x] 
+         implied by the hypothesis or the behavior of Der at endpoints in this context *)
+      apply nth_differentiable_on_imp_nth_differentiable_at with (D := [a, x]); auto.
+      - solve_R.
+      - auto_interval.
+      - apply nth_differentiable_on_le with (m := S n); try lia; auto.
+    }
+    2: {
+      unfold Taylor_polynomial.
+      apply nth_differentiable_at_sum; try lia.
+      intros i Hi. apply nth_differentiable_at_mult_const_l.
+      apply nth_differentiable_at_pow_shift.
+    }
+    rewrite nth_derive_taylor_poly_eq; try lia.
+    lra.
+  }
+
+  (* Step 3: Apply lemma_20_1 *)
+  pose proof (lemma_20_1 n a x g H1 H3 H4 x ltac:(split; lra)) as [t [H5 H6]].
+  exists t. split; auto.
+
+  (* Step 4: Simplify the (n+1)-th derivative of g at t *)
+  assert (H7 : ⟦ Der ^ (S n) t ⟧ g = ⟦ Der ^ (S n) t ⟧ f).
+  {
+    unfold g, Taylor_remainder.
+    rewrite nth_derive_at_minus.
+    2: {
+      (* t is in (a, x), so it is an interior point of [a, x] *)
+      apply nth_differentiable_on_imp_nth_differentiable_at with (D := [a, x]).
+      - destruct H5; split; lra.
+      - apply interior_point_closed_interval; destruct H5; split; lra.
+      - apply H2.
+    }
+    2: {
+      unfold Taylor_polynomial.
+      apply nth_differentiable_at_sum; try lia.
+      intros i Hi. apply nth_differentiable_at_mult_const_l.
+      apply nth_differentiable_at_pow_shift.
+    }
+    
+    (* The (n+1)-th derivative of the Taylor polynomial (degree n) is 0 *)
+    replace (⟦ Der ^ (S n) t ⟧ (P(n, a, f))) with 0; try lra.
+    unfold Taylor_polynomial.
+    rewrite nth_derive_at_sum; try lia.
+    2: { intros i Hi. apply nth_differentiable_at_mult_const_l. apply nth_differentiable_at_pow_shift. }
+    apply sum_eq_zero. intros k Hk.
+    rewrite nth_derive_at_mult_const_l.
+    rewrite nth_derive_pow_shift_gt; try lia.
+    lra.
+  }
+
+  rewrite H7 in H6.
+  rewrite H6.
+  field.
+  split.
+  - apply INR_fact_neq_0.
+  - apply pow_nonzero. lra.
+Qed.
 
 Lemma cos_1_bounds : 0.5 < cos 1 < 0.542.
 Proof.

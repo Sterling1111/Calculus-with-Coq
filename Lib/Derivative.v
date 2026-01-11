@@ -4516,6 +4516,41 @@ Proof.
   eapply derivative_on_imp_differentiable_domain; eauto.
 Qed.
 
+Lemma nth_derive_on_subset : forall n f D1 D2 x,
+  differentiable_domain D2 ->
+  D2 ⊆ D1 ->
+  x ∈ D2 ->
+  nth_differentiable_on n f D1 ->
+  ⟦ Der ^ n ⟧ f D2 x = ⟦ Der ^ n ⟧ f D1 x.
+Proof.
+  intros n f D1 D2 x H1 H2 H3 H4.
+  destruct n.
+  - simpl. reflexivity.
+  - destruct H4 as [fn H4].
+    assert (H5 : differentiable_domain D1).
+    { apply nth_derivative_on_imp_differentiable_domain with (n := S n) (f := f) (fn' := fn); solve_R. }
+    assert (H6 : ⟦ der ^ (S n) ⟧ f D2 = fn).
+    { apply nth_derivative_on_subset with (D1 := D1); auto. }
+    pose proof (nth_derive_on_spec (S n) f D1 H5 ltac:(eapply nth_derivative_on_imp_nth_differentiable_on; eauto)) as H7.
+    pose proof (nth_derive_on_spec (S n) f D2 H1 ltac:(eapply nth_derivative_on_imp_nth_differentiable_on; eauto)) as H8.
+    pose proof nth_derivative_unique as H9.
+    transitivity (fn x).
+    + apply nth_derivative_on_unique with (n := S n) (f := f) (fn1' := ⟦ Der^(S n) ⟧ f D2) (fn2' := fn) (D := D2); auto.
+    + symmetry. apply nth_derivative_on_unique with (n := S n) (f := f) (fn1' := ⟦ Der^(S n) ⟧ f D1) (fn2' := fn) (D := D1); auto.
+Qed.
+
+Lemma nth_differentiable_on_minus : forall n f g D,
+  (n > 0)%nat ->
+  nth_differentiable_on n f D ->
+  nth_differentiable_on n g D ->
+  nth_differentiable_on n (fun x => f x - g x) D.
+Proof.
+  intros n f g D H0 [fnf H1] [fng H2].
+  exists (fun x => fnf x - fng x).
+  apply nth_derivative_on_minus; auto.
+  apply nth_derivative_on_imp_differentiable_domain in H1; auto.
+Qed.
+
 Lemma nth_differentiable_on_mult_const_l : forall n c f D,
   nth_differentiable_on n f D ->
   nth_differentiable_on n (fun x => c * f x) D.
