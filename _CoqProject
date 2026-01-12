@@ -36,6 +36,8 @@ Lib/Notations.v
 Lib/Inverse.v
 Lib/Trigonometry.v
 Lib/Tactics.v
+Lib/Vector.v
+Lib/Matrix.v
 
 # ==========================
 # ATTAM (depends on Lib only)

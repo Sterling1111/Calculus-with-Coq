@@ -62,7 +62,7 @@ Proof.
     }
       apply derivative_at_mult_const_l.
     set (f := (λ x0 : R, x0)). set (h := (λ x0, 1 - x0^2)). set (g := (λ x0 : R, √(h x0))).
-     replace ((λ x0 : ℝ, x0 * √(1 - x0 ^ 2))) with (f ∙ g).
+     replace ((λ x0 : ℝ, x0 * √(1 - x0 ^ 2))) with (f ⋅ g).
     2 : { extensionality y. unfold f, g, h. lra. }
     set (f' := (λ x0 : R, 1)). assert ( ⟦ der x ⟧ f = f') as H2. { unfold f, f'. apply derivative_at_id. }
     set (h' := (λ x0, -2 * x0)). assert ( ⟦ der x ⟧ h = h') as H3.
@@ -72,9 +72,9 @@ Proof.
     }
     set (g' := (λ x0, (h' x0) / (2 * √(h x0)))). assert ( ⟦ der x ⟧ g = g') as H4.
     { apply derivative_at_sqrt_comp; auto. unfold h. solve_R. }
-    assert ( ⟦ der x ⟧ (f ∙ g) = f' ∙ g + f ∙ g') as H5.
+    assert ( ⟦ der x ⟧ (f ⋅ g) = f' ⋅ g + f ⋅ g') as H5.
     { apply derivative_at_mult; auto. }
-    replace (λ x0 : ℝ, (1 - 2 * x0 ^ 2) / √(1 - x0 ^ 2)) with (f' ∙ g + f ∙ g')%f; auto.
+    replace (λ x0 : ℝ, (1 - 2 * x0 ^ 2) / √(1 - x0 ^ 2)) with (f' ⋅ g + f ⋅ g')%f; auto.
     extensionality y. assert (1 - y^2 <= 0 \/ 1 - y^2 > 0) as [H6 | H6] by lra.
     -- unfold f, g, f', g', h, h'. pose proof sqrt_neg_0 (1 - y^2) ltac:(lra) as H7.
        rewrite H7, Rmult_0_r, Rdiv_0_r, Rmult_0_r, Rdiv_0_r. lra.

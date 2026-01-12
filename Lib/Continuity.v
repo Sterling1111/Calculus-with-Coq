@@ -268,28 +268,28 @@ Proof.
 Qed.
 
 Lemma continuous_at_mult : forall f g a,
-  continuous_at f a -> continuous_at g a -> continuous_at (f ∙ g) a.
+  continuous_at f a -> continuous_at g a -> continuous_at (f ⋅ g) a.
 Proof.
   intros f g a H1 H2. unfold continuous_at in *.
   apply limit_mult; auto.
 Qed.
 
 Lemma continuous_at_right_mult : forall f g a,
-  continuous_at_right f a -> continuous_at_right g a -> continuous_at_right (f ∙ g) a.
+  continuous_at_right f a -> continuous_at_right g a -> continuous_at_right (f ⋅ g) a.
 Proof.
   intros f g a H1 H2. unfold continuous_at_right in *.
   apply limit_right_mult; auto.
 Qed.
 
 Lemma continuous_at_left_mult : forall f g a,
-  continuous_at_left f a -> continuous_at_left g a -> continuous_at_left (f ∙ g) a.
+  continuous_at_left f a -> continuous_at_left g a -> continuous_at_left (f ⋅ g) a.
 Proof.
   intros f g a H1 H2. unfold continuous_at_left in *.
   apply limit_left_mult; auto.
 Qed.
 
 Lemma continuous_on_mult : forall f g D,
-  continuous_on f D -> continuous_on g D -> continuous_on (f ∙ g) D.
+  continuous_on f D -> continuous_on g D -> continuous_on (f ⋅ g) D.
 Proof.
   intros f g D H1 H2 a H3.
   specialize (H1 a H3); specialize (H2 a H3).
@@ -297,7 +297,7 @@ Proof.
 Qed.
 
 Lemma continuous_mult : forall f g,
-  continuous f -> continuous g -> continuous (f ∙ g).
+  continuous f -> continuous g -> continuous (f ⋅ g).
 Proof.
   intros f g H1 H2 a.
   specialize (H1 a); specialize (H2 a).

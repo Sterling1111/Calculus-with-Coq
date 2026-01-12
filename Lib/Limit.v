@@ -484,7 +484,7 @@ Proof.
 Qed.
 
 Lemma limit_left_mult : forall f1 f2 a L1 L2,
-  ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> ⟦ lim a⁻ ⟧ (f1 ∙ f2) = L1 * L2.
+  ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> ⟦ lim a⁻ ⟧ (f1 ⋅ f2) = L1 * L2.
 Proof.
   intros f1 f2 a L1 L2 H1 H2 ε H3. assert (ε / (2 * ((|L2|) + 1)) > 0 /\ ε / (2 * ((|L1|) + 1)) > 0) as [H4 H5].
   { split; apply Rdiv_pos_pos; solve_abs. }
@@ -496,7 +496,7 @@ Proof.
 Qed.
 
 Lemma limit_right_mult : forall f1 f2 a L1 L2,
-  ⟦ lim a⁺ ⟧ f1 = L1 -> ⟦ lim a⁺ ⟧ f2 = L2 -> ⟦ lim a⁺ ⟧ (f1 ∙ f2) = L1 * L2.
+  ⟦ lim a⁺ ⟧ f1 = L1 -> ⟦ lim a⁺ ⟧ f2 = L2 -> ⟦ lim a⁺ ⟧ (f1 ⋅ f2) = L1 * L2.
 Proof.
   intros f1 f2 a L1 L2 H1 H2 ε H3. assert (ε / (2 * ((|L2|) + 1)) > 0 /\ ε / (2 * ((|L1|) + 1)) > 0) as [H4 H5].
   { split; apply Rdiv_pos_pos; solve_abs. }
@@ -508,14 +508,14 @@ Proof.
 Qed.
 
 Lemma limit_mult : forall f1 f2 a L1 L2,
-  ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> ⟦ lim a ⟧ (f1 ∙ f2) = L1 * L2.
+  ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> ⟦ lim a ⟧ (f1 ⋅ f2) = L1 * L2.
 Proof.
   intros f1 f2 a L1 L2 H1 H2. apply limit_iff in H1 as [H3 H4], H2 as [H5 H6].
   apply limit_iff; split; [ apply limit_left_mult | apply limit_right_mult ]; auto.
 Qed.
 
 Lemma limit_on_mult : forall f1 f2 a D L1 L2,
-  ⟦ lim a ⟧ f1 D = L1 -> ⟦ lim a ⟧ f2 D = L2 -> ⟦ lim a ⟧ (f1 ∙ f2) D = L1 * L2.
+  ⟦ lim a ⟧ f1 D = L1 -> ⟦ lim a ⟧ f2 D = L2 -> ⟦ lim a ⟧ (f1 ⋅ f2) D = L1 * L2.
 Proof.
   intros f1 f2 a D L1 L2 H1 H2 ε H3. assert (ε / (2 * ((|L2|) + 1)) > 0 /\ ε / (2 * ((|L1|) + 1)) > 0) as [H4 H5].
   { split; apply Rdiv_pos_pos; solve_abs. }
@@ -530,7 +530,7 @@ Lemma limit_left_mult_const_l : forall f c a L,
   ⟦ lim a ⁻ ⟧ f = L -> ⟦ lim a ⁻ ⟧ (fun x => c * f x) = c * L.
 Proof.
   intros f c a L H1.
-  apply limit_left_eq with (f1 := (fun _ => c) ∙ f).
+  apply limit_left_eq with (f1 := (fun _ => c) ⋅ f).
   - exists 1. split; solve_R.
   - apply limit_left_mult; auto. apply limit_left_const.
 Qed.
@@ -539,7 +539,7 @@ Lemma limit_right_mult_const_l : forall f c a L,
   ⟦ lim a ⁺ ⟧ f = L -> ⟦ lim a ⁺ ⟧ (fun x => c * f x) = c * L.
 Proof.
   intros f c a L H1.
-  apply limit_right_eq with (f1 := (fun _ => c) ∙ f).
+  apply limit_right_eq with (f1 := (fun _ => c) ⋅ f).
   - exists 1. split; solve_R.
   - apply limit_right_mult; auto. apply limit_right_const.
 Qed.
@@ -548,7 +548,7 @@ Lemma limit_mult_const_l : forall f c a L,
   ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ (fun x => c * f x) = c * L.
 Proof.
   intros f c a L H1.
-  apply limit_eq with (f1 := (fun _ => c) ∙ f).
+  apply limit_eq with (f1 := (fun _ => c) ⋅ f).
   - exists 1. split; solve_R.
   - apply limit_mult; auto. apply limit_const.
 Qed.
@@ -557,7 +557,7 @@ Lemma limit_on_mult_const_l : forall f c a D L,
   ⟦ lim a ⟧ f D = L -> ⟦ lim a ⟧ (fun x => c * f x) D = c * L.
 Proof.
   intros f c a D L H1.
-  apply limit_on_eq with (f1 := (fun _ => c) ∙ f).
+  apply limit_on_eq with (f1 := (fun _ => c) ⋅ f).
   - intros x H2. reflexivity.
   - apply limit_on_mult; auto. apply limit_on_const.
 Qed.
@@ -566,7 +566,7 @@ Lemma limit_left_mult_const_r : forall f c a L,
   ⟦ lim a ⁻ ⟧ f = L -> ⟦ lim a ⁻ ⟧ (fun x => f x * c) = L * c.
 Proof.
   intros f c a L H1.
-  apply limit_left_eq with (f1 := f ∙ (fun _ => c)).
+  apply limit_left_eq with (f1 := f ⋅ (fun _ => c)).
   - exists 1. split; solve_R.
   - apply limit_left_mult; auto. apply limit_left_const.
 Qed.
@@ -575,7 +575,7 @@ Lemma limit_right_mult_const_r : forall f c a L,
   ⟦ lim a ⁺ ⟧ f = L -> ⟦ lim a ⁺ ⟧ (fun x => f x * c) = L * c.
 Proof.
   intros f c a L H1.
-  apply limit_right_eq with (f1 := f ∙ (fun _ => c)).
+  apply limit_right_eq with (f1 := f ⋅ (fun _ => c)).
   - exists 1. split; solve_R.
   - apply limit_right_mult; auto. apply limit_right_const.
 Qed.
@@ -584,7 +584,7 @@ Lemma limit_mult_const_r : forall f c a L,
   ⟦ lim a ⟧ f = L -> ⟦ lim a ⟧ (fun x => f x * c) = L * c.
 Proof.
   intros f c a L H1.
-  apply limit_eq with (f1 := f ∙ (fun _ => c)).
+  apply limit_eq with (f1 := f ⋅ (fun _ => c)).
   - exists 1. split; solve_R.
   - apply limit_mult; auto. apply limit_const.
 Qed.
@@ -593,7 +593,7 @@ Lemma limit_on_mult_const_r : forall f c a D L,
   ⟦ lim a ⟧ f D = L -> ⟦ lim a ⟧ (fun x => f x * c) D = L * c.
 Proof.
   intros f c a D L H1.
-  apply limit_on_eq with (f1 := f ∙ (fun _ => c)).
+  apply limit_on_eq with (f1 := f ⋅ (fun _ => c)).
   - intros x H2. reflexivity.
   - apply limit_on_mult; auto. apply limit_on_const.
 Qed.
@@ -672,7 +672,7 @@ Qed.
 Lemma limit_left_div : forall f1 f2 a L1 L2,
   ⟦ lim a⁻ ⟧ f1 = L1 -> ⟦ lim a⁻ ⟧ f2 = L2 -> L2 <> 0 -> ⟦ lim a⁻ ⟧ (f1 / f2) = L1 / L2.
 Proof.
-  intros f1 f2 a L1 L2 H1 H2 H3. replace (f1 / f2)%function with (f1 ∙ (fun x => 1 / f2 x)).
+  intros f1 f2 a L1 L2 H1 H2 H3. replace (f1 / f2)%function with (f1 ⋅ (fun x => 1 / f2 x)).
   2 : { extensionality x. lra. }
   unfold Rdiv. apply limit_left_mult; auto. apply limit_left_inv; auto.
 Qed.
@@ -680,7 +680,7 @@ Qed.
 Lemma limit_right_div : forall f1 f2 a L1 L2,
   ⟦ lim a⁺ ⟧ f1 = L1 -> ⟦ lim a⁺ ⟧ f2 = L2 -> L2 <> 0 -> ⟦ lim a⁺ ⟧ (f1 / f2) = L1 / L2.
 Proof.
-  intros f1 f2 a L1 L2 H1 H2 H3. replace (f1 / f2)%function with (f1 ∙ (fun x => 1 / f2 x)).
+  intros f1 f2 a L1 L2 H1 H2 H3. replace (f1 / f2)%function with (f1 ⋅ (fun x => 1 / f2 x)).
   2 : { extensionality x. lra. }
   unfold Rdiv. apply limit_right_mult; auto. apply limit_right_inv; auto.
 Qed.
@@ -695,7 +695,7 @@ Qed.
 Lemma limit_on_div : forall f1 f2 a D L1 L2,
   ⟦ lim a ⟧ f1 D = L1 -> ⟦ lim a ⟧ f2 D = L2 -> L2 <> 0 -> ⟦ lim a ⟧ (f1 / f2) D = L1 / L2.
 Proof.
-  intros f1 f2 a D L1 L2 H1 H2 H3. replace (f1 / f2)%function with (f1 ∙ (fun x => 1 / f2 x)).
+  intros f1 f2 a D L1 L2 H1 H2 H3. replace (f1 / f2)%function with (f1 ⋅ (fun x => 1 / f2 x)).
   2 : { extensionality x. lra. }
   unfold Rdiv. apply limit_on_mult; auto. apply limit_on_inv; auto.
 Qed.

@@ -8,7 +8,7 @@ Proof.
   set (g' := λ x, 1 + 2 * x).
 
   replace (λ x, f (x + x^2)) with (f ∘ g) by reflexivity.
-  replace (λ x : ℝ, f' (x + x ^ 2) * (1 + 2 * x)) with ((f' ∘ g) ∙ g') by reflexivity.
+  replace (λ x : ℝ, f' (x + x ^ 2) * (1 + 2 * x)) with ((f' ∘ g) ⋅ g') by reflexivity.
   
   assert (H1 : ⟦ der ⟧ f = f') by apply derivative_sin.
   assert (H2 : ⟦ der ⟧ g = g').

@@ -261,7 +261,7 @@ Proof.
     assert (δ > 0) as H13 by (unfold δ; solve_R).
     exists δ; split; auto. intros x H14. unfold δ in *. destruct H4 as [_ [_ [_ H4]]]. unfold compose. rewrite H4; solve_R.
   }
-  pose proof derivative_at_unique (f ∘ f_inv) ((f' ∘ f_inv) ∙ f_inv')%f (λ _ : ℝ, 1) y H12 H13 as H14.
+  pose proof derivative_at_unique (f ∘ f_inv) ((f' ∘ f_inv) ⋅ f_inv')%f (λ _ : ℝ, 1) y H12 H13 as H14.
   simpl in H14. unfold compose in *. rewrite H7 in H14. lra.
 Qed.
 

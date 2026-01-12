@@ -13,7 +13,7 @@ Module Function_Notations.
   Notation "f + g" := (fun x : ℝ => f x + g x) (at level 50, left associativity) : function_scope.
   Notation "f - g" := (fun x : ℝ => f x - g x) (at level 50, left associativity) : function_scope.
   Notation "- f" := (fun x : ℝ => - f x) (at level 35) : function_scope.
-  Notation "f ∙ g" := (fun x : ℝ => f x * g x) (at level 40, left associativity) : function_scope. 
+  Notation "f ⋅ g" := (fun x : ℝ => f x * g x) (at level 40, left associativity) : function_scope. 
   Notation "c * f" := (fun x : ℝ => c * f x) (at level 40, left associativity) : function_scope. 
   Notation "f / g" := (fun x : ℝ => f x / g x) (at level 40, left associativity) : function_scope.
   Notation "f ^ n" := (fun x : ℝ => (f x) ^ n) (at level 30, right associativity) : function_scope.

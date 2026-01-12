@@ -1,68 +1,108 @@
-From Lib Require Import Imports Notations.
+From Lib Require Import Imports Limit Notations Reals_util Functions Vector.
+Import LimitNotations Function_Notations Vector_Notations.
 
-Open Scope nat_scope.
+Local Notation length := List.length.
 
-Definition Matrix (m n : nat) := ℕ -> ℕ -> ℝ.
+Bind Scope V_Scope with vector.
 
-Notation Vector n := (Matrix n 1).
-Notation Square n := (Matrix n n).
+Definition matrix (A : Type) (m n : nat) := vector (vector A n) m.
 
-Definition mat_equiv {m n : nat} (A B : Matrix m n) : Prop :=
-  ∀i j, i < m → j < n → A i j = B i j.
+Definition vector_nth {A : Type} {n : nat} (v : vector A n) (i : nat) (d : A) : A :=
+  nth i (vlist v) d.
 
-Infix "==" := mat_equiv (at level 70).
-
-Lemma mat_equiv_refl : ∀{m n} (A : Matrix m n), A == A.
-Proof. intros m n A i j Hi Hj. reflexivity. Qed.
-
-Lemma mat_equiv_sym : ∀{m n} (A B : Matrix m n), A == B → B == A.
+Definition vector_init {A : Type} {n : nat} (f : nat -> A) : vector A n.
 Proof.
-  intros m n A B H i j Hi Hj.
-  rewrite H; easy.
-Qed.
+  exists (map f (seq 0 n)).
+  rewrite length_map, length_seq. reflexivity.
+Defined.
 
-Lemma mat_equiv_trans : ∀{m n} (A B C : Matrix m n),
-    A == B → B == C → A == C.
-Proof.
-  intros m n A B C HAB HBC i j Hi Hj.
-  rewrite HAB; trivial.
-  apply HBC; easy.
-Qed.
+Definition get_row {A : Type} {m n : nat} `{Zero A} (M : matrix A m n) (i : nat) : vector A n :=
+  vector_nth M i zero.
 
-Add Parametric Relation m n : (Matrix m n) (@mat_equiv m n)
-  reflexivity proved by mat_equiv_refl
-  symmetry proved by mat_equiv_sym
-  transitivity proved by mat_equiv_trans
-    as mat_equiv_rel.
+Definition get_col {A : Type} {m n : nat} `{Zero A} (M : matrix A m n) (j : nat) : vector A m :=
+  vector_map (fun r => vector_nth r j zero) M.
 
-Lemma mat_equiv_trans2 : ∀{m n} (A B C : Matrix m n),
-    A == B → A == C → B == C.
-Proof.
-  intros m n A B C HAB HAC.
-  rewrite <- HAB.
-  apply HAC.
-Qed.
+Definition matrix_mult {A : Type} {m n p : nat} `{Add A} `{Mul A} `{Zero A} 
+  (M1 : matrix A m n) (M2 : matrix A n p) : matrix A m p :=
+  vector_init (fun i => 
+    vector_init (fun k => 
+      vector_dot (get_row M1 i) (get_col M2 k))).
 
-Close Scope nat_scope.
-Open Scope R_scope.
+Definition matrix_transpose {A : Type} {m n : nat} `{Zero A} (M : matrix A m n) : matrix A n m :=
+  vector_init (fun i => get_col M i).
 
-Declare Scope matrix_scope.
+Definition identity_matrix {A : Type} {n : nat} `{Zero A} `{One A} : matrix A n n :=
+  vector_init (fun i => 
+    vector_init (fun j => if Nat.eqb i j then one else zero)).
 
-Notation "m =? n" := (Nat.eqb m n) (at level 70) : matrix_scope.
-Notation "m <? n" := (Nat.ltb m n) (at level 70) : matrix_scope.
-Notation "m <=? n" := (Nat.leb m n) (at level 70) : matrix_scope.
+Module Matrix_Notations.
+  Declare Scope M_Scope.
+  Delimit Scope M_Scope with M.
 
-Open Scope matrix_scope.
+  (* Helper to keep Vector notations available in Matrix scope *)
+  Export Vector_Notations.
 
-Definition I (n : nat) : Matrix n n := fun i j => if (i =? j)%nat then 1 else 0.
+  Notation "A + B" := (add A B) (at level 50, left associativity) : M_Scope.
+  Notation "A ⊙ B" := (mul A B) (at level 40, left associativity) : M_Scope.
+  Notation "A × B" := (matrix_mult A B) (at level 40, left associativity) : M_Scope.
+  Notation "r * A" := (scale r A) (at level 40, left associativity) : M_Scope.
+  Notation "A 'ᵀ'" := (matrix_transpose A) (at level 30) : M_Scope.
+  
+  Notation "'I' n" := (identity_matrix (n:=n)) (at level 0) : M_Scope.
 
-Definition Zero (m n : nat) : Matrix m n := fun _ _ => 0.
+End Matrix_Notations.
 
-Definition Mscale {m n : nat} (c : R) (A : Matrix m n) : Matrix m n :=
-  fun i j => c * A i j.
+Import Matrix_Notations.
 
-Definition Mplus {m n : nat} (A B : Matrix m n) : Matrix m n :=
-  fun i j => A i j + B i j.
+Section Matrix_Examples.
+  Local Open Scope R_scope.
+  Local Open Scope V_Scope.
+  Local Open Scope M_Scope.
 
-Infix "+" := Mplus (at level 50, left associativity) : matrix_scope.
-Infix "*" := Mscale (at level 40, left associativity) : matrix_scope.
+  Let M1 : matrix R 2 2 := ⟨ ⟨1, 2⟩, ⟨3, 4⟩ ⟩.
+  Let M2 : matrix R 2 2 := ⟨ ⟨5, 6⟩, ⟨7, 8⟩ ⟩.
+
+  Example matrix_add_example : M1 + M2 = ⟨ ⟨6, 8⟩, ⟨10, 12⟩ ⟩.
+  Proof.
+    unfold M1, M2.
+    repeat (try apply vector_eq; try simpl; try f_equal; unfold add, Add_R; try lra).
+  Qed.
+
+  Let A : matrix R 2 3 := ⟨ ⟨1, 2, 3⟩, ⟨4, 5, 6⟩ ⟩.
+  Let B : matrix R 3 2 := ⟨ ⟨7, 8⟩, ⟨9, 1⟩, ⟨2, 3⟩ ⟩.
+
+  Example matrix_mult_example : A × B = ⟨ ⟨31, 19⟩, ⟨85, 55⟩ ⟩.
+  Proof.
+    unfold A, B, matrix_mult, matrix_transpose, vector_init, vector_dot, vector_map2, vector_fold, get_row, get_col, vector_nth.
+    repeat (try apply vector_eq; try simpl; try f_equal; unfold add, mul, zero, Add_R, Mul_R, Zero_R; solve_R).
+  Qed.
+
+  Example matrix_transpose_example : A ᵀ = ⟨ ⟨1, 4⟩, ⟨2, 5⟩, ⟨3, 6⟩ ⟩.
+  Proof.
+    unfold A, matrix_transpose, get_col, vector_nth, vector_init.
+    unfold zero, Zero_R.
+    repeat (try apply vector_eq; try simpl; try f_equal; try reflexivity).
+  Qed.
+
+End Matrix_Examples.
+
+Section Symbolic_Example.
+  Local Open Scope R_scope.
+  Local Open Scope V_Scope.
+  Local Open Scope M_Scope.
+
+  Let Md1 : matrix R 2 2 := ⟨ ⟨1.5, 2.0⟩, 
+                              ⟨0.5, 3.5⟩ ⟩.
+
+  Let Md2 : matrix R 2 2 := ⟨ ⟨4.0, 1.2⟩, 
+                              ⟨2.0, 0.0⟩ ⟩.
+
+  Example matrix_mult_decimal : 
+    Md1 × Md2 = ⟨ ⟨10.0, 1.8⟩, 
+                  ⟨ 9.0, 0.6⟩ ⟩.
+  Proof.
+    unfold Md1, Md2, matrix_mult, matrix_transpose, vector_init, vector_dot, vector_map2, vector_fold, get_row, get_col, vector_nth;
+    repeat (try apply vector_eq; try simpl; try f_equal; unfold add, mul, zero, Add_R, Mul_R, Zero_R); solve_R.
+  Qed.
+
+End Symbolic_Example.
