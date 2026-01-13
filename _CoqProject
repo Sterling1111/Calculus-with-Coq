@@ -38,6 +38,7 @@ Lib/Trigonometry.v
 Lib/Tactics.v
 Lib/Vector.v
 Lib/Matrix.v
+Lib/Exponential.v
 
 # ==========================
 # ATTAM (depends on Lib only)

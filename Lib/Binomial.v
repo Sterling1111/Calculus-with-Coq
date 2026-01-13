@@ -1,4 +1,4 @@
-From Lib Require Import Imports Sums Reals_util Rational.
+From Lib Require Import Imports Sums Reals_util Rational Notations.
 Open Scope nat_scope.
 
 Lemma fact_1 : fact 1 = 1%nat.
@@ -540,6 +540,11 @@ Proof.
   repeat rewrite Z_fact_simpl. rewrite IH. rewrite <- Nat2Z.inj_mul. reflexivity.
 Qed.
 
+Lemma INR_fact_eq_IZR_Z_fact : forall n, INR (fact n) = IZR (Z_fact n).
+Proof.
+  intros n. rewrite Z_fact_eq_fact. rewrite <- INR_IZR_INZ. reflexivity.
+Qed.
+
 Definition Z_choose (n k : nat) : Z :=
   if (n <? k)%nat then 0 else
   Z_fact n / (Z_fact k * Z_fact (n - k)).
@@ -570,3 +575,41 @@ Proof.
   rewrite binomial_recursion_4 with (n := S n) (k := S k); try lia.
   replace (S n - 1) with n by lia. replace (S k - 1) with k by lia. reflexivity.
 Qed.
+
+Open Scope R_scope.
+
+Ltac prove_fact_R :=
+  rewrite INR_fact_eq_IZR_Z_fact;
+  apply f_equal;
+  vm_compute; (* Computes the value in binary Z instantly *)
+  reflexivity.
+
+(* --- Pre-computed Lemmas --- *)
+
+Lemma fact_0_R : INR (0!) = 1. Proof. prove_fact_R. Qed.
+Lemma fact_1_R : INR (1!) = 1. Proof. prove_fact_R. Qed.
+Lemma fact_2_R : INR (2!) = 2. Proof. prove_fact_R. Qed.
+Lemma fact_3_R : INR (3!) = 6. Proof. prove_fact_R. Qed.
+Lemma fact_4_R : INR (4!) = 24. Proof. prove_fact_R. Qed.
+Lemma fact_5_R : INR (5!) = 120. Proof. prove_fact_R. Qed.
+Lemma fact_6_R : INR (6!) = 720. Proof. prove_fact_R. Qed.
+Lemma fact_7_R : INR (7!) = 5040. Proof. prove_fact_R. Qed.
+Lemma fact_8_R : INR (8!) = 40320. Proof. prove_fact_R. Qed.
+Lemma fact_9_R : INR (9!) = 362880. Proof. prove_fact_R. Qed.
+Lemma fact_10_R : INR (10!) = 3628800. Proof. prove_fact_R. Qed.
+Lemma fact_11_R : INR (11!) = 39916800. Proof. prove_fact_R. Qed.
+Lemma fact_12_R : INR (12!) = 479001600. Proof. prove_fact_R. Qed.
+Lemma fact_13_R : INR (13!) = 6227020800. Proof. prove_fact_R. Qed.
+Lemma fact_14_R : INR (14!) = 87178291200. Proof. prove_fact_R. Qed.
+Lemma fact_15_R : INR (15!) = 1307674368000. Proof. prove_fact_R. Qed.
+Lemma fact_16_R : INR (16!) = 20922789888000. Proof. prove_fact_R. Qed.
+Lemma fact_17_R : INR (17!) = 355687428096000. Proof. prove_fact_R. Qed.
+Lemma fact_18_R : INR (18!) = 6402373705728000. Proof. prove_fact_R. Qed.
+Lemma fact_19_R : INR (19!) = 121645100408832000. Proof. prove_fact_R. Qed.
+Lemma fact_20_R : INR (20!) = 2432902008176640000. Proof. prove_fact_R. Qed.
+
+Ltac simplify_factorials :=
+  rewrite ?fact_20_R, ?fact_19_R, ?fact_18_R, ?fact_17_R, ?fact_16_R,
+          ?fact_15_R, ?fact_14_R, ?fact_13_R, ?fact_12_R, ?fact_11_R,
+          ?fact_10_R, ?fact_9_R, ?fact_8_R, ?fact_7_R, ?fact_6_R, 
+          ?fact_5_R, ?fact_4_R, ?fact_3_R, ?fact_2_R, ?fact_1_R, ?fact_0_R.

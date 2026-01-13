@@ -1,4 +1,4 @@
-From Lib Require Import Imports Notations Reals_util Functions Sums Sets 
+From Lib Require Import Imports Notations Reals_util Functions Sums Sets Exponential
                         Limit Continuity Derivative Trigonometry Interval Binomial Polynomial.
 Import Function_Notations LimitNotations DerivativeNotations SetNotations IntervalNotations.
 
@@ -523,14 +523,14 @@ Proof.
     
     pose proof (cauchy_mvt g (⟦ Der ⟧ g (a, x)) h (⟦ Der ⟧ h (a, x)) a x (ltac:(solve_R)) H5 H6) as H11.
     assert (H12 : ⟦ der ⟧ g (a, x) = ⟦ Der ⟧ g (a, x)).
-    { apply derive_on_spec. auto. }
+    { apply derive_on_spec; auto. }
     assert (H13 : ⟦ der ⟧ h (a, x) = ⟦ Der ⟧ h (a, x)).
-    { apply derive_on_spec. auto. }
+    { apply derive_on_spec; auto. }
     specialize (H11 H12 H13 H9 H10) as [z [H14 H15]].
     
     set (g' := ⟦ Der ⟧ g [a, b]).
 
-    specialize (IH a z g' (ltac:(solve_R))).
+    specialize (IH a z g' ltac:(solve_R)).
 
     assert (H16 : nth_differentiable_on (S k) g' [a, z]).
     {
@@ -737,15 +737,10 @@ Proof.
      unfold Taylor_polynomial.
      repeat rewrite sum_f_i_Sn_f; try lia.
      rewrite sum_f_0_0; try lia.
-     replace (0!) with 1%nat by reflexivity.
-     replace (1!) with 1%nat by reflexivity.
-     replace (2!) with 2%nat by reflexivity.
-     replace (3!) with 6%nat by reflexivity.
-     replace (4!) with 24%nat by reflexivity.
-     replace (5!) with 120%nat by reflexivity.
-     replace (6!) with 720%nat by reflexivity.
      rewrite derive_0_cos_at_0, derive_1_cos_at_0, derive_2_cos_at_0, derive_3_cos_at_0,
-             derive_4_cos_at_0, derive_5_cos_at_0, derive_6_cos_at_0. simpl; lra.
+             derive_4_cos_at_0, derive_5_cos_at_0, derive_6_cos_at_0.
+     simplify_factorials.
+     simpl; lra.
   }
   unfold Taylor_remainder in H3.
   rewrite H4 in H3.
@@ -756,7 +751,7 @@ Proof.
   }
   replace (6 + 1)%nat with 7%nat in H3 by lia.
   rewrite H5 in H3.
-  replace (INR ((S 6)!)) with 5040 in H3 by (simpl; lra).
+  replace (INR ((S 6)!)) with 5040 in H3 by (simplify_factorials; auto). 
   rewrite Rminus_0_r in H3.
   rewrite pow1 in H3.
   rewrite Rmult_1_r in H3.
@@ -768,3 +763,37 @@ Proof.
   - apply Rplus_lt_reg_r with (r := -389/720); apply Rmult_lt_reg_r with (r := 5040); [ lra |].
     field_simplify. rewrite Rmult_div_r; auto. replace ((3628800 * 0.541 - 1960560) / 720) with 3.64 by lra. lra.
 Qed.
+
+Lemma e_bounds : 2.71828 < e < 2.71829.
+Proof.
+  assert (H1 : exists δ, δ > 0 /\ nth_differentiable_on (S 8) exp (0 - δ, 1 + δ)).
+  {
+    exists 1. split; [lra |].
+    apply nth_differentiable_imp_nth_differentiable_on.
+    - apply differentiable_domain_open; lra.
+    - apply inf_differentiable_imp_nth_differentiable; apply inf_differentiable_exp.
+  }
+  pose proof (Taylors_Theorem 8 0 1 exp ltac:(lra) H1) as [t [H2 H3]].
+  assert (H4 : P(8, 0, exp) 1 = 109601/40320).
+  {
+     unfold Taylor_polynomial.
+     repeat rewrite sum_f_i_Sn_f; try lia.
+     rewrite sum_f_0_0; try lia.
+     repeat rewrite nth_derive_exp_n_0.
+     simplify_factorials.
+     field.
+  }
+  unfold Taylor_remainder in H3.
+  rewrite H4 in H3.
+  assert (H5 : ⟦ Der ^ (S 8) t ⟧ exp = exp t).
+  {
+    replace (⟦ Der ^ 9 t ⟧ exp) with ((⟦ Der ^ 9 ⟧ exp) t) by reflexivity.
+    rewrite nth_derive_exp; auto.
+  }
+  replace (8 + 1)%nat with 9%nat in H3 by lia.
+  rewrite H5 in H3.
+  replace (INR ((S 8)!)) with 362880 in H3 by (simplify_factorials; lra).
+  rewrite Rminus_0_r, pow1, Rmult_1_r in H3.
+  assert (H6 : 1 < exp t < 3) by admit.
+  unfold e. lra.
+Admitted.

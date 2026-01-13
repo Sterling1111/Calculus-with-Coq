@@ -104,7 +104,7 @@ Proof.
     pose proof derivative_log_x as H6.
     assert (H7: ⟦ der ⟧ f [a, b] = log').
     {
-      apply derivative_on_ext with (f1' := (log' ∘ g) ∙ (fun _ => y * 1)); auto.
+      apply derivative_on_ext with (f1' := (log' ∘ g) ⋅ (fun _ => y * 1)); auto.
       { intros z H7. unfold log', g, compose, a, b in *; solve_R. }
       apply derivative_on_comp.
       - apply differentiable_domain_closed; auto.
@@ -346,3 +346,29 @@ Proof.
   rewrite pow2_sqrt in H3; try lra. 
   pose proof theorem_18_4 a (1/2) 2 H1 as H4.
 Admitted.
+
+Lemma inf_differentiable_exp : inf_differentiable exp.
+Proof.
+  assert (H1 : forall n, nth_derivative n exp exp).
+  { intros n. induction n; [reflexivity | exists exp; split; auto; apply theorem_18_2]. }
+  intros n. exists exp. apply H1.
+Qed.
+
+Lemma exp_0 : exp 0 = 1.
+Proof.
+  rewrite <- log_1. rewrite exp_log; try lra.
+Qed.
+
+Lemma nth_derive_exp : forall n, ⟦ Der^n ⟧ exp = exp.
+Proof.
+  induction n; simpl; auto.
+  rewrite IHn. apply derive_spec. 
+  - apply derivative_imp_differentiable with (f' := exp). apply theorem_18_2.
+  - apply theorem_18_2.
+Qed.
+
+Lemma nth_derive_exp_n_0 : forall n,
+  ⟦ Der^n 0 ⟧ exp = 1.
+Proof.
+  intros n. rewrite nth_derive_exp. apply exp_0.
+Qed.

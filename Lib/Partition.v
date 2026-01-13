@@ -9,7 +9,7 @@ Open Scope R_scope.
 Record partition (a b : ℝ) : Type := mkpartition
 {
   points : list ℝ; 
-  partition_P1 : a < b : Prop : Type;
+  partition_P1 : a < b;
   partition_P2 : Sorted Rlt points;
   partition_P3 : List.In a points;
   partition_P4 : List.In b points;
@@ -687,6 +687,20 @@ Proof.
   - simpl in H1. subst. exists t. reflexivity.
 Qed.
 
+Lemma Sorted_Rlt_glue : forall (l1 l2 : list ℝ) (c : ℝ),
+  Sorted Rlt (l1 ++ [c]) ->
+  Sorted Rlt ([c] ++ l2) ->
+  Sorted Rlt (l1 ++ [c] ++ l2).
+Proof.
+  induction l1 as [| h t IH]; intros l2 c H1 H2.
+  - simpl in *; auto.
+  - simpl in *. inversion H1. subst. apply Sorted_cons.
+    -- apply IH; auto.
+    -- destruct t.
+       + simpl in *. inversion H4. subst. inversion H2. subst. constructor; auto.
+       + simpl in *. inversion H4. subst. constructor; auto.
+Qed.
+
 Lemma join_partition : forall (a b c : R) (P1 : partition a c) (P2 : partition c b),
   a < c < b ->
   exists (P : partition a b),
@@ -707,97 +721,25 @@ Proof.
   assert (H3 : l1 = l' ++ [c]).
   { pose proof last_concat l1 c (partition_last a c P1) (partition_not_empty a c P1) as [l3 H3].
     unfold l'. rewrite H3. replace (length (l3 ++ [c]) - 1)%nat with (length l3) by (rewrite length_app; simpl; lia).
-    rewrite firstn_app, firstn_all, Nat.sub_diag. simpl. rewrite app_nil_r. auto.
-  }
+    rewrite firstn_app, firstn_all, Nat.sub_diag. simpl. rewrite app_nil_r. auto. }
   assert (H4 : l2 = [c] ++ l'').
-  {
-    pose proof first_concat l2 c (partition_first c b P2) (partition_not_empty c b P2) as [l3 H4].
-    unfold l''. rewrite H4. simpl. reflexivity.
-  }
-  assert (H5: Sorted Rlt l1). { destruct P1; auto. }
-  assert (H6: Sorted Rlt l2). { destruct P2; auto. }
-  assert (H7 : Sorted Rlt l).
-  {
-    unfold l. rewrite <- H4.
-    apply Sorted_app'; auto.
-    - apply firstn_Sorted_Rlt. destruct P1; auto.
-    - intros x H7 y H8. assert (y < c) as H9.
-      {
-        assert (List.In y l1) as H9.
-        { rewrite H3. apply in_or_app. left. auto. }
-        apply In_nth with (d := 0) in H9 as [i [H9 H10]].
-        assert (nth (length l1 - 1)%nat l1 0 = c) as H11.
-        {
-          rewrite H3. rewrite app_nth2. 2 : { rewrite length_app. simpl. lia. }
-          replace (length (l' ++ [c]) - 1 - length l')%nat with 0%nat. 2 : { rewrite length_app. simpl. lia. }
-          reflexivity.
-        }
-        apply In_nth with (d := 0) in H8 as [j [H8 H12]]. pose proof app_nth1 l' [c] 0 as H13. specialize (H13 j H8).
-        rewrite <- H3 in H13. rewrite H12 in H13. pose proof Sorted_Rlt_NoDup l1 H5 as H14.
-        pose proof NoDup_nth l1 0 as H15. rewrite H15 in H14. specialize (H14 (length l1 - 1)%nat j ltac:(lia) ltac:(rewrite H3, length_app; simpl; lia)).
-        rewrite <- H10, <- H11. apply Sorted_Rlt_nth; auto. assert (i = length l1 - 1 \/ i < length l1 - 1)%nat as [H16 | H16] by lia.
-        - rewrite H16 in H10. specialize (H14 ltac:(lra)). rewrite H3 in *. rewrite length_app in *. simpl in *. lia.
-        - lia.
-      }
-      rewrite H4 in H7. destruct H7 as [H7 | H7]; try lra.
-      simpl in H7. assert (x > c) as H10.
-      {
-        assert (List.In x l2) as H10.
-        { rewrite H4. apply in_or_app. right. auto. }
-        apply In_nth with (d := 0) in H10 as [i [H10 H11]].
-        assert (l2.[0] = c) as H12.
-        {
-          rewrite H4. rewrite app_nth1. 2 : { simpl. lia. }
-          reflexivity.
-        }
-        apply In_nth with (d := 0) in H7 as [j [H7 H13]]. pose proof app_nth2 [c] l'' 0 as H14. specialize (H14 (j+1)%nat ltac:(simpl; lia)).
-        rewrite <- H4 in H14. replace (j + 1 - length [c])%nat with j in H14 by (simpl; lia). rewrite H13 in H14. pose proof Sorted_Rlt_NoDup l2 H6 as H15.
-        pose proof NoDup_nth l2 0 as H16. rewrite H16 in H15. clear H16. specialize (H15 0%nat (j + 1)%nat ltac:(simpl; lia) ltac:(rewrite H4, length_app; simpl; lia)).
-        rewrite <- H11, <- H12. apply Sorted_Rlt_nth; auto. assert (i = 0 \/ i > 0)%nat as [H17 | H17] by lia.
-        - rewrite H17 in H10. specialize (H15 ltac:(rewrite H17 in *; lra)). rewrite H4 in *. rewrite length_app in *. simpl in *. lia.
-        - lia.
-      }
-      lra.
-  }
-  assert (H8 : List.In a l).
-  {
-    unfold l. apply list_in_first_app with (l2 := [c] ++ l'').
-    - rewrite app_nth1. 2 : { rewrite length_app. simpl. lia. }
-      rewrite app_nth1. 2 : { unfold l'. rewrite length_firstn. pose proof partition_length a c P1 as H9. fold l1 in H9. lia. }
-      unfold l'.
-      rewrite <- (partition_first a c P1). fold l1. rewrite nth_firstn.
-      pose proof partition_length a c P1 as H9.
-      assert (0 <? length l1 - 1 = true) as H10. { apply Nat.ltb_lt. fold l1 in H9. lia. }
-      rewrite H10. reflexivity.
-    - intros H8. simpl in H8. destruct l'; inversion H8.
-  }
-  assert (H9 : List.In b l).
-  {
-    unfold l. apply list_in_last_app with (l1 := l' ++ [c]).
-    - rewrite <- app_assoc. rewrite <- H4.
-      rewrite app_nth2. 2 : { rewrite length_app. simpl. lia. }
-      rewrite app_nth2. 2 : { repeat rewrite length_app. simpl. pose proof partition_length c b P2 as H10. fold l2 in H10. lia. }
-      replace (length (l' ++ [c]) + length (l' ++ l2) - 1 - length l' - length [c])%nat with (length l' + length l2 - 1)%nat.
-      2 : { repeat rewrite length_app. simpl. lia. }
-      rewrite app_nth2. 2 : { pose proof partition_length c b P2 as H10. fold l2 in H10. lia. }
-      replace (length l' + length l2 - 1 - length l')%nat with (length l2 - 1)%nat by lia.
-      apply partition_last.
-    - intros H9. simpl in H9. destruct l'; inversion H9.
-  }
-  assert (H10 : forall x, List.In x l -> a <= x <= b).
-  {
-    intros x H10. apply sorted_first_last_in with (l := l); auto.
-    - unfold l. rewrite <- (partition_first a c P1). fold l1.
-      destruct l1. inversion H3. unfold l'. simpl. rewrite Nat.sub_0_r. destruct l1.
-      simpl. inversion H3. reflexivity. simpl. reflexivity.
-    - unfold l. rewrite <- (partition_last c b P2).
-      fold l2. rewrite <- H4. destruct l2. inversion H4.
-      destruct l2. simpl. replace (length (l' ++ [r]) - 1)%nat with (length l') by (rewrite length_app; simpl; lia).
-      rewrite app_nth2; auto. rewrite Nat.sub_diag. simpl. reflexivity.
-      rewrite app_nth2. 2 : { rewrite length_app. simpl. lia. }
-      replace (length (l' ++ r :: r0 :: l2) - 1 - length l')%nat with (length (r :: r0 :: l2) - 1)%nat.
-      2 : { rewrite length_app. simpl. lia. } reflexivity.
-  }
-  exists (mkpartition a b l H2 H7 H8 H9 H10).
-  unfold l. auto.
+  { pose proof first_concat l2 c (partition_first c b P2) (partition_not_empty c b P2) as [l3 H4].
+    unfold l''. rewrite H4. simpl. reflexivity. }
+  assert (H5 : Sorted Rlt l).
+  { unfold l. apply Sorted_Rlt_glue.
+    - rewrite <- H3. destruct P1; auto.
+    - rewrite <- H4. destruct P2; auto. }
+  assert (H6 : List.In a l).
+  { unfold l. rewrite app_assoc. rewrite <- H3. apply in_or_app. left. destruct P1; auto. }
+  assert (H7 : List.In b l).
+  { unfold l. rewrite <- H4. apply in_or_app. right. destruct P2; auto. }
+  assert (H8 : forall x, List.In x l -> a <= x <= b).
+  { intros x H8. unfold l in H8. apply in_app_or in H8 as [H8 | H8].
+    - assert (List.In x l1). { rewrite H3. apply in_or_app. auto. }
+      specialize (partition_P5 a c P1 x H). lra.
+    - apply in_app_or in H8 as [H8 | H8].
+      + simpl in H8. destruct H8; try contradiction. subst. lra.
+      + assert (List.In x l2). { rewrite H4. apply in_or_app. right. auto. }
+        specialize (partition_P5 c b P2 x H). lra. }
+  exists (mkpartition a b l H2 H5 H6 H7 H8). auto.
 Qed.
