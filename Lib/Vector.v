@@ -85,7 +85,6 @@ Module Vector_Notations.
   Notation "v1 · v2" := (vector_dot v1 v2) (at level 40, left associativity) : V_Scope.
   Notation "r * v"   := (scale r v) (at level 40, left associativity) : V_Scope.
   Notation "∥ v ∥"   := (vector_norm v) (at level 40) : V_Scope.
-  Notation "0"       := zero : V_Scope.
 
 End Vector_Notations.
 

@@ -4812,6 +4812,14 @@ Proof.
   apply derivative_pow_shift.
 Qed.
 
+Lemma differentiable_at_pow : forall n a,
+  differentiable_at (fun x => x ^ n) a.
+Proof.
+  intros n a.
+  pose proof derivative_at_pow a n as H1.
+  apply derivative_at_imp_differentiable_at with (f' := λ x, INR n * x ^ (n - 1)); auto.
+Qed.
+
 Lemma differentiable_at_pow_shift : forall n c a,
   differentiable_at (fun x => (x - c) ^ n) a.
 Proof.
@@ -4859,6 +4867,46 @@ Proof.
       }
     rewrite mult_INR. field. split; apply not_0_INR; [apply fact_neq_0 | lia].
   + replace (n - S k)%nat with (n - k - 1)%nat by lia. reflexivity.
+Qed.
+
+Lemma differentiable_mult_const_l : forall c f,
+  differentiable f ->
+  differentiable (fun x => c * f x).
+Proof.
+  intros c f H1 x.
+  apply differentiable_imp_derivative in H1 as [f' H1].
+  apply derivative_imp_differentiable with (f' := (fun x => c * f' x)).
+  apply derivative_mult_const_l; auto.
+Qed.
+
+Lemma differentiable_mult : forall f g,
+  differentiable f ->
+  differentiable g ->
+  differentiable (fun x => f x * g x).
+Proof.
+  intros f g H1 H2 x.
+  apply differentiable_imp_derivative in H1 as [f' H3].
+  apply differentiable_imp_derivative in H2 as [g' H4].
+  apply derivative_imp_differentiable with (f' := (fun x => f' x * g x + f x * g' x)).
+  apply derivative_mult; auto.
+Qed.
+
+Lemma differentiable_comp : forall f g,
+  differentiable f ->
+  differentiable g ->
+  differentiable (fun x => f (g x)).
+Proof.
+  intros f g H1 H2 x.
+  apply differentiable_imp_derivative in H1 as [f' H3].
+  apply differentiable_imp_derivative in H2 as [g' H4].
+  apply derivative_imp_differentiable with (f' := (fun x => f' (g x) * g' x)).
+  apply derivative_comp; auto.
+Qed.
+
+Lemma differentiable_id : differentiable (fun x => x).
+Proof.
+  intros x. apply derivative_imp_differentiable with (f' := (fun _ : R => 1)).
+  apply derivative_id.
 Qed.
 
 Lemma differentiable_at_id : forall a,

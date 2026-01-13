@@ -382,6 +382,13 @@ Proof.
   apply derivative_at_sin.
 Qed.
 
+Lemma differentiable_sin : differentiable sin.
+Proof.
+  intros x.
+  apply derivative_at_imp_differentiable_at with (f' := cos).
+  apply derivative_at_sin.
+Qed.
+
 Lemma sin_consistency_on_0_π : ∀ x, 0 <= x <= π -> sin x = sin_0_π x.
 Proof. admit. Admitted.
 
