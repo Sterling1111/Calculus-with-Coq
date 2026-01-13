@@ -46,9 +46,9 @@ Module Matrix_Notations.
   Notation "A ⊙ B" := (mul A B) (at level 40, left associativity) : M_Scope.
   Notation "A × B" := (matrix_mult A B) (at level 40, left associativity) : M_Scope.
   Notation "r * A" := (scale r A) (at level 40, left associativity) : M_Scope.
-  (*Notation "A 'ᵀ'" := (matrix_transpose A) (at level 30) : M_Scope. *)
+  Notation "A ^T" := (matrix_transpose A) (at level 30, format "A ^T") : M_Scope.
   
-  Notation "'I' n" := (identity_matrix (n:=n)) (at level 0) : M_Scope.
+  Notation "'I'" := (identity_matrix) (at level 0) : M_Scope.
 
 End Matrix_Notations.
 
@@ -77,11 +77,17 @@ Section Matrix_Examples.
     repeat (try apply vector_eq; try simpl; try f_equal; unfold add, mul, zero, Add_R, Mul_R, Zero_R; solve_R).
   Qed.
 
-  Example matrix_transpose_example : matrix_transpose A = ⟨ ⟨1, 4⟩, ⟨2, 5⟩, ⟨3, 6⟩ ⟩.
+  Example matrix_transpose_example : A^T = ⟨ ⟨1, 4⟩, ⟨2, 5⟩, ⟨3, 6⟩ ⟩.
   Proof.
     unfold A, matrix_transpose, get_col, vector_nth, vector_init.
     unfold zero, Zero_R.
     repeat (try apply vector_eq; try simpl; try f_equal; try reflexivity).
+  Qed.
+
+  Lemma identity_matrix_example_explicit : I = ⟨ ⟨1, 0, 0⟩, ⟨0, 1, 0⟩, ⟨0, 0, 1 ⟩⟩.
+  Proof.
+    unfold identity_matrix, one, zero, One_R, Zero_R.
+    repeat (try apply vector_eq; simpl; try f_equal; try lra).
   Qed.
 
 End Matrix_Examples.
