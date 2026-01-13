@@ -722,20 +722,17 @@ Proof.
   field. apply INR_fact_neq_0.
 Qed.
 
-Lemma cos_1_bounds : 0.54027 < cos 1 < 0.54048.
+Lemma cos_1_bounds : 0.540 < cos 1 < 0.541.
 Proof.
-  pose proof (Taylors_Theorem 6 0 1 cos) as H1.
-  assert (H2 : 0 < 1) by lra.
-  assert (H3 : exists δ, δ > 0 /\ nth_differentiable_on (S 6) cos (0 - δ, 1 + δ)).
+  assert (H1 : exists δ, δ > 0 /\ nth_differentiable_on (S 6) cos (0 - δ, 1 + δ)).
   {
     exists 1. split; [lra |].
     apply nth_differentiable_imp_nth_differentiable_on.
     - apply differentiable_domain_open; lra.
     - apply inf_differentiable_imp_nth_differentiable. apply inf_differentiable_cos.
   }
-  specialize (H1 H2 H3).
-  destruct H1 as [t [H4 H5]].
-  assert (H6 : P(6, 0, cos) 1 = 389/720).
+  pose proof (Taylors_Theorem 6 0 1 cos ltac:(lra) H1) as [t [H2 H3]].
+  assert (H4 : P(6, 0, cos) 1 = 389/720).
   {
      unfold Taylor_polynomial.
      repeat rewrite sum_f_i_Sn_f; try lia.
@@ -750,19 +747,24 @@ Proof.
      rewrite derive_0_cos_at_0, derive_1_cos_at_0, derive_2_cos_at_0, derive_3_cos_at_0,
              derive_4_cos_at_0, derive_5_cos_at_0, derive_6_cos_at_0. simpl; lra.
   }
-  unfold Taylor_remainder in H5.
-  rewrite H6 in H5.
-  assert (H7 : ⟦ Der ^ (S 6) t ⟧ cos = sin t).
+  unfold Taylor_remainder in H3.
+  rewrite H4 in H3.
+  assert (H5 : ⟦ Der ^ (S 6) t ⟧ cos = sin t).
   {
     replace (⟦ Der ^ 7 t ⟧ cos) with ((⟦ Der ^ 7 ⟧ cos) t) by reflexivity.
     rewrite nth_derive_cos_7; auto.
   }
-  replace (6 + 1)%nat with 7%nat in H5 by lia.
-  rewrite H7 in H5.
-  replace (INR ((S 6)!)) with 5040 in H5 by (simpl; lra).
-  replace (1 - 0) with 1 in H5 by lra.
-  rewrite pow1 in H5.
-  rewrite Rmult_1_r in H5.
-  assert (H8 : 0 < sin t < 1) by (apply sin_bounds_open_0_1; solve_R).
-  lra.
+  replace (6 + 1)%nat with 7%nat in H3 by lia.
+  rewrite H5 in H3.
+  replace (INR ((S 6)!)) with 5040 in H3 by (simpl; lra).
+  rewrite Rminus_0_r in H3.
+  rewrite pow1 in H3.
+  rewrite Rmult_1_r in H3.
+  assert (H6 : 0 < sin t < 1) by (apply sin_bounds_open_0_1; solve_R).
+  replace (cos 1) with (389 / 720 + sin t / 5040) by lra.
+  split.
+  - apply Rplus_lt_reg_r with (r := -389/720); apply Rmult_lt_reg_r with (r := 5040); [ lra |].
+    field_simplify. rewrite Rmult_div_r; auto. replace ((3628800 * 0.540 - 1960560) / 720) with (-1.4) by lra. lra.
+  - apply Rplus_lt_reg_r with (r := -389/720); apply Rmult_lt_reg_r with (r := 5040); [ lra |].
+    field_simplify. rewrite Rmult_div_r; auto. replace ((3628800 * 0.541 - 1960560) / 720) with 3.64 by lra. lra.
 Qed.
