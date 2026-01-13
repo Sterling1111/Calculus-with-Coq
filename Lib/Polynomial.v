@@ -8,6 +8,14 @@ Local Notation length := List.length.
 Definition polynomial (l : list R) : R -> R :=
   fun x => sum_f 0 (length l - 1) (fun i => nth i l 0 * x^(length l - 1 - i)).
 
+Definition leading_coefficient (l : list R) : R := nth 0 l 0.
+
+Fixpoint degree (l : list R) : nat :=
+  match l with
+  | [] => 0
+  | h :: t => if Req_EM_T h 0 then degree t else length l - 1
+  end.
+
 Lemma poly_nil : forall x, polynomial ([] : list R) x = 0.
 Proof.
   intro; compute. rewrite Rmult_1_r. reflexivity.

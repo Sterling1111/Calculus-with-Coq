@@ -17,6 +17,9 @@ Open Scope R_scope.
 Notation "l .[ i ]" := (nth i l 0)
   (at level 10, format "l .[ i ]").
 
+Notation "x = y = z" := (x = y /\ y = z)
+  (at level 70, y at next level, z at next level) : type_scope.
+
 (* Single-term Unicode (keep ASCII <=, >= as already provided by Coq/Reals) *)
 Notation "x ≤ y" := (Rle x y) : R_scope.
 Notation "x ≥ y" := (Rge x y) : R_scope.
