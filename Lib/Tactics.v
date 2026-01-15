@@ -229,14 +229,20 @@ Ltac auto_limit :=
   change_fun_to_expr;
   match goal with
   | [ |- ⟦ lim ?a ⟧ (fun x => eval_expr ?e x) = ?L ] => 
-      replace L with (eval_expr e a) by (try (simpl; lra); solve_R); 
-      apply limit_eval_expr; repeat split; solve_R
+      apply limit_subst with (L1 := eval_expr e a); 
+      [ try (simpl; lra); solve_R 
+      | apply limit_eval_expr; repeat split; try solve [ solve_R | auto ] 
+      ]
   | [ |- ⟦ lim ?a⁺ ⟧ (fun x => eval_expr ?e x) = ?L ] => 
-      replace L with (eval_expr e a) by (try (simpl; lra); solve_R); 
-      apply right_limit_eval_expr; repeat split; solve_R
+      apply limit_subst with (L1 := eval_expr e a);
+      [ try (simpl; lra); solve_R 
+      | apply right_limit_eval_expr; repeat split; try solve [ solve_R | auto ] 
+      ]
   | [ |- ⟦ lim ?a⁻ ⟧ (fun x => eval_expr ?e x) = ?L ] => 
-      replace L with (eval_expr e a) by (try (simpl; lra); solve_R); 
-      apply left_limit_eval_expr; repeat split; solve_R
+      apply limit_subst with (L1 := eval_expr e a);
+      [ try (simpl; lra); solve_R 
+      | apply left_limit_eval_expr; repeat split; try solve [ solve_R | auto ] 
+      ]
   end.
 
 Ltac auto_cont :=

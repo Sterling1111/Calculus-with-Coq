@@ -31,3 +31,8 @@ Makefile.d
 
 # Coq Makefile configuration
 CoqMakefile.conf
+
+# Python scripts
+coq_stepper.py
+__pycache__/
+*.py
