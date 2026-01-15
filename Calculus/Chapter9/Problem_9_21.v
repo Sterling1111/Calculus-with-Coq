@@ -17,6 +17,32 @@ Proof.
       exists 1. split; try lra. intros h H2. solve_R.
 Qed.
 
+Lemma lemma_9_21_a' : ∀ f a L,
+  ⟦ der a ⟧ f = (λ _, L) <-> ⟦ lim a ⟧ (λ x, (f x - f a) / (x - a)) = L.
+Proof.
+  intros f a L. split; intros H1.
+  - unfold derivative_at in H1. replace a with (0 + a) at 1 by lra.
+    rewrite <- limit_shift with (a := 0) (c := a).
+    replace ((λ x : ℝ, (f (x + a) - f a) / (x + a - a))) with (λ x, (f (a + x) - f a) / x); auto.
+    extensionality x. replace (x + a - a) with x by lra. rewrite Rplus_comm. reflexivity.
+  - unfold derivative_at. replace a with (0 + a) in H1 at 1 by lra.
+    rewrite <- limit_shift with (a := 0) (c := a) in H1.
+    replace ((λ x : ℝ, (f (x + a) - f a) / (x + a - a))) with (λ x, (f (a + x) - f a) / x) in H1; auto.
+    extensionality x. replace (x + a - a) with x by lra. rewrite Rplus_comm. reflexivity.
+Qed.
+
+Lemma lemma_9_21_a'' : ∀ f a L,
+  ⟦ der a ⟧ f = (λ _, L) <-> ⟦ lim a ⟧ (λ x, (f x - f a) / (x - a)) = L.
+Proof.
+  intros f a L.
+  unfold derivative_at.
+  replace a with (0 + a) by lra.
+  rewrite <- limit_shift with (a := 0) (c := a).
+  repeat replace (0 + a) with a by lra.
+  replace (λ x, (f (x + a) - f a) / (x + a - a)) with (λ h, (f (a + h) - f a) / h); try reflexivity.
+  extensionality h. replace (h + a - a) with h by lra. rewrite Rplus_comm. reflexivity.
+Qed.
+
 Lemma lemma_9_21_b : ∀ f g a l,
   (∃ δ, δ > 0 /\ ∀ x, |x - a| < δ -> f x = g x) ->
   ⟦ der a ⟧ f = (fun _ => l) ->
