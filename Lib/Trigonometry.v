@@ -131,6 +131,9 @@ Proof.
   rewrite A_spec; try lra. replace ((1 - (-1) ^ 2)) with 0 by lra. rewrite sqrt_0. unfold π. lra.
 Qed.
 
+Lemma A_at_0 : A 0 = π / 4.
+Proof. admit. Admitted.
+
 Lemma A_decreases : decreasing_on A [-1, 1].
 Proof.
   apply derivative_on_neg_imp_decreasing_on_open with (f' := (fun x => -1 / (2 * √(1 - x ^ 2)))); try lra.
@@ -285,34 +288,90 @@ Qed.
 
 Definition red_0_2π (x : ℝ) : { y : ℝ | 0 <= y < 2 * π /\ ∃ k : ℤ, x = y + IZR k * 2 * π }.
 Proof.
-Admitted.
+  pose proof π_pos as H1.
+  set (p := 2 * π).
+  assert (H2: p > 0). { unfold p; lra. }
+  remember (up (x / p)) as u eqn:H3.
+  set (k := (u - 1)%Z).
+  exists (x - IZR k * p).
+  split.
+  - destruct (archimed (x / p)) as [H4 H5].
+    rewrite <- H3 in H4, H5. clear H3.
+    unfold k. rewrite minus_IZR. split.
+    + apply Rmult_le_reg_r with (r := / p).
+      { apply Rinv_0_lt_compat; assumption. }
+      rewrite Rmult_0_l.
+      rewrite Rmult_minus_distr_r.
+      rewrite Rmult_assoc. rewrite Rinv_r; [| lra]. lra. 
+    + apply Rmult_lt_reg_r with (r := / p).
+      { apply Rinv_0_lt_compat; assumption. }
+      rewrite Rmult_minus_distr_r.
+      rewrite Rmult_assoc. rewrite Rinv_r; lra.
+  - exists k. unfold p. lra.
+Qed.
 
 Lemma red_0_2π_spec : ∀ x,
   let y := proj1_sig (red_0_2π x) in
   0 <= y < 2 * π /\ ∃ k : ℤ, x = y + IZR k * 2 * π.
-Proof. intros x y. split; admit. Admitted.
+Proof.
+  intros x y. destruct (red_0_2π x) as [y0 [H1 H2]].
+  simpl. split; auto.
+Qed.
 
 Definition cos_0_2π (y : ℝ) : ℝ :=
   if Rle_dec y π
   then cos_0_π y
-  else - cos_0_π (2 * π - y).
+  else cos_0_π (2 * π - y).
 
 Definition cos (x : ℝ) : ℝ :=
   let y := proj1_sig (red_0_2π x) in cos_0_2π y.
 
 Lemma cos_on_0_π : ∀ x, 0 <= x <= π -> cos x = cos_0_π x.
 Proof.
-  intros x Hx.
-  admit.
+  intros x H1. unfold cos.
+  destruct (red_0_2π_spec x) as [H2 [k H3]].
+  set (y := proj1_sig (red_0_2π x)) in *.
+  assert (H4: x = y).
+  {
+    assert (|(x - y)| < 2 * π) as H4 by solve_R.
+    rewrite H3 in H4. 
+    replace (y + IZR k * 2 * π - y) with (IZR k * 2 * π) in H4 by lra.
+    assert (|(IZR k * 2 * π)| = (|(IZR k)| * 2 * π)) as H5 by solve_R.
+    rewrite H5 in H4.
+    destruct (Req_dec k 0) as [H6 | H6]; [solve_R | ].
+    assert (|(IZR k)| >= 1) by admit. solve_R.
+  }
+  rewrite H4. unfold cos_0_2π.
+  destruct (Rle_dec y π); try lra.
 Admitted.
 
-Lemma cos_on_π_2π : ∀ x, π < x < 2 * π -> cos x = - cos_0_π (2 * π - x).
-Proof. admit. Admitted.
+Lemma cos_on_π_2π : ∀ x, π < x < 2 * π -> cos x = cos_0_π (2 * π - x).
+Proof.
+  intros x H1. unfold cos.
+  destruct (red_0_2π_spec x) as [H2 [k H3]].
+  set (y := proj1_sig (red_0_2π x)) in *.
+  assert (H4: x = y).
+  {
+    assert (|(x - y)| < 2 * π) as H4 by solve_R.
+    rewrite H3 in H4.
+    replace (y + IZR k * 2 * π - y) with (IZR k * 2 * π) in H4 by lra.
+    assert (|(IZR k * 2 * π)| = (|(IZR k)| * 2 * π)) as H5 by solve_R.
+    rewrite H5 in H4.
+    destruct (Z.eq_dec k 0) as [H6 | H6].
+    - rewrite H6 in *. lra.
+    - assert (|(IZR k)| >= 1) as H7. {
+        assert ((k <= 1)%Z \/ (k >= 1)%Z) as [H7 | H7] by lia.
+        - admit.
+        - admit.
+      }
+      nra.
+  }
+  rewrite H4.
+  unfold cos_0_2π. destruct (Rle_dec y π); lra.
+Admitted.
 
 Lemma cos_periodic : ∀ x, cos (x + 2 * π) = cos x.
 Proof.
-  intros x.
-  admit.
 Admitted.
 
 Lemma cos_even : ∀ x, cos (-x) = cos x.
@@ -320,35 +379,64 @@ Proof. admit. Admitted.
 
 Lemma cos_le_1 : ∀ x, cos x <= 1.
 Proof.
-  intros x. admit.
 Admitted.
 
 Lemma cos_ge_neg1 : ∀ x, -1 <= cos x.
-Proof. admit.
+Proof.
 Admitted.
 
 Lemma cos_sign_q1 : ∀ x, 0 <= x <= π/2 -> 0 <= cos x.
-Proof. admit. Admitted.
+Proof.
+  intros x H1. rewrite cos_on_0_π; try lra.
+  apply Rnot_lt_le. intro H2.
+  assert (H3: cos_0_π x < 0) by lra.
+  assert (H5: cos_0_π x ∈ [-1, 1]). { apply cos_0_π_in_range; lra. }
+  assert (H6: 0 ∈ [-1, 1]) by (split; lra).
+  apply (A_decreases (cos_0_π x) 0) in H3; try assumption.
+  rewrite cos_0_π_spec in H3; try lra.
+  rewrite A_at_0 in H3.
+  lra.
+Qed.
 
 Lemma cos_sign_q2 : ∀ x, π/2 <= x <= π -> cos x <= 0.
-Proof. admit. Admitted.
+Proof.
+  intros x H1. rewrite cos_on_0_π; try lra.
+  apply Rnot_gt_le. intro H2.
+  assert (H3: cos_0_π x > 0) by lra.
+  assert (H5: cos_0_π x ∈ [-1, 1]). { apply cos_0_π_in_range; lra. }
+  assert (H6: 0 ∈ [-1, 1]) by (split; lra).
+  apply (A_decreases 0 (cos_0_π x)) in H3; try assumption.
+  rewrite cos_0_π_spec in H3; try lra.
+  rewrite A_at_0 in H3.
+  lra.
+Qed.
 
 Lemma cos_sign_q3 : ∀ x, π <= x <= (3*π)/2 -> cos x <= 0.
-Proof. admit. Admitted.
+Proof.
+Admitted.
 
 Lemma cos_sign_q4 : ∀ x, (3*π)/2 <= x <= 2 * π -> 0 <= cos x.
-Proof. admit. Admitted.
+Proof.
+Admitted.
 
 Lemma cos_derivative_on_0_π :
   ∀ x, 0 < x < π -> ⟦ der x ⟧ cos = - sin_0_π.
 Proof.
   intros x Hx.
-  admit.
-Admitted.
+  apply derivative_at_eq with (f1 := cos_0_π).
+  - exists (Rmin x (π - x)). split.
+    + apply Rmin_pos; lra.
+    + intros z Hz. rewrite cos_on_0_π; solve_R.
+  - apply theorem_15_1_a; auto.
+Qed.
+
+Definition sin_0_2π (y : ℝ) : ℝ :=
+  if Rle_dec y π
+  then sin_0_π y
+  else -sin_0_π (2 * π - y).
 
 Definition sin (x : ℝ) : ℝ :=
-  let y := proj1_sig (red_0_2π x) in
-  if Rle_dec y π then  √(1 - (cos y)^2) else -√(1 - (cos y)^2).
+  let y := proj1_sig (red_0_2π x) in sin_0_2π y.
 
 Lemma continuous_sin : continuous sin.
 Proof.

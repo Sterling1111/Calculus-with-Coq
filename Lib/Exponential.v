@@ -204,10 +204,68 @@ Proof.
 Qed.
 
 Lemma log_unbounded_above_on : unbounded_above_on log (0, ∞).
-Admitted.
+Proof.
+  unfold unbounded_above_on, bounded_above_on. intros [M H].
+  assert (H1 : log 2 > 0) by apply log_2_pos.
+  destruct (INR_archimed (log 2) M H1) as [n Hn].
+  set (x := 2 ^ (S n)).
+  assert (Hx : x ∈ (0, ∞)).
+  { unfold x. auto_interval. pose proof (Rpow_gt_0 n 2 ltac:(lra)); lra. }
+  specialize (H (log x)).
+  assert (H3 : exists x0, x0 ∈ (0, ∞) /\ log x = log x0).
+  { exists x. split; auto. }
+  specialize (H H3).
+  unfold x in H.
+  rewrite corollary_18_1 in H; try lra.
+  assert (H_final: INR (S n) * log 2 > M).
+  {
+    replace (INR (S n) * log 2) with (INR n * log 2 + log 2).
+    2 : { rewrite S_INR. ring. }
+    assert (INR n * log 2 + log 2 > INR n * log 2).
+    { apply Rplus_lt_reg_l with (r := -(INR n * log 2)). ring_simplify. apply H1. }
+    lra.
+  }
+  lra.
+Qed.
 
 Lemma log_unbounded_below_on : unbounded_below_on log (0, 1).
-Admitted.
+Proof.
+  unfold unbounded_below_on, bounded_below_on. intros [M H].
+  assert (H1 : log 2 > 0) by apply log_2_pos.
+  destruct (INR_archimed (log 2) (-M) H1) as [n Hn].
+  set (x := (1/2) ^ (S n)).
+  assert (Hx : x ∈ (0, 1)).
+  {
+    unfold x. split.
+    - apply Rpow_gt_0. lra.
+    - apply Rpow_lt_1; try lra. lia.
+  }
+  specialize (H (log x)).
+  assert (H3 : exists x0, x0 ∈ (0, 1) /\ log x = log x0).
+  { exists x. split; auto. }
+  specialize (H H3).
+  unfold x in H.
+  rewrite corollary_18_1 in H; try lra.
+  rewrite corollary_18_2 in H; try lra.
+  rewrite log_1 in H.
+  assert (H_final : INR (S n) * (0 - log 2) < M).
+  {
+    replace (INR (S n) * (0 - log 2)) with (INR n * (-log 2) - log 2).
+    2 : { rewrite S_INR. replace (0 - log 2) with (-log 2) by lra. ring. }
+    assert (INR n * (-log 2) - log 2 < INR n * (-log 2)).
+    { apply Rplus_lt_reg_l with (r := -(INR n * (-log 2))). ring_simplify. 
+      assert (-log 2 < 0) by lra.
+      lra. 
+    }
+    assert (INR n * (-log 2) < M).
+    {
+       replace (INR n * (-log 2)) with (-(INR n * log 2)) by ring.
+       lra.
+    }
+    lra.
+  }
+  lra.
+Qed.
 
 Lemma log_surjective : surjective_on log (0, ∞) ℝ.
 Proof.

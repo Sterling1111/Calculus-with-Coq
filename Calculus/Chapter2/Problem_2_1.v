@@ -15,3 +15,13 @@ Proof.
   - rewrite H2. compute. lra.
   - repeat rewrite sum_f_i_Sn_f; try lia. rewrite IH; auto. rewrite sum_n_nat; auto. repeat rewrite S_INR. lra.  
 Qed.
+
+Lemma lemma_2_1_iii : ∀ n : nat,
+  (n >= 1) -> ∑ 1 n (λ i, i ^ 2) = (n * (n + 1) * (2 * n + 1)) / 6.
+Proof.
+  intros n H1. induction n as [| k IH]; try lia. Set Printing Coercions.
+  assert (H2 : 0 = INR 0) by auto. rewrite <- H2. lra.
+  assert (k = 0 \/ k >= 1)%nat as [H2 | H2] by lia.
+  - rewrite H2, sum_f_n_n. simpl. field_simplify. reflexivity.
+  - rewrite sum_f_i_Sn_f; try lia. rewrite IH; auto. rewrite S_INR. lra.
+Qed.
