@@ -607,9 +607,27 @@ Lemma fact_17_R : INR (17!) = 355687428096000. Proof. prove_fact_R. Qed.
 Lemma fact_18_R : INR (18!) = 6402373705728000. Proof. prove_fact_R. Qed.
 Lemma fact_19_R : INR (19!) = 121645100408832000. Proof. prove_fact_R. Qed.
 Lemma fact_20_R : INR (20!) = 2432902008176640000. Proof. prove_fact_R. Qed.
+Lemma fact_21_R : INR (21!) = 51090942171709440000. Proof. prove_fact_R. Qed.
+Lemma fact_22_R : INR (22!) = 1124000727777607680000. Proof. prove_fact_R. Qed.
+Lemma fact_23_R : INR (23!) = 25852016738884976640000. Proof. prove_fact_R. Qed.
+Lemma fact_24_R : INR (24!) = 620448401733239439360000. Proof. prove_fact_R. Qed.
+Lemma fact_25_R : INR (25!) = 15511210043330985984000000. Proof. prove_fact_R. Qed.
+Lemma fact_26_R : INR (26!) = 403291461126605635584000000. Proof. prove_fact_R. Qed.
+Lemma fact_27_R : INR (27!) = 10888869450418352160768000000. Proof. prove_fact_R. Qed.
+Lemma fact_28_R : INR (28!) = 304888344611713860501504000000. Proof. prove_fact_R. Qed.
+Lemma fact_29_R : INR (29!) = 8841761993739701954543616000000. Proof. prove_fact_R. Qed.
+Lemma fact_30_R : INR (30!) = 265252859812191058636308480000000. Proof. prove_fact_R. Qed.
+Lemma fact_31_R : INR (31!) = 8222838654177922817725562880000000. Proof. prove_fact_R. Qed.
+Lemma fact_32_R : INR (32!) = 263130836933693530167218012160000000. Proof. prove_fact_R. Qed.
+Lemma fact_33_R : INR (33!) = 8683317618811886495518194401280000000. Proof. prove_fact_R. Qed.
+Lemma fact_34_R : INR (34!) = 295232799039604140847618609643520000000. Proof. prove_fact_R. Qed.
+Lemma fact_35_R : INR (35!) = 10333147966386144929666651337523200000000. Proof. prove_fact_R. Qed.
 
 Ltac simplify_factorials :=
-  rewrite ?fact_20_R, ?fact_19_R, ?fact_18_R, ?fact_17_R, ?fact_16_R,
+  rewrite ?fact_35_R, ?fact_34_R, ?fact_33_R, ?fact_32_R, ?fact_31_R,
+          ?fact_30_R, ?fact_29_R, ?fact_28_R, ?fact_27_R, ?fact_26_R,
+          ?fact_25_R, ?fact_24_R, ?fact_23_R, ?fact_22_R, ?fact_21_R,
+          ?fact_20_R, ?fact_19_R, ?fact_18_R, ?fact_17_R, ?fact_16_R,
           ?fact_15_R, ?fact_14_R, ?fact_13_R, ?fact_12_R, ?fact_11_R,
           ?fact_10_R, ?fact_9_R, ?fact_8_R, ?fact_7_R, ?fact_6_R, 
           ?fact_5_R, ?fact_4_R, ?fact_3_R, ?fact_2_R, ?fact_1_R, ?fact_0_R.

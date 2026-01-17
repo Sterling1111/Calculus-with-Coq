@@ -318,6 +318,22 @@ Proof.
   apply H4. apply Full_intro.
 Qed.
 
+Lemma exp_increasing : increasing_on exp ℝ.
+Proof.
+  intros x y _ _ H1.
+  destruct (Rtotal_order (exp x) (exp y)) as [H2 | [H2 | H2]]; auto.
+  - apply f_equal with (f := log) in H2.
+    repeat rewrite log_exp in H2.
+    lra.
+  - assert (H3 : log (exp y) < log (exp x)).
+    {
+      apply log_increasing; try apply exp_pos.
+      assumption.
+    }
+    repeat rewrite log_exp in H3.
+    lra.
+Qed.
+
 Theorem theorem_18_2 : ⟦ der ⟧ exp = exp.
 Proof.
   intros x.

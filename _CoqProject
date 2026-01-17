@@ -36,6 +36,7 @@ Lib/Notations.v
 Lib/Inverse.v
 Lib/Trigonometry.v
 Lib/Tactics.v
+Lib/Taylor.v
 Lib/Vector.v
 Lib/Matrix.v
 Lib/Exponential.v

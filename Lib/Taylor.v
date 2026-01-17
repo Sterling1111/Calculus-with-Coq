@@ -764,17 +764,50 @@ Proof.
     field_simplify. rewrite Rmult_div_r; auto. replace ((3628800 * 0.541 - 1960560) / 720) with 3.64 by lra. lra.
 Qed.
 
-Lemma e_bounds : 2.71828 < e < 2.71829.
+Lemma e_bound_1_3 : 1 < exp 1 < 3.
 Proof.
-  assert (H1 : exists δ, δ > 0 /\ nth_differentiable_on (S 8) exp (0 - δ, 1 + δ)).
+  split.
+  - rewrite <- exp_0 at 1. apply exp_increasing; solve_R; apply Full_intro.
+  - assert (H1 : exists δ, δ > 0 /\ nth_differentiable_on 3 exp (0 - δ, 1 + δ)).
+    {
+      exists 1. split; [lra |].
+      apply nth_differentiable_imp_nth_differentiable_on.
+      - apply differentiable_domain_open; lra.
+      - apply inf_differentiable_imp_nth_differentiable; apply inf_differentiable_exp.
+    }
+    destruct H1 as [δ [H2 H3]].
+    pose proof (Taylors_Theorem 2 0 1 exp ltac:(lra) (ex_intro _ δ (conj H2 H3))) as [t [H4 H5]].
+    assert (H6 : P(2, 0, exp) 1 = 5/2).
+    {
+      unfold Taylor_polynomial.
+      repeat rewrite sum_f_i_Sn_f; try lia.
+      rewrite sum_f_0_0; try lia.
+      repeat rewrite nth_derive_exp_n_0.
+      simplify_factorials.
+      field.
+    }
+    unfold Taylor_remainder in H5.
+    rewrite H6 in H5.
+    replace (2 + 1)%nat with 3%nat in H5 by lia.
+    rewrite Rminus_0_r, pow1, Rmult_1_r in H5.
+    replace (⟦ Der ^ 3 t ⟧ exp) with (exp t) in H5 by (rewrite nth_derive_exp; auto).
+    replace (INR (3!)) with 6 in H5 by (simplify_factorials; lra).
+    assert (H7 : exp t < exp 1).
+    { apply exp_increasing; solve_R; apply Full_intro. }
+    lra.
+Qed.
+
+Lemma e_bounds : 2.7182818284590452353602874713526624977571 < e < 2.7182818284590452353602874713526624977575.
+Proof.
+  assert (H1 : exists δ, δ > 0 /\ nth_differentiable_on (S 34) exp (0 - δ, 1 + δ)).
   {
     exists 1. split; [lra |].
     apply nth_differentiable_imp_nth_differentiable_on.
     - apply differentiable_domain_open; lra.
     - apply inf_differentiable_imp_nth_differentiable; apply inf_differentiable_exp.
   }
-  pose proof (Taylors_Theorem 8 0 1 exp ltac:(lra) H1) as [t [H2 H3]].
-  assert (H4 : P(8, 0, exp) 1 = 109601/40320).
+  pose proof (Taylors_Theorem 34 0 1 exp ltac:(lra) H1) as [t [H2 H3]].
+  assert (H4 : P(34, 0, exp) 1 = 160505190558891399620169143887464379777/59046559807920828169523721928704000000).
   {
      unfold Taylor_polynomial.
      repeat rewrite sum_f_i_Sn_f; try lia.
@@ -785,15 +818,21 @@ Proof.
   }
   unfold Taylor_remainder in H3.
   rewrite H4 in H3.
-  assert (H5 : ⟦ Der ^ (S 8) t ⟧ exp = exp t).
+  assert (H5 : ⟦ Der ^ (S 34) t ⟧ exp = exp t).
   {
-    replace (⟦ Der ^ 9 t ⟧ exp) with ((⟦ Der ^ 9 ⟧ exp) t) by reflexivity.
+    replace (⟦ Der ^ 35 t ⟧ exp) with ((⟦ Der ^ 35 ⟧ exp) t) by reflexivity.
     rewrite nth_derive_exp; auto.
   }
-  replace (8 + 1)%nat with 9%nat in H3 by lia.
+  replace (34 + 1)%nat with 35%nat in H3 by lia.
   rewrite H5 in H3.
-  replace (INR ((S 8)!)) with 362880 in H3 by (simplify_factorials; lra).
+  replace (INR ((S 34)!)) with 10333147966386144929666651337523200000000 in H3 by (simplify_factorials; lra).
   rewrite Rminus_0_r, pow1, Rmult_1_r in H3.
-  assert (H6 : 1 < exp t < 3) by admit.
+  assert (H6 : 1 < exp t < 3).
+  {
+    pose proof e_bound_1_3 as [H6 H7]. split.
+    - rewrite <- exp_0. apply exp_increasing; solve_R; apply Full_intro.
+    - pose proof exp_increasing t 1 ltac:(apply Full_intro) ltac:(apply Full_intro) ltac:(solve_R) as H8.
+      lra.
+  }
   unfold e. lra.
-Admitted.
+Qed.
