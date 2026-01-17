@@ -1,5 +1,5 @@
 From Lib Require Import Imports Sets Notations Functions Limit Continuity Derivative Reals_util Interval.
-Import SetNotations IntervalNotations Function_Notations LimitNotations DerivativeNotations.
+Import SetNotations IntervalNotations FunctionNotations LimitNotations DerivativeNotations.
 
 Definition one_to_one_on (f : ℝ -> ℝ) (D : Ensemble ℝ) :=
   injective_on f D.
@@ -33,7 +33,7 @@ Proof.
 Qed.
 
 Lemma one_to_one_on_neg : forall f D,
-  one_to_one_on f D -> one_to_one_on (-f)%f D.
+  one_to_one_on f D -> one_to_one_on (-f)%function D.
 Proof.
   intros f D H1 x y H2 H3 H4.
   specialize (H1 x y H2 H3). solve_R.
@@ -261,7 +261,7 @@ Proof.
     assert (δ > 0) as H13 by (unfold δ; solve_R).
     exists δ; split; auto. intros x H14. unfold δ in *. destruct H4 as [_ [_ [_ H4]]]. unfold compose. rewrite H4; solve_R.
   }
-  pose proof derivative_at_unique (f ∘ f_inv) ((f' ∘ f_inv) ⋅ f_inv')%f (λ _ : ℝ, 1) y H12 H13 as H14.
+  pose proof derivative_at_unique (f ∘ f_inv) ((f' ∘ f_inv) ⋅ f_inv')%function (λ _ : ℝ, 1) y H12 H13 as H14.
   simpl in H14. unfold compose in *. rewrite H7 in H14. lra.
 Qed.
 

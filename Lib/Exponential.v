@@ -1,5 +1,5 @@
 From Lib Require Import Imports Notations Integral Derivative Functions Continuity Limit Sets Reals_util Inverse Interval.
-Import IntervalNotations SetNotations Function_Notations DerivativeNotations LimitNotations.
+Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations.
 
 Definition log (x : R) :=
   match (Rle_dec x 0) with
@@ -28,10 +28,10 @@ Proof.
     replace (λ x0 : ℝ, ∫ 1 x0 (λ t : ℝ, 1 / t)) with (λ x : ℝ, ∫ x 1 h).
     2 : {
         extensionality z. apply eq_sym. unfold h. rewrite integral_b_a_neg'; auto.
-        replace (- Rdiv 1)%f with (λ t : ℝ, - 1 / t).
+        replace (- Rdiv 1)%function with (λ t : ℝ, - 1 / t).
         2 : { extensionality t. lra. } auto.
     }
-    replace (λ x0 : ℝ, 1 / x0) with (λ x0 : ℝ, - (h)%f x0).
+    replace (λ x0 : ℝ, 1 / x0) with (λ x0 : ℝ, - (h)%function x0).
     2 : { extensionality z. unfold h. lra. }
     apply FTC1'; try lra. unfold h. intros c H6. apply limit_imp_limit_on. apply limit_div; solve_R. apply limit_const. apply limit_id.
   - apply derivative_on_imp_derivative_at with (D := [0.5, 2]); auto_interval. 
@@ -91,10 +91,10 @@ Proof.
         replace (λ x0 : ℝ, ∫ b x0 (λ t : ℝ, b / t)) with (λ x : ℝ, ∫ x 1 h).
         2 : {
             extensionality z. apply eq_sym. unfold h. rewrite integral_b_a_neg'; auto.
-            replace (- Rdiv b)%f with (λ t : ℝ, - b / t).
+            replace (- Rdiv b)%function with (λ t : ℝ, - b / t).
             2 : { extensionality t. lra. } solve_R.
         }
-        apply derivative_on_ext with (f1' := (-h)%f); auto.
+        apply derivative_on_ext with (f1' := (-h)%function); auto.
         { intros z H6. unfold h. lra. }
         replace b with 1 by solve_R.
         apply FTC1'; solve_R. unfold h. intros c H6. apply limit_imp_limit_on. unfold a, b in *. solve_lim.
@@ -165,7 +165,7 @@ Proof.
   intros x H1. rewrite log_spec; try lra.
   assert (H2 : continuous_on (λ t : ℝ, -1 / t) [x, 1]).
   { intros c H2. apply limit_imp_limit_on. solve_lim. }
-  rewrite integral_b_a_neg'; try lra. replace (- Rdiv 1)%f with (λ t : ℝ, -1 / t).
+  rewrite integral_b_a_neg'; try lra. replace (- Rdiv 1)%function with (λ t : ℝ, -1 / t).
   2 : { extensionality t. lra. }
   apply integral_neg; solve_R.
   pose proof Rdiv_pos_pos 1 x0 ltac:(lra) ltac:(lra). lra.

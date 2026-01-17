@@ -1,8 +1,7 @@
 From Lib Require Import Imports Sequence Sets Reals_util Notations Functions Interval.
-Import SetNotations IntervalNotations Function_Notations.
+Import SetNotations IntervalNotations FunctionNotations.
 
 Open Scope R_scope.
-Open Scope interval_scope.
 
 Definition limit (f : ℝ -> ℝ) (a L : ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ δ, δ > 0 /\ ∀ x, 0 < |x - a| < δ -> |f x - L| < ε.
@@ -55,8 +54,7 @@ Definition limit_minf_to_minf (f : ℝ -> ℝ) : Prop :=
 Module LimitNotations.
 
   Declare Scope limit_scope.
-
-  Delimit Scope limit_scope with l. 
+  Delimit Scope limit_scope with lim.
 
   Notation "⟦ 'lim' a ⟧ f '=' L" := 
     (limit f a L) 
@@ -122,11 +120,11 @@ Module LimitNotations.
     (left_limit_to_minf f a)
       (at level 70, f at level 0, no associativity, format "⟦  'lim'  a ⁻  ⟧  f  '='  -∞") : limit_scope.
 
+  Open Scope limit_scope.
+      
 End LimitNotations.
 
 Import LimitNotations.
-
-Open Scope limit_scope.
 
 Lemma lemma_1_20 : forall x x0 y y0 ε,
   |x - x0| < ε / 2 -> |y - y0| < ε / 2 -> |(x + y) - (x0 + y0)| < ε /\ |(x - y) - (x0 - y0)| < ε.
@@ -854,7 +852,7 @@ Lemma limit_plus_const : forall f a L C,
 Proof.
   intros f a L C. split; intro H.
   - apply limit_plus; [exact H | apply limit_const].
-  - replace f with (((f + (fun _ => C))%f - (fun _ => C))%f) by (extensionality x; lra).
+  - replace f with (((f + (fun _ => C))%function - (fun _ => C))%function) by (extensionality x; lra).
     replace L with (L + C - C) by lra. apply limit_minus; [exact H | apply limit_const].
 Qed.
 
@@ -863,7 +861,7 @@ Lemma limit_minus_const : forall f a L C,
 Proof.
   intros f a L C. split; intro H.
   - apply limit_minus; [exact H | apply limit_const].
-  - replace f with (((f - (fun _ => C))%f + (fun _ => C))%f) by (extensionality x; lra).
+  - replace f with (((f - (fun _ => C))%function + (fun _ => C))%function) by (extensionality x; lra).
     replace L with (L - C + C) by lra. apply limit_plus; [exact H | apply limit_const].
 Qed.
 

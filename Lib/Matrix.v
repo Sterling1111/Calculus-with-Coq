@@ -1,5 +1,5 @@
 From Lib Require Import Imports Limit Notations Reals_util Functions Vector.
-Import LimitNotations Function_Notations Vector_Notations.
+Import LimitNotations FunctionNotations Vector_Notations.
 
 Local Notation length := List.length.
 

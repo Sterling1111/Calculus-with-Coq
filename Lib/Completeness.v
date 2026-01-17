@@ -39,7 +39,7 @@ Proof.
   destruct (completeness_upper_bound E' H4 H5) as [lub H6]. exists (-lub). split.
   - intros x H7. destruct H6 as [H6 _]. specialize (H6 (-x)). apply H3 in H7. specialize (H6 H7). lra.
   - intros lb H7. destruct H6 as [_ H6]. specialize (H6 (-lb)). replace (-lub >= lb) with (lub <= -lb).
-    2 : { apply EquivThenEqual. lra. } apply H6. intros x H8. specialize (H7 (-x)). specialize (H3 (-x)).
+    2 : { apply propositional_extensionality. lra. } apply H6. intros x H8. specialize (H7 (-x)). specialize (H3 (-x)).
     rewrite Ropp_involutive in H3. apply H3 in H8. specialize (H7 H8). lra.
 Qed.
 

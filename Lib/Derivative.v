@@ -1,5 +1,5 @@
 From Lib Require Import Imports Sets Notations Functions Limit Continuity Reals_util Sums Interval.
-Import SetNotations IntervalNotations Function_Notations LimitNotations.
+Import SetNotations SumNotations IntervalNotations FunctionNotations LimitNotations.
 
 Definition differentiable_at (f:R -> R) (a:R) :=
   exists L, ⟦ lim 0 ⟧ (fun h => (f (a + h) - f a) / h) = L.
@@ -154,8 +154,9 @@ Definition inf_differentiable (f : R -> R) : Prop :=
   forall n, exists fn', nth_derivative n f fn'.
 
 Module DerivativeNotations.
+
   Declare Scope derivative_scope.
-  Delimit Scope derivative_scope with d.
+  Delimit Scope derivative_scope with der.
 
   Notation "⟦ 'der' ⟧ f = f'" := (derivative f f')
     (at level 70, f at level 0, no associativity, format "⟦  'der'  ⟧  f  =  f'") : derivative_scope.
@@ -223,11 +224,11 @@ Module DerivativeNotations.
       f at level 0,
       no associativity, format "⟦  'Der' ^ n  a  ⟧  f") : derivative_scope.
 
+  Open Scope derivative_scope.
+      
 End DerivativeNotations.
 
 Import DerivativeNotations.
-
-Open Scope derivative_scope.
 
 Lemma differentiable_domain_open : forall a b,
   a < b -> differentiable_domain (a, b).
@@ -1183,11 +1184,11 @@ Theorem derivative_at_mult_const_l : forall f f' a c,
   ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ (c * f) = c * f'.
 Proof.
   intros f f' a c H1. set (h := fun _ : ℝ => c). set (h' := fun _ : ℝ => 0).
-  assert ((c * f)%f = h ⋅ f) as H3 by reflexivity. rewrite H3.
+  assert ((c * f)%function = h ⋅ f) as H3 by reflexivity. rewrite H3.
   assert (⟦ der a ⟧ h = h') as H4 by (apply derivative_at_const).
   assert (⟦ der a ⟧ (h ⋅ f) = h' ⋅ f + h ⋅ f') as H5.
   { apply derivative_at_mult; auto. }
-  replace (c * f')%f with (h' ⋅ f + h ⋅ f')%f. 2 : { extensionality x. unfold h, h'. lra. }
+  replace (c * f')%function with (h' ⋅ f + h ⋅ f')%function. 2 : { extensionality x. unfold h, h'. lra. }
   auto.
 Qed.
 
@@ -1195,11 +1196,11 @@ Lemma derivative_at_right_mult_const_l : forall f f' a c,
   ⟦ der a ⁺ ⟧ f = f' -> ⟦ der a ⁺ ⟧ (c * f) = c * f'.
 Proof.
   intros f f' a c H1. set (h := fun _ : ℝ => c). set (h' := fun _ : ℝ => 0).
-  assert ((c * f)%f = h ⋅ f) as H3 by reflexivity. rewrite H3.
+  assert ((c * f)%function = h ⋅ f) as H3 by reflexivity. rewrite H3.
   assert (⟦ der a ⁺ ⟧ h = h') as H4 by (apply derivative_at_right_const).
   assert (⟦ der a ⁺ ⟧ (h ⋅ f) = h' ⋅ f + h ⋅ f') as H5.
   { apply derivative_at_right_mult; auto. }
-  replace (c * f')%f with (h' ⋅ f + h ⋅ f')%f. 2 : { extensionality x. unfold h, h'. lra. }
+  replace (c * f')%function with (h' ⋅ f + h ⋅ f')%function. 2 : { extensionality x. unfold h, h'. lra. }
   auto.
 Qed.
 
@@ -1207,11 +1208,11 @@ Lemma derivative_at_left_mult_const_l : forall f f' a c,
   ⟦ der a ⁻ ⟧ f = f' -> ⟦ der a ⁻ ⟧ (c * f) = c * f'.
 Proof.
   intros f f' a c H1. set (h := fun _ : ℝ => c). set (h' := fun _ : ℝ => 0).
-  assert ((c * f)%f = h ⋅ f) as H3 by reflexivity. rewrite H3.
+  assert ((c * f)%function = h ⋅ f) as H3 by reflexivity. rewrite H3.
   assert (⟦ der a ⁻ ⟧ h = h') as H4 by (apply derivative_at_left_const).
   assert (⟦ der a ⁻ ⟧ (h ⋅ f) = h' ⋅ f + h ⋅ f') as H5.
   { apply derivative_at_left_mult; auto. }
-  replace (c * f')%f with (h' ⋅ f + h ⋅ f')%f. 2 : { extensionality x. unfold h, h'. lra. }
+  replace (c * f')%function with (h' ⋅ f + h ⋅ f')%function. 2 : { extensionality x. unfold h, h'. lra. }
   auto.
 Qed.
 
@@ -1258,8 +1259,8 @@ Lemma derivative_at_mult_const_r : forall f f' a c,
   ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ (fun x => f x * c) = (fun x => f' x * c).
 Proof.
   intros f f' a c H1.
-  replace (fun x => f x * c) with (c * f)%f by (extensionality x; lra).
-  replace (fun x => f' x * c) with (c * f')%f by (extensionality x; lra).
+  replace (fun x => f x * c) with (c * f)%function by (extensionality x; lra).
+  replace (fun x => f' x * c) with (c * f')%function by (extensionality x; lra).
   apply derivative_at_mult_const_l; auto.
 Qed.
 
@@ -1267,8 +1268,8 @@ Lemma derivative_at_right_mult_const_r : forall f f' a c,
   ⟦ der a ⁺ ⟧ f = f' -> ⟦ der a ⁺ ⟧ (fun x => f x * c) = (fun x => f' x * c).
 Proof.
   intros f f' a c H1.
-  replace (fun x => f x * c) with (c * f)%f by (extensionality x; lra).
-  replace (fun x => f' x * c) with (c * f')%f by (extensionality x; lra).
+  replace (fun x => f x * c) with (c * f)%function by (extensionality x; lra).
+  replace (fun x => f' x * c) with (c * f')%function by (extensionality x; lra).
   apply derivative_at_right_mult_const_l; auto.
 Qed.
 
@@ -1276,8 +1277,8 @@ Lemma derivative_at_left_mult_const_r : forall f f' a c,
   ⟦ der a ⁻ ⟧ f = f' -> ⟦ der a ⁻ ⟧ (fun x => f x * c) = (fun x => f' x * c).
 Proof.
   intros f f' a c H1.
-  replace (fun x => f x * c) with (c * f)%f by (extensionality x; lra).
-  replace (fun x => f' x * c) with (c * f')%f by (extensionality x; lra).
+  replace (fun x => f x * c) with (c * f)%function by (extensionality x; lra).
+  replace (fun x => f' x * c) with (c * f')%function by (extensionality x; lra).
   apply derivative_at_left_mult_const_l; auto.
 Qed.
 
@@ -1285,8 +1286,8 @@ Theorem derivative_mult_const_r : forall f f' c,
   ⟦ der ⟧ f = f' -> ⟦ der ⟧ (fun x => f x * c) = (fun x => f' x * c).
 Proof.
   intros f f' c H1.
-  replace (fun x => f x * c) with (c * f)%f by (extensionality x; lra).
-  replace (fun x => f' x * c) with (c * f')%f by (extensionality x; lra).
+  replace (fun x => f x * c) with (c * f)%function by (extensionality x; lra).
+  replace (fun x => f' x * c) with (c * f')%function by (extensionality x; lra).
   apply derivative_mult_const_l; auto.
 Qed.
 
@@ -1295,8 +1296,8 @@ Theorem derivative_on_mult_const_r : forall f f' D c,
   ⟦ der ⟧ f D = f' -> ⟦ der ⟧ (fun x => f x * c) D = (fun x => f' x * c).
 Proof.
   intros f f' D c H1 H2.
-  replace (fun x => f x * c) with (c * f)%f by (extensionality x; lra).
-  replace (fun x => f' x * c) with (c * f')%f by (extensionality x; lra).
+  replace (fun x => f x * c) with (c * f)%function by (extensionality x; lra).
+  replace (fun x => f' x * c) with (c * f')%function by (extensionality x; lra).
   apply derivative_on_mult_const_l; auto.
 Qed.
 
@@ -1305,8 +1306,8 @@ Lemma derivative_on_mult_const_r_open : forall f f' a b c,
   ⟦ der ⟧ f (a, b) = f' -> ⟦ der ⟧ (fun x => f x * c) (a, b) = (fun x => f' x * c).
 Proof.
   intros f f' a b c H1 H2.
-  replace (fun x => f x * c) with (c * f)%f by (extensionality x; lra).
-  replace (fun x => f' x * c) with (c * f')%f by (extensionality x; lra).
+  replace (fun x => f x * c) with (c * f)%function by (extensionality x; lra).
+  replace (fun x => f' x * c) with (c * f')%function by (extensionality x; lra).
   apply derivative_on_mult_const_l; auto.
   apply differentiable_domain_open; auto.
 Qed.
@@ -1316,8 +1317,8 @@ Lemma derivative_on_mult_const_r_closed : forall f f' a b c,
   ⟦ der ⟧ f [a, b] = f' -> ⟦ der ⟧ (fun x => f x * c) [a, b] = (fun x => f' x * c).
 Proof.
   intros f f' a b c H1 H2.
-  replace (fun x => f x * c) with (c * f)%f by (extensionality x; lra).
-  replace (fun x => f' x * c) with (c * f')%f by (extensionality x; lra).
+  replace (fun x => f x * c) with (c * f)%function by (extensionality x; lra).
+  replace (fun x => f' x * c) with (c * f')%function by (extensionality x; lra).
   apply derivative_on_mult_const_l; auto.
   apply differentiable_domain_closed; auto.
 Qed.
@@ -1325,24 +1326,24 @@ Qed.
 Lemma derivative_at_neg : forall f f' a,
   ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ (fun x => - (f x)) = (fun x => - (f' x)).
 Proof.
-  intros f f' a H1. replace (- f)%f with ((fun _ => 0) - (fun y => f y))%f by (extensionality y; nra).
-  replace (- f')%f with ((fun _ => 0) - (fun y => f' y))%f by (extensionality y; nra).
+  intros f f' a H1. replace (- f)%function with ((fun _ => 0) - (fun y => f y))%function by (extensionality y; nra).
+  replace (- f')%function with ((fun _ => 0) - (fun y => f' y))%function by (extensionality y; nra).
   apply derivative_at_minus; auto. apply derivative_at_const.
 Qed.
 
 Lemma derivative_at_right_neg : forall f f' a,
   ⟦ der a ⁺ ⟧ f = f' -> ⟦ der a ⁺ ⟧ (fun x => - (f x)) = (fun x => - (f' x)).
 Proof.
-  intros f f' a H1. replace (fun x => - (f x)) with ((fun _ => 0) - f)%f by (extensionality y; nra).
-  replace (fun x => - (f' x)) with ((fun _ => 0) - f')%f by (extensionality y; nra).
+  intros f f' a H1. replace (fun x => - (f x)) with ((fun _ => 0) - f)%function by (extensionality y; nra).
+  replace (fun x => - (f' x)) with ((fun _ => 0) - f')%function by (extensionality y; nra).
   apply derivative_at_right_minus; auto. apply derivative_at_right_const.
 Qed.
 
 Lemma derivative_at_left_neg : forall f f' a,
   ⟦ der a ⁻ ⟧ f = f' -> ⟦ der a ⁻ ⟧ (fun x => - (f x)) = (fun x => - (f' x)).
 Proof.
-  intros f f' a H1. replace (fun x => - (f x)) with ((fun _ => 0) - f)%f by (extensionality y; nra).
-  replace (fun x => - (f' x)) with ((fun _ => 0) - f')%f by (extensionality y; nra).
+  intros f f' a H1. replace (fun x => - (f x)) with ((fun _ => 0) - f)%function by (extensionality y; nra).
+  replace (fun x => - (f' x)) with ((fun _ => 0) - f')%function by (extensionality y; nra).
   apply derivative_at_left_minus; auto. apply derivative_at_left_const.
 Qed.
 
@@ -1357,8 +1358,8 @@ Theorem derivative_on_neg : forall f f' D,
   ⟦ der ⟧ f D = f' -> ⟦ der ⟧ (fun x => - (f x)) D = (fun x => - (f' x)).
 Proof.
   intros f f' D H1 H2.
-  replace (fun x => - (f x)) with ((fun _ => 0) - f)%f by (extensionality y; nra).
-  replace (fun x => - (f' x)) with ((fun _ => 0) - f')%f by (extensionality y; nra).
+  replace (fun x => - (f x)) with ((fun _ => 0) - f)%function by (extensionality y; nra).
+  replace (fun x => - (f' x)) with ((fun _ => 0) - f')%function by (extensionality y; nra).
   apply derivative_on_minus; auto. apply derivative_on_const; auto.
 Qed.
 
@@ -1572,7 +1573,7 @@ Lemma derivative_at_div : forall f f' g g' a,
   ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = g' -> g a <> 0 -> ⟦ der a ⟧ (fun x => f x / g x) = (fun x => (f' x * g x - g' x * f x) / (g x * g x)).
 Proof.
   intros f f' g g' a H1 H2 H3.
-  replace (f / g)%f with (f ⋅ (fun x => / g x))%f. 2 : { extensionality x. unfold Rdiv. reflexivity. }
+  replace (f / g)%function with (f ⋅ (fun x => / g x))%function. 2 : { extensionality x. unfold Rdiv. reflexivity. }
   replace (λ x : ℝ, (f' x * g x - g' x * f x) / (g x * g x)) with (fun x => f' x * /g x + (f x * ((-1 * g' x) * / (g x)^2))).
   2 : { extensionality x. assert (g x = 0 \/ g x <> 0) as [H4 | H4] by lra. rewrite H4. simpl. unfold Rdiv. repeat rewrite Rmult_0_l. rewrite Rinv_0. nra. field; lra. }
   apply derivative_at_mult; auto. apply derivative_at_inv; auto.
@@ -1582,7 +1583,7 @@ Lemma derivative_at_right_div : forall f f' g g' a,
   ⟦ der a ⁺ ⟧ f = f' -> ⟦ der a ⁺ ⟧ g = g' -> g a <> 0 -> ⟦ der a ⁺ ⟧ (fun x => f x / g x) = (fun x => (f' x * g x - g' x * f x) / (g x * g x)).
 Proof.
   intros f f' g g' a H1 H2 H3.
-  replace (f / g)%f with (f ⋅ (fun x => / g x))%f. 2 : { extensionality x. unfold Rdiv. reflexivity. }
+  replace (f / g)%function with (f ⋅ (fun x => / g x))%function. 2 : { extensionality x. unfold Rdiv. reflexivity. }
   replace (λ x : ℝ, (f' x * g x - g' x * f x) / (g x * g x)) with (fun x => f' x * /g x + (f x * ((-1 * g' x) * / (g x)^2))).
   2 : { extensionality x. assert (g x = 0 \/ g x <> 0) as [H4 | H4] by lra. rewrite H4. simpl. unfold Rdiv. repeat rewrite Rmult_0_l. rewrite Rinv_0. nra. field; lra. }
   apply derivative_at_right_mult; auto. apply derivative_at_right_inv; auto.
@@ -1592,7 +1593,7 @@ Lemma derivative_at_left_div : forall f f' g g' a,
   ⟦ der a ⁻ ⟧ f = f' -> ⟦ der a ⁻ ⟧ g = g' -> g a <> 0 -> ⟦ der a ⁻ ⟧ (fun x => f x / g x) = (fun x => (f' x * g x - g' x * f x) / (g x * g x)).
 Proof.
   intros f f' g g' a H1 H2 H3.
-  replace (f / g)%f with (f ⋅ (fun x => / g x))%f. 2 : { extensionality x. unfold Rdiv. reflexivity. }
+  replace (f / g)%function with (f ⋅ (fun x => / g x))%function. 2 : { extensionality x. unfold Rdiv. reflexivity. }
   replace (λ x : ℝ, (f' x * g x - g' x * f x) / (g x * g x)) with (fun x => f' x * /g x + (f x * ((-1 * g' x) * / (g x)^2))).
   2 : { extensionality x. assert (g x = 0 \/ g x <> 0) as [H4 | H4] by lra. rewrite H4. simpl. unfold Rdiv. repeat rewrite Rmult_0_l. rewrite Rinv_0. nra. field; lra. }
   apply derivative_at_left_mult; auto. apply derivative_at_left_inv; auto.
@@ -1643,7 +1644,7 @@ Proof.
 Qed.
 
 Lemma derivative_at_comp : forall f g f' g' a,
-  ⟦ der a ⟧ f = f' -> ⟦ der (f a) ⟧ g = g' -> ⟦ der a ⟧ (g ∘ f) = (g' ∘ f)%f ⋅ f'.
+  ⟦ der a ⟧ f = f' -> ⟦ der (f a) ⟧ g = g' -> ⟦ der a ⟧ (g ∘ f) = (g' ∘ f)%function ⋅ f'.
 Proof.
   intros f g f' g' a H1 H2.
   set ( φ := fun h : ℝ => match (Req_dec_T (f (a + h) - f a) 0) with 
@@ -1671,7 +1672,7 @@ Proof.
 Qed.
 
 Lemma derivative_at_right_comp : forall f g f' g' a,
-  ⟦ der a ⁺ ⟧ f = f' -> ⟦ der (f a) ⟧ g = g' -> ⟦ der a ⁺ ⟧ (g ∘ f) = (g' ∘ f)%f ⋅ f'.
+  ⟦ der a ⁺ ⟧ f = f' -> ⟦ der (f a) ⟧ g = g' -> ⟦ der a ⁺ ⟧ (g ∘ f) = (g' ∘ f)%function ⋅ f'.
 Proof.
   intros f g f' g' a H1 H2.
   set ( φ := fun h : ℝ => match (Req_dec_T (f (a + h) - f a) 0) with 
@@ -1699,7 +1700,7 @@ Proof.
 Qed.
 
 Lemma derivative_at_left_comp : forall f g f' g' a,
-  ⟦ der a ⁻ ⟧ f = f' -> ⟦ der (f a) ⟧ g = g' -> ⟦ der a ⁻ ⟧ (g ∘ f) = (g' ∘ f)%f ⋅ f'.
+  ⟦ der a ⁻ ⟧ f = f' -> ⟦ der (f a) ⟧ g = g' -> ⟦ der a ⁻ ⟧ (g ∘ f) = (g' ∘ f)%function ⋅ f'.
 Proof.
   intros f g f' g' a H1 H2.
   set ( φ := fun h : ℝ => match (Req_dec_T (f (a + h) - f a) 0) with 
@@ -1729,7 +1730,7 @@ Qed.
 Theorem derivative_comp : forall f g f' g',
   ⟦ der ⟧ f = f' -> 
   ⟦ der ⟧ g = g' -> 
-  ⟦ der ⟧ (g ∘ f) = (g' ∘ f)%f ⋅ f'.
+  ⟦ der ⟧ (g ∘ f) = (g' ∘ f)%function ⋅ f'.
 Proof.
   intros f g f' g' H1 H2 a.
   apply derivative_at_comp; auto.
@@ -1739,7 +1740,7 @@ Theorem derivative_on_comp : forall f g f' g' D,
   differentiable_domain D ->
   ⟦ der ⟧ f D = f' -> 
   (forall x, x ∈ D -> ⟦ der (f x) ⟧ g = g') ->
-  ⟦ der ⟧ (g ∘ f) D = (g' ∘ f)%f ⋅ f'.
+  ⟦ der ⟧ (g ∘ f) D = (g' ∘ f)%function ⋅ f'.
 Proof.
   intros f g f' g' D H1 H2 H3 a H4.
   specialize (H1 a H4); specialize (H2 a H4); specialize (H3 a H4).
@@ -1755,7 +1756,7 @@ Lemma derivative_on_comp_open : forall f g f' g' a b,
   a < b ->
   ⟦ der ⟧ f (a, b) = f' -> 
   (forall x, x ∈ (a, b) -> ⟦ der (f x) ⟧ g = g') ->
-  ⟦ der ⟧ (g ∘ f) (a, b) = (g' ∘ f)%f ⋅ f'.
+  ⟦ der ⟧ (g ∘ f) (a, b) = (g' ∘ f)%function ⋅ f'.
 Proof.
   intros f g f' g' a b H1 H2 H3.
   apply derivative_on_comp; auto.
@@ -1766,7 +1767,7 @@ Lemma derivative_on_comp_closed : forall f g f' g' a b,
   a < b ->
   ⟦ der ⟧ f [a, b] = f' -> 
   (forall x, x ∈ [a, b] -> ⟦ der (f x) ⟧ g = g') ->
-  ⟦ der ⟧ (g ∘ f) [a, b] = (g' ∘ f)%f ⋅ f'.
+  ⟦ der ⟧ (g ∘ f) [a, b] = (g' ∘ f)%function ⋅ f'.
 Proof.
   intros f g f' g' a b H1 H2 H3.
   apply derivative_on_comp; auto.
@@ -1847,7 +1848,7 @@ Theorem derivative_at_sqrt_comp : forall f f' a,
   ⟦ der a ⟧ (fun x => sqrt (f x)) = (fun x => f' x / (2 * sqrt (f x))).
 Proof.
   intros f f' a H1 H2.
-  replace (fun x => f' x / (2 * sqrt (f x))) with ((fun y => (1 / (2 * sqrt y))%R) ∘ f ⋅ f')%f.
+  replace (fun x => f' x / (2 * sqrt (f x))) with ((fun y => (1 / (2 * sqrt y))%R) ∘ f ⋅ f')%function.
   2 : { extensionality x. unfold compose. lra. }
   apply derivative_at_comp; auto.
   apply derivative_at_sqrt; auto.
@@ -1859,7 +1860,7 @@ Theorem derivative_at_right_sqrt_comp : forall f f' a,
   ⟦ der a ⁺ ⟧ (fun x => sqrt (f x)) = (fun x => f' x / (2 * sqrt (f x))).
 Proof.
   intros f f' a H1 H2.
-  replace (fun x => f' x / (2 * sqrt (f x))) with ((fun y => (1 / (2 * sqrt y))%R) ∘ f ⋅ f')%f.
+  replace (fun x => f' x / (2 * sqrt (f x))) with ((fun y => (1 / (2 * sqrt y))%R) ∘ f ⋅ f')%function.
   2 : { extensionality x. unfold compose. lra. }
   apply derivative_at_right_comp; auto.
   apply derivative_at_sqrt; auto.
@@ -1871,7 +1872,7 @@ Theorem derivative_at_left_sqrt_comp : forall f f' a,
   ⟦ der a ⁻ ⟧ (fun x => sqrt (f x)) = (fun x => f' x / (2 * sqrt (f x))).
 Proof.
   intros f f' a H1 H2.
-  replace (fun x => f' x / (2 * sqrt (f x))) with ((fun y => (1 / (2 * sqrt y))%R) ∘ f ⋅ f')%f.
+  replace (fun x => f' x / (2 * sqrt (f x))) with ((fun y => (1 / (2 * sqrt y))%R) ∘ f ⋅ f')%function.
   2 : { extensionality x. unfold compose. lra. }
   apply derivative_at_left_comp; auto.
   apply derivative_at_sqrt; auto.
@@ -1893,7 +1894,7 @@ Theorem derivative_on_sqrt_comp : forall f f' D,
   ⟦ der ⟧ (fun x => sqrt (f x)) D = (fun x => f' x / (2 * sqrt (f x))).
 Proof.
   intros f f' D H1 H2 H3.
-  replace (fun x => f' x / (2 * sqrt (f x))) with ((fun y => (1 / (2 * sqrt y))%R) ∘ f ⋅ f')%f.
+  replace (fun x => f' x / (2 * sqrt (f x))) with ((fun y => (1 / (2 * sqrt y))%R) ∘ f ⋅ f')%function.
   2 : { extensionality x. unfold compose. lra. }
   apply derivative_on_comp; auto.
   intros x H4. apply derivative_at_sqrt. apply H2; auto.
@@ -2224,7 +2225,7 @@ Proof.
       apply derivative_at_minus; tauto.
   }
   assert (⟦ der ⟧ h [a, b] = (λ _, 0)) as H7.
-  { apply derivative_on_ext with (f1' := (f' - g')%f); auto; try lra. intros x H7. specialize (H4 x H7). lra. }
+  { apply derivative_on_ext with (f1' := (f' - g')%function); auto; try lra. intros x H7. specialize (H4 x H7). lra. }
   apply derivative_zero_imp_const with (a := a) (b := b) in H7 as [c H8]; auto.
   exists c. intros x H9. unfold h. specialize (H8 x H9). unfold h in H8. lra.
 Qed.
@@ -3008,7 +3009,7 @@ Proof.
   induction n as [| k IH]; intros f g fn' gn' H1 H2.
   - simpl in *. subst. reflexivity.
   - simpl in *. destruct H1 as [f' [H1 H3]], H2 as [g' [H2 H4]].
-    exists (f' + g')%f. split.
+    exists (f' + g')%function. split.
     + apply IH; auto.
     + apply derivative_plus; auto.
 Qed.
@@ -3022,7 +3023,7 @@ Proof.
   - simpl in *. intros x H4. specialize (H2 x H4). specialize (H3 x H4).
     rewrite H2, H3. reflexivity.
   - simpl in *. destruct H2 as [f' [H2 H4]], H3 as [g' [H3 H5]].
-    exists (f' + g')%f. split.
+    exists (f' + g')%function. split.
     + apply IH; auto.
     + apply derivative_on_plus; auto.
 Qed.
@@ -3035,7 +3036,7 @@ Proof.
   - simpl in *. subst. lra.
   - simpl in *. destruct H1 as [d1 [fk [H1 [H3 H4]]]].
     destruct H2 as [d2 [gk [H2 [H5 H6]]]].
-    exists (Rmin d1 d2), (fk + gk)%f. split; [solve_R |].
+    exists (Rmin d1 d2), (fk + gk)%function. split; [solve_R |].
     split.
     + apply nth_derivative_on_plus with (D := (a - Rmin d1 d2, a + Rmin d1 d2)).
       * apply differentiable_domain_open; solve_R.
@@ -3053,7 +3054,7 @@ Proof.
   induction n as [| k IH]; intros f g fn' gn' H1 H2.
   - simpl in *. subst. reflexivity.
   - simpl in *. destruct H1 as [f' [H1 H3]], H2 as [g' [H2 H4]].
-    exists (f' - g')%f. split.
+    exists (f' - g')%function. split.
     + apply IH; auto.
     + apply derivative_minus; auto.
 Qed.
@@ -3067,7 +3068,7 @@ Proof.
   - simpl in *. intros x H4. specialize (H2 x H4). specialize (H3 x H4).
     rewrite H2, H3. reflexivity.
   - simpl in *. destruct H2 as [f' [H2 H4]], H3 as [g' [H3 H5]].
-    exists (f' - g')%f. split.
+    exists (f' - g')%function. split.
     + apply IH; auto.
     + apply derivative_on_minus; auto.
 Qed.
@@ -3080,7 +3081,7 @@ Proof.
   - simpl in *. subst. lra.
   - simpl in *. destruct H1 as [d1 [fk [H1 [H3 H4]]]].
     destruct H2 as [d2 [gk [H2 [H5 H6]]]].
-    exists (Rmin d1 d2), (fk - gk)%f. split; [solve_R |].
+    exists (Rmin d1 d2), (fk - gk)%function. split; [solve_R |].
     split.
     + apply nth_derivative_on_minus with (D := (a - Rmin d1 d2, a + Rmin d1 d2)).
       * apply differentiable_domain_open; solve_R.
@@ -3098,7 +3099,7 @@ Proof.
   induction n as [| k IH]; intros f fn' H1.
   - simpl in *. subst. reflexivity.
   - simpl in *. destruct H1 as [f' [H1 H2]].
-    exists (- f')%f. split.
+    exists (- f')%function. split.
     + apply IH; auto.
     + apply derivative_neg; auto.
 Qed.
@@ -3111,7 +3112,7 @@ Proof.
   induction n as [| k IH]; intros f fn' D H1 H2.
   - simpl in *. intros x H3. specialize (H2 x H3). rewrite H2. reflexivity.
   - simpl in *. destruct H2 as [f' [H2 H3]].
-    exists (- f')%f. split.
+    exists (- f')%function. split.
     + apply IH; auto.
     + apply derivative_on_neg; auto.
 Qed.
@@ -3123,7 +3124,7 @@ Proof.
   induction n as [| k IH]; intros f fn' a H1.
   - simpl in *. subst. lra.
   - simpl in *. destruct H1 as [d [fk [H1 [H2 H3]]]].
-    exists d, (- fk)%f. split; [solve_R |].
+    exists d, (- fk)%function. split; [solve_R |].
     split.
     + apply nth_derivative_on_neg; auto.
       apply differentiable_domain_open; solve_R.
@@ -3137,7 +3138,7 @@ Proof.
   induction n as [| k IH]; intros c f fn' H1.
   - simpl in *. subst. reflexivity.
   - simpl in *. destruct H1 as [f' [H1 H2]].
-    exists (c * f')%f. split.
+    exists (c * f')%function. split.
     + apply IH; auto.
     + apply derivative_mult_const_l; auto.
 Qed.
@@ -3150,7 +3151,7 @@ Proof.
   induction n as [| k IH]; intros c f fn' D H1 H2.
   - simpl in *. intros x H3. specialize (H2 x H3). rewrite H2. reflexivity.
   - simpl in *. destruct H2 as [f' [H2 H3]].
-    exists (c * f')%f. split.
+    exists (c * f')%function. split.
     + apply IH; auto.
     + apply derivative_on_mult_const_l; auto.
 Qed.
@@ -3162,7 +3163,7 @@ Proof.
   induction n as [| k IH]; intros c f fn' a H1.
   - simpl in *. subst. nra.
   - simpl in *. destruct H1 as [δ [fk [H1 [H2 H3]]]].
-    exists δ, (c * fk)%f. split; [solve_R |].
+    exists δ, (c * fk)%function. split; [solve_R |].
     split.
     + apply nth_derivative_on_mult_const_l; auto.
       apply differentiable_domain_open; solve_R.
@@ -3442,7 +3443,7 @@ Qed.
 
 Lemma derive_plus : forall f g,
   differentiable f -> differentiable g ->
-  ⟦ Der ⟧ (f + g) = (⟦ Der ⟧ f + ⟦ Der ⟧ g)%f.
+  ⟦ Der ⟧ (f + g) = (⟦ Der ⟧ f + ⟦ Der ⟧ g)%function.
 Proof.
   intros f g H1 H2.
   apply differentiable_imp_derivative in H1 as [f' H1].
@@ -3487,7 +3488,7 @@ Qed.
 
 Lemma derive_minus : forall f g,
   differentiable f -> differentiable g ->
-  ⟦ Der ⟧ (f - g) = (⟦ Der ⟧ f - ⟦ Der ⟧ g)%f.
+  ⟦ Der ⟧ (f - g) = (⟦ Der ⟧ f - ⟦ Der ⟧ g)%function.
 Proof.
   intros f g H1 H2.
   apply differentiable_imp_derivative in H1 as [f' H1].
@@ -3527,7 +3528,7 @@ Qed.
 
 Lemma derive_mult_const_l : forall c f,
   differentiable f ->
-  ⟦ Der ⟧ (c * f) = (c * ⟦ Der ⟧ f)%f.
+  ⟦ Der ⟧ (c * f) = (c * ⟦ Der ⟧ f)%function.
 Proof.
   intros c f H1.
   apply differentiable_imp_derivative in H1 as [f' H1].
@@ -3563,7 +3564,7 @@ Qed.
 
 Lemma derive_neg : forall f,
   differentiable f ->
-  ⟦ Der ⟧ (-f) = (- ⟦ Der ⟧ f)%f.
+  ⟦ Der ⟧ (-f) = (- ⟦ Der ⟧ f)%function.
 Proof.
   intros f H1.
   apply differentiable_imp_derivative in H1 as [f' H1].
@@ -3631,7 +3632,7 @@ Proof.
   apply differentiable_at_imp_derivative_at in H2 as [g' H2].
   rewrite (derivative_at_imp_derive_at f f' a); auto.
   rewrite (derivative_at_imp_derive_at g g' a); auto.
-  rewrite (derivative_at_imp_derive_at (f ⋅ g) (f' ⋅ g + f ⋅ g')%f a).
+  rewrite (derivative_at_imp_derive_at (f ⋅ g) (f' ⋅ g + f ⋅ g')%function a).
   - reflexivity.
   - apply derivative_at_mult; auto.
 Qed.
@@ -3639,14 +3640,14 @@ Qed.
 Lemma derive_mult : forall f g,
   differentiable f ->
   differentiable g ->
-  ⟦ Der ⟧ (f ⋅ g) = (⟦ Der ⟧ f ⋅ g + f ⋅ ⟦ Der ⟧ g)%f.
+  ⟦ Der ⟧ (f ⋅ g) = (⟦ Der ⟧ f ⋅ g + f ⋅ ⟦ Der ⟧ g)%function.
 Proof.
   intros f g H1 H2.
   apply differentiable_imp_derivative in H1 as [f' H1].
   apply differentiable_imp_derivative in H2 as [g' H2].
   rewrite (derivative_imp_derive f f'); auto.
   rewrite (derivative_imp_derive g g'); auto.
-  rewrite (derivative_imp_derive (f ⋅ g) (f' ⋅ g + f ⋅ g')%f); auto.
+  rewrite (derivative_imp_derive (f ⋅ g) (f' ⋅ g + f ⋅ g')%function); auto.
   apply derivative_mult; auto.
 Qed.
 
@@ -3662,7 +3663,7 @@ Proof.
   apply differentiable_on_imp_derivative_on in H4 as [g' H4].
   rewrite (derivative_on_imp_derive_on f f' D x H2); auto.
   rewrite (derivative_on_imp_derive_on g g' D x H2); auto.
-  rewrite (derivative_on_imp_derive_on (f ⋅ g) (f' ⋅ g + f ⋅ g')%f D x H2); auto.
+  rewrite (derivative_on_imp_derive_on (f ⋅ g) (f' ⋅ g + f ⋅ g')%function D x H2); auto.
   apply derivative_on_mult; auto.
 Qed.
 
@@ -3760,7 +3761,7 @@ Proof.
   apply differentiable_at_imp_derivative_at in H2 as [g' H2].
   rewrite (derivative_at_imp_derive_at f f' a); auto.
   rewrite (derivative_at_imp_derive_at g g' (f a)); auto.
-  rewrite (derivative_at_imp_derive_at (g ∘ f) ((g' ∘ f) ⋅ f')%f a).
+  rewrite (derivative_at_imp_derive_at (g ∘ f) ((g' ∘ f) ⋅ f')%function a).
   - reflexivity.
   - apply derivative_at_comp; auto.
 Qed.
@@ -3768,7 +3769,7 @@ Qed.
 Lemma derive_comp : forall f g,
   differentiable f ->
   differentiable g ->
-  ⟦ Der ⟧ (g ∘ f) = ((⟦ Der ⟧ g ∘ f) ⋅ ⟦ Der ⟧ f)%f.
+  ⟦ Der ⟧ (g ∘ f) = ((⟦ Der ⟧ g ∘ f) ⋅ ⟦ Der ⟧ f)%function.
 Proof.
   intros f g H1 H2.
   extensionality x.
@@ -4664,7 +4665,7 @@ Qed.
 Lemma nth_derive_minus : forall n f g,
   nth_differentiable n f ->
   nth_differentiable n g ->
-  ⟦ Der ^ n ⟧ (f - g) = (⟦ Der ^ n ⟧ f - ⟦ Der ^ n ⟧ g)%f.
+  ⟦ Der ^ n ⟧ (f - g) = (⟦ Der ^ n ⟧ f - ⟦ Der ^ n ⟧ g)%function.
 Proof.
   intros n f g H1 H2.
   apply nth_derivative_imp_nth_derive.
@@ -4681,7 +4682,7 @@ Proof.
   destruct H2 as [gn H2].
   rewrite (nth_derivative_at_imp_nth_derive_at n a f fn); auto.
   rewrite (nth_derivative_at_imp_nth_derive_at n a g gn); auto.
-  rewrite (nth_derivative_at_imp_nth_derive_at n a (f - g) (fn - gn)%f); auto.
+  rewrite (nth_derivative_at_imp_nth_derive_at n a (f - g) (fn - gn)%function); auto.
   apply nth_derivative_at_minus; auto.
 Qed.
 
@@ -5201,7 +5202,7 @@ Proof.
     + intros y H16. auto_interval.
     + apply nth_differentiable_on_le with (m := n); try lia; auto.
     + solve_R.
-  - apply limit_eq with (f1 := (⟦ Der^n ⟧ f / ⟦ Der^n ⟧ g)%f); auto.
+  - apply limit_eq with (f1 := (⟦ Der^n ⟧ f / ⟦ Der^n ⟧ g)%function); auto.
     exists δ. split; [unfold δ; solve_R |].
     intros x H11.
     assert (H12 : x ∈ (a - δ, a + δ)) by solve_R.

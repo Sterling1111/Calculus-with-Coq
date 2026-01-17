@@ -1,7 +1,5 @@
 From Lib Require Import Imports Limit Sums Reals_util Sets Notations Functions Completeness Interval.
-Import SetNotations IntervalNotations Function_Notations LimitNotations.
-
-Open Scope interval_scope.
+Import SetNotations IntervalNotations FunctionNotations LimitNotations.
 
 Definition continuous_at (f : ℝ -> ℝ) (a : ℝ) : Prop :=
   ⟦ lim a ⟧ f = f a.

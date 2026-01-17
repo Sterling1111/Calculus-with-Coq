@@ -1,11 +1,20 @@
 From Lib Require Import Imports Reals_util.
-From Stdlib Require Import List.
-Import ListNotations.
 Open Scope R_scope.
 
-Notation "'∑' i n f" := (sum_f i n f)
-  (at level 45, i at level 0, n at level 0,
-   format "'∑'  i  n  f").
+Module SumNotations.
+
+  Declare Scope sum_scope.
+  Delimit Scope sum_scope with sm.
+
+  Notation "'∑' i n f" := (sum_f i n f)
+    (at level 45, i at level 0, n at level 0,
+     format "'∑'  i  n  f") : sum_scope.
+
+  Open Scope sum_scope.
+
+End SumNotations.
+
+Import SumNotations.
 
 Lemma sum_f_R0_f_Sn : forall f n,
   sum_f_R0 f (S n) = sum_f_R0 f n + f (S n).

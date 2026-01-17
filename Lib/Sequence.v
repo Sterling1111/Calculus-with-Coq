@@ -43,18 +43,18 @@ Definition arithmetic_sequence (a : sequence) (c d : R) : Prop :=
 Definition geometric_sequence (a : sequence) (c r : R) : Prop :=
   a = (fun n => c * (r ^ n)).
 
-Definition lim (a : sequence) (L : R) : Prop :=
+Definition lim_s (a : sequence) (L : R) : Prop :=
   forall ε : R, ε > 0 ->
     exists N : R, forall n : nat, INR n > N -> |a n - L| < ε.
 
 Definition lim_s_pinf (a : sequence) : Prop :=
   forall M : R, exists N : R, forall n : nat, INR n > N -> a n > M.
 
-Definition lim_s_minf (a : sequence) : Prop :=
+Definition lim_s_ninf (a : sequence) : Prop :=
   forall M : R, exists N : R, forall n : nat, INR n > N -> a n < M.
 
 Definition convergent_sequence (a : sequence) : Prop :=
-  exists (L : R), lim a L.
+  exists (L : R), lim_s a L.
 
 Definition not_limit_of_sequence (a : sequence) (L : R) : Prop :=
   exists ε : R, ε > 0 /\
@@ -84,23 +84,25 @@ Definition a_eventually_bounded_below_by_b (a b : sequence) : Prop :=
 Module SequenceNotations.
 
   Declare Scope sequence_scope.
-  Delimit Scope sequence_scope with s.
+  Delimit Scope sequence_scope with seq.
 
-  (* The input variable for sequences is always n -> ∞, so we just use ⟦ lim ⟧ *)
   Notation "⟦ 'lim' ⟧ a '=' L" := 
-    (lim a L)
+    (lim_s a L)
       (at level 70, a at level 0, no associativity, format "⟦  'lim'  ⟧  a  '='  L") : sequence_scope.
 
-  (* If you add definitions for divergence to ±∞ later, you can add these: *)
-  (* Notation "⟦ 'lim' ⟧ a '=' ∞" := 
-    (lim_pinf a) ... : sequence_scope.
-  *)
+  Notation "⟦ 'lim' ⟧ a '=' ∞" := 
+    (lim_s_pinf a)
+      (at level 70, a at level 0, no associativity, format "⟦  'lim'  ⟧  a  '='  ∞") : sequence_scope.
 
+  Notation "⟦ 'lim' ⟧ a '=' -∞" := 
+    (lim_s_ninf a)
+      (at level 70, a at level 0, no associativity, format "⟦  'lim'  ⟧  a  '='  -∞") : sequence_scope.
+
+  Open Scope sequence_scope.
+      
 End SequenceNotations.
 
-Import SequenceNotations.  
-
-Open Scope sequence_scope.
+Import SequenceNotations.
 
 Lemma divergent_sequence_iff : forall a, divergent_sequence a <-> ~ convergent_sequence a.
 Proof.
@@ -753,7 +755,7 @@ Lemma oscillating_on_parity_sequence_divergent : forall a c,
   c <> 0 -> (forall n, Nat.Odd n -> a n = c) -> (forall n, Nat.Even n -> a n = -c) -> divergent_sequence a.
 Proof.
   intros a c H1 H2 H3. apply divergent_sequence_iff. intros [L H4].
-  unfold lim in H4. assert ((L <> c /\ L <> -c) \/ L = c \/ L = -c) as [H5 | [H5 | H5]] by lra.
+  unfold lim_s in H4. assert ((L <> c /\ L <> -c) \/ L = c \/ L = -c) as [H5 | [H5 | H5]] by lra.
   - specialize (H4 (Rabs (L - c) / 2) ltac:(solve_abs)) as [N H4].
     pose proof INR_unbounded N as [n H6]. pose proof Nat.Even_or_Odd n as [[k H7] | H7].
     -- specialize (H4 (n + 1)%nat ltac:(solve_INR)). specialize (H2 (n + 1)%nat ltac:(exists k; lia)). solve_abs.
@@ -796,7 +798,7 @@ Lemma two_seq_converge_to_same_limit:
 Proof.
   intros a b La Lb Ha Hb Hdiff.
 
-  unfold lim in Ha, Hb, Hdiff.
+  unfold lim_s in Ha, Hb, Hdiff.
 
   set (eps := Rabs (La - Lb)).
   pose proof (Rtotal_order La Lb) as [Hlt|[Heq|Hgt]].

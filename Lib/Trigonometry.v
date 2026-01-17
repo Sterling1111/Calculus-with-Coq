@@ -1,5 +1,5 @@
 From Lib Require Import Imports Notations Integral Derivative Functions Continuity Limit Sets Reals_util Inverse Interval Polynomial.
-Import IntervalNotations SetNotations Function_Notations DerivativeNotations LimitNotations.
+Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations.
 
 Open Scope R_scope.
 
@@ -74,7 +74,7 @@ Proof.
     { apply derivative_at_sqrt_comp; auto. unfold h. solve_R. }
     assert ( ⟦ der x ⟧ (f ⋅ g) = f' ⋅ g + f ⋅ g') as H5.
     { apply derivative_at_mult; auto. }
-    replace (λ x0 : ℝ, (1 - 2 * x0 ^ 2) / √(1 - x0 ^ 2)) with (f' ⋅ g + f ⋅ g')%f; auto.
+    replace (λ x0 : ℝ, (1 - 2 * x0 ^ 2) / √(1 - x0 ^ 2)) with (f' ⋅ g + f ⋅ g')%function; auto.
     extensionality y. assert (1 - y^2 <= 0 \/ 1 - y^2 > 0) as [H6 | H6] by lra.
     -- unfold f, g, f', g', h, h'. pose proof sqrt_neg_0 (1 - y^2) ltac:(lra) as H7.
        rewrite H7, Rmult_0_r, Rdiv_0_r, Rmult_0_r, Rdiv_0_r. lra.
@@ -271,7 +271,7 @@ Proof.
   rewrite H12 in H8.
   pose proof (theorem_12_5 B cos_0_π (λ x0, -1 / √(1 - x0 ^ 2))
     (-1) 1 x H5 H6 H7 H8 H9 H10 H11) as H13.
-  replace (- sin_0_π)%f with ( λ x : ℝ, / (λ x0 : ℝ, -1 / √(1 - x0 ^ 2)) (cos_0_π x)); auto.
+  replace (- sin_0_π)%function with ( λ x : ℝ, / (λ x0 : ℝ, -1 / √(1 - x0 ^ 2)) (cos_0_π x)); auto.
   extensionality y. unfold sin_0_π. apply Rmult_eq_reg_r with (r := -1); try lra.
   assert (√(1 - cos_0_π y ^ 2) = 0 \/ √(1 - cos_0_π y ^ 2) <> 0) as [H14 | H14]; try lra.
   - rewrite H14, Rdiv_0_r, Rinv_0. lra.
@@ -539,13 +539,13 @@ Proof.
     exists f', derivative f f' /\ (f' = cos \/ f' = sin \/ f' = (fun x => -cos x) \/ f' = (fun x => -sin x))).
   {
     intros f [H | [H | [H | H]]]; subst.
-    - exists (- sin)%f. split; [apply derivative_cos | right; right; right; reflexivity].
+    - exists (- sin)%function. split; [apply derivative_cos | right; right; right; reflexivity].
     - exists cos. split; [apply derivative_sin | left; reflexivity].
     - exists sin. split. 
       + replace sin with (fun x => - (- sin x)) by (extensionality x; lra). 
         apply derivative_neg. apply derivative_cos.
       + right; left; reflexivity.
-    - exists (- cos)%f. split; [apply derivative_neg; apply derivative_sin | right; right; left; reflexivity].
+    - exists (- cos)%function. split; [apply derivative_neg; apply derivative_sin | right; right; left; reflexivity].
   }
   assert (H_inv : forall n, exists fn, nth_derivative n cos fn /\ (fn = cos \/ fn = sin \/ fn = (fun x => -cos x) \/ fn = (fun x => -sin x))).
   {
@@ -566,7 +566,7 @@ Qed.
 
 Lemma nth_derivative_cos_1 : ⟦ der^1 ⟧ cos = - sin.
 Proof.
-  apply nth_derivative_succ_iff. exists (- sin)%f. split.
+  apply nth_derivative_succ_iff. exists (- sin)%function. split.
   - apply derivative_cos.
   - reflexivity.
 Qed.
@@ -598,7 +598,7 @@ Qed.
 Lemma nth_derivative_cos_4 : ⟦ der^4 ⟧ cos = cos.
 Proof.
   apply nth_derivative_succ_iff.
-  exists (-sin)%f. split.
+  exists (-sin)%function. split.
   - apply derivative_cos.
   - simpl. exists sin. split.
     + exists (fun x => - cos x). split.
@@ -612,7 +612,7 @@ Qed.
 Lemma nth_derivative_cos_5 : ⟦ der^5 ⟧ cos = - sin.
 Proof.
   apply nth_derivative_succ_iff.
-  exists (-sin)%f. split.
+  exists (-sin)%function. split.
   - apply derivative_cos.
   - simpl. exists cos. split.
     + exists sin. split.
@@ -628,7 +628,7 @@ Qed.
 Lemma nth_derivative_cos_6 : ⟦ der^6 ⟧ cos = - cos.
 Proof.
   apply nth_derivative_succ_iff.
-  exists (-sin)%f. split.
+  exists (-sin)%function. split.
   - apply derivative_cos.
   - simpl. exists (fun x => - sin x). split.
     + exists cos. split.
@@ -646,14 +646,14 @@ Qed.
 Lemma nth_derivative_cos_7 : ⟦ der^7 ⟧ cos = sin.
 Proof.
   apply nth_derivative_succ_iff.
-  exists (-sin)%f. split.
+  exists (-sin)%function. split.
   - apply derivative_cos.
-  - simpl. exists (-cos)%f. split.
-    + exists (-sin)%f. split.
+  - simpl. exists (-cos)%function. split.
+    + exists (-sin)%function. split.
       * exists cos. split.
         { exists sin. split.
-          - exists (-cos)%f. split.
-            + exists (-sin)%f. split.
+          - exists (-cos)%function. split.
+            + exists (-sin)%function. split.
               * reflexivity.
               * apply derivative_neg. apply derivative_sin.
             + replace sin with (fun x => - (- sin x)) by (extensionality x; lra).
@@ -672,13 +672,13 @@ Proof.
 Qed.
 
 Lemma nth_derive_cos_1 : 
-  ⟦ Der^1 ⟧ cos = (-sin)%f.
+  ⟦ Der^1 ⟧ cos = (-sin)%function.
 Proof.
   apply nth_derivative_imp_nth_derive. apply nth_derivative_cos_1.
 Qed.
 
 Lemma nth_derive_cos_2 : 
-  ⟦ Der^2 ⟧ cos = (-cos)%f.
+  ⟦ Der^2 ⟧ cos = (-cos)%function.
 Proof.
   apply nth_derivative_imp_nth_derive. apply nth_derivative_cos_2.
 Qed.
@@ -696,13 +696,13 @@ Proof.
 Qed.
 
 Lemma nth_derive_cos_5 : 
-  ⟦ Der^5 ⟧ cos = (-sin)%f.
+  ⟦ Der^5 ⟧ cos = (-sin)%function.
 Proof.
   apply nth_derivative_imp_nth_derive. apply nth_derivative_cos_5.
 Qed.
 
 Lemma nth_derive_cos_6 : 
-  ⟦ Der^6 ⟧ cos = (-cos)%f.
+  ⟦ Der^6 ⟧ cos = (-cos)%function.
 Proof.
   apply nth_derivative_imp_nth_derive. apply nth_derivative_cos_6.
 Qed.

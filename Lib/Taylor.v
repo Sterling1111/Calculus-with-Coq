@@ -1,6 +1,6 @@
 From Lib Require Import Imports Notations Reals_util Functions Sums Sets Exponential
                         Limit Continuity Derivative Trigonometry Interval Binomial Polynomial.
-Import Function_Notations LimitNotations DerivativeNotations SetNotations IntervalNotations.
+Import FunctionNotations SumNotations LimitNotations DerivativeNotations SetNotations IntervalNotations.
 
 Open Scope R_scope.
 
@@ -156,7 +156,7 @@ Proof.
         - intros k H6.
           apply nth_differentiable_on_mult_const_l. apply nth_differentiable_on_pow_shift. apply differentiable_domain_open; lra.
       }
-      exists (fn - Qn)%f.
+      exists (fn - Qn)%function.
       apply nth_derivative_on_minus; auto.
       apply differentiable_domain_open; lra.
     + exists δ. split; auto. apply nth_derivative_on_imp_nth_differentiable_on with (fn := fun x => (n! / (n - (n-1))!) * (x - a)^(n - (n-1))).

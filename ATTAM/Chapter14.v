@@ -1,4 +1,5 @@
 From Lib Require Import Imports Fibonacci Sums Reals_util.
+Import SumNotations.
 Require Export ATTAM.Chapter13.
 
 Open Scope nat_scope.

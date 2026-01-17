@@ -1,8 +1,12 @@
 From Lib Require Import Imports Sums Sequence Reals_util Notations.
+Import SequenceNotations SumNotations.
 
 Open Scope R_scope.
 
 Definition partial_sum (a : sequence) (n : nat) := ∑ 0 n a.
+
+Definition series_sum (a : sequence) (L : R) : Prop :=
+  ⟦ lim ⟧ (partial_sum a) = L.
 
 Definition series_converges (a : sequence) : Prop :=
   convergent_sequence (partial_sum a).
@@ -10,12 +14,37 @@ Definition series_converges (a : sequence) : Prop :=
 Definition series_diverges (a : sequence) : Prop :=
   divergent_sequence (partial_sum a).
 
-Definition series_sum (a : sequence) (L : R) : Prop :=
-  ⟦ lim_s ⟧ (partial_sum a) = L.
+Definition series_diverges_pinf (a : sequence) : Prop :=
+  lim_s_pinf (partial_sum a).
 
-Notation "'∑' 0 '∞' a '=' S" := (series_sum a S)
- (at level 45, a at level 0, S at level 0,
-  format "'∑'  0  '∞'  a  '='  S").
+Definition series_diverges_ninf (a : sequence) : Prop :=
+  lim_s_ninf (partial_sum a).
+
+Module SeriesNotations.
+
+  Declare Scope series_scope.
+  Delimit Scope series_scope with series.
+
+  Notation "'∑' 0 '∞' a '=' S" := 
+    (series_sum a S)
+      (at level 45, a at level 0, S at level 0, 
+       format "'∑'  0  '∞'  a  '='  S") : series_scope.
+
+  Notation "'∑' 0 '∞' a '=' '∞'" := 
+    (series_diverges_pinf a)
+      (at level 45, a at level 0, 
+       format "'∑'  0  '∞'  a  '='  '∞'") : series_scope.
+
+  Notation "'∑' 0 '∞' a '=' '-∞'" := 
+    (series_diverges_ninf a)
+      (at level 45, a at level 0, 
+       format "'∑'  0  '∞'  a  '='  '-∞'") : series_scope.
+
+  Open Scope series_scope.
+       
+End SeriesNotations.
+
+Import SeriesNotations.
 
 Section section_35_2.
   Let a : sequence := (fun n => 1).
@@ -99,7 +128,7 @@ Qed.
         = ε
 *)
 Theorem theorem_35_6 : forall a : sequence,
-  series_converges a -> ⟦ lim_s ⟧ a = 0.
+  series_converges a -> ⟦ lim ⟧ a = 0.
 Proof.
   intros a [L H1] ε H2. specialize (H1 (ε / 2) ltac:(nra)) as [M H4].
   exists (Rmax 1 (M + 1)). intros n H5. apply Rmax_Rgt in H5 as [H5 H6].
@@ -115,7 +144,7 @@ Proof.
 Qed.
 
 Theorem theorem_35_7 : forall a : sequence,
-  ~ ⟦ lim_s ⟧ a = 0 -> series_diverges a.
+  ~ ⟦ lim ⟧ a = 0 -> series_diverges a.
 Proof.
   intros a H1. pose proof theorem_35_6 a as H2. apply contra_2 in H2; auto.
   unfold series_diverges. apply divergent_sequence_iff. intros H3. apply H2.

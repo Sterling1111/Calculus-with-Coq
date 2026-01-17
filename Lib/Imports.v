@@ -1,18 +1,9 @@
 Set Warnings "-all".
 
-(* Standard Library imports *)
 From Coq Require Export 
-  (* Real number theory *)
+  (* Real numbers *)
   Reals 
   Lra 
-  Reals.ROrderedType
-  Reals.Rdefinitions
-  Reals.Raxioms
-  Reals.Rfunctions
-  Reals.SeqSeries
-  Reals.Rtrigo
-  Reals.Ranalysis
-  Reals.RIneq
   
   (* Arithmetic *)
   ZArith
@@ -51,12 +42,8 @@ From Coq Require Export
   Lists.List.
   
 
-(* Common notations *)
 Export ListNotations.
 Import EqNotations.
 
-(* Open common scopes *)
 Open Scope R_scope.
 Open Scope nat_scope.
-
-Axiom EquivThenEqual: prop_extensionality.

@@ -1,10 +1,11 @@
 From Lib Require Import Imports Sets Notations Reals_util.
 Import SetNotations.
 
-Declare Scope interval_scope.
-Delimit Scope interval_scope with interval.
-
 Module IntervalNotations.
+
+  Declare Scope interval_scope.
+  Delimit Scope interval_scope with interval.
+  
   Notation "[ a , b ]" := (fun x => a <= x <= b) : interval_scope.
   Notation "[ a , b )" := (fun x => a <= x < b) : interval_scope.
   Notation "( a , b ]" := (fun x => a < x <= b)  : interval_scope.
@@ -16,10 +17,11 @@ Module IntervalNotations.
   Notation "[ a , ∞)" := (fun x => a <= x) : interval_scope.
 
   Notation "(-∞ , +∞)" := (Full_set _) : interval_scope.
+
+  Open Scope interval_scope.
 End IntervalNotations.
 
 Import IntervalNotations.
-Open Scope interval_scope.
 
 Definition left_endpoint (A : Ensemble R) (a : R) :=
   exists δ, δ > 0 /\ forall x, (x ∈ [a-δ, a) -> x ∉ A) /\ (x ∈ [a, a+δ) -> x ∈ A).

@@ -1,4 +1,5 @@
 From Lib Require Import Imports Sequence Series Sums Reals_util WI_SI_WO.
+Import SequenceNotations SumNotations SeriesNotations.
 Require Export ATTAM.Chapter34.
 
 Section section_35_1.
@@ -50,7 +51,7 @@ Section section_35_3.
   Proof.
     unfold series_sum. 
     set (b := (fun n => 1 / INR n)). set (c := (fun n : nat => 2)).
-    assert (⟦ lim_s ⟧ a = 0) as H1.
+    assert (⟦ lim ⟧ a = 0) as H1.
     {
       apply (sequence_squeeze_lower b a 0).
       - apply theorem_34_12.
@@ -58,7 +59,7 @@ Section section_35_3.
         apply Rmult_le_reg_r with (r := INR n); try nra; apply Rmult_le_reg_r with (r := 2^n); try nra; field_simplify; try nra.
       - intro n. apply Rlt_le. apply Rdiv_pos_pos; try lra. apply Rpow_gt_0; lra.
     }
-    assert (⟦ lim_s ⟧ c = 2) as H2. { apply limit_of_const_sequence. }
+    assert (⟦ lim ⟧ c = 2) as H2. { apply limit_of_const_sequence. }
     replace (partial_sum a) with (fun n => 2 - 1 / 2 ^ n). 2 : { apply functional_extensionality. intro n. rewrite lemma_35_3_a; auto. }
     replace 2 with (2 - 0) at 1 by lra. apply limit_of_sequence_sub; auto.
   Qed.
