@@ -1,6 +1,6 @@
 From Lib Require Import Imports Notations Integral Derivative Functions Continuity 
                         Limit Sets Reals_util Inverse Trigonometry Sums Rational Binomial Tactics Interval.
-Import IntervalNotations SetNotations Function_Notations DerivativeNotations LimitNotations Choose_Notations.
+Import IntervalNotations SetNotations SumNotations FunctionNotations DerivativeNotations LimitNotations Choose_Notations.
 
 Open Scope R_scope.
 

@@ -29,14 +29,14 @@ Section section_34_2.
 
   Lemma prop_34_2_a_symbolic : prop_34_2_a = forall ε : ℝ, ε > 0 -> (exists N : ℝ, forall n : ℕ, INR n > N -> Rabs (3 - 4 / INR n - 3) < ε).
   Proof.
-    unfold prop_34_2_a, lim_s. reflexivity.
+    unfold prop_34_2_a, limit_s. reflexivity.
   Qed.
         
   Definition prop_34_2_b := ~ ⟦ lim ⟧ (fun n => 6) = 3.
   
   Lemma prop_34_2_b_symbolic : prop_34_2_b = exists ε : ℝ, ε > 0 -> forall N : ℝ, exists n : ℕ, INR n > N -> Rabs (6 - 3) >= ε.
   Proof.
-    unfold prop_34_2_b, lim_s. apply propositional_extensionality. split.
+    unfold prop_34_2_b, limit_s. apply propositional_extensionality. split.
     - intros _. exists 1. intros _. intros N. exists 0%nat. intros _. rewrite Rabs_pos_eq; lra.
     - intros [ε H1] H2. specialize (H2 1 ltac:(lra)) as [N H2]. pose proof INR_unbounded N as [n H3].
       specialize (H2 n H3). rewrite Rabs_pos_eq in H2; lra.
@@ -87,9 +87,9 @@ Qed.
 
 Lemma lemma_34_6_a : ⟦ lim ⟧ (fun n => (INR n + 1) / INR n) = 1.
 Proof.
-  intros ε H1. assert (lim_s (fun n => INR n / INR n) 1) as H2.
+  intros ε H1. assert (limit_s (fun n => INR n / INR n) 1) as H2.
   { intros ε2 H2. exists 1. intros n H3. rewrite Rdiv_diag; solve_abs. }
-  assert (lim_s (fun n => 1 / INR n) 0) as H3 by apply theorem_34_12.
+  assert (limit_s (fun n => 1 / INR n) 0) as H3 by apply theorem_34_12.
   specialize (H2 ε H1) as [N1 H2]. specialize (H3 ε H1) as [N2 H3].
   exists (Rmax N1 (Rmax N2 1)). intros n H4. 
   assert (INR n > N1 /\ INR n > N2 /\ INR n > 1) as [H5 [H6 H7]] by solve_max.
@@ -173,7 +173,7 @@ Section section_34_10.
             - apply Rdiv_pos_neg; lra.
             - apply Rmult_lt_reg_r with (r := r); field_simplify; try lra.
           }
-          assert (decreasing b) as H9.
+          assert (nonincreasing b) as H9.
           {
             intros n. unfold b. induction n as [| k IH].
             - field_simplify; try lra. apply Rmult_ge_le_reg_neg_l with (r := c); try lra;
@@ -182,7 +182,7 @@ Section section_34_10.
               apply Rmult_ge_le_reg_neg_l with (r := c); try lra; apply Rmult_le_reg_l with (r := r); field_simplify; try lra.
               apply Rge_le in IH. apply Rmult_le_ge_compat_neg_l with (r := c) in IH; try lra. field_simplify in IH; try lra.
           }
-          apply limit_of_sequence_reciprocal_unbounded_below_decreasing with (b := b); auto.
+          apply limit_of_sequence_reciprocal_unbounded_below_nonincreasing with (b := b); auto.
         - assert (unbounded_above b) as H8.
           {
             apply geometric_sequence_unbounded_above with (c := 1 / c) (r := 1 / r).
@@ -191,7 +191,7 @@ Section section_34_10.
             - apply Rdiv_pos_pos; lra.
             - apply Rmult_lt_reg_r with (r := r); field_simplify; try lra.
           }
-          assert (increasing b) as H9.
+          assert (nondecreasing b) as H9.
           {
             intros n. unfold b. induction n as [| k IH].
             - field_simplify; try lra. apply Rmult_le_reg_r with (r := c); try lra;

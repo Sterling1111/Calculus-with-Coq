@@ -2,6 +2,7 @@
 -R Calculus Calculus
 -R ATTAM ATTAM
 
+-arg -quiet
 -arg -w -arg "-uniform-inheritance,-ambiguous-paths"
 
 # =========

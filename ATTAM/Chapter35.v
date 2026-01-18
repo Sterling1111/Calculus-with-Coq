@@ -152,7 +152,7 @@ Section section_35_5.
   Close Scope nat_scope.
   Open Scope R_scope.
 
-  Lemma a_decreasing : decreasing a.
+  Lemma a_decreasing : nonincreasing a.
   Proof.
     intros n. unfold a. apply Rle_ge. pose proof pos_INR n as H1.
     apply Rmult_le_reg_l with (r := INR n + 1); try lra. apply Rmult_le_reg_l with (r := INR (S n) + 1);

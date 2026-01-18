@@ -15,10 +15,10 @@ Definition series_diverges (a : sequence) : Prop :=
   divergent_sequence (partial_sum a).
 
 Definition series_diverges_pinf (a : sequence) : Prop :=
-  lim_s_pinf (partial_sum a).
+  limit_s_pinf (partial_sum a).
 
 Definition series_diverges_ninf (a : sequence) : Prop :=
-  lim_s_ninf (partial_sum a).
+  limit_s_ninf (partial_sum a).
 
 Module SeriesNotations.
 

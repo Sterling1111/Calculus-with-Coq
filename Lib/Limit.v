@@ -1,10 +1,15 @@
-From Lib Require Import Imports Sequence Sets Reals_util Notations Functions Interval.
+From Lib Require Import Imports Sets Reals_util Notations Functions Interval Complex.
 Import SetNotations IntervalNotations FunctionNotations.
 
 Open Scope R_scope.
 
 Definition limit (f : ℝ -> ℝ) (a L : ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ δ, δ > 0 /\ ∀ x, 0 < |x - a| < δ -> |f x - L| < ε.
+
+Definition limit_c (f : C -> C) (a L : C) :=
+  forall ε, ε > 0 ->
+    exists δ, δ > 0 /\
+      forall z : C, 0 < |z - a|%C < δ -> |f z - L|%C < ε.
 
 Definition left_limit (f : ℝ -> ℝ) (a L : ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ δ, δ > 0 /\ ∀ x, 0 < a - x < δ -> |f x - L| < ε.
@@ -59,6 +64,10 @@ Module LimitNotations.
   Notation "⟦ 'lim' a ⟧ f '=' L" := 
     (limit f a L) 
       (at level 70, f at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  '='  L") : limit_scope.
+
+  Notation "⟦ 'lim' a ⟧ f '=' L" := 
+    (limit_c f a L) 
+      (at level 70, f at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  '='  L") : C_scope.
 
   Notation "⟦ 'lim' a ⁺ ⟧ f '=' L" := 
     (right_limit f a L)
@@ -344,6 +353,22 @@ Proof.
   - intros [H1 H2] ε H3. specialize (H1 ε H3) as [δ1 [H4 H5]]. specialize (H2 ε H3) as [δ2 [H6 H7]]. set (δ := Rmin δ1 δ2).
     assert (δ > 0) as H8 by (unfold δ; solve_min). assert (δ <= δ1 /\ δ <= δ2) as [H9 H10] by (unfold δ; solve_min).
     exists δ. split; auto. intros x H11. specialize (H5 x). specialize (H7 x). solve_R.
+Qed.
+
+Lemma not_limit_iff : ∀ f a L,
+  ~ ⟦ lim a ⟧ f = L <-> 
+  ∃ ε, ε > 0 /\ ∀ δ, δ > 0 -> ∃ x, 0 < |x - a| < δ /\ |f x - L| >= ε.
+Proof.
+  intros f a L. split.
+  - intros H1. apply not_all_ex_not in H1 as [ε H1].
+    apply imply_to_and in H1 as [H1 H2]. exists ε. split; auto.
+    intros δ H3. apply not_ex_all_not with (n := δ) in H2.
+    apply not_and_or in H2 as [H2 | H2]; [lra |].
+    apply not_all_ex_not in H2 as [x H2]. exists x.
+    apply imply_to_and in H2. lra.
+  - intros [ε [H1 H2]] H3. specialize (H3 ε H1) as [δ [H4 H5]].
+    specialize (H2 δ H4) as [x [H6 H7]].
+    specialize (H5 x H6). lra.
 Qed.
 
 Lemma limit_imp_limit_on : forall f L D a,
@@ -967,3 +992,36 @@ Ltac solve_lim :=
            ])); 
       apply (limit_subst f a L rhs); [solve_R | exact H]
   end.
+
+Open Scope C_scope.
+  
+Theorem limit_c_component_iff_clean : forall (f : C -> C) (a l : C),
+  let u := fun z => fst (f z) in
+  let v := fun z => snd (f z) in
+  let α := fst l in
+  let β := snd l in
+  ⟦ lim a ⟧ f = l <->
+  (⟦ lim a ⟧ u = α /\ ⟦ lim a ⟧ v = β).
+Proof.
+  intros f a l u v α β. split.
+  - intros H1. split; intros ε H2.
+    + specialize (H1 ε H2) as [δ [H3 H4]].
+      exists δ. split; auto. intros x H5.
+      unfold u, α. 
+      specialize (H4 x H5). apply Rle_lt_trans with (r2 := |f x - l|); auto.
+      admit.
+    + specialize (H1 ε H2) as [δ [H3 H4]].
+      exists δ. split; auto. intros x H5.
+      unfold v, β. 
+      specialize (H4 x H5). apply Rle_lt_trans with (r2 := |f x - l|); auto.
+      admit.
+  - intros [H1 H2] ε H3. 
+    specialize (H1 (ε/2)%R ltac:(lra)) as [δ1 [H4 H5]].
+    specialize (H2 (ε/2)%R ltac:(lra)) as [δ2 [H6 H7]].
+    set (δ := Rmin δ1 δ2). exists δ. split; [ solve_R |].
+    intros z H8. specialize (H5 z ltac:(unfold δ in *; solve_min)).
+    specialize (H7 z ltac:(unfold δ in *; solve_min)).
+    apply Rle_lt_trans with (r2 := (|u z - α| + |v z - β|)%R).
+    + admit.
+    + replace ε with (ε / 2 + ε / 2)%R by lra. admit.
+Admitted.

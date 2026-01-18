@@ -438,6 +438,9 @@ Definition sin_0_2π (y : ℝ) : ℝ :=
 Definition sin (x : ℝ) : ℝ :=
   let y := proj1_sig (red_0_2π x) in sin_0_2π y.
 
+Definition tan (x : ℝ) : ℝ :=
+  sin x / cos x.
+
 Lemma continuous_sin : continuous sin.
 Proof.
 Admitted.

@@ -22,6 +22,7 @@ From Coq Require Export
   Logic.PropExtensionality
   Logic.ClassicalChoice
   Logic.ClassicalEpsilon
+  Logic.ChoiceFacts
   
   (* Utilities *)
   String

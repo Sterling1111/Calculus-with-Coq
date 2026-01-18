@@ -797,17 +797,17 @@ Proof.
     lra.
 Qed.
 
-Lemma e_bounds : 2.7182818284590452353602874713526624977571 < e < 2.7182818284590452353602874713526624977575.
+Lemma e_bounds : 2.7182 < e < 2.7183.
 Proof.
-  assert (H1 : exists δ, δ > 0 /\ nth_differentiable_on (S 34) exp (0 - δ, 1 + δ)).
+  assert (H1 : exists δ, δ > 0 /\ nth_differentiable_on (S 8) exp (0 - δ, 1 + δ)).
   {
     exists 1. split; [lra |].
     apply nth_differentiable_imp_nth_differentiable_on.
     - apply differentiable_domain_open; lra.
     - apply inf_differentiable_imp_nth_differentiable; apply inf_differentiable_exp.
   }
-  pose proof (Taylors_Theorem 34 0 1 exp ltac:(lra) H1) as [t [H2 H3]].
-  assert (H4 : P(34, 0, exp) 1 = 160505190558891399620169143887464379777/59046559807920828169523721928704000000).
+  pose proof (Taylors_Theorem 8 0 1 exp ltac:(lra) H1) as [t [H2 H3]].
+  assert (H4 : P(8, 0, exp) 1 = 109601/40320).
   {
      unfold Taylor_polynomial.
      repeat rewrite sum_f_i_Sn_f; try lia.
@@ -818,14 +818,14 @@ Proof.
   }
   unfold Taylor_remainder in H3.
   rewrite H4 in H3.
-  assert (H5 : ⟦ Der ^ (S 34) t ⟧ exp = exp t).
+  assert (H5 : ⟦ Der ^ (S 8) t ⟧ exp = exp t).
   {
-    replace (⟦ Der ^ 35 t ⟧ exp) with ((⟦ Der ^ 35 ⟧ exp) t) by reflexivity.
+    replace (⟦ Der ^ 9 t ⟧ exp) with ((⟦ Der ^ 9 ⟧ exp) t) by reflexivity.
     rewrite nth_derive_exp; auto.
   }
-  replace (34 + 1)%nat with 35%nat in H3 by lia.
+  replace (8 + 1)%nat with 9%nat in H3 by lia.
   rewrite H5 in H3.
-  replace (INR ((S 34)!)) with 10333147966386144929666651337523200000000 in H3 by (simplify_factorials; lra).
+  replace (INR ((S 8)!)) with 362880 in H3 by (simplify_factorials; lra).
   rewrite Rminus_0_r, pow1, Rmult_1_r in H3.
   assert (H6 : 1 < exp t < 3).
   {
