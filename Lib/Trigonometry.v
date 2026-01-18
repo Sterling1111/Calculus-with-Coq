@@ -339,11 +339,18 @@ Proof.
     assert (|(IZR k * 2 * π)| = (|(IZR k)| * 2 * π)) as H5 by solve_R.
     rewrite H5 in H4.
     destruct (Req_dec k 0) as [H6 | H6]; [solve_R | ].
-    assert (|(IZR k)| >= 1) by admit. solve_R.
+    assert (|(IZR k)| >= 1).
+    {
+      assert ((k <= -1)%Z \/ (k = 0)%Z \/ (k >= 1)%Z) as [H7 | [H7 | H7]] by lia.
+      - apply IZR_le in H7. solve_R.
+      - rewrite H7 in *. lra. 
+      - apply IZR_ge in H7. solve_R.
+    }
+    nra.
   }
   rewrite H4. unfold cos_0_2π.
   destruct (Rle_dec y π); try lra.
-Admitted.
+Qed.
 
 Lemma cos_on_π_2π : ∀ x, π < x < 2 * π -> cos x = cos_0_π (2 * π - x).
 Proof.
@@ -359,22 +366,51 @@ Proof.
     rewrite H5 in H4.
     destruct (Z.eq_dec k 0) as [H6 | H6].
     - rewrite H6 in *. lra.
-    - assert (|(IZR k)| >= 1) as H7. {
-        assert ((k <= 1)%Z \/ (k >= 1)%Z) as [H7 | H7] by lia.
-        - admit.
-        - admit.
+    - assert (|(IZR k)| >= 1) as H7. 
+      {
+        assert ((k <= -1)%Z \/ (k = 0)%Z \/ (k >= 1)%Z) as [H8 | [H8 | H8]] by lia.
+        - apply IZR_le in H8. solve_R.
+        - rewrite H8 in *. lia.
+        - apply IZR_ge in H8. solve_R.
       }
       nra.
   }
   rewrite H4.
   unfold cos_0_2π. destruct (Rle_dec y π); lra.
-Admitted.
+Qed.
 
 Lemma cos_periodic : ∀ x, cos (x + 2 * π) = cos x.
 Proof.
-Admitted.
+  intros x. unfold cos.
+  destruct (red_0_2π_spec x) as [H1 [k1 H2]].
+  destruct (red_0_2π_spec (x + 2 * π)) as [H3 [k2 H4]].
+  set (y1 := proj1_sig (red_0_2π x)) in *.
+  set (y2 := proj1_sig (red_0_2π (x + 2 * π))) in *.
+  assert (H5: y1 = y2).
+  {
+    assert (|(y1 - y2)| < 2 * π) as H5 by solve_R.
+    rewrite H2 in H4.
+    replace (y1 - y2) with ((IZR k2 - IZR k1 - 1) * 2 * π) in H5 by lra.
+    set (k := (k2 - k1 - 1)%Z).
+    replace (IZR k2 - IZR k1 - 1) with (IZR k) in H5.
+    2:{ unfold k. repeat rewrite minus_IZR. simpl. reflexivity. }
+    assert (|(IZR k * 2 * π)| = |(IZR k)| * 2 * π) as H6 by solve_R.
+    rewrite H6 in H5.
+    destruct (Z.eq_dec k 0) as [H7 | H7].
+    - subst k. replace k2 with (k1 + 1)%Z in H4 by lia. rewrite plus_IZR in H4. lra.
+    - assert (|(IZR k)| >= 1) as H8.
+      {
+        assert ((k <= -1)%Z \/ (k = 0)%Z \/ (k >= 1)%Z) as [H9 | [H9 | H9]] by lia.
+        - apply IZR_le in H9. solve_R.
+        - contradiction.
+        - apply IZR_ge in H9. solve_R.
+      }
+      nra.
+  }
+  rewrite H5. reflexivity.
+Qed.
 
-Lemma cos_even : ∀ x, cos (-x) = cos x.
+Lemma cos_even : even_f cos.
 Proof. admit. Admitted.
 
 Lemma cos_le_1 : ∀ x, cos x <= 1.
