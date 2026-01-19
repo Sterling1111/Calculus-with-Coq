@@ -4191,6 +4191,20 @@ Proof.
   - simpl. rewrite IH. reflexivity.
 Qed.
 
+Lemma nth_derivative_add : forall n m f g h,
+  ⟦ der^n ⟧ f = g -> (⟦ der^m ⟧ g = h <-> ⟦ der^(n+m) ⟧ f = h).
+Proof.
+  intros n m f g. induction m as [| m IH].
+  - intros h H1. simpl. replace (n + 0)%nat with n by lia. split; intros H2.
+    + subst; auto.
+    + eapply nth_derivative_unique; eauto.
+  - intros h H1. simpl. split.
+    + intros H2. destruct H2 as [gm' [H3 H4]]. replace (n + S m)%nat with (S (n + m)) by lia.
+      exists gm'. split; [apply IH|]; auto.
+    + intros H2. replace (n + S m)%nat with (S (n + m)) in H2 by lia. destruct H2 as [fk' [H5 H6]].
+      exists fk'. split; [apply IH|]; auto.
+Qed.  
+
 Lemma nth_derivative_pow : forall n k, (k <= n)%nat ->
   ⟦ der ^ k ⟧ (fun x => x ^ n) = (fun x => (n! / (n-k)!) * x ^ (n - k)).
 Proof.

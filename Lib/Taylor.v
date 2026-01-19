@@ -737,9 +737,8 @@ Proof.
      unfold Taylor_polynomial.
      repeat rewrite sum_f_i_Sn_f; try lia.
      rewrite sum_f_0_0; try lia.
-     rewrite derive_0_cos_at_0, derive_1_cos_at_0, derive_2_cos_at_0, derive_3_cos_at_0,
-             derive_4_cos_at_0, derive_5_cos_at_0, derive_6_cos_at_0.
      simplify_factorials.
+     simplify_nth_derive_trig. repeat rewrite sin_0, cos_0.
      simpl; lra.
   }
   unfold Taylor_remainder in H3.
@@ -747,7 +746,7 @@ Proof.
   assert (H5 : ⟦ Der ^ (S 6) t ⟧ cos = sin t).
   {
     replace (⟦ Der ^ 7 t ⟧ cos) with ((⟦ Der ^ 7 ⟧ cos) t) by reflexivity.
-    rewrite nth_derive_cos_7; auto.
+    simplify_nth_derive_trig; auto.
   }
   replace (6 + 1)%nat with 7%nat in H3 by lia.
   rewrite H5 in H3.
@@ -755,13 +754,47 @@ Proof.
   rewrite Rminus_0_r in H3.
   rewrite pow1 in H3.
   rewrite Rmult_1_r in H3.
-  assert (H6 : 0 < sin t < 1) by (apply sin_bounds_open_0_1; solve_R).
+  assert (H6 : -1 <= sin t <= 1) by (apply sin_bounds; solve_R).
   replace (cos 1) with (389 / 720 + sin t / 5040) by lra.
   split.
   - apply Rplus_lt_reg_r with (r := -389/720); apply Rmult_lt_reg_r with (r := 5040); [ lra |].
     field_simplify. rewrite Rmult_div_r; auto. replace ((3628800 * 0.540 - 1960560) / 720) with (-1.4) by lra. lra.
   - apply Rplus_lt_reg_r with (r := -389/720); apply Rmult_lt_reg_r with (r := 5040); [ lra |].
     field_simplify. rewrite Rmult_div_r; auto. replace ((3628800 * 0.541 - 1960560) / 720) with 3.64 by lra. lra.
+Qed.
+
+Lemma cos_2_bounds : -0.417 < cos 2 < -0.416.
+Proof.
+  assert (H1 : exists δ, δ > 0 /\ nth_differentiable_on (S 10) cos (0 - δ, 2 + δ)).
+  {
+    exists 1. split; [lra |].
+    apply nth_differentiable_imp_nth_differentiable_on.
+    - apply differentiable_domain_open; lra.
+    - apply inf_differentiable_imp_nth_differentiable. apply inf_differentiable_cos.
+  }
+  pose proof (Taylors_Theorem 10 0 2 cos ltac:(lra) H1) as [t [H2 H3]].
+  assert (H4 : P(10, 0, cos) 2 = -1510144 / 3628800).
+  {
+     unfold Taylor_polynomial.
+     repeat rewrite sum_f_i_Sn_f; try lia.
+     rewrite sum_f_0_0; try lia.
+     simplify_factorials.
+     simplify_nth_derive_trig.
+     repeat rewrite sin_0, cos_0.
+     simpl; lra.
+  }
+  unfold Taylor_remainder in H3.
+  rewrite H4 in H3.
+  assert (H5 : ⟦ Der ^ (S 10) t ⟧ cos = sin t).
+  {
+    replace (⟦ Der ^ 11 t ⟧ cos) with ((⟦ Der ^ 11 ⟧ cos) t) by reflexivity.
+    simplify_nth_derive_trig; auto.
+  }
+  replace (10 + 1)%nat with 11%nat in H3 by lia.
+  rewrite H5 in H3.
+  replace (INR ((S 10)!)) with 39916800 in H3 by (simplify_factorials; auto).
+  rewrite Rminus_0_r in H3.
+  assert (H6 : -1 <= sin t <= 1) by (apply sin_bounds; solve_R). lra.
 Qed.
 
 Lemma e_bound_1_3 : 1 < exp 1 < 3.
@@ -836,3 +869,46 @@ Proof.
   }
   unfold e. lra.
 Qed.
+
+Set Ltac Profiling.
+Lemma e_bounds_crazy : 2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274274663919320030599218174135966290435729003342952605956307381 < e < 2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274274663919320030599218174135966290435729003342952605956307384.
+Proof.
+  assert (H1 : exists δ, δ > 0 /\ nth_differentiable_on (S 100) exp (0 - δ, 1 + δ)).
+  {
+    exists 1. split; [lra |].
+    apply nth_differentiable_imp_nth_differentiable_on.
+    - apply differentiable_domain_open; lra.
+    - apply inf_differentiable_imp_nth_differentiable; apply inf_differentiable_exp.
+  }
+  pose proof (Taylors_Theorem 100 0 1 exp ltac:(lra) H1) as [t [H2 H3]].
+  assert (H4 : P(100, 0, exp) 1 = 4299778907798767752801199122242037634663518280784714275131782813346597523870956720660008227544949996496057758175050906671347686438130409774741771022426508339/1581800261761765299689817607733333906622304546853925787603270574495213559207286705236295999595873191292435557980122436580528562896896000000000000000000000000).
+  {
+     unfold Taylor_polynomial.
+     repeat rewrite sum_f_i_Sn_f; try lia.
+     rewrite sum_f_0_0; try lia.
+     repeat rewrite nth_derive_exp_n_0.
+     simplify_factorials.
+     field.
+  }
+  unfold Taylor_remainder in H3.
+  rewrite H4 in H3.
+  assert (H5 : ⟦ Der ^ (S 100) t ⟧ exp = exp t).
+  {
+    replace (⟦ Der ^ 101 t ⟧ exp) with ((⟦ Der ^ 101 ⟧ exp) t) by reflexivity.
+    rewrite nth_derive_exp; auto.
+  }
+  replace (100 + 1)%nat with 101%nat in H3 by lia.
+  rewrite H5 in H3.
+  replace (INR ((S 100)!)) with 9425947759838359420851623124482936749562312794702543768327889353416977599316221476503087861591808346911623490003549599583369706302603264000000000000000000000000 in H3 by (simplify_factorials; lra).
+  rewrite Rminus_0_r, pow1, Rmult_1_r in H3.
+  assert (H6 : 1 < exp t < 3).
+  {
+    pose proof e_bound_1_3 as [H6 H7]. split.
+    - rewrite <- exp_0. apply exp_increasing; solve_R; apply Full_intro.
+    - pose proof exp_increasing t 1 ltac:(apply Full_intro) ltac:(apply Full_intro) ltac:(solve_R) as H8.
+      lra.
+  }
+  unfold e. lra.
+Qed.
+
+Show Ltac Profile.

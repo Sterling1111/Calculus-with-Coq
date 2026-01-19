@@ -410,9 +410,6 @@ Proof.
   rewrite H5. reflexivity.
 Qed.
 
-Lemma cos_even : even_f cos.
-Proof. admit. Admitted.
-
 Lemma cos_le_1 : ∀ x, cos x <= 1.
 Proof.
 Admitted.
@@ -603,10 +600,22 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma nth_derivative_sin_0 : ⟦ der^0 ⟧ sin = sin.
+Proof.
+  reflexivity.
+Qed.
+
 Lemma nth_derivative_cos_1 : ⟦ der^1 ⟧ cos = - sin.
 Proof.
   apply nth_derivative_succ_iff. exists (- sin)%function. split.
   - apply derivative_cos.
+  - reflexivity.
+Qed.
+
+Lemma nth_derivative_sin_1 : ⟦ der^1 ⟧ sin = cos.
+Proof.
+  apply nth_derivative_succ_iff. exists cos. split.
+  - apply derivative_sin.
   - reflexivity.
 Qed.
 
@@ -621,6 +630,15 @@ Proof.
     + apply derivative_neg. apply derivative_sin.
 Qed.
 
+Lemma nth_derivative_sin_2 : ⟦ der^2 ⟧ sin = - sin.
+Proof.
+  apply nth_derivative_succ_iff.
+  exists cos. split.
+  - apply derivative_sin.
+  - simpl. exists (fun x => cos x). split; auto.
+    apply derivative_cos.
+Qed.
+
 Lemma nth_derivative_cos_3 : ⟦ der^3 ⟧ cos = sin.
 Proof.
   apply nth_derivative_succ_iff.
@@ -632,6 +650,16 @@ Proof.
       apply derivative_neg. apply derivative_sin.
     + replace sin with (fun x => - (- sin x)) by (extensionality x; lra).
       apply derivative_neg. apply derivative_cos.
+Qed.
+
+Lemma nth_derivative_sin_3 : ⟦ der^3 ⟧ sin = - cos.
+Proof.
+  apply nth_derivative_succ_iff.
+  exists cos. split.
+  - apply derivative_sin.
+  - simpl. exists (fun x => - sin x). split.
+    + exists (fun x => cos x). split; [reflexivity |]. apply derivative_cos.
+    + apply derivative_neg. apply derivative_sin.
 Qed.
 
 Lemma nth_derivative_cos_4 : ⟦ der^4 ⟧ cos = cos.
@@ -648,61 +676,122 @@ Proof.
     + apply derivative_sin.
 Qed.
 
-Lemma nth_derivative_cos_5 : ⟦ der^5 ⟧ cos = - sin.
+Lemma nth_derivative_sin_4 : ⟦ der^4 ⟧ sin = sin.
 Proof.
   apply nth_derivative_succ_iff.
-  exists (-sin)%function. split.
-  - apply derivative_cos.
-  - simpl. exists cos. split.
-    + exists sin. split.
-      * exists (fun x => - cos x). split.
-        { exists (fun x => - sin x). split; auto.
-          apply derivative_neg. apply derivative_sin. }
-        { replace sin with (fun x => - (- sin x)) by (extensionality x; lra).
-          apply derivative_neg. apply derivative_cos. }
-      * apply derivative_sin.
-    + apply derivative_cos.
-Qed.
-
-Lemma nth_derivative_cos_6 : ⟦ der^6 ⟧ cos = - cos.
-Proof.
-  apply nth_derivative_succ_iff.
-  exists (-sin)%function. split.
-  - apply derivative_cos.
-  - simpl. exists (fun x => - sin x). split.
-    + exists cos. split.
-      * exists sin. split.
-        { exists (fun x => - cos x). split.
-          - exists (fun x => - sin x). split; auto.
-            apply derivative_neg. apply derivative_sin.
-          - replace sin with (fun x => - (- sin x)) by (extensionality x; lra).
-            apply derivative_neg. apply derivative_cos. }
-        { apply derivative_sin. }
-      * apply derivative_cos.
-    + simpl. apply derivative_neg. apply derivative_sin.
-Qed.
-
-Lemma nth_derivative_cos_7 : ⟦ der^7 ⟧ cos = sin.
-Proof.
-  apply nth_derivative_succ_iff.
-  exists (-sin)%function. split.
-  - apply derivative_cos.
+  exists cos. split.
+  - apply derivative_sin.
   - simpl. exists (-cos)%function. split.
     + exists (-sin)%function. split.
-      * exists cos. split.
-        { exists sin. split.
-          - exists (-cos)%function. split.
-            + exists (-sin)%function. split.
-              * reflexivity.
-              * apply derivative_neg. apply derivative_sin.
-            + replace sin with (fun x => - (- sin x)) by (extensionality x; lra).
-              apply derivative_neg. apply derivative_cos.
-          - apply derivative_sin. }
-        { apply derivative_cos. }
+      * exists cos. split; auto.
+        apply derivative_cos.
       * apply derivative_neg. apply derivative_sin.
     + replace sin with (fun x => - (- sin x)) by (extensionality x; lra).
       apply derivative_neg. apply derivative_cos.
 Qed.
+
+Lemma nth_derivative_cos_4n : forall n, ⟦ der^(4 * n) ⟧ cos = cos.
+Proof.
+  induction n.
+  - simpl. reflexivity.
+  - replace (4 * S n)%nat with (4 * n + 4)%nat by lia.
+    apply nth_derivative_add with cos; [auto | apply nth_derivative_cos_4].
+Qed.
+
+Lemma nth_derivative_sin_4n : forall n, ⟦ der^(4 * n) ⟧ sin = sin.
+Proof.
+  induction n.
+  - simpl. reflexivity.
+  - replace (4 * S n)%nat with (4 * n + 4)%nat by lia.
+    apply nth_derivative_add with sin; [auto | apply nth_derivative_sin_4].
+Qed.
+
+Lemma nth_derivative_cos_4n_1 : forall n, ⟦ der^(4 * n + 1) ⟧ cos = -sin.
+Proof.
+  intros. apply nth_derivative_add with cos.
+  - apply nth_derivative_cos_4n.
+  - apply nth_derivative_cos_1.
+Qed.
+
+Lemma nth_derivative_sin_4n_1 : forall n, ⟦ der^(4 * n + 1) ⟧ sin = cos.
+Proof.
+  intros. apply nth_derivative_add with sin.
+  - apply nth_derivative_sin_4n.
+  - apply nth_derivative_sin_1.
+Qed.
+
+Lemma nth_derivative_cos_4n_2 : forall n, ⟦ der^(4 * n + 2) ⟧ cos = -cos.
+Proof.
+  intros. apply nth_derivative_add with cos.
+  - apply nth_derivative_cos_4n.
+  - apply nth_derivative_cos_2.
+Qed.
+
+Lemma nth_derivative_sin_4n_2 : forall n, ⟦ der^(4 * n + 2) ⟧ sin = -sin.
+Proof.
+  intros. apply nth_derivative_add with sin.
+  - apply nth_derivative_sin_4n.
+  - apply nth_derivative_sin_2.
+Qed.
+
+Lemma nth_derivative_cos_4n_3 : forall n, ⟦ der^(4 * n + 3) ⟧ cos = sin.
+Proof.
+  intros. apply nth_derivative_add with cos.
+  - apply nth_derivative_cos_4n.
+  - apply nth_derivative_cos_3.
+Qed.
+
+Lemma nth_derivative_sin_4n_3 : forall n, ⟦ der^(4 * n + 3) ⟧ sin = -cos.
+Proof.
+  intros. apply nth_derivative_add with sin.
+  - apply nth_derivative_sin_4n.
+  - apply nth_derivative_sin_3.
+Qed.
+
+Ltac normalize_nat_mod4 n :=
+  let n' := eval cbv in n in
+  let q  := eval cbv in (Nat.div n' 4) in
+  let r  := eval cbv in (Nat.modulo n' 4) in
+  lazymatch r with
+  | O => replace n with (4 * q)%nat by lia
+  | _ => replace n with (4 * q + r)%nat by lia
+  end.
+
+Ltac nat_mod4_normalize_derivative_only :=
+  repeat match goal with
+  | |- context[ nth_derivative ?n ?f ] =>
+      normalize_nat_mod4 n
+  | H : context[ nth_derivative ?n ?f ] |- _ =>
+      normalize_nat_mod4 n
+
+  | |- context[ nth_derive ?n ?f ] =>
+      normalize_nat_mod4 n
+  | H : context[ nth_derive ?n ?f ] |- _ =>
+      normalize_nat_mod4 n
+
+  | |- context[ nth_derive_at ?n ?f ?x ] =>
+      normalize_nat_mod4 n
+  | H : context[ nth_derive_at ?n ?f ?x ] |- _ =>
+      normalize_nat_mod4 n
+  end.
+
+
+Ltac rewrite_trig_nth_derivative :=
+  first
+    [ apply nth_derivative_sin_4n
+    | apply nth_derivative_sin_4n_1
+    | apply nth_derivative_sin_4n_2
+    | apply nth_derivative_sin_4n_3
+    | apply nth_derivative_cos_4n
+    | apply nth_derivative_cos_4n_1
+    | apply nth_derivative_cos_4n_2
+    | apply nth_derivative_cos_4n_3 ].
+
+
+Ltac simplify_trig_derivatives :=
+  repeat (first [ nat_mod4_normalize_derivative_only | rewrite_trig_nth_derivative ]).
+
+
 
 Lemma nth_derive_cos_0 : 
   ⟦ Der^0 ⟧ cos = cos.
@@ -734,82 +823,146 @@ Proof.
   apply nth_derivative_imp_nth_derive. apply nth_derivative_cos_4.
 Qed.
 
-Lemma nth_derive_cos_5 : 
-  ⟦ Der^5 ⟧ cos = (-sin)%function.
+Lemma nth_derive_sin_0 : 
+  ⟦ Der^0 ⟧ sin = sin.
 Proof.
-  apply nth_derivative_imp_nth_derive. apply nth_derivative_cos_5.
+  reflexivity.
 Qed.
 
-Lemma nth_derive_cos_6 : 
-  ⟦ Der^6 ⟧ cos = (-cos)%function.
+Lemma nth_derive_sin_1 : 
+  ⟦ Der^1 ⟧ sin = cos.
 Proof.
-  apply nth_derivative_imp_nth_derive. apply nth_derivative_cos_6.
+  apply nth_derivative_imp_nth_derive. apply nth_derivative_sin_1.
 Qed.
 
-Lemma nth_derive_cos_7 : 
-  ⟦ Der^7 ⟧ cos = sin.
+Lemma nth_derive_sin_2 : 
+  ⟦ Der^2 ⟧ sin = (-sin)%function.
 Proof.
-  apply nth_derivative_imp_nth_derive. apply nth_derivative_cos_7.
+  apply nth_derivative_imp_nth_derive. apply nth_derivative_sin_2.
 Qed.
+
+Lemma nth_derive_sin_3 : 
+  ⟦ Der^3 ⟧ sin = (-cos)%function.
+Proof.
+  apply nth_derivative_imp_nth_derive. apply nth_derivative_sin_3.
+Qed.
+
+Lemma nth_derive_sin_4 : 
+  ⟦ Der^4 ⟧ sin = sin.
+Proof.
+  apply nth_derivative_imp_nth_derive. apply nth_derivative_sin_4.
+Qed.
+
+Lemma nth_derive_cos_4n : forall n, ⟦ Der^(4 * n) ⟧ cos = cos.
+Proof.
+  intros n. apply nth_derivative_imp_nth_derive. apply nth_derivative_cos_4n.
+Qed.
+
+Lemma nth_derive_sin_4n : forall n, ⟦ Der^(4 * n) ⟧ sin = sin.
+Proof.
+  intros n. apply nth_derivative_imp_nth_derive. apply nth_derivative_sin_4n.
+Qed.
+
+Lemma nth_derive_cos_4n_1 : forall n, ⟦ Der^(4 * n + 1) ⟧ cos = (-sin)%function.
+Proof.
+  intros n. apply nth_derivative_imp_nth_derive. apply nth_derivative_cos_4n_1.
+Qed.
+
+Lemma nth_derive_cos_4n_2 : forall n, ⟦ Der^(4 * n + 2) ⟧ cos = (-cos)%function.
+Proof.
+  intros n. apply nth_derivative_imp_nth_derive. apply nth_derivative_cos_4n_2.
+Qed.
+
+Lemma nth_derive_cos_4n_3 : forall n, ⟦ Der^(4 * n + 3) ⟧ cos = sin.
+Proof.
+  intros n. apply nth_derivative_imp_nth_derive. apply nth_derivative_cos_4n_3.
+Qed.
+
+Lemma nth_derive_sin_4n_1 : forall n, ⟦ Der^(4 * n + 1) ⟧ sin = cos.
+Proof.
+  intros n. apply nth_derivative_imp_nth_derive. apply nth_derivative_sin_4n_1.
+Qed.
+
+Lemma nth_derive_sin_4n_2 : forall n, ⟦ Der^(4 * n + 2) ⟧ sin = (-sin)%function.
+Proof.
+  intros n. apply nth_derivative_imp_nth_derive. apply nth_derivative_sin_4n_2.
+Qed.
+
+Lemma nth_derive_sin_4n_3 : forall n, ⟦ Der^(4 * n + 3) ⟧ sin = (-cos)%function.
+Proof.
+  intros n. apply nth_derivative_imp_nth_derive. apply nth_derivative_sin_4n_3.
+Qed.
+
+Ltac step_nth_derive_trig :=
+  first
+    [ rewrite nth_derive_cos_4n
+    | rewrite nth_derive_cos_4n_1
+    | rewrite nth_derive_cos_4n_2
+    | rewrite nth_derive_cos_4n_3
+    | rewrite nth_derive_sin_4n
+    | rewrite nth_derive_sin_4n_1
+    | rewrite nth_derive_sin_4n_2
+    | rewrite nth_derive_sin_4n_3
+    | nat_mod4_normalize_derivative_only 
+    ].
+
+
+Ltac simplify_nth_derive_trig :=
+  repeat step_nth_derive_trig.
+
+Ltac finish_trig :=
+  (repeat rewrite sin_0); (repeat rewrite cos_0); lra.
 
 Lemma derive_0_cos_at_0 : 
   ⟦ Der^0 0 ⟧ cos = 1.
 Proof.
-  simpl. apply cos_0.
+  simplify_nth_derive_trig. finish_trig.
 Qed.
 
 Lemma derive_1_cos_at_0 : 
   ⟦ Der^1 0 ⟧ cos = 0.
 Proof.
-  replace (⟦ Der^1 0 ⟧ cos) with ((⟦ Der^1 ⟧ cos) 0) by reflexivity.
-  rewrite nth_derive_cos_1. rewrite sin_0. lra.
+  simplify_nth_derive_trig. finish_trig.
 Qed.
 
 Lemma derive_2_cos_at_0 : 
   ⟦ Der^2 0 ⟧ cos = -1.
 Proof.
-  replace (⟦ Der^2 0 ⟧ cos) with ((⟦ Der^2 ⟧ cos) 0) by reflexivity.
-  rewrite nth_derive_cos_2. rewrite cos_0. lra.
+  simplify_nth_derive_trig. finish_trig.
 Qed.
 
 Lemma derive_3_cos_at_0 : 
   ⟦ Der^3 0 ⟧ cos = 0.
 Proof.
-  replace (⟦ Der^3 0 ⟧ cos) with ((⟦ Der^3 ⟧ cos) 0) by reflexivity.
-  rewrite nth_derive_cos_3. rewrite sin_0. lra.
+  simplify_nth_derive_trig. finish_trig. 
 Qed.
 
 Lemma derive_4_cos_at_0 : 
   ⟦ Der^4 0 ⟧ cos = 1.
 Proof.
-  replace (⟦ Der^4 0 ⟧ cos) with ((⟦ Der^4 ⟧ cos) 0) by reflexivity.
-  rewrite nth_derive_cos_4. rewrite cos_0. lra.
+  simplify_nth_derive_trig. finish_trig.
 Qed.
 
 Lemma derive_5_cos_at_0 : 
   ⟦ Der^5 0 ⟧ cos = 0.
 Proof.
-  replace (⟦ Der^5 0 ⟧ cos) with ((⟦ Der^5 ⟧ cos) 0) by reflexivity.
-  rewrite nth_derive_cos_5. rewrite sin_0. lra.
+  simplify_nth_derive_trig. finish_trig.
 Qed.
 
 Lemma derive_6_cos_at_0 : 
   ⟦ Der^6 0 ⟧ cos = -1.
 Proof.
-  replace (⟦ Der^6 0 ⟧ cos) with ((⟦ Der^6 ⟧ cos) 0) by reflexivity.
-  rewrite nth_derive_cos_6. rewrite cos_0. lra.
+  simplify_nth_derive_trig. finish_trig.
 Qed.
 
-Lemma cos_bounds_open_0_1 : forall x,
-  x ∈ (0, 1) -> 0 < cos x < 1.
+Lemma cos_bounds : forall x,
+  -1 <= cos x <= 1.
 Proof.
-  intros x H1.
   admit.
 Admitted.
 
-Lemma sin_bounds_open_0_1 : forall x,
-  x ∈ (0, 1) -> 0 < sin x < 1.
+Lemma sin_bounds : forall x,
+  -1 <= sin x <= 1.
 Proof.
-  intros x H1.
   admit.
 Admitted.
