@@ -350,17 +350,25 @@ Proof.
     assert (H3 : a < b) by (unfold a, b; lra).
     assert (H4 : log a < log b). { apply log_increasing; unfold a, b; solve_R. }
     rewrite Rmin_left, Rmax_right by lra.
-    repeat split; try intros t H5.
-    - apply increasing_on_imp_not_decreasing_on with (f := log); try apply log_increasing; unfold a, b in *; lra.
-    - apply increasing_on_imp_not_decreasing_on with (f := log); try apply log_increasing; unfold a, b in *; lra.
-- apply increasing_on_imp_not_decreasing_on with (f := exp); try apply exp_increasing; rewrite log_exp; lra.
-- apply increasing_on_imp_not_decreasing_on with (f := exp); try apply exp_increasing; rewrite log_exp; lra.
-- apply exp_log; unfold a, b in *; lra.
-- apply log_exp.
-    admit.
+    repeat (split; try intros t H5).
+    - apply increasing_on_imp_not_decreasing_on with (f := log) (D := (0, ∞)); try apply log_increasing; unfold a, b in *; solve_R.
+    - apply increasing_on_imp_not_decreasing_on with (f := log) (D := (0, ∞)); try apply log_increasing; unfold a, b in *; solve_R.
+    - rewrite <- (exp_log a); [| unfold a; lra].
+      apply increasing_on_imp_not_decreasing_on with (D := Full_set R); try apply exp_increasing; try apply Full_intro.
+      destruct H5; lra.
+    - rewrite <- (exp_log b); [| unfold b; lra].
+      apply increasing_on_imp_not_decreasing_on with (D := Full_set R); try apply exp_increasing; try apply Full_intro.
+      destruct H5; lra.
+    - apply exp_log; unfold a, b in *; solve_R.
+    - apply log_exp.
   }
   
-  assert (H4 : x ∈ (Rmin (log a) (log b), Rmax (log a) (log b))) by admit.
+  assert (H4 : x ∈ (Rmin (log a) (log b), Rmax (log a) (log b))).
+  {
+    assert (H4 : log a < log b) by (apply log_increasing; unfold a, b; solve_R).
+    rewrite Rmin_left, Rmax_right by lra.
+    split; rewrite <- (log_exp x); apply log_increasing; pose proof exp_pos x; unfold a, b, z; solve_R.
+  }
   
   assert (H5 : ⟦ der ⟧ log (a, b) = (λ t : ℝ, 1 / t)).
   {
@@ -376,7 +384,7 @@ Proof.
   specialize (H H2 H3 H4 H5 H6).
   apply derivative_at_ext with (f1 := λ x : ℝ, / (λ t : ℝ, 1 / t) (exp x)); auto.
   intros x0. field. pose proof exp_pos x0. lra.
-Admitted.
+Qed.
 
 Theorem theorem_18_3 : forall x y,
   exp (x + y) = exp x * exp y.
@@ -402,7 +410,7 @@ Definition Rpower (a x : R) : R :=
   | right _ => 0
   end.
 
-Notation "a ^^ x" := (Rpower a x) (at level 30) : R_scope.
+Notation "a ^^ x" := (Rpower a x) (at level 30, format "a ^^ x") : R_scope.
 
 Theorem theorem_18_4 : forall a b c,
   a > 0 -> (a ^^ b) ^^ c = a ^^ (b * c).
@@ -449,4 +457,6 @@ Proof.
   intros n. rewrite nth_derive_exp. apply exp_0.
 Qed.
 
-Definition log_b (b x : R) : R := log x / log b.
+Definition log_ b x := log x / log b.
+
+Definition lg x := log_ 2 x.
