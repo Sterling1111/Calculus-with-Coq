@@ -2257,6 +2257,16 @@ Proof.
   intros f A H1 a b H2 H3 H4. specialize (H1 a b H2 H3 H4). lra.
 Qed.
 
+Lemma increasing_on_imp_not_decreasing_on : forall f D,
+  increasing_on f D -> forall x y, x ∈ D -> y ∈ D -> x <= y -> f x <= f y.
+Proof.
+  intros f D H1 x y H2 H3 [H4 | H4].
+  - left. apply H1; auto.
+  - subst. right. reflexivity.
+Qed.
+
+
+
 Theorem MVT : forall f f' a b,
   a < b -> continuous_on f [a, b] -> ⟦ der ⟧ f (a, b) = f' ->
   exists x, x ∈ (a, b) /\ f' x = (f b - f a) / (b - a).

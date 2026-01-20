@@ -205,76 +205,68 @@ Qed.
 
 Lemma log_unbounded_above_on : unbounded_above_on log (0, ∞).
 Proof.
-  unfold unbounded_above_on, bounded_above_on. intros [M H].
-  assert (H1 : log 2 > 0) by apply log_2_pos.
-  destruct (INR_archimed (log 2) M H1) as [n Hn].
+  unfold unbounded_above_on, bounded_above_on. intros [M H1].
+  assert (H2 : log 2 > 0) by apply log_2_pos.
+  destruct (INR_archimed (log 2) M H2) as [n H3].
   set (x := 2 ^ (S n)).
-  assert (Hx : x ∈ (0, ∞)).
+  assert (H4 : x ∈ (0, ∞)).
   { unfold x. auto_interval. pose proof (Rpow_gt_0 n 2 ltac:(lra)); lra. }
-  specialize (H (log x)).
-  assert (H3 : exists x0, x0 ∈ (0, ∞) /\ log x = log x0).
+  specialize (H1 (log x)).
+  assert (H5 : exists x0, x0 ∈ (0, ∞) /\ log x = log x0).
   { exists x. split; auto. }
-  specialize (H H3).
-  unfold x in H.
-  rewrite corollary_18_1 in H; try lra.
-  assert (H_final: INR (S n) * log 2 > M).
-  {
-    replace (INR (S n) * log 2) with (INR n * log 2 + log 2).
-    2 : { rewrite S_INR. ring. }
-    assert (INR n * log 2 + log 2 > INR n * log 2).
-    { apply Rplus_lt_reg_l with (r := -(INR n * log 2)). ring_simplify. apply H1. }
-    lra.
-  }
-  lra.
+  specialize (H1 H5).
+  unfold x in H1.
+  rewrite corollary_18_1 in H1; try lra.
+  assert (H6 : INR (S n) * log 2 > M); solve_R.
 Qed.
 
 Lemma log_unbounded_below_on : unbounded_below_on log (0, 1).
 Proof.
-  unfold unbounded_below_on, bounded_below_on. intros [M H].
-  assert (H1 : log 2 > 0) by apply log_2_pos.
-  destruct (INR_archimed (log 2) (-M) H1) as [n Hn].
+  unfold unbounded_below_on, bounded_below_on. intros [M H1].
+  assert (H2 : log 2 > 0) by apply log_2_pos.
+  destruct (INR_archimed (log 2) (-M) H2) as [n H3].
   set (x := (1/2) ^ (S n)).
-  assert (Hx : x ∈ (0, 1)).
+  assert (H4 : x ∈ (0, 1)).
   {
     unfold x. split.
     - apply Rpow_gt_0. lra.
     - apply Rpow_lt_1; try lra. lia.
   }
-  specialize (H (log x)).
-  assert (H3 : exists x0, x0 ∈ (0, 1) /\ log x = log x0).
+  specialize (H1 (log x)).
+  assert (H5 : exists x0, x0 ∈ (0, 1) /\ log x = log x0).
   { exists x. split; auto. }
-  specialize (H H3).
-  unfold x in H.
-  rewrite corollary_18_1 in H; try lra.
-  rewrite corollary_18_2 in H; try lra.
-  rewrite log_1 in H.
-  assert (H_final : INR (S n) * (0 - log 2) < M).
-  {
-    replace (INR (S n) * (0 - log 2)) with (INR n * (-log 2) - log 2).
-    2 : { rewrite S_INR. replace (0 - log 2) with (-log 2) by lra. ring. }
-    assert (INR n * (-log 2) - log 2 < INR n * (-log 2)).
-    { apply Rplus_lt_reg_l with (r := -(INR n * (-log 2))). ring_simplify. 
-      assert (-log 2 < 0) by lra.
-      lra. 
-    }
-    assert (INR n * (-log 2) < M).
-    {
-       replace (INR n * (-log 2)) with (-(INR n * log 2)) by ring.
-       lra.
-    }
-    lra.
-  }
-  lra.
+  specialize (H1 H5).
+  unfold x in H1.
+  rewrite corollary_18_1 in H1; try lra.
+  rewrite corollary_18_2 in H1; try lra.
+  rewrite log_1 in H1.
+  assert (H6 : INR (S n) * (0 - log 2) < M); solve_R.
 Qed.
 
 Lemma log_surjective : surjective_on log (0, ∞) ℝ.
 Proof.
   intros y _.
-  assert (exists x, x ∈ (0, 1) /\ log x < y) as [x1 [H1 H2]] by admit.
-  assert (exists x, x ∈ (1, ∞) /\ log x > y) as [x2 [H3 H4]] by admit.
+  assert (exists x, x ∈ (0, 1) /\ log x < y) as [x1 [H1 H2]].
+  {
+    apply NNPP; intro H1. apply log_unbounded_below_on.
+    exists y. intros z H2. apply Rnot_lt_ge; intro H3.
+    destruct H2 as [x [H4 H5]]. apply H1. exists x; solve_R.
+  }
+  assert (exists x, x ∈ (1, ∞) /\ log x > y) as [x2 [H3 H4]].
+  {
+    apply NNPP; intro H3. apply log_unbounded_above_on.
+    exists (Rmax y 0). intros z H4. apply Rnot_gt_le; intro H5.
+    destruct H4 as [x [H6 H7]].
+    apply H3. exists x. split; [| solve_R].
+    assert (log x > 0) as H8 by solve_R.
+    destruct (Rle_dec x 1) as [H9 | H9]; [ | solve_R ].
+    assert (log x <= 0); [| solve_R].
+    destruct (Req_dec x 1) as [H10 | H10]; [subst; rewrite log_1; lra |].
+    pose proof log_neg x ltac:(solve_R) as H11. solve_R.
+  }
   pose proof intermediate_value_theorem log x1 x2 y ltac:(solve_R) ltac:(apply log_continuous_on; solve_R) ltac:(lra) as [c [H5 H6]].
   exists c. solve_R.
-Admitted.
+Qed.
 
 Lemma exists_log_inverse : exists f, inverse_on log f (0, ∞) ℝ.
 Proof.
@@ -355,6 +347,16 @@ Proof.
   }
   assert (H3 : inverse_on log exp [a, b] [Rmin (log a) (log b), Rmax (log a) (log b)]).
   {
+    assert (H3 : a < b) by (unfold a, b; lra).
+    assert (H4 : log a < log b). { apply log_increasing; unfold a, b; solve_R. }
+    rewrite Rmin_left, Rmax_right by lra.
+    repeat split; try intros t H5.
+    - apply increasing_on_imp_not_decreasing_on with (f := log); try apply log_increasing; unfold a, b in *; lra.
+    - apply increasing_on_imp_not_decreasing_on with (f := log); try apply log_increasing; unfold a, b in *; lra.
+- apply increasing_on_imp_not_decreasing_on with (f := exp); try apply exp_increasing; rewrite log_exp; lra.
+- apply increasing_on_imp_not_decreasing_on with (f := exp); try apply exp_increasing; rewrite log_exp; lra.
+- apply exp_log; unfold a, b in *; lra.
+- apply log_exp.
     admit.
   }
   
@@ -446,3 +448,5 @@ Lemma nth_derive_exp_n_0 : forall n,
 Proof.
   intros n. rewrite nth_derive_exp. apply exp_0.
 Qed.
+
+Definition log_b (b x : R) : R := log x / log b.
