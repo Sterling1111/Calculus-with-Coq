@@ -16,6 +16,12 @@ Notation "√ x" := (sqrt x) (format "√ x", at level 20).
 
 Notation "n !" := (fact n) (format "n !", at level 10).
 
+Definition Nfloor (x : R) : nat := Z.to_nat (Int_part x).
+Definition Nceil (x : R) : nat := Z.to_nat (up x).
+
+Notation "⌊ x ⌋" := (Nfloor x) (at level 9, format "⌊ x ⌋").
+Notation "⌈ x ⌉" := (Nceil x) (at level 9, format "⌈ x ⌉").
+
 Open Scope R_scope.
 
 Notation "l .[ i ]" := (nth i l 0)

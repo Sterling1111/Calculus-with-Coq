@@ -699,3 +699,50 @@ Proof.
       * replace (f (S n')) with 0; try lra. rewrite H2; try lra; try lia.
       * intros j H4 H5. apply H2; lia.
 Qed.
+
+Lemma sum_f_geometric : forall n r,
+  r <> 1 -> ∑ 0 n (fun i => r ^ i) = (1 - r ^ (n+1)) / (1 - r).
+Proof.
+  intros n r H1. induction n as [| k IH].
+  - compute. field. nra.
+  - destruct k as [| k'] eqn : Ek.
+    -- compute. field. nra.
+    -- rewrite sum_f_i_Sn_f. 2 : { lia. }
+       rewrite IH. rewrite <- Ek. apply Rmult_eq_reg_l with (r := (1 - r)).
+       2 : { nra. }
+       replace ((1 - r) * ((1 - r ^ (k + 1)) / (1 - r) + r ^ S k)) with (1 - r^(k+1) + r^S k - r * r^S k) by (field; nra).
+       replace ((1 - r) * ((1 - r ^ (S k + 1)) / (1 - r))) with (1 - r^(S k + 1)) by (field; nra).
+       replace (r^(S k + 1)) with (r * r ^ (S k)). 2 : { replace (S k + 1)%nat with (S (S k)) by lia. simpl. auto. }
+       simpl. apply Rplus_eq_reg_r with (r := r * (r * r^k)).
+       replace (1 - r ^ (k + 1) + r * r ^ k - r * (r * r ^ k) + r * (r * r ^ k)) with
+               (1 - r ^(k+1) + r * r^k) by nra.
+       replace (1 - r * (r * r ^ k) + r * (r * r ^ k)) with 1 by nra.
+       replace (k+1)%nat with (S k) by lia. simpl. lra.
+Qed.
+
+Lemma sum_f_geometric_rev : forall n r,
+  r <> 1 -> (n >= 1)%nat ->
+  ∑ 0 (n - 1) (fun k => r ^ (n - k)) = r * (1 - r ^ n) / (1 - r).
+Proof.
+  intros n r H1 H2. 
+  destruct n; try lia.
+  replace (S n - 1)%nat with n by lia.
+  induction n as [| k IH].
+  - rewrite sum_f_0_0. simpl. field. nra.
+  - rewrite sum_f_Si; try lia.
+    replace (S (S k) - 0)%nat with (S (S k)) by lia.
+    replace (r ^ S (S k)) with (r * r ^ (S k)) by (simpl; ring).
+    replace (∑ 1 (S k) (fun i : nat => r ^ (S (S k) - i)))
+      with (∑ 0 k (fun i : nat => r ^ (S k - i))).
+    2: { 
+       rewrite sum_f_reindex with (s := 1%nat) (i := 1%nat); try lia.
+       replace (1 - 1)%nat with 0%nat by lia.
+       replace (S k - 1)%nat with k by lia.
+       apply sum_f_equiv; try lia.
+       intros i H3. 
+       replace (S (S k) - (i + 1))%nat with (S k - i)%nat by lia.
+       reflexivity.
+    }
+    
+    rewrite IH; solve_R.
+Qed.

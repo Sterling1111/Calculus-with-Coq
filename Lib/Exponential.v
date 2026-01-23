@@ -415,21 +415,32 @@ Notation "a ^^ x" := (Rpower a x) (at level 30, format "a ^^ x") : R_scope.
 Theorem theorem_18_4 : forall a b c,
   a > 0 -> (a ^^ b) ^^ c = a ^^ (b * c).
 Proof.
-  intros a b c H1.  
-Admitted.
+  intros a b c H1.
+  unfold Rpower.
+  destruct (Rlt_dec 0 a) as [H2|H2]; [| lra].
+  destruct (Rlt_dec 0 (exp (b * log a))) as [H3|H3].
+  - rewrite log_exp; try lra.
+    apply f_equal. lra.
+  - pose proof exp_pos (b * log a); lra.
+Qed.
 
 Lemma Rpower_sqrt : forall a,
   a > 0 -> a ^^ (1/2) = sqrt a.
 Proof.
   intros a H1.
   unfold Rpower.
-  destruct (Rlt_dec 0 a) as [H2 | H2]; try lra. 
-  rewrite <- exp_log; try lra.
-  2 : { apply sqrt_lt_R0; auto. }
-  pose proof corollary_18_1 2 (sqrt a) ltac:(apply sqrt_lt_R0; auto) as H3.
-  rewrite pow2_sqrt in H3; try lra. 
-  pose proof theorem_18_4 a (1/2) 2 H1 as H4.
-Admitted.
+  destruct (Rlt_dec 0 a) as [H2|H2]; [| lra].
+  apply Rsqr_inj.
+  - apply Rlt_le; apply exp_pos.
+  - apply Rlt_le; apply sqrt_lt_R0; auto.
+  - rewrite Rsqr_sqrt; [| lra].
+    unfold Rsqr.
+    rewrite <- theorem_18_3.
+    rewrite <- Rmult_plus_distr_r.
+    replace (1 / 2 + 1 / 2) with 1 by lra.
+    rewrite Rmult_1_l.
+    apply exp_log; auto.
+Qed.
 
 Lemma inf_differentiable_exp : inf_differentiable exp.
 Proof.
@@ -458,5 +469,209 @@ Proof.
 Qed.
 
 Definition log_ b x := log x / log b.
-
 Definition lg x := log_ 2 x.
+Definition ln x := log_ e x.
+
+Lemma log_b_spec : forall n b k,
+  n > 0 -> b > 0 -> b <> 1 ->
+  n = b ^^ k <-> k = log_ b n.
+Proof.
+  intros n b k H1 H2 H3.
+  unfold log_, Rpower.
+  destruct (Rlt_dec 0 b); try lra.
+  assert (H4 : log b <> 0).
+  { intro H4. rewrite <- log_1 in H4. apply log_injective in H4; solve_R. }
+  split; intro H5.
+  - apply f_equal with (f := log) in H5.
+    rewrite log_exp in H5.
+    rewrite H5; field; auto.
+  - rewrite H5.
+    replace (log n / log b * log b) with (log n) by (field; auto).
+    rewrite exp_log; auto.
+Qed.
+
+Lemma log_b_increasing : forall b,
+  b > 1 -> increasing_on (log_ b) (0, ∞).
+Proof.
+  intros b H1 x y H2 H3 H4.
+  unfold log_.
+  apply Rmult_lt_compat_r.
+  - apply Rinv_0_lt_compat. apply log_pos; lra.
+  - apply log_increasing; auto. 
+Qed.
+
+Lemma Rpower_nat : forall a (n : ℕ),
+  a > 0 -> a ^^ n = a ^ n.
+Proof.
+  intros a n H1.
+  induction n as [| k IH].
+  - unfold Rpower. destruct (Rlt_dec 0 a); [| lra].
+    rewrite Rmult_0_l. apply exp_0.
+  - rewrite <- tech_pow_Rmult. unfold Rpower in IH.
+    unfold Rpower. destruct (Rlt_dec 0 a); [| lra].
+    rewrite S_INR, Rmult_plus_distr_r, Rmult_1_l.
+    rewrite theorem_18_3.
+    rewrite exp_log; auto. unfold Rpower in IH. rewrite IH; lra.
+Qed.
+
+Lemma floor_log_unique : forall (b x : R) (k : nat),
+  b > 1 ->
+  x > 0 ->
+  b ^ k <= x < b ^ (k + 1) ->
+  ⌊ log_ b x ⌋ = k.
+Proof.
+  intros b x k H1 H2 [H3 H4]. rewrite <- Rpower_nat in H3, H4; try lra.
+  unfold log_, Rpower in *.
+  destruct (Rlt_dec 0 b); [| lra].
+  apply floor_unique.
+  - unfold Rdiv. apply Rle_ge. apply Rmult_le_pos.
+    + apply Rle_trans with (r2 := log (exp (INR k * log b))).
+      * rewrite log_exp. apply Rmult_le_pos; [apply pos_INR | apply Rlt_le, log_pos; lra ].
+      * apply increasing_on_imp_not_decreasing_on with (f := log) (D := (0, ∞)); try apply log_increasing; auto; try apply exp_pos.
+    + apply Rlt_le. apply Rinv_pos. apply log_pos; lra.
+  - split.
+    apply Rmult_le_reg_r with (r := log b).
+    + apply log_pos; lra.
+    + unfold Rdiv. rewrite Rmult_assoc, Rinv_l, Rmult_1_r; [| pose proof log_pos b; lra].
+      rewrite <- (log_exp (INR k * log b)).
+      apply increasing_on_imp_not_decreasing_on with (f := log) (D := (0, ∞)); try apply log_increasing; auto; try apply exp_pos.
+    + apply Rmult_lt_reg_r with (r := log b); [apply log_pos; lra |].
+      unfold Rdiv; rewrite Rmult_assoc, Rinv_l, Rmult_1_r; [| pose proof log_pos b; lra].
+      rewrite <- (log_exp ((INR k + 1) * log b)). 
+      rewrite plus_INR in H4. simpl in H4.
+      apply log_increasing; auto; try apply exp_pos. 
+Qed.
+
+Lemma power_base_change : forall (k : ℕ) (a b : ℝ),
+  a > 0 -> b > 0 -> b <> 1 ->
+  a ^ k = (b ^ k) ^^ (log_ b a).
+Proof.
+  intros k a b H1 H2 H3.
+  rewrite <- Rpower_nat; auto.
+  unfold Rpower, log_.
+  destruct (Rlt_dec 0 a) as [H4 | H4]; [| lra].
+  destruct (Rlt_dec 0 (b ^ k)) as [H5 | H5].
+  - f_equal. rewrite corollary_18_1; auto. field.
+    intro H6. rewrite <- log_1 in H6.
+    apply log_injective in H6; solve_R.
+  - pose proof Rpow_gt_0 k b H2. lra.
+Qed.
+
+Lemma Rpower_0 : forall x,
+  x > 0 -> x ^^ 0 = 1.
+Proof.
+  intros x H1. unfold Rpower.
+  destruct (Rlt_dec 0 x); try lra.
+  rewrite Rmult_0_l. apply exp_0.
+Qed.
+
+Lemma Rpower_ge_0 : forall a x,
+  a ^^ x >= 0.
+Proof.
+  intros a x.
+  unfold Rpower.
+  destruct (Rlt_dec 0 a); try lra.
+  pose proof exp_pos (x * log a); lra.
+Qed.
+
+Lemma Rpower_gt_0 : forall x y : R, 0 < x -> 0 < x ^^ y.
+Proof.
+  intros x y H1.
+  unfold Rpower.
+  destruct (Rlt_dec 0 x); try lra.
+  pose proof exp_pos (y * log x); lra.
+Qed.
+
+Lemma Rpower_gt_1 : forall a x,
+  a > 1 -> x > 0 -> a ^^ x > 1.
+Proof.
+  intros a x H1 H2.
+  unfold Rpower.
+  destruct (Rlt_dec 0 a); try lra.
+  pose proof log_pos a H1 as H3.
+  assert (H4 : x * log a > 0) by nra.
+  rewrite <- exp_0.
+  apply exp_increasing; auto; apply Full_intro.
+Qed.
+
+Lemma Rpower_le : forall x y z,
+  0 < x -> x <= y -> 0 <= z -> 
+  x ^^ z <= y ^^ z.
+Proof.
+  intros x y z H1 H2 H3.
+  unfold Rpower.
+  destruct (Rlt_dec 0 x) as [H4 | H4]; [| lra].
+  destruct (Rlt_dec 0 y) as [H5 | H5]; [| lra].
+  assert (z = 0 \/ z > 0) as [H6 | H6]; assert (x = y \/ x <> y) as [H7 | H7]; try lra.
+  - rewrite H6, Rmult_0_l, Rmult_0_l. lra.
+  - rewrite H6, Rmult_0_l, Rmult_0_l. lra.
+  - rewrite H7. reflexivity.
+  - pose proof log_increasing x y H1 H5 ltac:(lra) as H8.
+    pose proof exp_increasing (z * log x) (z * log y) ltac:(apply Full_intro) ltac:(apply Full_intro) ltac:(nra).
+    lra.
+Qed.
+
+Lemma Rpower_mult_distr : forall a b c,
+  a > 0 -> b > 0 -> (a * b) ^^ c = a ^^ c * b ^^ c.
+Proof.
+  intros a b c H1 H2.
+  unfold Rpower.
+  destruct (Rlt_dec 0 a) as [H3|H3]; [| lra].
+  destruct (Rlt_dec 0 b) as [H4|H4]; [| lra].
+  destruct (Rlt_dec 0 (a * b)) as [H5|H5]; [| nra].
+  rewrite theorem_18_1; try lra.
+  rewrite Rmult_plus_distr_l.
+  apply theorem_18_3.
+Qed.
+
+Lemma Rpower_mult : forall a b c,
+  a > 0 -> (a ^^ b) ^^ c = a ^^ (b * c).
+Proof.
+  intros a b c H1.
+  unfold Rpower.
+  destruct (Rlt_dec 0 a) as [H2 | H2]; [| lra].
+  destruct (Rlt_dec 0 (exp (b * log a))) as [H3 | H3].
+  - rewrite log_exp. f_equal. lra.
+  - pose proof (exp_pos (b * log a)). lra.
+Qed.
+
+Lemma Rpower_plus : forall a b c,
+  a > 0 -> a ^^ (b + c) = a ^^ b * a ^^ c.
+Proof.
+  intros a b c H1.
+  unfold Rpower.
+  destruct (Rlt_dec 0 a) as [H2|H2]; [| lra].
+  rewrite Rmult_plus_distr_r.
+  apply theorem_18_3.
+Qed.
+
+Lemma Rpower_le_contravar : forall a b c,
+  0 < a -> a <= b -> c < 0 -> b ^^ c <= a ^^ c.
+Proof.
+  intros a b c H1 H2 H3.
+  unfold Rpower.
+  destruct (Rlt_dec 0 a) as [H4|H4]; [| lra].
+  destruct (Rlt_dec 0 b) as [H5|H5]; [| lra].
+  apply increasing_on_imp_not_decreasing_on with (f := exp) (D := Full_set R).
+  - apply exp_increasing.
+  - apply Full_intro.
+  - apply Full_intro.
+  - apply Rmult_le_compat_neg_l; [ lra |].
+    destruct H2 as [H6 | H6].
+    pose proof log_increasing a b H1 H5 ltac:(lra); lra.
+    rewrite H6. lra.
+Qed.
+
+Lemma Rpower_inv : forall a x,
+  a > 0 -> (1 / a) ^^ x = a ^^ (- x).
+Proof.
+  intros a x H1.
+  unfold Rpower.
+  destruct (Rlt_dec 0 a) as [H2 | H2]; [| lra].
+  destruct (Rlt_dec 0 (1 / a)) as [H3 | H3].
+  - f_equal.
+    rewrite corollary_18_2; try lra.
+    rewrite log_1.
+    lra.
+  - pose proof Rinv_0_lt_compat a H2. lra.
+Qed.

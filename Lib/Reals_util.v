@@ -1,4 +1,4 @@
-From Lib Require Import Imports.
+From Lib Require Import Imports Notations.
 
 Open Scope R_scope.
 
@@ -276,6 +276,12 @@ Proof.
   intros r1 r2 H1 H2. destruct H1 as [n1 H1]. destruct H2 as [n2 H2]. exists (n1 * n2)%nat. rewrite H1, H2. rewrite mult_INR. reflexivity.
 Qed. 
 
+Lemma is_natural_pow : forall r n,
+  is_natural r -> is_natural (r ^ n).
+Proof.
+  intros r n H1. destruct H1 as [k H1]. exists (k ^ n)%nat. rewrite H1. rewrite pow_INR. reflexivity.
+Qed.
+
 Lemma is_integer_plus : forall r1 r2 : R,
   is_integer r1 -> is_integer r2 -> is_integer (r1 + r2).
 Proof.
@@ -392,4 +398,93 @@ Lemma Rdiv_pos_neg_rev' : forall r1 r2,
 Proof.
   intros r1 r2 H1 H2. pose proof Rtotal_order r1 0 as [H3 | [H3 | H3]]; try nra.
   pose proof Rdiv_pos_neg r1 r2 ltac:(lra) ltac:(lra). nra.
+Qed.
+
+Lemma floor_spec : ∀ x : R,
+  x >= 0 ->
+  ⌊ x ⌋ <= x < ⌊ x ⌋ + 1.
+Proof.
+  intros x H1.
+  unfold Nfloor.
+  rewrite INR_IZR_INZ.
+  generalize (base_Int_part x). intros [H2 H3].
+  rewrite Z2Nat.id; [split; lra | ].
+  assert (H4 : IZR (Int_part x) > -1) by lra.
+  apply lt_IZR in H4. lia.
+Qed.
+
+Lemma ceil_spec : forall x : R,
+  x > 0 ->
+  ⌈ x ⌉ - 1 <= x < ⌈ x ⌉.
+Proof.
+  intros x H1.
+  unfold Nceil.
+  rewrite INR_IZR_INZ.
+  generalize (archimed x); intros [H2 H3].
+  rewrite Z2Nat.id; [ split; lra |].
+  apply le_IZR; lra.
+Qed.
+
+Lemma floor_unique : forall (x : R) (n : nat),
+  x >= 0 ->
+  n <= x < n + 1 ->
+  ⌊ x ⌋ = n.
+Proof.
+  intros x n H1 [H2 H3].
+  unfold Nfloor.
+  apply Nat2Z.inj.
+  rewrite Z2Nat.id.
+  - symmetry.
+    apply Int_part_spec.
+    rewrite <- INR_IZR_INZ.
+    split; lra.
+  - generalize (base_Int_part x); intros [H4 H5].
+    assert (H6 : (-1 < Int_part x)%Z).
+    { apply lt_IZR. lra. }
+    lia.
+Qed.
+
+Lemma ceil_unique : forall (x : R) (n : nat),
+  x > 0 ->
+  n - 1 <= x < n ->
+  ⌈ x ⌉ = n.
+Proof.
+  intros x n H1 [H2 H3].
+  unfold Nceil.
+  apply Nat2Z.inj.
+  rewrite Z2Nat.id.
+  - symmetry. apply tech_up; rewrite <- INR_IZR_INZ; lra.
+  - apply le_IZR.
+    transitivity x; [lra |].
+    generalize (archimed x); intros [H4 H5]. lra.
+Qed.
+
+Lemma floor_INR : forall r, is_natural r -> INR ⌊r⌋ = r.
+Proof.
+  intros r [k H1].
+  rewrite H1. unfold Nfloor. rewrite Int_part_INR.
+  rewrite Nat2Z.id; auto.
+Qed.
+
+Lemma floor_INR_id : forall n : nat, ⌊INR n⌋ = n.
+Proof.
+  intros n. unfold Nfloor. rewrite Int_part_INR.
+  rewrite Nat2Z.id; auto.
+Qed.
+
+Lemma floor_power_succ_div : forall n b, b > 1 -> is_natural b -> ⌊b ^ (S n) / b⌋ = ⌊b ^ n⌋.
+Proof.
+  intros n b H1 [k H2]. assert ((k = 0)%nat \/ (k > 0)%nat) as [H3 | H3] by lia.
+  - subst. replace 1 with (INR 1) in H1 by auto. apply INR_lt in H1. lia.
+  - rewrite H2, <- tech_pow_Rmult. 
+    replace (INR k * INR k ^ n / INR k) with (INR k ^ n) by (field; lra). auto.
+Qed.
+
+Lemma floor_power_succ_ge_base : forall b k, 
+  b > 1 -> is_natural b -> ⌊b ^ (S k)⌋ >= b.
+Proof.
+  intros b k H1 H2.
+  induction k as [| k IH].
+  - simpl. rewrite floor_INR. 2: { rewrite Rmult_1_r; auto. } lra.
+  - rewrite floor_INR in *; try apply is_natural_pow; auto. simpl in *; nra.
 Qed.
