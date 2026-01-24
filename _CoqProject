@@ -41,7 +41,7 @@ Lib/Taylor.v
 Lib/Vector.v
 Lib/Matrix.v
 Lib/Exponential.v
-Lib/Master_Theorem.v
+Lib/Asymptotics.v
 
 # ==========================
 # ATTAM (depends on Lib only)
