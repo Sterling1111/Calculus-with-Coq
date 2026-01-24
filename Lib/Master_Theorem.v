@@ -3,13 +3,13 @@ Import SumNotations SequenceNotations FunctionNotations.
 
 Open Scope R_scope.
 
-Definition big_O (f g : ℕ -> ℝ) :=
+Definition big_o (f g : ℕ -> ℝ) :=
   ∃ c N, c > 0 /\ ∀ (n : ℕ), n >= N -> |f n| <= c * |g n|.
 
-Definition big_Omega (f g : ℕ -> ℝ) :=
+Definition big_omega (f g : ℕ -> ℝ) :=
   ∃ c N, c > 0 /\ ∀ (n : ℕ), n >= N -> |f n| >= c * |g n|.
 
-Definition big_Theta (f g : ℕ -> ℝ) :=
+Definition big_theta (f g : ℕ -> ℝ) :=
   ∃ c1 c2 N, c1 > 0 /\ c2 > 0 /\ ∀ (n : ℕ), n >= N -> 
   c1 * |g n| <= |f n| <= c2 * |g n|.
 
@@ -19,13 +19,13 @@ Definition little_o (f g : ℕ -> ℝ) :=
 Definition little_omega (f g : ℕ -> ℝ) :=
   ∀ c, c > 0 -> ∃ N, ∀ (n : ℕ), n >= N -> |f n| >= c * |g n|.
 
-Notation "f = Ο( g )" := (big_O f g) 
+Notation "f = Ο( g )" := (big_o f g) 
   (at level 70, no associativity, format "f  =  Ο( g )") : R_scope.
 
-Notation "f = Ω( g )" := (big_Omega f g) 
+Notation "f = Ω( g )" := (big_omega f g) 
   (at level 70, no associativity, format "f  =  Ω( g )") : R_scope.
 
-Notation "f = Θ( g )" := (big_Theta f g) 
+Notation "f = Θ( g )" := (big_theta f g) 
   (at level 70, no associativity, format "f  =  Θ( g )") : R_scope.
 
 Notation "f = o( g )" := (little_o f g) 
@@ -99,7 +99,7 @@ Proof.
   nra.
 Qed.
 
-Theorem big_O_trans : forall f g h,
+Theorem big_o_trans : forall f g h,
   f = Ο( g ) -> g = Ο( h ) -> f = Ο( h ).
 Proof.
   intros f g h [c1 [N1 [H1 H2]]] [c2 [N2 [H3 H4]]].
@@ -111,7 +111,7 @@ Proof.
   nra.
 Qed.
 
-Theorem big_Omega_trans : forall f g h,
+Theorem big_omega_trans : forall f g h,
   f = Ω( g ) -> g = Ω( h ) -> f = Ω( h ).
 Proof.
   intros f g h [c1 [N1 [H1 H2]]] [c2 [N2 [H3 H4]]].
@@ -154,12 +154,12 @@ Proof.
   intros f. exists 1, 1, 0%nat. repeat split; lra.
 Qed.
 
-Theorem big_O_refl : forall f, f = Ο( f ).
+Theorem big_o_refl : forall f, f = Ο( f ).
 Proof.
   intros f. exists 1, 0%nat. split; solve_R.
 Qed.
 
-Lemma big_Omega_refl : forall f, f = Ω( f ).
+Lemma big_omega_refl : forall f, f = Ω( f ).
 Proof.
   intros f. exists 1, 0%nat. split; solve_R.
 Qed.
@@ -208,7 +208,23 @@ Proof.
     field_simplify in H3; solve_R.
 Qed.
 
-Lemma big_O_extend_1 : forall (f : nat -> R) (g : nat -> R) (N : R) (c : R),
+Lemma big_o_add : forall f1 f2 g,
+  f1 = Ο(g) -> f2 = Ο(g) -> (λ n, f1 n + f2 n) = Ο(g).
+Proof.
+  intros f1 f2 g [c1 [N1 [H1 H2]]] [c2 [N2 [H3 H4]]].
+  exists (c1 + c2), (Rmax N1 N2). split; [lra |].
+  intros n H5.
+  apply Rle_trans with (|f1 n| + |f2 n|); [apply Rabs_triang |].
+  rewrite Rmult_plus_distr_r.
+  apply Rplus_le_compat.
+  - apply H2; apply Rle_ge; apply Rle_trans with (Rmax N1 N2); [apply Rmax_l | apply Rge_le; exact H5].
+  - apply H4; apply Rle_ge; apply Rle_trans with (Rmax N1 N2); [apply Rmax_r | apply Rge_le; exact H5].
+Qed.
+
+
+
+
+Lemma big_o_extend_1 : forall (f : nat -> R) (g : nat -> R) (N : R) (c : R),
   (forall n, (n >= 1)%nat -> g n > 0) ->
   (forall n : nat, n >= N -> f n <= c * g n) ->
   exists c', forall n, (n >= 1)%nat -> f n <= c' * g n.
@@ -264,7 +280,7 @@ Section Master_Theorem.
   Hypothesis H2 : b > 1.
   Hypothesis H3 : ∀ n, f n >= 0.
   Hypothesis H4 : ∀ n, T n >= 0.
-  Hypothesis H5 : ∃ n, T n > 0.
+  Hypothesis H5 : T 1 > 0.
   Hypothesis H6 : ∀ n : ℕ, n >= b -> T n = a * T (⌊n/b⌋) + f n.
   Hypothesis H7 : ∀ k : ℕ, T' k = T (⌊b^k⌋).
 
@@ -329,7 +345,7 @@ Section Master_Theorem.
 
       assert (exists c', ∀ n, (n >= 1)%nat -> |f n| <= c' * |h n|) as [c' H15].
       {
-        apply big_O_extend_1 with (N := N) (c := c); auto.
+        apply big_o_extend_1 with (N := N) (c := c); auto.
         intros n H15. unfold h. apply Rabs_pos_lt, Rgt_not_eq, Rpower_gt_0; solve_R.
       }
 
@@ -451,52 +467,56 @@ Section Master_Theorem.
     fold g in H9, H10, H11.
     pose proof lemma_4_2 as H12.
     split; [| split].
-    - intros [ε [H13 H14]]. specialize (H9 (ex_intro _ ε (conj H13 H14))).
-apply big_theta_iff; split.
-+ apply big_O_trans with (λ k, (b ^ k) ^^ p + g k).
-  * exists 1, 1%nat. split; [lra |]. intros n H15.
-    rewrite Rmult_1_l. rewrite Rabs_right. 2 : { rewrite H7, H4; lra. }
-    rewrite H12; auto; [ | apply Rge_le, INR_le in H15; lia].
-    rewrite Rabs_right. 
-    2 : {
-      apply Rle_ge, Rplus_le_le_0_compat.
-      - apply Rge_le. apply Rpower_ge_0.
-      - apply sum_f_nonneg; try lia. intros k H16. pose proof H3 (⌊b^(n - k)⌋) as H17. pose proof pow_lt a k ltac:(lra) as H18. nra.
-    }
-    replace ((b ^ n) ^^ p) with (a ^ n).
-    2 : { unfold p. rewrite power_base_change with (b := b); lra. }j
-    apply Rplus_le_compat.
-    apply Rplus_le_compat_r.
-
-    unfold p. rewrite power_base_change; try lra.
-    rewrite Rmult_comm.
-    destruct (Rle_dec (T' 0) 1).
-    * apply Rmult_le_compat_l; [apply pow_le; lra | auto].
-    * apply Rle_trans with (T' 0 * a ^ n).
-      -- apply Rmult_le_compat_l; [apply pow_le; lra | lra].
-      -- apply Rle_trans with (T' 0 * a ^ n + T' 0 * g n).
-         ++ rewrite Rmult_plus_distr_l. apply Rplus_le_compat_l.
-            apply Rmult_le_pos; [lra | apply sum_f_nonneg; try lia; intros; apply Rmult_le_pos; [apply pow_le; lra | apply H3]].
-         ++ admit. (* Constant factor absorption *)
-  + apply big_O_add.
-    * apply big_O_mult_const. apply big_O_refl.
-    * exact H9.
-- apply big_Omega_trans with (λ k, (b ^ k) ^^ p).
-  + apply big_Omega_refl.
-  + exists (T' 0), 1%nat. split; [admit |]. (* Assume T' 0 > 0 *)
-    intros n H15.
-    rewrite H12; auto; [| lia].
-    rewrite Rabs_right; [| apply H4].
-    rewrite Rabs_right; [| apply Rpower_ge_0].
-    apply Rle_trans with (a ^ n * T' 0).
-    * apply Rmult_le_compat_r; [admit |].
-      unfold p. rewrite power_base_change; try lra. lra.
-    * apply Rle_trans with (a ^ n * T' 0 + g n); [| lra].
-      rewrite Rplus_comm. apply Rle_trans with (g n + 0); [rewrite Rplus_0_r; lra |].
-      apply Rplus_le_compat_l.
-      apply sum_f_nonneg; try lia.
-      intros j H16. apply Rmult_le_pos; [apply pow_le; lra | apply H3].
-
+    - intros [ε [H13 H14]]. specialize (H9 (ex_intro _ ε (conj H13 H14))). apply big_theta_iff; split.
+      + apply big_o_trans with (λ k, (b ^ k) ^^ p + g k); [ | apply big_o_add; auto; apply big_o_refl ].
+        exists (Rmax 1 (T' 0)), 1%nat. split; [solve_R |]. intros n H15.
+        specialize (H12 n ltac:(apply Rge_le, INR_le in H15; lia) H8).
+        replace (∑ 0 (n - 1) λ j : ℕ, a ^ j * f ⌊b ^ (n - j)⌋) with (g n) in H12 by reflexivity.
+        replace ((b ^ n) ^^ p) with (a ^ n).
+        2 : { unfold p. rewrite power_base_change with (b := b); lra. }
+        rewrite H12. pose proof pow_le a n ltac:(lra) as H16. rewrite H7, pow_O.
+        replace 1 with (INR 1) by auto. rewrite floor_INR_id; auto.
+        assert (H17 : 0 <= g n).
+        { apply sum_f_nonneg; try lia. intros k H17. apply Rmult_le_pos; [apply pow_le; lra | apply Rge_le; auto ]. }
+        solve_R.
+      + exists (T 1), 1%nat. split; auto.
+        intros n H15. specialize (H12 n ltac:(apply Rge_le, INR_le in H15; lia) H8).
+        replace (∑ 0 (n - 1) λ j : ℕ, a ^ j * f ⌊b ^ (n - j)⌋) with (g n) in H12 by reflexivity.
+        replace ((b ^ n) ^^ p) with (a ^ n).
+        2 : { unfold p. rewrite power_base_change with (b := b); lra. }
+        pose proof pow_le a n ltac:(lra) as H16.
+        rewrite H12, H7, pow_O. replace 1 with (INR 1) by auto. rewrite floor_INR_id; auto.
+        assert (H17 : 0 <= g n).
+        { apply sum_f_nonneg; try lia. intros k H17. apply Rmult_le_pos; [apply pow_le; lra | apply Rge_le; auto ]. }
+        solve_R.
+    - intros H13. specialize (H10 H13). apply big_theta_iff; split.
+      + apply big_o_trans with (λ k, (b ^ k) ^^ p + g k).
+        * exists (Rmax 1 (T' 0)), 1%nat. split; [solve_R |]. intros n H14.
+          specialize (H12 n ltac:(apply Rge_le, INR_le in H14; lia) H8).
+          replace (∑ 0 (n - 1) λ j : ℕ, a ^ j * f ⌊b ^ (n - j)⌋) with (g n) in H12 by reflexivity.
+          replace ((b ^ n) ^^ p) with (a ^ n).
+          2 : { unfold p. rewrite power_base_change with (b := b); lra. }
+          rewrite H12. pose proof pow_le a n ltac:(lra) as H15. rewrite H7, pow_O.
+          replace 1 with (INR 1) by auto. rewrite floor_INR_id; auto.
+          assert (H16 : 0 <= g n).
+          { apply sum_f_nonneg; try lia. intros k H16. apply Rmult_le_pos; [apply pow_le; lra | apply Rge_le; auto ]. }
+          solve_R.
+        * apply big_o_add; [ | apply big_theta_iff; auto ].
+          apply big_o_trans with (λ k, (b ^ k) ^^ p); [ apply big_o_refl | ].
+          exists 1, 1%nat. split; [solve_R |]. intros n H14. simpl in H14.
+          pose proof Rpower_ge_0 (b ^ n) p as H15. solve_R.
+      + apply big_omega_trans with g; [ | apply big_theta_iff; auto ].
+        exists 1, 1%nat. split; [lra|]. intros n H14.
+        specialize (H12 n ltac:(apply Rge_le, INR_le in H14; lia) H8).
+        replace (∑ 0 (n - 1) λ j : ℕ, a ^ j * f ⌊b ^ (n - j)⌋) with (g n) in H12 by reflexivity.
+        replace ((b ^ n) ^^ p) with (a ^ n).
+        2 : { unfold p. rewrite power_base_change with (b := b); lra. }
+        assert (H15 : 0 <= g n).
+        { apply sum_f_nonneg; try lia. intros k H15. apply Rmult_le_pos; [apply pow_le; lra | apply Rge_le; auto ]. }
+        rewrite H12. pose proof pow_le a n ltac:(lra) as H16. rewrite H7, pow_O.
+        replace 1 with (INR 1) by auto. rewrite floor_INR_id; auto. simpl.
+        solve_R.
+    - 
 End Master_Theorem.
 
 Theorem master_theorem : ∀ (a b : ℝ) (f T : ℕ -> ℝ),
