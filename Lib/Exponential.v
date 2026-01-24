@@ -675,3 +675,36 @@ Proof.
     lra.
   - pose proof Rinv_0_lt_compat a H2. lra.
 Qed.
+
+Lemma floor_power_lower_bound :
+  ∀ p : ℝ, p ≥ 0 → ∃ j : ℝ, j > 0 ∧ ∀ x : ℝ, x ≥ 1 → ⌊x⌋^^p ≥ j * x^^p.
+Proof.
+  intros p H1.
+  exists ((1 / 2) ^^ p). split.
+  - apply Rpower_gt_0. lra.
+  - intros x H2.
+    assert (H3 : ⌊x⌋ ≥ x / 2).
+    {
+      destruct (Rlt_dec x 2) as [H3 | H3].
+      - assert (H4 : ⌊x⌋ = 1%nat).
+        { apply floor_unique; solve_R. }
+        rewrite H4. solve_R.
+      - apply Rle_ge. apply Rle_trans with (x - 1); try lra.
+        pose proof floor_spec x. lra.
+    }
+    rewrite <- Rpower_mult_distr; try lra.
+    apply Rle_ge.
+    apply Rpower_le; try lra.
+Qed.
+
+Lemma log_b_nonneg : forall b x,
+  b > 1 -> x >= 1 -> log_ b x >= 0.
+Proof.
+  intros b x H1 H2.
+  unfold log_.
+  apply Rle_ge.
+  assert (x = 1 \/ x > 1) as [H3 | H3] by lra.
+  - subst. rewrite log_1. lra.
+  - pose proof Rdiv_pos_pos (log x) (log b) ltac:(apply log_pos; lra) ltac:(apply log_pos; lra).
+    lra.
+Qed.

@@ -488,3 +488,13 @@ Proof.
   - simpl. rewrite floor_INR. 2: { rewrite Rmult_1_r; auto. } lra.
   - rewrite floor_INR in *; try apply is_natural_pow; auto. simpl in *; nra.
 Qed.
+
+Lemma pow_unbounded : forall b M : R, b > 1 -> exists n : nat, b ^ n >= M.
+Proof.
+  intros b M H1.
+  destruct (Pow_x_infinity b ltac:(solve_R) M) as [N H2].
+  exists N.
+  specialize (H2 N ltac:(solve_R)).
+  rewrite Rabs_right in H2; solve_R.
+  apply Rle_ge. apply pow_le. lra.
+Qed.

@@ -221,9 +221,6 @@ Proof.
   - apply H4; apply Rle_ge; apply Rle_trans with (Rmax N1 N2); [apply Rmax_r | apply Rge_le; exact H5].
 Qed.
 
-
-
-
 Lemma big_o_extend_1 : forall (f : nat -> R) (g : nat -> R) (N : R) (c : R),
   (forall n, (n >= 1)%nat -> g n > 0) ->
   (forall n : nat, n >= N -> f n <= c * g n) ->
@@ -264,13 +261,13 @@ Proof.
       destruct (⌊x⌋). simpl in *; try nra. rewrite S_INR in *.
       pose proof pos_INR n; lra.
     }
-replace (2 ^^ (- p) * x ^^ p) with ((x / 2) ^^ p).
-2: {
-  rewrite <- Rpower_inv; [| lra].
-  rewrite <- Rpower_mult_distr; try lra.
-  f_equal; lra.
-}
-apply Rpower_le_contravar; try lra.
+    replace (2 ^^ (- p) * x ^^ p) with ((x / 2) ^^ p).
+    2: {
+      rewrite <- Rpower_inv; [| lra].
+      rewrite <- Rpower_mult_distr; try lra.
+      f_equal; lra.
+    }
+    apply Rpower_le_contravar; try lra.
 Qed.
 
 Section Master_Theorem.
@@ -328,20 +325,21 @@ Section Master_Theorem.
 
   Lemma lemma_4_3 :
     let g := λ k, ∑ 0 (k - 1) (λ j, a ^ j * f (⌊b^(k-j)⌋)) in
-    ((∃ ε, ε > 0 /\ f = Ο(λ n, n ^^ (log_ b a - ε))) -> 
-      g = Ο(λ k, (b^k) ^^ (log_ b a))) /\
-    (f = Θ(λ n, n ^^ (log_ b a)) -> 
-      g = Θ(λ k, (b^k) ^^ (log_ b a) * k)) /\
-    ((∃ ε c N, ε > 0 /\ c < 1 /\ f = Ω(λ n, n ^^ (log_ b a + ε)) /\ 
+    let p := log_ b a in
+    ((∃ ε, ε > 0 /\ f = Ο(λ n, n ^^ (p - ε))) -> 
+      g = Ο(λ k, (b^k) ^^ p)) /\
+    (f = Θ(λ n, n ^^ p) -> 
+      g = Θ(λ k, (b^k) ^^ p * k)) /\
+    ((∃ ε c N, ε > 0 /\ c < 1 /\ f = Ω(λ n, n ^^ p) /\ 
       (∀ n : ℕ, n >= N -> a * f (⌊n/b⌋) <= c * f n)) -> 
       g = Θ(λ k, f (⌊b^k⌋))).
   Proof.
-    intros g. split; [| split].
+    intros g p. split; [| split].
     - intros [ε [H10 [c [N [H12 H13]]]]]. 
       set (q := b ^^ ε).
       assert (H14 : q > 1). { unfold q. apply Rpower_gt_1; try lra. }
 
-      set (h := λ n : nat, n ^^ (log_ b a - ε)).
+      set (h := λ n : nat, n ^^ (p - ε)).
 
       assert (exists c', ∀ n, (n >= 1)%nat -> |f n| <= c' * |h n|) as [c' H15].
       {
@@ -349,7 +347,7 @@ Section Master_Theorem.
         intros n H15. unfold h. apply Rabs_pos_lt, Rgt_not_eq, Rpower_gt_0; solve_R.
       }
 
-      pose proof floor_power_bound (log_ b a - ε) as [j [H16 H17]].
+      pose proof floor_power_bound (p - ε) as [j [H16 H17]].
 
       set (c'' := Rmax 1 (c' * j)).
 
@@ -363,7 +361,7 @@ Section Master_Theorem.
         specialize (H3 (⌊b^(n - k)⌋)). pose proof pow_lt a k ltac:(lra) as H21. nra.
       }
 
-      apply Rle_trans with (r2 := ∑ 0 (n - 1) (λ k, a ^ k * (c'' * (b ^ (n - k)) ^^ (log_ b a - ε)))).
+      apply Rle_trans with (r2 := ∑ 0 (n - 1) (λ k, a ^ k * (c'' * (b ^ (n - k)) ^^ (p - ε)))).
       {
         apply sum_f_congruence_le; try lia.
         intros k H20. 
@@ -384,12 +382,12 @@ Section Master_Theorem.
         unfold h.
         assert (H22: 0 <= c').
         { 
-          apply Rmult_le_reg_r with (⌊b ^ (n - k)⌋ ^^ (log_ b a - ε)).
+          apply Rmult_le_reg_r with (⌊b ^ (n - k)⌋ ^^ (p - ε)).
           - apply Rpower_gt_0. solve_R.
           - rewrite Rmult_0_l. apply Rle_trans with (f ⌊b ^ (n - k)⌋); auto.
             apply Rge_le. apply H3.
         }
-        apply Rle_trans with (c' * (j * (b ^ (n - k)) ^^ (log_ b a - ε))).
+        apply Rle_trans with (c' * (j * (b ^ (n - k)) ^^ (p - ε))).
         + apply Rmult_le_compat_l; auto.
           apply H17. apply Rle_ge; apply pow_R1_Rle; lra.
         + rewrite <- Rmult_assoc.
@@ -400,8 +398,8 @@ Section Master_Theorem.
 
       apply Rle_trans with (c'' * a ^ n * ∑ 0 (n - 1) (fun k => (1/q)^(n-k))).
       {
-        replace (λ k : ℕ, a ^ k * (c'' * (b ^ (n - k))^^(log_ b a - ε))) with
-                (λ k : ℕ, c'' * (a^k * (b ^ (n - k))^^(log_ b a - ε))) by (extensionality x; lra).
+        replace (λ k : ℕ, a ^ k * (c'' * (b ^ (n - k))^^(p - ε))) with
+                (λ k : ℕ, c'' * (a^k * (b ^ (n - k))^^(p - ε))) by (extensionality x; lra).
         rewrite <- r_mult_sum_f_i_n_f_l.
         right. rewrite Rmult_assoc. f_equal.
         rewrite r_mult_sum_f_i_n_f_l. 
@@ -411,18 +409,19 @@ Section Master_Theorem.
         rewrite Rpower_mult; try lra.
         rewrite Rmult_minus_distr_l. unfold Rminus at 1. rewrite Rpower_plus; try lra.
 
-        replace (b ^^ (INR (n - k) * log_ b a)) with (a ^^ INR (n - k)).
+        replace (b ^^ ((n - k)%nat * p)) with (a ^^ (n - k)).
         2: {
           rewrite Rmult_comm.
-          rewrite <- Rpower_mult; [| lra].
-          unfold log_. f_equal. unfold Rpower. destruct (Rlt_dec 0 b); [| lra].
+          rewrite <- Rpower_mult; [| lra]. unfold p.
+          unfold log_. f_equal; [| rewrite minus_INR; solve_R]. unfold Rpower.
+          destruct (Rlt_dec 0 b) as [H21 | H21]; try lra.
           replace (log a / log b * log b) with (log a).
           - rewrite exp_log; lra.
           - field. apply Rgt_not_eq. apply log_pos; lra.
         }
         rewrite <- Rmult_assoc.
         rewrite <- Rpower_plus; [| lra].
-        replace (INR k + INR (n - k)) with (INR n) by (rewrite minus_INR; [lra | lia]).
+        replace (k + (n - k)) with (INR n) by lra.
         f_equal.
         unfold q.
         rewrite Rpower_inv; [| apply Rpower_gt_0; lra].
@@ -431,7 +430,7 @@ Section Master_Theorem.
         lra.
       }
 
-      replace (| (b ^ n) ^^ log_ b a |) with (a ^ n).
+      replace (| (b ^ n) ^^ p |) with (a ^ n).
       2: { rewrite Rabs_right. apply power_base_change; try lra. apply Rpower_ge_0; lra. }
       rewrite Rmult_assoc. replace (c'' * q / (q - 1) * a ^ n) with (c'' * (a ^ n * (q / (q - 1)))) by nra.
       apply Rmult_le_compat_l; try lra. apply Rmult_le_compat_l. apply pow_le; lra.
@@ -449,8 +448,28 @@ Section Master_Theorem.
           { apply Rmult_le_pos. pose proof Rdiv_pos_pos 1 q; lra. apply pow_le. pose proof Rdiv_pos_pos 1 q; lra. }
           lra.
         * apply Rlt_le. apply Rdiv_lt_1; lra.
-    - admit.
-    - admit.
+    - intros [c1 [c2 [N [H8 [H9 H10]]]]].
+
+      set (h := λ n : nat, n ^^ p).
+
+      assert (exists c3, ∀ n, (n >= 1)%nat -> |f n| <= c3 * |h n|) as [c3 H11].
+      {
+        apply big_o_extend_1 with (N := N) (c := c2); [ | apply H10 ].
+        intros n H11. unfold h. pose proof Rpower_gt_0 n p ltac:(solve_R); solve_R.
+      }
+
+      pose proof floor_power_bound p as [j [H12 H13]].
+      pose proof floor_power_lower_bound p as [k [H14 H15]].
+      { unfold p. apply log_b_nonneg; lra. }
+
+      destruct (pow_unbounded b (Rmax 2 (N + 1)) H2) as [M H16].
+
+      exists (c1 * k / 2), (Rmax c3 1 * j), (Rmax 1 (2 * INR M)).
+      split; [solve_R | split]; [solve_R |]. intros n H17. split.
+      + admit.
+      + admit.
+
+  - admit.
   Admitted.
 
   Lemma lemma_4_4 :
@@ -516,7 +535,8 @@ Section Master_Theorem.
         rewrite H12. pose proof pow_le a n ltac:(lra) as H16. rewrite H7, pow_O.
         replace 1 with (INR 1) by auto. rewrite floor_INR_id; auto. simpl.
         solve_R.
-    - 
+    - admit.
+  Admitted.
 End Master_Theorem.
 
 Theorem master_theorem : ∀ (a b : ℝ) (f T : ℕ -> ℝ),
