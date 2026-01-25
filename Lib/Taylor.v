@@ -869,3 +869,39 @@ Proof.
   }
   unfold e. lra.
 Qed.
+
+Lemma ln_19_bounds : 2.944 < ln 19 < 2.945.
+Proof.
+  set (x := e^3 / 19).
+  assert (H1 : exists δ, δ > 0 /\ nth_differentiable_on (S 3) ln (1 - δ, x + δ)).
+  {
+    exists 0.5. split; [lra |].
+    apply nth_differentiable_imp_nth_differentiable_on.
+    - apply differentiable_domain_open. pose proof e_bounds. unfold x. nra.
+    - apply inf_differentiable_imp_nth_differentiable. admit.
+  }
+  assert (H2 : 1 < x). { pose proof e_bounds. unfold x. nra. }
+  pose proof (Taylors_Theorem 3 1 x ln H2 H1) as [t [H3 H4]].
+  assert (H5 : P(3, 1, ln) x = (x - 1) - (x - 1)^2 / 2 + (x - 1)^3 / 3).
+  {
+    unfold Taylor_polynomial. repeat rewrite sum_f_i_Sn_f; try lia.
+    rewrite sum_f_0_0; try lia.
+    repeat rewrite nth_derive_ln; try lra. simplify_factorials. simpl. 
+    rewrite ln_1. field.
+  }
+  unfold Taylor_remainder in H4. rewrite H5 in H4.
+  assert (H6 : ⟦ Der ^ (S 3) t ⟧ ln = -6 / t^4).
+  { replace (S 3) with 4%nat by lia. rewrite nth_derive_ln; [| solve_R]. simplify_factorials. field; solve_R. }
+  replace (3 + 1)%nat with 4%nat in H4 by lia.
+  rewrite H6 in H4.
+  replace (INR (4!)) with 24 in H4 by (simplify_factorials; lra).
+  assert (H7 : ln 19 = 3 - ln x). { admit.  }  
+  pose proof e_bounds.
+  assert (H8 : 2.944 < 3 - ((x - 1) - (x - 1)^2 / 2 + (x - 1)^3 / 3 + -6 / t^4 / 24 * (x - 1)^4) < 2.945).
+  {
+    unfold x in *. destruct H3.
+    assert (0.057 < e^3/19 - 1 < 0.0572). { nra. }
+    split. apply Rlt_trans 
+  }
+  lra.
+Qed.

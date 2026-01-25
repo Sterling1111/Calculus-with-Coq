@@ -159,6 +159,14 @@ Proof.
   - apply theorem_13_3; solve_R.
 Qed.
 
+Lemma log_nonneg : forall x,
+  x >= 1 -> log x >= 0.
+Proof.
+  intros x H1. destruct H1 as [H1 | H1].
+  - pose proof log_pos x H1 as H2; lra.
+  - subst. rewrite log_1; lra.
+Qed.
+
 Lemma log_neg : forall x,
   0 < x < 1 -> log x < 0.
 Proof.
@@ -594,6 +602,24 @@ Proof.
   apply exp_increasing; auto; apply Full_intro.
 Qed.
 
+Lemma exp_nondecreasing : non_decreasing exp.
+Proof.
+  apply increasing_on_imp_non_decreasing_on with (f := exp) (D := Full_set R); try apply exp_increasing; apply Full_intro.
+Qed.
+
+Lemma Rpower_exp_le : forall a b c,
+  a >= 1 -> b <= c -> a ^^ b <= a ^^ c.
+Proof.
+  intros a b c H1 H2.
+  unfold Rpower.
+  destruct (Rlt_dec 0 a) as [H3 | H3]; [| lra].
+  destruct (Req_dec (b * log a) (c * log a)) as [H4 | H4].
+  - rewrite H4; apply Rle_refl.
+  - apply exp_nondecreasing; try apply Full_intro.
+    apply Rmult_le_compat_r; try lra.
+    pose proof log_nonneg a ltac:(lra) as H5; lra.
+Qed.
+
 Lemma Rpower_le : forall x y z,
   0 < x -> x <= y -> 0 <= z -> 
   x ^^ z <= y ^^ z.
@@ -707,4 +733,102 @@ Proof.
   - subst. rewrite log_1. lra.
   - pose proof Rdiv_pos_pos (log x) (log b) ltac:(apply log_pos; lra) ltac:(apply log_pos; lra).
     lra.
+Qed.
+
+Lemma Rpower_1 : forall x,
+  0 < x -> x ^^ 1 = x.
+Proof.
+  intros x H1.
+  unfold Rpower.
+  destruct (Rlt_dec 0 x); try lra.
+  rewrite Rmult_1_l.
+  rewrite exp_log; auto.
+Qed.
+
+Lemma Rpower_1_base : forall x,
+  1 ^^ x = 1.
+Proof.
+  intros x.
+  unfold Rpower.
+  destruct (Rlt_dec 0 1); try lra.
+  rewrite log_1.
+  rewrite Rmult_0_r.
+  apply exp_0.
+Qed.
+
+Lemma ln_eq_log : forall x, ln x = log x.
+Proof.
+  intros x. unfold ln, log_, e. 
+  rewrite log_exp.
+  lra.
+Qed.
+
+Lemma derive_log_val : forall x, x > 0 -> ⟦ Der x ⟧ log = 1 / x.
+Proof.
+  intros x H1.
+  apply derive_at_spec.
+  - apply derivative_at_imp_differentiable_at with (f' := fun t => 1/t).
+    apply derivative_log_x; auto.
+  - apply derivative_log_x; auto.
+Qed.
+
+Lemma nth_derive_inv : forall n x,
+  x > 0 ->
+  ⟦ Der^n x ⟧ (fun t => 1/t) = ((-1)^n * INR (fact n)) / (x ^ (S n)).
+Proof.
+  induction n; intros x H1.
+  - simpl. field; lra.
+  - rewrite nth_derive_at_succ.
+    rewrite <- nth_derive_at_comm.
+    rewrite derive_at_eq with (f2 := fun t => ((-1)^n * INR (fact n)) / t ^ (S n)).
+    2: { exists (x/2). split; [lra |].
+      intros t H2. apply IHn. solve_R.  }
+    rewrite derive_at_div.
+    4: { apply pow_nonzero; lra. }
+    3: { apply differentiable_at_pow. }
+    2: { apply differentiable_at_const. }
+    rewrite derive_at_const, derive_at_pow.
+    rewrite Rmult_0_l, Rminus_0_l.
+    rewrite fact_simpl, mult_INR.
+    replace ((-1) ^ S n) with ((-1)^n * -1) by (simpl; lra).
+    field_simplify; try split; try apply pow_nonzero; try lra.
+    replace (S n - 1)%nat with n by lia.
+    replace ((x ^ S n) ^ 2) with (x ^ S n * x ^ S n) by (simpl; lra).
+    rewrite <- pow_add.
+    replace (S n + S n)%nat with (n + S (S n))%nat by lia.
+    rewrite pow_add.
+    field; split; apply pow_nonzero; lra.
+Qed.
+
+Lemma nth_derive_ln : forall n x,
+  x > 0 ->
+  ⟦ Der^n x ⟧ ln = match n with
+  | 0%nat => ln x
+  | S m => ((-1)^m * INR (fact m)) / (x ^ n)
+  end.
+Proof.
+  intros n x H1.
+  rewrite ln_eq_log.
+  destruct n.
+  - simpl. apply ln_eq_log.
+  - rewrite nth_derive_at_succ.
+    rewrite nth_derive_at_eq with (g := fun t => 1/t) (δ := x/2); try lra.
+    2: { 
+      intros t H2. 
+      assert (H3 : t > 0) by (solve_R).
+      
+      transitivity (⟦ Der t ⟧ log).
+      - apply derive_at_eq with (f2 := log).
+        exists (x/2); split; [lra |].
+        intros y Hy. apply ln_eq_log.
+      - apply derive_log_val; auto.
+    }
+    apply nth_derive_inv; auto.
+Qed.
+
+Lemma ln_1 : ln 1 = 0.
+Proof.
+  unfold ln, log_, e.
+  rewrite log_1.
+  lra.
 Qed.

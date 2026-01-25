@@ -2245,6 +2245,50 @@ Definition increasing (f: ℝ -> ℝ) :=
 Definition decreasing (f: ℝ -> ℝ) :=
   decreasing_on f ℝ.
 
+Definition non_decreasing_on (f: ℝ -> ℝ) (A : Ensemble ℝ) :=
+  forall a b, a ∈ A -> b ∈ A -> a <= b -> f a <= f b.
+
+Definition non_increasing_on (f: ℝ -> ℝ) (A : Ensemble ℝ) :=
+  forall a b, a ∈ A -> b ∈ A -> a <= b -> f a >= f b.
+
+Definition non_decreasing (f: ℝ -> ℝ) :=
+  non_decreasing_on f ℝ.
+
+Definition non_increasing (f: ℝ -> ℝ) :=
+  non_increasing_on f ℝ.
+
+Lemma increasing_on_imp_non_decreasing_on : forall f D,
+  increasing_on f D -> non_decreasing_on f D.
+Proof.
+  intros f D H1 a b H2 H3 H4. destruct H4 as [H4 | H4].
+  - specialize (H1 a b H2 H3 H4). lra.
+  - subst. right. reflexivity.
+Qed.
+
+Lemma decreasing_on_imp_non_increasing_on : forall f D,
+  decreasing_on f D -> non_increasing_on f D.
+Proof.
+  intros f D H1 a b H2 H3 H4. destruct H4 as [H4 | H4].
+  - specialize (H1 a b H2 H3 H4). lra.
+  - subst. right. reflexivity.
+Qed.
+
+Lemma increasing_imp_non_decreasing : forall f,
+  increasing f -> non_decreasing f.
+Proof.
+  intros f H1 a b H2 H3 H4. destruct H4 as [H4 | H4].
+  - specialize (H1 a b H2 H3 H4). lra.
+  - subst. right. reflexivity.
+Qed.
+
+Lemma decreasing_imp_non_increasing : forall f,
+  decreasing f -> non_increasing f.
+Proof.
+  intros f H1 a b H2 H3 H4. destruct H4 as [H4 | H4].
+  - specialize (H1 a b H2 H3 H4). lra.
+  - subst. right. reflexivity.
+Qed.
+
 Lemma increasing_on_neg : forall f A,
   increasing_on f A -> decreasing_on (-f) A.
 Proof.
@@ -2264,8 +2308,6 @@ Proof.
   - left. apply H1; auto.
   - subst. right. reflexivity.
 Qed.
-
-
 
 Theorem MVT : forall f f' a b,
   a < b -> continuous_on f [a, b] -> ⟦ der ⟧ f (a, b) = f' ->
@@ -5234,4 +5276,30 @@ Proof.
     2 : { intros y H13. auto_interval. }
     rewrite nth_derive_on_open_eq_nth_derive with (f := g) (D := (a - δ, a + δ)); auto; try (intros y Hy; apply is_interior_point_open; solve_R).
     intros y H13. auto_interval.
+Qed.
+
+Lemma nth_differentiable_at_const : forall n c a,
+  nth_differentiable_at n (fun _ => c) a.
+Proof.
+  intros n c a. destruct n.
+  - exists (fun _ => c). simpl. reflexivity.
+  - apply nth_derivative_at_imp_nth_differentiable_at with (fn' := fun _ => 0).
+    apply nth_derivative_imp_at.
+    apply nth_derivative_const. lia.
+Qed.
+
+Lemma nth_differentiable_at_id : forall n a,
+  nth_differentiable_at n (fun x => x) a.
+Proof.
+  intros n a. destruct n.
+  - exists (fun x => x). simpl. reflexivity.
+  - destruct n.
+    + apply nth_derivative_at_imp_nth_differentiable_at with (fn' := fun _ => 1).
+      apply nth_derivative_imp_at.
+      apply nth_derivative_1. apply derivative_id.
+    + apply nth_derivative_at_imp_nth_differentiable_at with (fn' := fun _ => 0).
+      apply nth_derivative_imp_at. apply nth_derivative_succ_iff.
+      exists (fun _ => 1); split.
+      * apply derivative_id.
+      * apply nth_derivative_const; lia.
 Qed.

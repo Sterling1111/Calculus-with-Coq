@@ -489,6 +489,16 @@ Proof.
   - rewrite floor_INR in *; try apply is_natural_pow; auto. simpl in *; nra.
 Qed.
 
+Lemma floor_floor : forall r, r >= 0 -> ⌊⌊r⌋⌋ = ⌊r⌋.
+Proof.
+  intros r H1.
+  apply floor_unique; try lra.
+  pose proof floor_spec r H1 as [H2 H3].
+  Set Printing Coercions.
+  pose proof pos_INR (⌊r⌋) as H4.
+  lra.
+Qed.
+
 Lemma pow_unbounded : forall b M : R, b > 1 -> exists n : nat, b ^ n >= M.
 Proof.
   intros b M H1.

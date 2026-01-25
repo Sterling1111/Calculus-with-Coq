@@ -1,4 +1,4 @@
-From Lib Require Import Imports Notations Reals_util Functions Sums Sets Sequence Exponential.
+From Lib Require Import Imports Notations Reals_util Functions Sums Sets Sequence Exponential Trigonometry Binomial.
 Import SumNotations SequenceNotations FunctionNotations.
 
 Open Scope R_scope.
@@ -335,25 +335,25 @@ Section Master_Theorem.
       g = Θ(λ k, f (⌊b^k⌋))).
   Proof.
     intros g p. split; [| split].
-    - intros [ε [H10 [c [N [H12 H13]]]]]. 
+    - intros [ε [H10 [c1 [N [H12 H13]]]]]. 
       set (q := b ^^ ε).
       assert (H14 : q > 1). { unfold q. apply Rpower_gt_1; try lra. }
 
       set (h := λ n : nat, n ^^ (p - ε)).
 
-      assert (exists c', ∀ n, (n >= 1)%nat -> |f n| <= c' * |h n|) as [c' H15].
+      assert (exists c2, ∀ n, (n >= 1)%nat -> |f n| <= c2 * |h n|) as [c2 H15].
       {
-        apply big_o_extend_1 with (N := N) (c := c); auto.
+        apply big_o_extend_1 with (N := N) (c := c1); auto.
         intros n H15. unfold h. apply Rabs_pos_lt, Rgt_not_eq, Rpower_gt_0; solve_R.
       }
 
       pose proof floor_power_bound (p - ε) as [j [H16 H17]].
 
-      set (c'' := Rmax 1 (c' * j)).
+      set (c3 := Rmax 1 (c2 * j)).
 
-      assert (H18 : c'' > 0). { unfold c''. solve_R. }
+      assert (H18 : c3 > 0). { unfold c3. solve_R. }
       
-      exists (c'' * q / (q - 1)), 1. split; [apply Rdiv_pos_pos; nra |].
+      exists (c3 * q / (q - 1)), 1. split; [apply Rdiv_pos_pos; nra |].
       intros n H19. unfold g. 
       rewrite Rabs_right.
       2 : {
@@ -361,7 +361,7 @@ Section Master_Theorem.
         specialize (H3 (⌊b^(n - k)⌋)). pose proof pow_lt a k ltac:(lra) as H21. nra.
       }
 
-      apply Rle_trans with (r2 := ∑ 0 (n - 1) (λ k, a ^ k * (c'' * (b ^ (n - k)) ^^ (p - ε)))).
+      apply Rle_trans with (r2 := ∑ 0 (n - 1) (λ k, a ^ k * (c3 * (b ^ (n - k)) ^^ (p - ε)))).
       {
         apply sum_f_congruence_le; try lia.
         intros k H20. 
@@ -378,16 +378,16 @@ Section Master_Theorem.
         specialize (H15 (⌊b^(n - k)⌋) H21). 
         rewrite Rabs_right in H15; auto.
         rewrite Rabs_right in H15; [ | apply Rpower_ge_0 ].
-        apply Rle_trans with (c' * h ⌊b ^ (n - k)⌋); auto.
+        apply Rle_trans with (c2 * h ⌊b ^ (n - k)⌋); auto.
         unfold h.
-        assert (H22: 0 <= c').
+        assert (H22: 0 <= c2).
         { 
           apply Rmult_le_reg_r with (⌊b ^ (n - k)⌋ ^^ (p - ε)).
           - apply Rpower_gt_0. solve_R.
           - rewrite Rmult_0_l. apply Rle_trans with (f ⌊b ^ (n - k)⌋); auto.
             apply Rge_le. apply H3.
         }
-        apply Rle_trans with (c' * (j * (b ^ (n - k)) ^^ (p - ε))).
+        apply Rle_trans with (c2 * (j * (b ^ (n - k)) ^^ (p - ε))).
         + apply Rmult_le_compat_l; auto.
           apply H17. apply Rle_ge; apply pow_R1_Rle; lra.
         + rewrite <- Rmult_assoc.
@@ -396,10 +396,10 @@ Section Master_Theorem.
           * apply Rmax_r.
       }
 
-      apply Rle_trans with (c'' * a ^ n * ∑ 0 (n - 1) (fun k => (1/q)^(n-k))).
+      apply Rle_trans with (c3 * a ^ n * ∑ 0 (n - 1) (fun k => (1/q)^(n-k))).
       {
-        replace (λ k : ℕ, a ^ k * (c'' * (b ^ (n - k))^^(p - ε))) with
-                (λ k : ℕ, c'' * (a^k * (b ^ (n - k))^^(p - ε))) by (extensionality x; lra).
+        replace (λ k : ℕ, a ^ k * (c3 * (b ^ (n - k))^^(p - ε))) with
+                (λ k : ℕ, c3 * (a^k * (b ^ (n - k))^^(p - ε))) by (extensionality x; lra).
         rewrite <- r_mult_sum_f_i_n_f_l.
         right. rewrite Rmult_assoc. f_equal.
         rewrite r_mult_sum_f_i_n_f_l. 
@@ -432,7 +432,7 @@ Section Master_Theorem.
 
       replace (| (b ^ n) ^^ p |) with (a ^ n).
       2: { rewrite Rabs_right. apply power_base_change; try lra. apply Rpower_ge_0; lra. }
-      rewrite Rmult_assoc. replace (c'' * q / (q - 1) * a ^ n) with (c'' * (a ^ n * (q / (q - 1)))) by nra.
+      rewrite Rmult_assoc. replace (c3 * q / (q - 1) * a ^ n) with (c3 * (a ^ n * (q / (q - 1)))) by nra.
       apply Rmult_le_compat_l; try lra. apply Rmult_le_compat_l. apply pow_le; lra.
       rewrite sum_f_geometric_rev.
       2 : { apply Rlt_not_eq. apply Rdiv_lt_1; lra. }
@@ -462,14 +462,178 @@ Section Master_Theorem.
       pose proof floor_power_lower_bound p as [k [H14 H15]].
       { unfold p. apply log_b_nonneg; lra. }
 
-      destruct (pow_unbounded b (Rmax 2 (N + 1)) H2) as [M H16].
+      destruct (pow_unbounded b (Rmax (b * b) (N + 1)) H2) as [M H16].
 
-      exists (c1 * k / 2), (Rmax c3 1 * j), (Rmax 1 (2 * INR M)).
+      exists (c1 * k / 2), (Rmax c3 1 * j), (Rmax 1 (2 * M)).
       split; [solve_R | split]; [solve_R |]. intros n H17. split.
-      + admit.
-      + admit.
+      + unfold g.
+        rewrite Rabs_right. 2 : { pose proof Rpower_ge_0 (b ^ n) p as H18. solve_R. }
+        rewrite Rabs_right. 2 : {
+          apply Rle_ge. apply sum_f_nonneg; try lia. intros l H19.
+          specialize (H3 (⌊b^(n - l)⌋)). pose proof pow_lt a l ltac:(lra) as H20. nra.
+        }
 
-  - admit.
+        assert ((n - M < n - 1)%nat) as H18.
+        {
+          apply INR_lt. rewrite minus_INR. 2 : { apply INR_le. solve_R. }
+          rewrite minus_INR. 2 : { apply INR_le. solve_R. }
+          assert (M > 1) as H18.
+          { replace (1) with (INR 1) by auto. apply lt_INR. destruct M; [ |destruct M]; solve_R. }
+          solve_R.
+        }
+        rewrite sum_f_split with (j := (n - M)%nat); try lia.
+        apply Rle_trans with (∑ 0 (n - M) (λ j0 : ℕ, a ^ j0 * f ⌊b ^ (n - j0)⌋)).
+        2 : {
+          rewrite <- Rplus_0_r at 1.
+          apply Rplus_le_compat_l.
+          apply sum_f_nonneg; try lia.
+          intros j0 H19.
+          apply Rmult_le_pos; [apply pow_le; lra | apply Rge_le; auto ].
+        }
+        apply Rle_trans with (∑ 0 (n - M) (λ j : ℕ, c1 * k * (b ^ n)^^p)).
+        2 : {
+          apply sum_f_congruence_le; try lia.
+          intros j0 H19.
+          
+          assert (H20 : (⌊b ^ (n - j0)⌋ >= N)).
+          {
+            apply Rle_ge.
+
+            assert (H20 : N + 1 <= b ^ (n - j0)).
+            {
+              apply Rle_trans with (b ^ M).
+              - apply Rle_trans with (Rmax (b * b) (N + 1)); try lra; auto.
+                solve_R.
+              - apply Rle_pow; try lra. assert (M <= n)%nat as H21.
+                { apply INR_le. solve_R. }
+                lia.
+            }
+            apply Rle_trans with (b ^ (n - j0) - 1); try lra.
+            assert (b ^ (n - j0) ≥ 0 ) as H21.
+            { apply Rle_ge. apply pow_le; lra. }
+            
+            pose proof floor_spec (b ^ (n - j0)) H21 as H22. lra.
+          }
+          apply Rle_trans with (a ^ j0 * (c1 * k * (b ^ (n - j0)) ^^ p)).
+          2 : {
+            rewrite Rmult_assoc. apply Rmult_le_compat_l.
+            - apply pow_le; lra.
+            - rewrite Rmult_comm. apply Rle_trans with (c1 * ⌊b ^ (n - j0)⌋ ^^ p).
+              2 : {
+                specialize (H10 ⌊b ^ (n - j0)⌋ H20).
+                rewrite Rabs_right in H10.
+                rewrite Rabs_right in H10. lra.
+                apply H3. apply Rpower_ge_0.
+              }
+              rewrite (Rmult_comm (k * _)).
+              apply Rmult_le_compat_l; try lra.
+              apply Rge_le, H15. apply Rle_ge; apply pow_R1_Rle; lra.
+          }
+          replace (a ^ j0 * (c1 * k * (b ^ (n - j0))^^p)) with (c1 * k * (a ^ j0 * (b ^ (n - j0))^^p)) by lra.
+          apply Rmult_le_compat_l; try nra.
+          unfold p. repeat rewrite <- power_base_change with (b := b); try lra.
+          rewrite <- pow_add. replace (j0 + (n - j0))%nat with n; solve_R.
+        }
+        rewrite sum_f_const.
+        replace (c1 * k / 2 * ((b ^ n)^^p * n)) with (c1 * k * (b ^ n)^^p * (n / 2)) by nra.
+        apply Rmult_le_compat_l; try nra.
+        * apply Rmult_le_pos; try nra. apply Rge_le. apply Rpower_ge_0.
+        * assert (n / 2 <= n - M + 1) as H19 by solve_R.
+          rewrite Nat.sub_0_r.
+          rewrite plus_INR, minus_INR. simpl. lra. apply INR_le. solve_R.
+      + unfold g.
+        rewrite Rabs_right. 2 : {
+          apply Rle_ge. apply sum_f_nonneg; try lia. intros l H19.
+          specialize (H3 (⌊b^(n - l)⌋)). pose proof pow_lt a l ltac:(lra) as H20. nra.
+        }
+        rewrite Rabs_right. 2 : { pose proof Rpower_ge_0 (b ^ n) p as H18. solve_R. }
+
+        assert (H18 : c3 >= 0).
+        {
+          specialize (H11 1%nat ltac:(lia)).
+          rewrite Rabs_right in H11; [| apply H3 ].
+          rewrite Rabs_right in H11; [| apply Rpower_ge_0].
+          unfold h in H11. specialize (H3 1%nat). simpl in H11. rewrite Rpower_1_base in H11. lra.
+        }
+
+        apply Rle_trans with (∑ 0 (n - 1) (λ k0 : ℕ, c3 * j * (b ^ n)^^p)).
+        2 : {
+          rewrite sum_f_const. rewrite Nat.sub_0_r, Nat.sub_add. 2 : { apply INR_le. solve_R. }
+          pose proof pos_INR n as H19.
+          pose proof Rpower_ge_0 (b ^ n) p as H20.
+          repeat rewrite Rmult_assoc.
+          apply Rmult_le_compat_r; [ | solve_R ].
+          apply Rmult_le_pos; try nra.
+        }
+
+        apply sum_f_congruence_le; try lia.
+        intros k0 H19.
+
+        assert (H20 : (⌊b ^ (n - k0)⌋ >= 1)%nat).
+        {
+          apply INR_le.
+          assert ((n - k0) >= 1)%nat as H20.
+          { assert (n >= 1)%nat as H20. { apply INR_le. solve_R. } lia. }
+          assert (1 <= b ^ (n - k0)) as H21.
+          { apply pow_R1_Rle; lra. }
+          pose proof floor_spec (b ^ (n - k0)) ltac:(apply Rle_ge, pow_le; lra) as [H22 H23].
+          simpl. destruct (⌊b ^ (n - k0)⌋). simpl in *. lra.
+          rewrite S_INR. pose proof pos_INR n0; lra.
+         }
+        specialize (H11 _ H20).
+
+        apply Rle_trans with (a ^ k0 * (c3 * ⌊b ^ (n - k0)⌋ ^^ p)).
+        {
+          apply Rmult_le_compat_l; [apply pow_le; lra |].
+          rewrite Rabs_right in H11; [| apply H3].
+          rewrite Rabs_right in H11; [| apply Rpower_ge_0].
+          apply H11.
+        }
+
+        apply Rle_trans with (a ^ k0 * (c3 * (j * (b ^ (n - k0)) ^^ p))).
+        {
+          apply Rmult_le_compat_l; [apply pow_le; lra |].
+          apply Rmult_le_compat_l; [apply Rge_le; apply H18 |].
+          apply H13.
+          apply Rle_ge, pow_R1_Rle; lra.
+        }
+
+        replace (a ^ k0 * (c3 * (j * (b ^ (n - k0)) ^^ p))) with (c3 * j * (a ^ k0 * (b ^ (n - k0)) ^^ p)) by lra.
+        apply Rmult_le_compat_l; try nra.
+        unfold p. repeat rewrite <- power_base_change with (b := b); try lra.
+        rewrite <- pow_add. replace (k0 + (n - k0))%nat with n; solve_R.
+  - intros [ε [c1 [c2 [N [H10 [H11 H12]]]]]].
+    assert (H13 : c1 > 0).
+    { 
+      destruct H11 as [k [N0 [H11 H13]]].
+      destruct (Rle_dec c1 0) as [H14 | H14]; try lra.
+      exfalso. admit.
+    }
+  
+  apply big_theta_iff; split.
+    + exists (1 / (1 - c1)), (Rmax 1 c2). split; [ apply Rdiv_pos_pos; nra | ].
+      intros n H14.
+
+      rewrite Rabs_right. 
+      2 : {
+        apply Rle_ge. apply sum_f_nonneg; try lia. intros k H15.
+        specialize (H3 (⌊b^(n - k)⌋ )). pose proof pow_lt a k ltac:(lra) as H16. nra.
+      }
+      rewrite Rabs_right; auto.
+      
+      unfold g. 
+
+      apply Rle_trans with (∑ 0 (n - 1) (λ j : ℕ, c1 ^ j * f ⌊b ^ n⌋)).
+    * apply sum_f_congruence_le; try lia.
+    intros k H15. induction k as [| k IH].
+    -- simpl. rewrite Nat.sub_0_r, Rmult_1_l. lra.
+    -- apply Rle_trans with (c1 * (a ^ k * f ⌊b ^ (n - k)⌋)).
+      2 : {
+        simpl. rewrite Rmult_assoc. apply Rmult_le_compat_l; try lra. apply IH; lia.
+      }
+      admit.
+    * admit.
+    + admit.
   Admitted.
 
   Lemma lemma_4_4 :
@@ -521,7 +685,6 @@ Section Master_Theorem.
           { apply sum_f_nonneg; try lia. intros k H16. apply Rmult_le_pos; [apply pow_le; lra | apply Rge_le; auto ]. }
           solve_R.
         * apply big_o_add; [ | apply big_theta_iff; auto ].
-          apply big_o_trans with (λ k, (b ^ k) ^^ p); [ apply big_o_refl | ].
           exists 1, 1%nat. split; [solve_R |]. intros n H14. simpl in H14.
           pose proof Rpower_ge_0 (b ^ n) p as H15. solve_R.
       + apply big_omega_trans with g; [ | apply big_theta_iff; auto ].
@@ -535,7 +698,47 @@ Section Master_Theorem.
         rewrite H12. pose proof pow_le a n ltac:(lra) as H16. rewrite H7, pow_O.
         replace 1 with (INR 1) by auto. rewrite floor_INR_id; auto. simpl.
         solve_R.
-    - admit.
+    - intros [ε [c1 [c2 [N [H13 [H14 H15]]]]]].
+      assert (H16 : f = Ω(λ n : ℕ, n ^^ p)).
+      {
+        apply big_omega_trans with (λ n : ℕ, n ^^ (p + ε)); auto.
+        exists 1, 1. split; [lra |].
+        intros n H16. rewrite Rmult_1_l.
+        rewrite Rabs_right; [| apply Rpower_ge_0 ].
+        rewrite Rabs_right; [| apply Rpower_ge_0 ].
+        apply Rle_ge. apply Rpower_exp_le; lra.
+      }
+      specialize (H11 (ex_intro _ ε (ex_intro _ c1 (ex_intro _ c2 (conj N (conj H13 (conj H16 H15))))))).
+      apply big_theta_iff; split.
+  + apply big_theta_iff in H11 as [H17 H18].
+    apply big_o_trans with (λ k, a^k * T' 0 + g k).
+    * exists 1, 1%nat. split; [lra |].
+      intros n H19. assert (H20 : (n > 0)%nat). 
+      { apply INR_le. lra. }
+      rewrite Rmult_1_l.
+      specialize (H12 n ltac:(lia) H8).
+      replace (∑ 0 (n - 1) λ j : ℕ, a ^ j * f ⌊b ^ (n - j)⌋) with (g n) in H12 by reflexivity.
+      replace ((b ^ n) ^^ p) with (a ^ n).
+      2 : { unfold p. rewrite power_base_change with (b := b); lra. }
+      rewrite H12. solve_R.
+    * apply big_o_add; auto.
+      destruct H14 as [c3 [N1 [H20 H21]]].
+      assert (H19 : T' 0 > 0). 
+      { rewrite H7, pow_O. replace 1 with (INR 1) by auto. rewrite floor_INR_id; auto. }
+      exists (T' 0 / c3), (Rmax 1 (Z.to_nat (up (log_ b (Rmax N1 1) / log b)))).
+      split.
+      { apply Rdiv_pos_pos; [exact H19 | exact H20]. }
+      intros n H22. 
+      rewrite Rabs_right; [| apply Rle_ge, Rmult_le_pos; [apply pow_le; lra | lra ]].
+      rewrite Rabs_right; [| apply H3].
+      replace (a ^ n) with ((b ^ n) ^^ p).
+      2 : { unfold p. rewrite <- power_base_change with (b := b); lra. }
+      apply Rle_trans with (T' 0 * ⌊b ^ n⌋ ^^ (p + ε)).
+      { rewrite Rmult_comm. apply Rmult_le_compat_l; [left; exact H19 |].
+        rewrite Rpower_plus. admit. admit. }
+        
+    ++ unfold p in *. admit. 
+    + admit.
   Admitted.
 End Master_Theorem.
 
@@ -555,3 +758,26 @@ Proof.
   - intros H7. admit.
   - intros [ε [c [N [H7 [H8 [H9 H10]]]]]]. admit.
 Admitted.
+
+Section Examples.
+  Let f1  := λ n : nat, 2.
+  Let f2  := λ n : nat, 121!.
+  Let f3  := λ n : nat, ln (19 * n ^ 4).
+  Let f4  := λ n : nat, 7 * (ln (n ^ 3)) ^ 2.
+  Let f5  := λ n : nat, 42 * n ^ (3/5).
+  Let f6  := λ n : nat, n.
+  Let f7  := λ n : nat, n * ln n.
+  Let f8  := λ n : nat, log_ π (((2/23) * n) ^ (5 * n)).
+  Let f9  := λ n : nat, n ^ 3 / (n ^ (1/2)).
+  Let f10 := λ n : nat, (3/2) ^ n.
+  Let f11 := λ n : nat, 2 ^ n.
+  Let f12 := λ n : nat, (n!) ^ 2.
+
+  Lemma f1_big_o_f2 : f1 = Ο(f2).
+  Proof.
+    exists 1, 0%nat. split; try lra.
+    intros n H1. unfold f1, f2.
+    simplify_factorials. solve_R.
+  Qed.
+  
+End Examples.
