@@ -607,8 +607,54 @@ Section Master_Theorem.
     { 
       destruct H11 as [k [N0 [H11 H13]]].
       destruct (Rle_dec c1 0) as [H14 | H14]; try lra.
-      exfalso. admit.
-    }
+      exfalso.
+      assert (H15 : ∀ n : nat, INR n ≥ c2 → f ⌊INR n / b⌋ = 0).
+      {
+        intros n H15.
+        apply Rle_antisym.
+        - apply Rmult_le_reg_l with a; [lra |].
+          eapply Rle_trans; [apply H12; assumption |].
+          specialize (H3 n). nra.
+        - apply Rge_le. apply H3.
+      }
+      assert (H16 : ∃ n : nat, n ≥ c2 ∧ ⌊n / b⌋ ≥ N0 ∧ ⌊n / b⌋ > 0).
+      { pose (x := Rmax c2 (b * (Rabs N0 + 2))).
+        exists (⌈x⌉).
+        assert (H17 : x > 0) by (unfold x; solve_R).
+        split.
+        - pose proof ceil_spec x H17 as H18. unfold x in *; solve_R.
+        - split.
+          + apply Rle_ge. apply Rle_trans with (x / b - 1).
+            * apply Rplus_le_reg_r with 1; ring_simplify.
+              apply Rmult_le_reg_r with b; [lra |].
+              replace (x / b * b) with x by (field; lra).
+              unfold x; solve_R.
+            * apply Rlt_le.
+              apply Rplus_lt_reg_r with 1; ring_simplify.
+              assert (H18 : ⌈x⌉ / b >= 0). 
+              {
+                pose proof ceil_spec x H17 as H19.
+                apply Rdiv_nonneg_nonneg; unfold x in *; solve_R.
+              }
+              pose proof (floor_spec (⌈x⌉ / b) H18) as H19.
+              pose proof ceil_spec x H17 as H20.
+              apply Rle_lt_trans with (⌈x⌉ / b); solve_R.
+          + pose proof ceil_spec x H17 as H18.
+            assert (H19 : ⌈x⌉ / b >= 0) by (pose proof ceil_spec x H17 as H20; apply Rdiv_nonneg_nonneg; unfold x in *; solve_R).
+            pose proof (floor_spec (⌈x⌉ / b) H19) as H20.
+            
+          
+          
+    + apply Rlt_le_trans with (x / b - 1).
+      * unfold x. apply Rmult_lt_reg_r with b; [lra |].
+        eapply Rle_lt_trans; [apply Rmax_r |].
+        lra.
+      * eapply Rle_trans; [| apply floor_spec].
+        -- apply Rplus_le_reg_r with 1. ring_simplify.
+           apply Rmult_le_compat_r; [apply Rlt_le; apply Rinv_0_lt_compat; lra |].
+           apply ceil_spec in H17. lra.
+        -- apply Rmult_le_0_compat; [| apply Rlt_le; apply Rinv_0_lt_compat; lra].
+           eapply Rle_trans; [apply Rmax_l | apply ceil_spec in H17; lra]. }
   
   apply big_theta_iff; split.
     + exists (1 / (1 - c1)), (Rmax 1 c2). split; [ apply Rdiv_pos_pos; nra | ].

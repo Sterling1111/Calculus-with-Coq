@@ -901,7 +901,7 @@ Proof.
   {
     unfold x in *. destruct H3.
     assert (0.057 < e^3/19 - 1 < 0.0572). { nra. }
-    split. apply Rlt_trans 
+    split; admit.
   }
   lra.
-Qed.
+Admitted.

@@ -400,6 +400,14 @@ Proof.
   pose proof Rdiv_pos_neg r1 r2 ltac:(lra) ltac:(lra). nra.
 Qed.
 
+Lemma Rdiv_nonneg_nonneg : forall r1 r2,
+  r1 >= 0 -> r2 > 0 -> r1 / r2 >= 0.
+Proof.
+  intros r1 r2 H1 H2.
+  pose proof Rtotal_order r1 0 as [H3 | [H3 | H3]]; try nra.
+  pose proof Rdiv_pos_pos r1 r2 ltac:(lra) ltac:(lra). nra.
+Qed.  
+
 Lemma floor_spec : ∀ x : R,
   x >= 0 ->
   ⌊ x ⌋ <= x < ⌊ x ⌋ + 1.
