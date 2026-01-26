@@ -502,7 +502,6 @@ Proof.
   intros r H1.
   apply floor_unique; try lra.
   pose proof floor_spec r H1 as [H2 H3].
-  Set Printing Coercions.
   pose proof pos_INR (⌊r⌋) as H4.
   lra.
 Qed.
@@ -515,4 +514,131 @@ Proof.
   specialize (H2 N ltac:(solve_R)).
   rewrite Rabs_right in H2; solve_R.
   apply Rle_ge. apply pow_le. lra.
+Qed.
+
+Lemma floor_gt_0 : ∀ x : R, x ≥ 1 → ⌊x⌋ > 0.
+Proof.
+  intros x H1. replace 0 with (INR 0) by auto.
+  destruct (floor_spec x ltac:(lra)) as [H2 H3].
+  solve_R.
+Qed.
+
+Lemma Rdiv_ge_0 : forall a b,
+  a >= 0 -> b > 0 -> a / b >= 0.
+Proof.
+  intros a b H1 H2.
+  pose proof Rtotal_order a 0 as [H3 | [H3 | H3]]; try nra.
+  pose proof Rdiv_pos_pos a b ltac:(lra) ltac:(lra). nra.
+Qed.
+
+Lemma Rle_div_l : ∀ a b c, c > 0 → a / c ≤ b ↔ a ≤ b * c.
+Proof.
+  intros a b c H.
+  split; intros H1.
+  - apply Rmult_le_reg_r with (/ c); [apply Rinv_0_lt_compat; lra |].
+    rewrite Rmult_assoc, Rinv_r, Rmult_1_r; nra.
+  - apply Rmult_le_reg_r with c; [lra |].
+    rewrite Rdiv_def, Rmult_assoc, Rinv_l, Rmult_1_r; nra.
+Qed.
+
+Lemma Rle_div_r : ∀ a b c, c > 0 → a ≤ b / c ↔ a * c ≤ b.
+Proof.
+  intros a b c H.
+  split; intros H1.
+  - apply Rmult_le_reg_r with (/ c); [apply Rinv_0_lt_compat; lra |].
+    rewrite Rmult_assoc, Rinv_r, Rmult_1_r; nra.
+  - apply Rmult_le_reg_r with c; [lra |].
+    rewrite Rdiv_def, Rmult_assoc, Rinv_l, Rmult_1_r; nra.
+Qed.
+
+Lemma Rlt_div_l : ∀ a b c, c > 0 → a / c < b ↔ a < b * c.
+Proof.
+  intros a b c H.
+  split; intros H1.
+  - apply Rmult_lt_reg_r with (/ c); [apply Rinv_0_lt_compat; lra |].
+    rewrite Rmult_assoc, Rinv_r, Rmult_1_r; nra.
+  - apply Rmult_lt_reg_r with c; [lra |].
+    rewrite Rdiv_def, Rmult_assoc, Rinv_l, Rmult_1_r; nra.
+Qed.
+
+Lemma floor_div_general : forall n d : nat, 
+  (d > 0)%nat -> 
+  (n / d)%nat = ⌊INR n / INR d⌋.
+Proof.
+  intros n d H1.
+  symmetry.
+  apply floor_unique.
+  - apply Rdiv_ge_0; solve_R. apply Rle_ge, pos_INR.
+  - split.
+    + apply Rle_div_r; solve_R.
+      rewrite <- mult_INR. apply le_INR.
+      rewrite Nat.mul_comm.
+      apply Nat.Div0.mul_div_le; auto.
+    + apply Rlt_div_l; solve_R.
+      rewrite Rmult_plus_distr_r, Rmult_1_l, <- mult_INR, <- plus_INR.
+      Set Printing Coercions.
+      apply lt_INR.
+      rewrite Nat.mul_comm.
+      assert (H2 : (d > 0)%nat).
+      { 
+        replace 0 with (INR 0) in H1 by reflexivity.
+        apply INR_lt in H1. 
+        exact H1. 
+      }
+      pose proof Nat.div_mod n d ltac:(lia) as H3.
+      pose proof Nat.mod_upper_bound n d ltac:(lia) as H4.
+      lia.
+Qed.
+
+Lemma Rle_not_gt : forall a b,
+  ~(a > b) <-> a <= b.
+Proof.
+  intros a b. nra.
+Qed.
+
+Lemma INR_ge : forall n m : nat,
+  INR n >= INR m <-> (n >= m)%nat.
+Proof.
+  intros n m. split.
+  - intros H1. apply Rge_le, INR_le in H1. lia.
+  - intros H1. solve_R.
+Qed.
+
+Lemma iter_ineq_on_powers
+  (a b c1 c2 : R) (f : nat -> R)
+  (M n j : nat) :
+  a ≥ 1 ->
+  b > 1 ->
+  c1 > 0 ->
+  is_natural b ->
+  (forall m : nat, m ≥ c2 -> a * f ⌊m / b⌋ ≤ c1 * f m) ->
+  b ^ M ≥ Rmax c2 b ->
+  (M > 0)%nat ->
+  (0 <= j <= n - M - 1)%nat ->
+  a ^ j * f ⌊b ^ (n - j)⌋ ≤ c1 ^ j * f ⌊b ^ n⌋.
+Proof.
+  intros H1 H2 H0 H3 H4 H5 H6 H7.
+  induction j as [| k IH].
+  - rewrite Nat.sub_0_r. lra.
+  - assert (H8 : (0 <= k <= n - M - 1)%nat) by lia.
+    specialize (IH H8). pose proof H3 as H3'.
+    destruct H3 as [nb H3].
+  assert (H9 : (n - k = S (n - S k))%nat) by lia.
+  assert (H10 : is_natural (b ^ (n - k))).
+  { exists (nb ^ (n - k))%nat. rewrite H3, pow_INR. reflexivity. }
+  assert (H11 : INR ⌊b ^ (n - k)⌋ >= c2).
+  { rewrite floor_INR; try exact H10.
+    apply Rle_ge, Rle_trans with (b ^ M); [ solve_R | ]. 
+    apply Rle_pow; try lra. lia. }
+  specialize (H4 _ H11).
+  rewrite floor_INR in H4; try exact H10.
+  rewrite H9 in H4.
+  rewrite floor_power_succ_div in H4; auto.
+  apply Rle_trans with (a ^ k * (c1 * f ⌊b ^ (n - k)⌋)).
+  + replace (a ^ S k * f ⌊b ^ (n - S k)⌋) with (a ^ k * (a * f ⌊b ^ (n - S k)⌋)) by (simpl; lra).
+    apply Rmult_le_compat_l. apply pow_le. lra.
+    rewrite H9. auto.
+  + replace (a ^ k * (c1 * f ⌊b ^ (n - k)⌋)) with (c1 * (a ^ k * f ⌊b ^ (n - k)⌋)) by lra.
+    replace (c1 ^ S k * f ⌊b ^ n⌋) with (c1 * (c1 ^ k * f ⌊b ^ n⌋)) by (simpl; lra).
+    apply Rmult_le_compat_l; lra.
 Qed.
