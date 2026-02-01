@@ -7,6 +7,14 @@ Proof. reflexivity. Qed.
 Lemma fact_0 : fact 0 = 1%nat.
 Proof. reflexivity. Qed.
 
+Lemma INR_fact_ge_1 : forall n : nat,
+  (INR (fact n) >= 1)%R.
+Proof.
+  intro n. induction n as [| k IH].
+  - simpl. lra.
+  - simpl. pose proof pos_INR k. solve_R.
+Qed.
+
 Lemma fact_le : forall n1 n2,
   (n1 <= n2) -> (fact n1 <= fact n2).
 Proof.

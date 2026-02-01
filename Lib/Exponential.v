@@ -602,6 +602,23 @@ Proof.
   apply exp_increasing; auto; apply Full_intro.
 Qed.
 
+Lemma Rpower_ge_1 : forall x y,
+  x >= 1 -> y >= 0 -> x ^^ y >= 1.
+Proof.
+  intros x y H1 H2.
+  unfold Rpower.
+  destruct (Rlt_dec 0 x) as [H3 | H3]; [| lra].
+  destruct (Req_dec (y * log x) 0) as [H4 | H4].
+  - rewrite H4, exp_0; lra.
+  - apply Rle_ge. rewrite <- exp_0.
+    destruct H2 as [H2 | H2].
+    + destruct H1 as [H1 | H1].
+      * apply Rlt_le, exp_increasing; try apply Full_intro.
+        apply Rmult_pos_pos; try lra. apply log_pos; lra.
+      * rewrite H1, log_1, Rmult_0_r. lra.
+    + rewrite H2, Rmult_0_l. lra.
+Qed.
+
 Lemma exp_nondecreasing : non_decreasing exp.
 Proof.
   apply increasing_on_imp_non_decreasing_on with (f := exp) (D := Full_set R); try apply exp_increasing; apply Full_intro.
@@ -831,4 +848,90 @@ Proof.
   unfold ln, log_, e.
   rewrite log_1.
   lra.
+Qed.
+
+Lemma log_change_base : forall b1 b2 x,
+  b1 > 1 -> b2 > 1 ->
+  log_ b1 x = (log b2 / log b1) * log_ b2 x.
+Proof.
+  intros b1 b2 x Hb1 Hb2.
+  unfold log_.
+  field.
+  split; apply Rgt_not_eq; apply log_pos; auto.
+Qed.
+
+Lemma log_b_pos : forall b x,
+  b > 1 -> x > 1 -> log_ b x > 0.
+Proof.
+  intros b x H1 H2.
+  unfold log_.
+  pose proof log_pos x H2 as H3.
+  pose proof log_pos b H1 as H4.
+  pose proof Rdiv_pos_pos (log x) (log b) H3 H4.  lra.
+Qed.
+
+Lemma log_b_unbounded_above : forall b,
+  b > 1 -> unbounded_above (log_ b).
+Proof.
+  intros b H1.
+  unfold unbounded_above, bounded_above.
+  intros [M H2].
+  assert (H3 : log b > 0) by (apply log_pos; auto).
+  apply log_unbounded_above_on.
+  exists (M * log b).
+  intros x [y [H4 H5]].
+  apply Rmult_le_reg_r with (1 / log b).
+  - apply Rdiv_pos_pos; lra.
+  - pose proof log_pos y. ltac:(solve_R).
+   pose proof log_b_pos b x H1.
+   field_simplify; try lra.
+   rewrite H5. apply H2.
+   exists y. split; auto. apply Full_intro.
+Qed.
+
+Lemma log_b_ge_1 : forall b x,
+  b > 1 -> x >= 1 -> log_ b x >= 1 <-> x >= b.
+Proof.
+  intros b x H1 H2. unfold log_.
+  assert (H3 : log b > 0) by (apply log_pos; lra).
+  split; intro H4.
+  - destruct (Rlt_dec x b) as [H5 | H5]; try lra.
+    assert (H6 : log x < log b).  { apply log_increasing; solve_R. }
+    apply Rge_le in H4. apply Rmult_le_compat_l with (r := log b) in H4; 
+    field_simplify in H4; nra.
+  - apply Rle_ge. apply Rmult_le_reg_r with (log b); try lra.
+    unfold Rdiv. rewrite Rmult_assoc, Rinv_l, Rmult_1_r; try lra.
+    rewrite Rmult_1_l.
+    apply increasing_on_imp_not_decreasing_on with (f := log) (D := (0, ∞)); solve_R; apply log_increasing.
+Qed.
+
+Lemma log_lt_self : forall x, x >= 1 -> log x < x.
+Proof.
+  intros x H1. destruct (Req_dec x 1) as [H2 | H2].
+  - rewrite H2, log_1. lra.
+  - assert (H3 : x > 1) by lra.
+    set (f := λ t, t - 1 - log t).
+    assert (H4 : continuous_on f [1, x]).
+    {
+      apply continuous_on_minus; [apply continuous_on_minus; [apply continuous_on_id | apply continuous_on_const] | apply log_continuous_on; lra].
+    }
+    assert (H5 : ⟦ der ⟧ f (1, x) = (λ t, 1 - 1 / t)).
+    {
+      apply derivative_on_ext with (f1' := (λ t, 1 - 0 - 1/t)).
+      - intros t H5. lra.
+      - apply derivative_on_minus; try (apply differentiable_domain_open; lra).
+        + apply derivative_on_minus; try (apply differentiable_domain_open; lra).
+          * apply derivative_on_id; apply differentiable_domain_open; lra.
+          * apply derivative_on_const; apply differentiable_domain_open; lra.
+        + apply derivative_on_subset with (D1 := [1, x]); [apply derivative_log_on; lra | apply differentiable_domain_open; lra | intros t H5; solve_R].
+    }
+    assert (H6 : forall t, t ∈ (1, x) -> 1 - 1 / t > 0).
+    {
+      intros t H6. apply Rgt_minus.
+      apply Rlt_gt, Rmult_lt_reg_r with (r := t); field_simplify; solve_R.
+    }
+    pose proof derivative_on_pos_imp_increasing_on_open f (λ t, 1 - 1 / t) 1 x ltac:(lra) H4 H5 H6 as H7.
+    assert (H8 : f x > f 1).
+    { apply H7; try auto_interval. }
+    unfold f in H8. rewrite log_1 in H8. lra.
 Qed.

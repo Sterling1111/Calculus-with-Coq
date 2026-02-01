@@ -96,6 +96,35 @@ Proof.
   solve_R.
 Qed.
 
+Lemma continuous_at_imp_right_continuous : forall f a,
+  continuous_at f a -> continuous_at_right f a.
+Proof.
+  intros f a H. apply limit_iff in H. destruct H; auto.
+Qed.
+
+Lemma continuous_at_imp_left_continuous : forall f a,
+  continuous_at f a -> continuous_at_left f a.
+Proof.
+  intros f a H. apply limit_iff in H. destruct H; auto.
+Qed.
+
+Lemma continuous_iff_right_and_left : forall f a,
+  continuous_at f a <-> continuous_at_right f a /\ continuous_at_left f a.
+Proof.
+  intros f a. split.
+  - intros H. split; [apply continuous_at_imp_right_continuous | apply continuous_at_imp_left_continuous]; auto.
+  - intros [H1 H2]. apply limit_iff. split; auto.
+Qed.
+
+Lemma right_limit_imp_continuous_at : forall f a b,
+  a < b -> continuous_at_right f a -> ⟦ lim a ⟧ f [a, b] = f a.
+Proof.
+  intros f a b H1 H2. 
+  apply continuous_at_right_imp_continuous_on; auto.
+  exists (b - a). split; [lra |].
+  intros x H3 H4. solve_R.
+Qed.
+
 Lemma continuous_at_left_imp_continuous_on : forall f D a,
   (exists δ, δ > 0 /\ forall x, x ∈ D -> |x - a| < δ -> x <= a) ->
   continuous_at_left f a ->
@@ -108,6 +137,15 @@ Proof.
   exists (Rmin d δ'). split; [ solve_R | ].
   intros x H7 H8. apply H6. specialize (H2 x H7 ltac:(solve_R)).
   solve_R.
+Qed.
+
+Lemma left_limit_imp_continuous_at : forall f a b,
+  a < b -> continuous_at_left f b -> ⟦ lim b ⟧ f [a, b] = f b.
+Proof.
+  intros f a b H1 H2.
+  apply continuous_at_left_imp_continuous_on; auto.
+  exists (b - a). split; [lra |].
+  intros x H3 H4. solve_R.
 Qed.
 
 Lemma continuous_at_const : forall a c,
@@ -1239,6 +1277,18 @@ Definition unbounded_above (f : ℝ -> ℝ) :=
 Definition bounded_on (f : ℝ -> ℝ) (A : Ensemble ℝ) :=
   has_lower_bound (fun y => exists x, x ∈ A /\ y = f x) /\
   has_upper_bound (fun y => exists x, x ∈ A /\ y = f x).
+
+Lemma unbounded_above_exists : forall f,
+  unbounded_above f -> forall M, exists x, f x > M.
+Proof.
+  intros f H1 M. 
+  apply NNPP; intro H2.
+  apply H1.
+  exists M.
+  intros x [x0 [_ ->]].
+  apply Rnot_lt_le. intros H3. apply H2.
+  exists x0. auto.
+Qed.
 
 Lemma continuous_on_interval_is_bounded : forall f a b,
   a <= b -> continuous_on f [a, b] -> bounded_on f [a, b].

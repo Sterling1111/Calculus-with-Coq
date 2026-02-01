@@ -2618,6 +2618,68 @@ Proof.
   - apply limit_div; auto.
 Qed.
 
+Lemma lhopital_right_strong : forall f f' g g' a L,
+  ⟦ lim a⁺ ⟧ f = 0 -> ⟦ lim a⁺ ⟧ g = 0 ->
+  ⟦ der a ⟧ f = f' -> ⟦ der a ⟧ g = g' ->
+  (exists δ, δ > 0 /\ forall x, x ∈ (a, a + δ) -> ⟦ der x ⟧ f = f') ->
+  (exists δ, δ > 0 /\ forall x, x ∈ (a, a + δ) -> ⟦ der x ⟧ g = g') ->
+  (exists δ, δ > 0 /\ forall x, x ∈ (a, a + δ) -> g' x <> 0) ->
+  ⟦ lim a⁺ ⟧ (f' / g') = L ->
+  ⟦ lim a⁺ ⟧ (f / g) = L.
+Proof.
+  intros f f' g g' a L H1 H2 H3 H4 [δ1 [H5 H6]] [δ2 [H7 H8]] [δ3 [H9 H10]] H11.
+  intros ε H12.
+  specialize (H11 ε H12) as [δ4 [H13 H14]].
+  set (δ := Rmin (Rmin δ1 δ2) (Rmin δ3 δ4)).
+  exists δ. split; [unfold δ; repeat apply Rmin_pos; auto|].
+  intros x H15.
+  assert (H16 : a < x) by lra.
+  assert (H17 : x < a + δ) by lra.
+  set (F := fun t => if Req_dec_T t a then 0 else f t).
+  set (G := fun t => if Req_dec_T t a then 0 else g t).
+  assert (H18 : continuous_on F [a, x]).
+  {
+    apply continuous_on_subset with (A2 := [a, x]). intros y H18; solve_R.
+    intros t H18. destruct (Req_dec_T t a).
+    - subst t. apply right_limit_imp_continuous_at; auto.
+      apply limit_right_eq with f; auto. exists 1; split; try lra. intros y Hy. unfold F. destruct (Req_dec_T y a); try lra.
+      replace (F a) with 0 by (unfold F; destruct (Req_dec_T a a); try lra; reflexivity). apply H1.
+    - admit.
+  }
+  assert (H19 : continuous_on G [a, x]).
+  {
+    admit.
+  }
+  assert (H20 : forall c, c ∈ (a, x) -> ⟦ der c ⟧ F = f').
+  {
+   admit.
+  }
+  assert (H21 : forall c, c ∈ (a, x) -> ⟦ der c ⟧ G = g').
+  {
+    admit.
+  }
+  assert (H22 : G x <> G a).
+  {
+    admit.
+  }
+  pose proof (cauchy_mvt F f' G g' a x H16 H18 H19) as [c [H23 H24]].
+  - intros t Ht. left. split; auto_interval.
+  - intros t Ht. left. split; auto_interval.
+  - intros t Ht. apply H10; unfold δ in *; solve_R.
+  - auto.
+Admitted.
+
+Lemma lhopital_infty_pinf : forall f g f' g',
+  ⟦ lim ∞ ⟧ f = 0 ->
+  ⟦ lim ∞ ⟧ g = 0 ->
+  (exists M, forall x, x > M -> ⟦ der x ⟧ f = f') ->
+  (exists M, forall x, x > M -> ⟦ der x ⟧ g = g') ->
+  (exists M, forall x, x > M -> g' x <> 0) ->
+  ⟦ lim ∞ ⟧ (f' / g') = ∞ ->
+  ⟦ lim ∞ ⟧ (f / g) = ∞.
+Proof.
+Admitted.
+
 Lemma nth_derivative_0 : forall f,
   ⟦ der ^ 0 ⟧ f = f.
 Proof.
