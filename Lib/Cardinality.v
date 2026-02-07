@@ -21,7 +21,7 @@ Proof.
        do 2 (rewrite Nat.mul_comm, Nat.div_mul in H1; try lia).
     -- pose proof Zle_0_nat (x / 2) as H4. pose proof Zle_0_nat (y / 2 + 1) as H5. lia.
     -- pose proof Zle_0_nat (x / 2 + 1) as H4. pose proof Zle_0_nat (y / 2) as H5. lia.
-    -- apply Z.opp_inj in H1. apply Nat_even_false_Odd in H2 as [j H2], H3 as [k H3]; subst.
+    -- apply Z.opp_inj in H1. Search (Nat.Even). _ = false). apply Nat_even_false_Odd in H2 as [j H2], H3 as [k H3]; subst.
        apply Nat2Z.inj in H1. rewrite Nat.mul_comm in H1. rewrite Nat.mul_comm with (n := 2%nat) in H1.
        rewrite Nat.div_add_l in H1; try lia. rewrite Nat.div_add_l in H1; try lia.
   - intros y. assert (y >= 0 \/ y < 0) as [H1 | H1] by lia.

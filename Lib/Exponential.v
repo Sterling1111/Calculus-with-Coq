@@ -1,4 +1,5 @@
-From Lib Require Import Imports Notations Integral Derivative Functions Continuity Limit Sets Reals_util Inverse Interval.
+From Lib Require Import Imports Notations Integral Derivative Functions Continuity 
+                        Limit Sets Reals_util Inverse Interval Completeness.
 Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations.
 
 Definition log (x : R) :=
@@ -420,6 +421,11 @@ Definition Rpower (a x : R) : R :=
 
 Notation "a ^^ x" := (Rpower a x) (at level 30, format "a ^^ x") : R_scope.
 
+Lemma Rpower_0_0 : 0 ^^ 0 = 0.
+Proof.
+  unfold Rpower. destruct (Rlt_dec 0 0); try lra. 
+Qed.
+
 Theorem theorem_18_4 : forall a b c,
   a > 0 -> (a ^^ b) ^^ c = a ^^ (b * c).
 Proof.
@@ -430,6 +436,15 @@ Proof.
   - rewrite log_exp; try lra.
     apply f_equal. lra.
   - pose proof exp_pos (b * log a); lra.
+Qed.
+
+Lemma log_Rpower : forall a x,
+  a > 0 -> log (a ^^ x) = x * log a.
+Proof.
+  intros a x H1.
+  unfold Rpower.
+  destruct (Rlt_dec 0 a) as [H2|H2]; [| lra].
+  rewrite log_exp; try lra.
 Qed.
 
 Lemma Rpower_sqrt : forall a,
@@ -508,6 +523,38 @@ Proof.
   - apply log_increasing; auto. 
 Qed.
 
+Lemma log_b_le : forall b,
+  b > 1 -> forall x y,
+  0 < x <= y -> log_ b x <= log_ b y.
+Proof.
+  intros b H1 x y [H2 H3].
+  unfold log_.
+  apply Rmult_le_compat_r.
+  - pose proof log_pos b H1 as H4. apply Rlt_le. apply Rinv_pos; auto.
+  - destruct H3 as [H3 | H3].
+    + pose proof log_increasing x y ltac:(solve_R) ltac:(solve_R) H3 as H4. lra.
+    + subst. reflexivity.
+Qed.
+
+Lemma log_b_lt : forall b,
+  b > 1 -> forall x y,
+  0 < x < y -> log_ b x < log_ b y.
+Proof.
+  intros b H1 x y [H2 H3].
+  unfold log_.
+  apply Rmult_lt_compat_r.
+  - apply Rinv_0_lt_compat. apply log_pos; lra.
+  - apply log_increasing; solve_R.
+Qed.
+
+Lemma Rpower_0_base : forall x,
+  x <> 0 -> 0 ^^ x = 0.
+Proof.
+  intros x H1. assert (x < 0 \/ x > 0) as [H2 | H2] by lra.
+  - unfold Rpower. destruct (Rlt_dec 0 0); try lra.
+  - unfold Rpower. destruct (Rlt_dec 0 0); try lra.
+Qed.
+
 Lemma Rpower_nat : forall a (n : ℕ),
   a > 0 -> a ^^ n = a ^ n.
 Proof.
@@ -520,6 +567,16 @@ Proof.
     rewrite S_INR, Rmult_plus_distr_r, Rmult_1_l.
     rewrite theorem_18_3.
     rewrite exp_log; auto. unfold Rpower in IH. rewrite IH; lra.
+Qed.
+
+Lemma Rpower_nat' : forall a (n : nat),
+  a >= 0 -> n > 0 -> a ^^ n = a ^ n.
+Proof.
+  intros a n H1 H2.
+  destruct H1 as [H1 | H1].
+  - apply Rpower_nat; auto.
+  - subst. unfold Rpower. destruct (Rlt_dec 0 0); try lra. rewrite pow_i; solve_R.
+    apply INR_lt. solve_R.
 Qed.
 
 Lemma floor_log_unique : forall (b x : R) (k : nat),
@@ -654,6 +711,17 @@ Proof.
     lra.
 Qed.
 
+Lemma Rpower_le_reg :  forall x y z,
+  x > 1 -> y <= z -> x ^^ y <= x ^^ z.
+Proof.
+  intros x y z H1 H2.
+  unfold Rpower.
+  destruct (Rlt_dec 0 x) as [H3 | H3]; [| lra].
+  assert (y = z \/ y <> z) as [H4 | H4]; try lra.
+  - rewrite H4. reflexivity.
+  - apply Rlt_le, exp_increasing; try apply Full_intro. pose proof log_pos x ltac:(lra) as H5. nra.
+Qed.
+
 Lemma Rpower_mult_distr : forall a b c,
   a > 0 -> b > 0 -> (a * b) ^^ c = a ^^ c * b ^^ c.
 Proof.
@@ -686,6 +754,21 @@ Proof.
   destruct (Rlt_dec 0 a) as [H2|H2]; [| lra].
   rewrite Rmult_plus_distr_r.
   apply theorem_18_3.
+Qed.
+
+Lemma Rpower_pow : forall x y (n : nat),
+  x >= 0 -> (n > 0) -> (x ^^ y) ^ n = x ^^ (INR n * y).
+Proof.
+  intros x y n H1 H2.
+  destruct H1 as [H1 | H1].
+  - rewrite <- Rpower_nat. rewrite Rpower_mult; try lra.
+    rewrite Rmult_comm. reflexivity. apply Rpower_gt_0; lra.
+  - destruct (Req_dec y 0) as [H3 | H3].
+    + subst. rewrite Rmult_0_r. rewrite Rpower_0_0. rewrite pow_i; solve_R.
+      apply INR_lt. solve_R.
+    + subst. rewrite Rpower_0_base; try lra. rewrite pow_i; solve_R.
+      2 : { apply INR_lt. solve_R. }
+      rewrite Rpower_0_base; solve_R.
 Qed.
 
 Lemma Rpower_le_contravar : forall a b c,
@@ -752,8 +835,29 @@ Proof.
     lra.
 Qed.
 
+Lemma Rpower_unbounded_above : forall b,
+  b > 1 -> unbounded_above (Rpower b).
+Proof.
+  intros b H1 H2. destruct H2 as [M H2].
+  destruct (Rle_dec M 0) as [H3 | H3].
+  - specialize (H2 1).
+    assert (H4 : 1 <= M); [| lra].
+    { apply H2. exists 0. split. apply Full_intro. rewrite Rpower_0; lra. }
+  - specialize (H2 (M + 1)).
+    assert (H5 : M + 1 <= M).
+    {
+      apply H2. exists (log_ b (M + 1)).
+      split; [try apply Full_intro; try trivial |].
+      unfold log_, Rpower.
+      destruct (Rlt_dec 0 b) as [H4 | H4]; [| lra].
+      replace (log (M + 1) / log b * log b) with (log (M + 1)).
+      2 : { field; auto. pose proof log_pos b H1; lra. }
+      rewrite exp_log; try lra.
+    } lra.
+Qed.
+
 Lemma Rpower_1 : forall x,
-  0 < x -> x ^^ 1 = x.
+  0 <= x -> x ^^ 1 = x.
 Proof.
   intros x H1.
   unfold Rpower.
@@ -934,4 +1038,44 @@ Proof.
     assert (H8 : f x > f 1).
     { apply H7; try auto_interval. }
     unfold f in H8. rewrite log_1 in H8. lra.
+Qed.
+
+Lemma log_b_mult : forall b x y,
+  b > 1 -> x > 0 -> y > 0 ->
+  log_ b (x * y) = log_ b x + log_ b y.
+Proof.
+  intros b x y H1 H2 H3.
+  unfold log_.
+  rewrite theorem_18_1; try lra.
+Qed.
+
+Lemma log_b_pow : forall b x y,
+  b > 1 -> x > 0 ->
+  log_ b (x ^^ y) = y * log_ b x.
+Proof.
+  intros b x y H1 H2.
+  unfold log_, Rpower.
+  destruct (Rlt_dec 0 x); try lra.
+  rewrite log_exp. field.
+  apply Rgt_not_eq; apply log_pos; lra.
+Qed.
+
+Lemma log_b_b : forall b,
+  b > 1 -> log_ b b = 1.
+Proof.
+  intros b H1.
+  unfold log_.
+  field.
+  pose proof log_pos b H1 as H2. lra.
+Qed.
+
+Lemma log_b_Rpower : forall b a x,
+  b > 1 ->
+  a > 0 ->
+  log_ b (a ^^ x) = x * log_ b a.
+Proof.
+  intros b a x H1 H2.
+  unfold log_.
+  rewrite log_Rpower; auto. field. 
+  pose proof log_pos b ltac:(lra) as H4. lra.
 Qed.

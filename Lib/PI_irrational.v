@@ -117,6 +117,15 @@ Lemma f_n_derivatives_at_0_are_integers : ∀ (n k: nat) (r : R),
 Proof.
   intros n k r H1.
   rewrite f_n_is_polynomial in H1.
+  rewrite nth_derive_mult_const_l in H1.
+  2 : { admit. }
+  rewrite nth_derive_sum in H1; try lia.
+  2 : { intros j. apply nth_differentiable_mult_const_l. admit. }
+  replace (λ k0 : ℕ, (⟦ Der^k ⟧ (λ x : ℝ, (-1) ^ (k0 - n) * n ∁ (k0 - n) * x ^ k0)) 0) with (λ k0 : ℕ, (-1) ^ (k0 - n) * n ∁ (k0 - n) * (⟦ Der^k 0 ⟧ (λ x : ℝ, x ^ k0))) in H1.
+  2 : { extensionality k0. rewrite nth_derive_mult_const_l. auto. admit. }
+  pose proof nth_derivative_pow as H2.
+  pose proof nth_derivative_pow_gt as H3.
+  admit.
 Admitted.
 
 Lemma f_n_derivatives_at_1_are_integers : ∀ (n k: nat) (r : R),
@@ -333,14 +342,15 @@ Proof.
          apply differentiable_id.
   }
   pose proof pow_over_factorial_tends_to_0 (a * π) (1) (ltac:(pose proof π_pos; nra)) (ltac:(lra)) as [n H7].
-  assert (H8 : π * a ^ n / n! < (a * π) ^ n / n!).
+  assert (H8 : π * a ^ n / n! <= (a * π) ^ n / n!).
   {
-    apply Rmult_lt_reg_l with (r := n!). apply INR_fact_lt_0.  field_simplify; try apply INR_fact_neq_0.
-    rewrite Rpow_mult_distr. rewrite Rmult_comm. apply Rmult_lt_compat_l. apply pow_lt; auto.
-    admit.
+    assert (n = 0 \/ n > 0)%nat as [H8 | H8] by lia.
+    - subst. simpl in H7. lra.
+    - apply Rmult_le_reg_l with (r := n!). apply INR_fact_lt_0. field_simplify; try apply INR_fact_neq_0.
+      rewrite Rpow_mult_distr. rewrite Rmult_comm. apply Rmult_le_compat_l. apply pow_le; lra.
+      rewrite <- pow_1 at 1. apply Rle_pow. apply Rlt_le. admit. lia.
   }
-  assert ((n = 0)%nat \/ (n > 0)%nat) as [H9 | H9] by lia.
-  - subst. simpl in H7. rewrite Rdiv_1_r in H7. lra.
-  - specialize (H6 n H9) as [H10 H11]. specialize (H4 n) as [c H4].
-    rewrite H4 in *. assert (H12 : 0 < c < 1) by lra. 
+  assert (n <> 0)%nat as H9. { intros H9. subst. simpl in *; lra. }
+  specialize (H6 n ltac:(lia)).
+  apply (no_integer_between 0 (∫ 0 1 (λ x : ℝ, π * a ^ n * f n x * sin (π * x))) ltac:(lra)); auto.
 Admitted.

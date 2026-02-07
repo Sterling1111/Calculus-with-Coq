@@ -1,5 +1,5 @@
 From Lib Require Import Imports Sets Limit Continuity Derivative Notations Reals_util Inverse Interval Functions.
-Import LimitNotations IntervalNotations SetNotations DerivativeNotations Function_Notations.
+Import LimitNotations IntervalNotations SetNotations DerivativeNotations FunctionNotations.
 Open Scope R_scope.
 
 Lemma lemma_12_23_a : forall f g a b,

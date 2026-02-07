@@ -189,7 +189,7 @@ Proof.
     + apply Rmult_le_reg_r with (r := c1); try lra. field_simplify; solve_R.
 Qed.
 
-Theorem transpose_sym_O_Omega : forall f g,
+Theorem transpose_sym_o_Omega : forall f g,
   f = Ο( g ) <-> g = Ω( f ).
 Proof.
   intros f g. split; intros H1.
@@ -228,7 +228,7 @@ Proof.
   - apply big_theta_iff in H1; destruct H1; auto.
   - apply big_o_trans with g'; auto.
     apply big_theta_iff in H2; destruct H2 as [_ H2].
-    apply transpose_sym_O_Omega; auto.
+    apply transpose_sym_o_Omega; auto.
 Qed.
 
 Lemma big_omega_canonical_reduction : forall f f' g g',
@@ -238,9 +238,9 @@ Lemma big_omega_canonical_reduction : forall f f' g g',
   f = Ω(g).
 Proof.
   intros f f' g g' H1 H2 H3.
-  apply transpose_sym_O_Omega.
+  apply transpose_sym_o_Omega.
   apply big_o_canonical_reduction with (f' := g') (g' := f'); auto.
-  apply transpose_sym_O_Omega; auto.
+  apply transpose_sym_o_Omega; auto.
 Qed.
 
 Lemma big_theta_canonical_reduction : forall f f' g g',
@@ -301,6 +301,69 @@ Proof.
   apply big_theta_iff. split.
   - apply big_o_const; auto.
   - apply big_omega_const; auto.
+Qed.
+
+Lemma big_o_log_of_poly : forall f k b,
+  b > 1 -> k > 0 -> (exists N, forall n, n >= N -> f n >= 1) ->
+  f = Ο(λ n, n ^^ k) ->
+  (λ n, log_ b (f n)) = Ο(log_ b).
+Proof.
+  intros f k b H1 H2 [N1 H3] [c [N2 [H4 H5]]].
+  exists (Rabs (log_ b c) + k), (Rmax b (Rmax N1 N2)). split; [solve_R |].
+  intros n H6.
+  specialize (H3 n ltac:(solve_R)).
+  specialize (H5 n ltac:(solve_R)).
+  rewrite Rabs_right in H5; [| solve_R].
+  rewrite Rabs_right in H5; [| apply Rpower_ge_0].
+  rewrite Rabs_right; [| apply log_b_nonneg; [lra | apply H3]].
+  apply Rle_trans with (log_ b (c * n ^^ k)).
+  - apply log_b_le; solve_R.
+  - rewrite log_b_mult, log_b_pow; try solve [solve_R].
+    assert (H7 : log_ b n >= 1). { apply log_b_ge_1; solve_R. }
+    solve_R.
+Qed.
+
+Lemma big_omega_log_of_poly : forall f k b,
+  b > 1 -> k > 0 -> (exists N, forall n, n >= N -> f n >= 1) ->
+  f = Ω(λ n, n ^^ k) ->
+  (λ n, log_ b (f n)) = Ω(log_ b).
+Proof.
+  intros f k b H1 H2 [N1 H3] [c [N2 [H4 H5]]].
+  exists (k / 2), (Rmax (Rmax b (b ^^ (2 * |log_ b c| / k))) (Rmax N1 N2)).
+  split; [lra |].
+  intros n H6.
+  specialize (H3 n ltac:(solve_R)).
+  specialize (H5 n ltac:(solve_R)).
+  rewrite Rabs_right in H5; [| solve_R].
+  rewrite Rabs_right in H5; [| apply Rpower_ge_0].
+  rewrite Rabs_right; [| apply log_b_nonneg; [lra | apply H3]].
+  apply Rle_ge, Rle_trans with (log_ b (c * n ^^ k)).
+  - rewrite log_b_mult, log_b_pow; try solve [solve_R].
+    2 : { apply Rpower_gt_0; solve_R. }
+    rewrite Rabs_right. 2 : { apply log_b_nonneg; solve_R. }
+    assert (H7 : k / 2 * log_ b n >= |log_ b c|).
+    {
+      apply Rle_ge.
+      apply Rmult_le_reg_r with (2/k); [ apply Rdiv_pos_pos; lra | ].
+      field_simplify; try lra.
+      apply Rle_trans with (log_ b (b ^^ (2 * |log_ b c| / k))).
+      - rewrite log_b_pow; try lra. rewrite log_b_b; lra.
+      - apply log_b_le; try lra; [split; [apply Rpower_gt_0; lra |] ]. solve_R.
+    }
+    solve_R.
+  - pose proof Rpower_gt_0 n k ltac:(solve_R) as H7. apply log_b_le; nra.
+Qed.
+
+Lemma big_theta_log_of_poly : forall f k b,
+  b > 1 -> k > 0 -> (exists N, forall n, n >= N -> f n >= 1) ->
+  f = Θ(λ n, n ^^ k) ->
+  (λ n, log_ b (f n)) = Θ(log_ b).
+Proof.
+  intros f k b H1 H2 H3 H4.
+  apply big_theta_iff in H4. destruct H4 as [H5 H6].
+  apply big_theta_iff. split.
+  - apply big_o_log_of_poly with k; auto.
+  - apply big_omega_log_of_poly with k; auto.
 Qed.
 
 Inductive expr : Type :=
@@ -500,9 +563,9 @@ Lemma big_theta_iff_both_big_o : forall f g,
 Proof.
   intros f g.
   rewrite big_theta_iff.
-  rewrite transpose_sym_O_Omega.
+  rewrite transpose_sym_o_Omega.
   split; intros [H1 H2]; split; auto;
-  apply transpose_sym_O_Omega; auto.
+  apply transpose_sym_o_Omega; auto.
 Qed.
 
 Lemma big_theta_iff_both_big_omega : forall f g,
@@ -511,7 +574,7 @@ Proof.
   intros f g.
   rewrite big_theta_iff.
   split; intros [H1 H2]; split; auto;
-  apply transpose_sym_O_Omega; auto.
+  apply transpose_sym_o_Omega; auto.
 Qed.
 
 
@@ -533,6 +596,36 @@ Proof.
   - exists 1, 0%nat. split; [lra |]. intros n H2. 
     simpl. rewrite Rabs_R1. lra.
   - simpl. apply big_o_mult; auto.
+Qed.
+
+Lemma big_omega_pow : forall f g k,
+  f = Ω( g ) -> (λ n, (f n) ^ k) = Ω( λ n, (g n) ^ k ).
+Proof.
+  intros f g k H1. apply transpose_sym_o_Omega.
+  apply big_o_pow. apply transpose_sym_o_Omega; auto.
+Qed.
+
+Lemma big_theta_pow : forall f g k,
+  f = Θ( g ) -> (λ n, (f n) ^ k) = Θ( λ n, (g n) ^ k ).
+Proof.
+  intros f g k H1. apply big_theta_iff in H1. destruct H1 as [H1 H2].
+  apply big_theta_iff. split.
+  - apply big_o_pow; auto.
+  - apply big_omega_pow; auto.
+Qed.
+
+Lemma big_o_self_pow : forall f (k : nat),
+  (k >= 1)%nat -> (exists N, forall n, n >= N -> f n >= 1) ->
+  f = Ο(λ n, (f n) ^ k).
+Proof.
+  intros f k H1 [N H2].
+  exists 1, N. split; [lra |].
+  intros n H3. specialize (H2 n ltac:(solve_R)).
+  rewrite Rmult_1_l.
+  rewrite Rabs_right; [| lra].
+  rewrite Rabs_right; [| apply Rle_ge; apply pow_le; lra].
+  replace (f n) with (f n ^ 1) at 1. 2 : { simpl; lra. }
+  apply Rle_pow; solve_R. apply INR_le. solve_R.
 Qed.
 
 Lemma big_o_poly_poly : forall p q,
@@ -580,85 +673,59 @@ Proof.
   intros n H3. pose proof log_b_ge_1 b n H2 ltac:(lra). solve_R.
 Qed.
 
-Lemma big_o_log_poly : forall b k, 
-  b > 1 -> k > 0 -> 
-  (λ n, log_ b n) = Ο(λ n, n ^^ k).
+Lemma big_o_log_poly : forall f k b,
+  b > 1 -> k > 0 -> f = Θ(λ n, n ^^ k) ->
+  (λ n, log_ b n) = Ο(f).
 Proof.
-  intros b k H1 H2.
-  exists (1 / (k * log b)), 1%nat. split.
-  { apply Rdiv_pos_pos; [solve_R | apply Rmult_pos_pos; [solve_R | apply log_pos; auto]]. }
-  intros n H3.
-  rewrite Rabs_right; [| apply log_b_nonneg; auto; solve_R].
-  rewrite Rabs_right; [| apply Rpower_ge_0; solve_R].
-  apply Rmult_le_reg_r with (r := k * log b); [ pose proof log_pos b H1; solve_R |].
-  field_simplify. 2 : { pose proof log_pos b H1; solve_R. }
-  unfold log_.
-  replace (log (INR n) / log b * k * log b) with (log ((INR n) ^^ k)).
-  2: { unfold Rpower. destruct (Rlt_dec 0 n) as [H4 | H4].
-       2 : { exfalso; apply H4. apply INR_ge in H3. solve_R. }
-       rewrite log_exp. field. apply Rgt_not_eq; apply log_pos; lra. }
-  set (y := n ^^ k).
-  assert (H4 : y >= 1).
-  {
-    unfold y. destruct (Req_dec (INR n) 1) as [H4 | H4].
-    - rewrite H4; rewrite Rpower_1_base; lra.
-    - apply Rgt_ge. apply Rpower_gt_1; [ apply INR_ge in H3 |]; solve_R.
-  }
-  apply Rlt_le.
-  apply log_lt_self; auto.
+  intros f k b H1 H2 H3.
+  apply big_o_trans with (g := λ n, n ^^ k).
+  - exists (1 / (k * log b)), 1%nat.
+    split.
+    + apply Rdiv_lt_0_compat; [lra |].
+      apply Rmult_lt_0_compat; [lra | apply log_pos; lra].
+    + intros n H4.
+      rewrite Rabs_right. 2 : { apply log_b_nonneg; solve_R. }
+      rewrite Rabs_right. 2 : { apply Rpower_ge_0; solve_R. }
+      apply Rmult_le_reg_l with (k * log b).
+      * apply Rmult_lt_0_compat; [lra | apply log_pos; lra].
+      * field_simplify. 
+        2 : { split; solve_R. pose proof log_pos b H1 as H5. lra. }
+        unfold log_. rewrite Rmult_comm.
+        replace (k * log n) with (log (n ^^ k)).
+        2 : { rewrite log_Rpower; [field | apply INR_ge in H4; solve_R]. }
+        apply Rlt_le. field_simplify. 2 : { pose proof log_pos b H1 as H5. lra. }
+        rewrite Rmult_comm. rewrite <- log_Rpower.
+        2 : { apply INR_ge in H4; solve_R. }
+        apply log_lt_self. apply Rpower_ge_1; solve_R.
+  - apply big_theta_iff in H3 as [_ H3].
+    apply transpose_sym_o_Omega; auto.
 Qed.
 
-Lemma big_o_log_of_poly : forall b c k,
-  b > 1 -> c > 0 -> k > 0 ->
-  (λ n, log_ b (n ^^ k)) = Ο(log_ b).
+Lemma big_o_poly_polylog : forall f g k1 k2 p b,
+  b > 1 -> k1 <= k2 -> p >= 0 ->
+  f = Θ(λ n, n ^^ k1) ->
+  g = Θ(λ n, n ^^ k2 * (log_ b n) ^^ p) ->
+  f = Ο(g).
 Proof.
-  intros b c k H1 H2 H3.
-  exists k, 1%nat. split; auto.
-  intros n H4.
-  rewrite Rabs_right.
-  2 : { apply log_b_nonneg; auto. apply Rpower_ge_1; solve_R. }
-  rewrite Rabs_right.
-  2 : { apply log_b_nonneg; auto; solve_R. }
-  unfold log_, Rpower.
-  destruct (Rlt_dec 0 n) as [H5 | H5].
-  - rewrite log_exp; lra.
-  - apply INR_ge in H4. solve_R.
-Qed.
-
-Lemma big_omega_log_of_poly : forall b c k,
-  b > 1 -> c > 0 -> k > 0 ->
-  (λ n, log_ b (n ^^ k)) = Ω(log_ b).
-Proof.
-  intros b c k H1 H2 H3.
-  exists k, 1%nat. split; auto.
-  intros n H4.
-  rewrite Rabs_right.
-  2 : { apply log_b_nonneg; auto. apply Rpower_ge_1; solve_R. }
-  rewrite Rabs_right.
-  2 : { apply log_b_nonneg; auto; solve_R. }
-  unfold log_, Rpower.
-  destruct (Rlt_dec 0 n) as [H5 | H5].
-  - rewrite log_exp; lra.
-  - apply INR_ge in H4. solve_R.
-Qed.
-
-Lemma big_theta_log_of_poly : forall b c k,
-  b > 1 -> c > 0 -> k > 0 ->
-  (λ n, log_ b (n ^^ k)) = Θ(log_ b).
-Proof.
-  intros b c k H1 H2 H3. apply big_theta_iff; split.
-  - apply big_o_log_of_poly with (c := c); auto.
-  - apply big_omega_log_of_poly with (c := c); auto.
-Qed.
-
-Lemma big_o_log_le_log_pow : forall b c k,
-  b > 1 -> c > 0 -> k > 0 ->
-  (log_ b) = Ο(λ n, log_ b (n ^^ k)).
-Proof.
-  intros b c k H1 H2 H3.
-  apply big_theta_iff. 
-  apply big_theta_sym.
-  apply big_theta_log_of_poly with (c := c); auto.
+  intros f g k1 k2 p b H1 H2 H3 H4 H5.
+  apply big_theta_iff in H5. destruct H5 as [_ H5].
+  apply big_theta_iff in H4. destruct H4 as [H4 _].
+  apply big_o_trans with (g := λ n, n ^^ k2 * (log_ b n) ^^ p).
+  - apply big_o_trans with (g := λ n, n ^^ k1); [apply H4 |].
+    exists 1, (⌈b⌉). split; [lra |].
+    intros n H6.
+    rewrite Rmult_1_l.
+    rewrite Rabs_right; [| apply Rpower_ge_0].
+    rewrite Rabs_right.
+    2 : { apply Rle_ge, Rmult_le_pos. apply Rge_le, Rpower_ge_0. apply Rge_le, Rpower_ge_0. }
+    rewrite <- (Rmult_1_r (n ^^ k1)) at 1.
+    apply Rmult_le_compat; try lra; [apply Rge_le, Rpower_ge_0 | | ].
+    2 : { apply Rge_le, Rpower_ge_1;  auto. apply log_b_ge_1; solve_R. 
+          pose  proof ceil_spec b ltac:(lra). solve_R.
+          pose proof ceil_spec b ltac:(lra). solve_R.
+    }
+    apply Rpower_le_reg; auto. pose proof ceil_spec b ltac:(lra). solve_R. 
+  - apply transpose_sym_o_Omega. apply H5.
 Qed.
 
 Lemma big_o_poly_exp : forall k b,
@@ -717,7 +784,7 @@ Proof.
 Qed.
 
 Lemma big_o_exp_fact : forall b,
-  b > 1 -> (λ n, b ^^ (INR n)) = Ο(λ n, INR (fact n)).
+  b > 1 -> (λ n, b ^^ n) = Ο(λ n, INR (fact n)).
 Proof.
   intros b H1.
   destruct (INR_unbounded b) as [N H2].
@@ -753,6 +820,29 @@ Proof.
   apply Rmult_le_compat_l; [nra | apply H3; auto].
 Qed.
 
+Lemma big_omega_mult_const : forall f g c,
+  c > 0 ->
+  f = Ω(g) -> (λ n, c * f n) = Ω(g).
+Proof.
+  intros f g c H1 [c0 [N [H2 H3]]].
+  exists (c * c0), N. split; [nra |].
+  intros n H4.
+  rewrite Rabs_mult, Rabs_right; [| nra].
+  rewrite Rmult_assoc.
+  specialize (H3 n H4).
+  solve_R.
+Qed.
+
+Lemma big_theta_mult_const : forall f g c,
+  c > 0 ->
+  f = Θ(g) -> (λ n, c * f n) = Θ(g).
+Proof.
+  intros f g c H1 H2. apply big_theta_iff in H2 as [H2 H3].
+  apply big_theta_iff. split.
+  - apply big_o_mult_const; auto.
+  - apply big_omega_mult_const; auto.
+Qed.
+
 Lemma big_o_extend_1 : forall (f : nat -> R) (g : nat -> R) (N : R) (c : R),
   (forall n, (n >= 1)%nat -> g n > 0) ->
   (forall n : nat, n >= N -> f n <= c * g n) ->
@@ -776,6 +866,146 @@ Proof.
   - apply Rle_trans with (c * g n); [apply H2|apply Rmult_le_compat_r; [apply Rlt_le, H1; lia|apply Rmax_l]].
     apply Rle_ge, Rlt_le, Rlt_le_trans with (IZR (up N)); [apply archimed | rewrite INR_IZR_INZ; apply IZR_le; lia].
 Qed.
+
+Section Examples.
+  Let f1  := λ n : ℕ, 2.
+  Let f2  := λ n : ℕ, 121!.
+  Let f3  := λ n : ℕ, ln (19 * n ^ 4).
+  Let f4  := λ n : ℕ, 7 * (ln (n ^ 3)) ^ 2.
+  Let f5  := λ n : ℕ, 42 * n ^^ (3/5).
+  Let f6  := λ n : ℕ, n.
+  Let f7  := λ n : ℕ, n * ln n.
+  Let f8  := λ n : ℕ, log_ π (((2/23) * n) ^^ (5 * n)).
+  Let f9  := λ n : ℕ, n ^ 3 / (n ^^ (1/2)).
+  Let f10 := λ n : ℕ, (3/2) ^ n.
+  Let f11 := λ n : ℕ, 2 ^ n.
+  Let f12 := λ n : ℕ, (n!) ^ 2.
+
+  Lemma f1_big_o_f2 : f1 = Ο(f2).
+  Proof.
+    unfold f1, f2. apply big_o_canonical_reduction with (f' := λ _, 1) (g' := λ _, 1).
+    - apply big_theta_const; lra.
+    - apply big_theta_const; apply INR_fact_lt_0.
+    - apply big_o_refl.
+  Qed.
+
+  Lemma f2_big_o_f3 : f2 = Ο(f3).
+  Proof.
+    unfold f2, f3.
+    apply big_o_canonical_reduction with (f' := λ _, 1) (g' := ln).
+    - apply big_theta_const; apply INR_fact_lt_0.
+    - set (f := λ n, 19 * n^4). unfold ln. apply (big_theta_log_of_poly f 4); try lra.
+      + pose proof e_bounds as H1. lra.
+      + exists 2. intros n H1. unfold f. pose proof Rlt_pow_R1 n 4 ltac:(lra) ltac:(lia). lra.
+      + unfold f. apply big_theta_mult_const; try lra. 
+        replace (λ n : ℕ, n ^ 4) with ((λ n : ℕ, n ^^ 4)).
+        2 : {
+          extensionality n. replace 4 with (INR 4) by (simpl; lra).
+          pose proof pos_INR n as H1. apply Rpower_nat'; solve_R. 
+        } 
+        apply big_theta_refl.
+    - apply big_o_const_log; try lra.
+      pose proof e_bounds as H1. lra.
+  Qed.
+
+  Lemma f3_big_o_f4 : f3 = Ο(f4).
+  Proof.
+    unfold f3, f4.
+    apply big_o_canonical_reduction with (f' := ln) (g' := λ n, (ln n)^2).
+    - set (f := λ n, 19 * n^4). unfold ln. apply (big_theta_log_of_poly f 4); try lra.
+      + pose proof e_bounds as H1. lra.
+      + exists 2. intros n H1. unfold f. pose proof Rlt_pow_R1 n 4 ltac:(lra) ltac:(lia). lra.
+      + unfold f. apply big_theta_mult_const; try lra.
+        replace (λ n : ℕ, n ^ 4) with ((λ n : ℕ, n ^^ 4)).
+        2 : { extensionality n. replace 4 with (INR 4) by (simpl; lra). pose proof pos_INR n. apply Rpower_nat'; solve_R. }
+        apply big_theta_refl.
+    - apply big_theta_mult_const; try lra. apply big_theta_pow.
+      unfold ln. set (f := λ n, n ^ 3). apply (big_theta_log_of_poly f 3); try lra.
+      + pose proof e_bounds as H1. lra.
+      + exists 2. intros n H1. unfold f. pose proof Rlt_pow_R1 n 3 ltac:(lra) ltac:(lia). lra.
+      + unfold f. replace (λ n : ℕ, n ^ 3) with ((λ n : ℕ, n ^^ 3)).
+        2 : { extensionality n. replace 3 with (INR 3) by (simpl; lra). pose proof pos_INR n. apply Rpower_nat'; solve_R. }
+        apply big_theta_refl.
+    - apply big_o_self_pow; try lia. 
+      exists e. intros n H1.
+      assert (H2 : e > 1) by (pose proof e_bounds as H3; lra).
+      unfold ln. apply log_b_ge_1; try lra.
+  Qed.
+
+  Lemma f4_big_o_f5 : f4 = Ο(f5).
+  Proof.
+    unfold f4, f5.
+    apply big_o_canonical_reduction with (f' := λ n, (ln n)^2) (g' := λ n, n ^^ (3/5)).
+    - apply big_theta_mult_const; try lra.
+      apply big_theta_pow.
+      unfold ln. set (f := λ n, n ^ 3). apply (big_theta_log_of_poly f 3); try lra.
+      + pose proof e_bounds as H1. lra.
+      + exists 2. intros n H1. unfold f. pose proof Rlt_pow_R1 n 3 ltac:(lra) ltac:(lia). lra.
+      + unfold f. replace (λ n : ℕ, n ^ 3) with ((λ n : ℕ, n ^^ 3)).
+        2 : { extensionality n. replace 3 with (INR 3) by (simpl; lra). pose proof pos_INR n. apply Rpower_nat'; solve_R. }
+        apply big_theta_refl.
+    - apply big_theta_mult_const; try lra.
+      apply big_theta_refl.
+    - apply big_o_ext with (f2 := λ n, (ln n)^2) (g2 := λ n, (n ^^ (3/10))^2).
+      + intros n. reflexivity.
+      + intros n. rewrite Rpower_pow; solve_R.
+        2 : { pose proof pos_INR n as H1; lra. }
+        replace ((0 + 1 + 1) * (3 / 10)) with (3 / 5) by lra. auto.
+      + apply big_o_pow. set (f := λ n, n ^ (3/10)).
+        apply big_o_log_poly with (k := 3/10); try lra.
+        * pose proof e_bounds; lra.
+        * apply big_theta_refl.
+  Qed.
+
+  Lemma f5_big_o_f6 : f5 = Ο(f6).
+  Proof.
+    unfold f5, f6. apply big_o_mult_const; try lra.
+    replace (λ n : ℕ, INR n) with (λ n : ℕ, n ^^ 1).
+    2 : { extensionality n. rewrite Rpower_1. solve_R. pose proof pos_INR n; lra. }
+    apply big_o_poly_poly; try lra.
+  Qed.
+
+  Lemma f6_big_o_f7 : f6 = Ο(f7).
+  Proof.
+    unfold f6, f7.            
+    replace (λ n : nat, INR n) with (λ n : nat, n^^1).
+    2 : { extensionality n. rewrite Rpower_1; auto. apply pos_INR; lia. }
+    replace (λ n : nat, n * ln n) with (λ n : nat, n^^1 * (log_ e n)^^1).
+    2 : {
+      extensionality n.
+      rewrite Rpower_1. 2 : { pose proof (pos_INR n). lra. }
+      assert (n = 0 \/ n >= 1)%nat as [H1 | H1] by lia.
+      - rewrite H1. solve_R.
+      - rewrite Rpower_1. 2 : { apply Rge_le, log_b_nonneg; solve_R. pose proof e_bounds; lra. }
+        auto.
+    }
+    apply big_o_poly_polylog with (k1 := 1) (k2 := 1) (p := 1) (b := e); try lra; try apply big_theta_refl.
+    pose proof e_bounds; lra.
+  Qed.
+
+  Lemma f7_big_o_f8 : f7 = Ο(f8).
+  Proof.
+    unfold f7, f8.
+   
+  Admitted.
+
+  Lemma f8_big_o_f9 : f8 = Ο(f9).
+  Proof.
+    unfold f8, f9.
+  Admitted.
+
+  Lemma f9_big_o_f10 : f9 = Ο(f10).
+  Proof.
+    unfold f9, f10.
+  Admitted.
+
+  Lemma f10_big_o_f11 : f10 = Ο(f11).
+  Proof.
+    unfold f10, f11.
+
+
+  Admitted.
+End Examples.
 
 Lemma floor_power_bound : forall p : R, 
   exists k : R, k > 0 /\ forall x : R, x >= 1 -> ⌊x⌋^^p <= k * x^^p.
@@ -1271,7 +1501,7 @@ Section Master_Theorem.
            { exists 1, 1%nat. split; [lra |]. intros n H19.
              rewrite Rmult_1_l. pose proof Rpower_exp_le (b^n) p (p + ε) ltac:(apply Rle_ge, pow_R1_Rle; lra) ltac:(lra) as H20.
              pose proof Rpower_ge_0 (b ^ n) p as H21. solve_R. }
-           apply transpose_sym_O_Omega.
+           apply transpose_sym_o_Omega.
            destruct (pow_unbounded b (Rabs N2 + 2) H2) as [N3 HN3].
            exists (c3 / 2), (Rmax N3 (b * b)). split; [lra |]. intros n H19.
            pose proof pow_le b n ltac:(lra) as H20.
@@ -1472,35 +1702,18 @@ Proof.
   exists 1%R, (1/2)%R, 1%R.
   repeat split; try lra.
   - unfold f.
-    admit.
-  - intros n H8. 
+    apply big_omega_mult_const; try lra.
+    apply transpose_sym_o_Omega.
+    replace (λ n : nat, n^5) with (λ n : nat, (n^^5)).
+    2 : {
+          extensionality n. rewrite <- Rpower_nat'.
+          -  replace 5 with (INR 5) by (simpl; lra). reflexivity.
+          - pose proof pos_INR n as H8. lra.
+          - solve_R.
+    }
+    apply big_o_poly_poly. admit.
+  - intros n H8. left. unfold f. 
     admit.
 Admitted.
 
 End Problem2b.
-
-Section Examples.
-  Let f1  := λ n : ℕ, 2.
-  Let f2  := λ n : ℕ, 121!.
-  Let f3  := λ n : ℕ, ln (19 * n ^ 4).
-  Let f4  := λ n : ℕ, 7 * (ln (n ^ 3)) ^ 2.
-  Let f5  := λ n : ℕ, 42 * n ^ (3/5).
-  Let f6  := λ n : ℕ, n.
-  Let f7  := λ n : ℕ, n * ln n.
-  Let f8  := λ n : ℕ, log_ π (((2/23) * n) ^ (5 * n)).
-  Let f9  := λ n : ℕ, n ^ 3 / (n ^ (1/2)).
-  Let f10 := λ n : ℕ, (3/2) ^ n.
-  Let f11 := λ n : ℕ, 2 ^ n.
-  Let f12 := λ n : ℕ, (n!) ^ 2.
-
-  Lemma f1_big_o_f2 : f1 = Ο(f2).
-  Proof.
-    unfold f1, f2. apply big_o_const_const; try lra.
-    apply INR_fact_lt_0.
-  Qed.
-
-  Lemma f2_big_o_f3 : f2 = Ο(f3).
-  Proof.
-  Admitted.
-  
-End Examples.

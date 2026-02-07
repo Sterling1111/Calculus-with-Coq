@@ -112,3 +112,51 @@ Section Symbolic_Example.
   Qed.
 
 End Symbolic_Example.
+
+Section Matrix_Coercion.
+
+  Local Open Scope R_scope.
+  Local Open Scope V_Scope.
+  Local Open Scope M_Scope.
+
+  Definition vector_ge {n} (v1 v2 : vector R n) : Prop :=
+    Forall2 Rge (vlist v1) (vlist v2).
+
+  Definition matrix_ge {m n} (M1 M2 : matrix R m n) : Prop :=
+    Forall2 (fun r1 r2 => vector_ge r1 r2) (vlist M1) (vlist M2).
+
+  Definition vector_const {A : Type} (x : A) (n : nat) : vector A n :=
+    mk_vector (repeat x n) (repeat_length x n).
+
+  Definition vec_to_col {A : Type} {n : nat} `{Zero A} (v : vector A n) : matrix A n 1 :=
+    vector_init (fun i => vector_init (fun j => vector_nth v i zero)).
+
+  Coercion vec_to_col : vector >-> matrix.
+
+  Definition to_scalar {A} `{Zero A} (M : matrix A 1 1) : A :=
+    vector_nth (vector_nth M 0 zero) 0 zero.
+
+  Lemma matrix_assoc : forall {m n p q} (A : matrix R m n) (B : matrix R n p) (C : matrix R p q),
+    (A × B) × C = A × (B × C).
+  Proof.
+    intros.
+  Admitted.
+
+  Lemma farkas_infeasibility_coerced : 
+    forall {m n} (A : matrix R m n) (b : vector R m) (x : vector R n) (y : vector R m),
+    matrix_ge (A × x) b -> 
+    vector_ge y (vector_const 0 m) ->
+    (y^T) × A = vector_const (vector_const 0 n) 1 ->
+    to_scalar ((y^T) × b) > 0 ->
+    False.
+  Proof.
+    intros m n A b x y H1 H2 H3 H4.
+    assert (H_ineq: to_scalar (y^T × (A × x)) >= to_scalar (y^T × b)).
+    { admit. }
+    rewrite <- matrix_assoc in H_ineq.
+    rewrite H3 in H_ineq.
+    unfold to_scalar in *.
+    admit. 
+  Admitted.
+
+End Matrix_Coercion.

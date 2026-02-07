@@ -642,3 +642,15 @@ Proof.
     replace (c1 ^ S k * f ⌊b ^ n⌋) with (c1 * (c1 ^ k * f ⌊b ^ n⌋)) by (simpl; lra).
     apply Rmult_le_compat_l; lra.
 Qed.
+
+Lemma no_natural_between : forall (n : ℕ) r,
+  n < r < (S n) -> ~ is_natural r.
+Proof.
+  intros n r [H1 H2] [k H3]. rewrite H3 in *. apply INR_lt in H1. apply INR_lt in H2. lia.
+Qed.
+
+Lemma no_integer_between : forall (n : ℤ) r,
+  n < r < n + 1 -> ~ is_integer r.
+Proof.
+  intros n r [H1 H2] [k H3]. rewrite H3 in *. apply lt_IZR in H1. rewrite <- plus_IZR in H2. apply lt_IZR in H2. lia.
+Qed.

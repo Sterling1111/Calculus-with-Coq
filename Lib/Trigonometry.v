@@ -528,6 +528,9 @@ Proof. admit. Admitted.
 Lemma cos_π : cos π = -1.
 Proof. admit. Admitted. 
 
+Lemma cos_π_over_2 : cos (π / 2) = 0.
+Proof. admit. Admitted.
+
 Lemma sin_0 : sin 0 = 0.
 Proof. admit. Admitted.
 
@@ -790,8 +793,6 @@ Ltac rewrite_trig_nth_derivative :=
 
 Ltac simplify_trig_derivatives :=
   repeat (first [ nat_mod4_normalize_derivative_only | rewrite_trig_nth_derivative ]).
-
-
 
 Lemma nth_derive_cos_0 : 
   ⟦ Der^0 ⟧ cos = cos.
