@@ -98,9 +98,3 @@ Lemma eq_cardinality_Type : forall A B : Type,
 Proof.
   intros A B [[[f H1] [a [b _]]] | [H1 H2]]; apply eq_cardinality_Full_set; auto. left. split. exists f. auto. exists a, b. auto.
 Qed.
-
-Theorem theorem_28_1 : forall A B (f : A -> B),
-  Finite_set (Full_set A) -> ‖ image f ‖ <= ‖ (Full_set A) ‖.
-Proof.
-  intros A B f H1.
-Abort.

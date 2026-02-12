@@ -1,6 +1,4 @@
-From Lib Require Import Imports Sets Limit Continuity Derivative Notations Reals_util Interval Functions Tactics.
-Import LimitNotations IntervalNotations SetNotations DerivativeNotations FunctionNotations.
-Open Scope R_scope.
+From Calculus.Chapter11 Require Import Prelude.
 
 Lemma lemma_11_47 : 1/9 < √66 - 8 < 1/8.
 Proof.

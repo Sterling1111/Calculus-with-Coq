@@ -11,6 +11,12 @@ Notation "n 'N'" := (n_N n) (at level 0, format "n 'N'").
 
 Open Scope Z_scope.
 
+Lemma Nat_even_false_Odd : forall n, Nat.even n = false -> exists k, n = (2 * k + 1)%nat.
+Proof.
+  intros n H1. apply Nat.odd_spec.
+  rewrite <- Nat.negb_even, H1. trivial.
+Qed.
+
 Theorem theorem_29_4 : ‖ ℕ ‖ = ‖ ℤ ‖.
 Proof.
   apply eq_cardinality_Type.
@@ -21,7 +27,7 @@ Proof.
        do 2 (rewrite Nat.mul_comm, Nat.div_mul in H1; try lia).
     -- pose proof Zle_0_nat (x / 2) as H4. pose proof Zle_0_nat (y / 2 + 1) as H5. lia.
     -- pose proof Zle_0_nat (x / 2 + 1) as H4. pose proof Zle_0_nat (y / 2) as H5. lia.
-    -- apply Z.opp_inj in H1. Search (Nat.Even). _ = false). apply Nat_even_false_Odd in H2 as [j H2], H3 as [k H3]; subst.
+    -- apply Z.opp_inj in H1. apply Nat_even_false_Odd in H2 as [j H2], H3 as [k H3]; subst.
        apply Nat2Z.inj in H1. rewrite Nat.mul_comm in H1. rewrite Nat.mul_comm with (n := 2%nat) in H1.
        rewrite Nat.div_add_l in H1; try lia. rewrite Nat.div_add_l in H1; try lia.
   - intros y. assert (y >= 0 \/ y < 0) as [H1 | H1] by lia.
@@ -53,65 +59,6 @@ Proof.
     do 3 rewrite H5 in H7; auto.
   - intros y. specialize (H3 y (g (f y))). specialize (H5 (f y)) as H6.
     rewrite <- H6 in H3 at 1. exists (f y). rewrite H3; auto. rewrite H6. auto.
-Qed.
-
-Lemma cardinal_eq_trans : forall (T1 T2 T3 : Type) (A : Ensemble T1) (B : Ensemble T2) (C : Ensemble T3),
-  ‖ A ‖ = ‖ B ‖ -> ‖ B ‖ = ‖ C ‖ -> ‖ A ‖ = ‖ C ‖.
-Proof.
-  intros T1 T2 T3 A B C [H1 | H1].
-Admitted.
-
-Definition countably_infinite {T : Type} (A : Ensemble T) : Prop := ‖ ℕ ‖ = ‖ A ‖.
-Definition countable {T : Type} (A : Ensemble T) : Prop := Finite_set A \/ countably_infinite A.
-
-Theorem theorem_29_14 : forall (T : Type) (A B : Ensemble T),
-  Infinite_set B -> B ⊆ A -> countably_infinite A -> countably_infinite B.
-Proof.
-  intros T A B H1 H2. unfold countably_infinite. unfold Type_to_Ensemble. intros [[_ H3] | [_ [_ [f [H3 H4]]]]].
-  - assert (B <> ⦃⦄) as H5. { apply not_Empty_In. apply Infinite_exists_In; auto. } exfalso. apply H5. autoset.
-  - unfold countably_infinite. unfold cardinal_eq. right. repeat split.
-    -- apply not_Empty_In. exists 0%nat. apply Full_intro.
-    -- apply not_Empty_In. apply Infinite_exists_In; auto.
-    -- unfold injective in H3. unfold surjective in H4. 
-Admitted.
-
-Open Scope Q_scope.
-
-Definition Npos_S : Ensemble nat := fun n => (n > 0)%nat.
-Definition Npos_T := subType (Npos_S).
-
-Definition Q' := Full_set (ℤ * positive).
-Definition Qpos : Ensemble Q := fun q => q > 0.
-Definition Qpos' := Full_set (Npos_T * Npos_T).
-Definition Q'' : Ensemble ℝ := fun r => exists a b : ℤ, (r = (IZR a) / IZR b)%R.
-Definition Q''' : Ensemble ℚ := ℚ.
-
-Lemma card_Q''_eq_card_Q : ‖ Q ‖ = ‖ Q' ‖.
-Proof.
-  unfold Type_to_Ensemble. apply cardinal_eq_sym. unfold cardinal_eq. right. repeat split.
-  - apply not_Empty_In. exists (1%Z, 1%positive). apply Full_intro.
-  - apply not_Empty_In. exists 1. apply Full_intro.
-  - repeat rewrite subType_Full_set. set (f := fun p : ℤ * positive => let (n, d) := p in (n # d)%Q). exists f. split.
-    -- intros [a b] [c d] H1. unfold f in H1. injection H1; intros H2 H3. subst. reflexivity.
-    -- intros q. destruct q as [a b]. exists (a, b). unfold f. reflexivity. 
-Qed.
-
-Lemma Npos_In_Qpos : forall n d : Npos_T, (Z.of_nat (val Npos_S n) # Pos.of_nat (val Npos_S d)) ∈ Qpos.
-Proof.
-  intros [n H1] [d H2]. unfold Ensembles.In, Npos_S, Qpos in *. simpl. unfold Qgt. simpl. lia.
-Qed.
-
-Lemma subType_eq {A : Type} {E : Ensemble A} (x y : subType E) :
-  val E x = val E y <-> x = y.
-Proof.
-  split.
-  - intros H1. destruct x as [x H2], y as [y H3]. simpl in *. subst. f_equal. apply proof_irrelevance.
-  - intros H1. subst. reflexivity.
-Qed.
-
-Lemma Qgt_0 : forall q, q > 0 -> let (n, _) := q in (n > 0)%Z.
-Proof.
-  intros q H1. destruct q as [n d]. unfold Qgt in H1. simpl in H1. lia.
 Qed.
 
 Open Scope nat_scope.
@@ -173,101 +120,3 @@ Proof.
        * rewrite H4. replace (n - n) with 0 by lia. rewrite Nat.sub_0_r. repeat rewrite Nat.add_0_r. auto.
        * replace ((t - (n - t * (t + 1) / 2) + (n - t * (t + 1) / 2))) with t by nia. lia.
 Qed.
-
-Theorem theorem_30_3' : forall {T : Type} (A B : Ensemble T),
-  countably_infinite A -> countably_infinite B -> countably_infinite (A × B).
-Proof.
-  intros T A B H1 H2. unfold countably_infinite in *.
-
-  
-   unfold Type_to_Ensemble in *. unfold cardinal_eq in *.
-  right. assert (H3 : Full_set ℕ ≠ ⦃⦄). { apply not_Empty_In. exists 0%nat. apply Full_intro. }
-  repeat split; auto.
-  - destruct H1 as [[H1 _] | [H1 [H4 H5]]]; destruct H2 as [[H2 _] | [H2 [H6 H7]]]; auto.
-    apply not_Empty_In. apply not_Empty_In in H4 as [a H4]. apply not_Empty_In in H6 as [b H6].
-    exists (a, b). exists a, b. auto.
-  - destruct H1 as [[H1 _] | [H1 [H4 H5]]]; destruct H2 as [[H2 _] | [H2 [H6 H7]]]; try tauto.
-    destruct H5 as [f H5]. destruct H7 as [g H7]. pose proof theorem_30_3 as [H8 | [_ [_ [h H9]]]]; try tauto.
-    unfold Type_to_Ensemble in h. assert (H10 : forall a b : T, a ∈ A -> b ∈ B -> (a, b) ∈ A × B).
-    { intros a b H10 H11. unfold Ensembles.In, set_prod. exists a, b. auto. }
-    set (f' := fun n : subType ℕ => let (a, Ha) := f n in let (b, Hb) := g n in mkSubType _ (A × B) (a, b) ltac:(apply H10; [ apply Ha | apply Hb] )).
-    exists f'. split.
-    -- intros [n1 H11] [n2 H12] H13. unfold f' in H13. destruct H5 as [H5 _]. unfold injective in H5.
-Abort.
-
-Lemma card_Nat_pos_eq_Qpos : ‖ Qpos ‖ = ‖ Qpos' ‖.
-Proof.
-  apply cardinal_eq_sym. unfold cardinal_eq. right. repeat split.
-  - apply not_Empty_In. set (one := mkSubType ℕ (fun n => (n > 0)%nat) 1%nat ltac:(unfold Ensembles.In; auto)). simpl in *. exists (one, one). apply Full_intro.
-  - apply not_Empty_In. exists 1%Q. constructor.
-  - repeat rewrite subType_Full_set.
-   set (f := fun p : Npos_T * Npos_T => let (n, d) := p in mkSubType Q Qpos (Z.of_nat (val Npos_S n) # Pos.of_nat (val Npos_S d))%Q ltac:(apply Npos_In_Qpos)).
-   exists f. split.
-   -- intros [[n1 H1] [d1 H2]] [[n2 H3] [d2 H4]] H5. unfold f in H5; simpl in H5; injection H5; clear H5 f; intros H5 H6. unfold Npos_S, Ensembles.In in *.
-      apply Nat2Pos.inj in H5; apply Nat2Z.inj in H6; try lia. subst. apply f_equal2; apply subType_eq; simpl; reflexivity.
-   -- intros [[n d] H1]. unfold Qpos, Ensembles.In in H1. set (n' := Z.to_nat n). set (d' := Pos.to_nat d).
-      assert (n > 0)%Z as H2. { pose proof Qgt_0 (n # d) H1. auto. } assert (n' > 0)%nat as H3 by lia. assert (d' > 0)%nat as H4 by lia.
-      set (n1 := mkSubType ℕ Npos_S n' H3). set (d1 := mkSubType ℕ Npos_S d' H4). exists (n1, d1). unfold f. apply subType_eq. simpl.
-      replace (Z.of_nat n') with n by lia. replace (Pos.of_nat d') with d by lia. reflexivity.
-Qed.
-
-Definition nat_to_Q (n d : nat) : Q := (Z.of_nat n) # (Pos.of_nat d).
-Definition Q_num_nat (q : Q) : nat := Z.to_nat (Qnum q).
-Definition Q_den_nat (q : Q) : nat := Pos.to_nat (Qden q).
-
-Definition next_Qpos (n d : nat) : nat * nat := 
-  (if d =? 1 then (1, n+1) else (n+1, d-1))%nat.
-
-Open Scope nat_scope.
-
-Lemma next_Qpos_fst_gt_0 : forall n d, n > 0 -> d > 0 -> fst (next_Qpos n d) > 0.
-Proof.
-  intros n d H1 H2. unfold next_Qpos. destruct d; simpl; try lia.
-  destruct d; simpl; try lia.
-Qed.
-
-Lemma next_Qpos_snd_gt_0 : forall n d, n > 0 -> d > 0 -> snd (next_Qpos n d) > 0.
-Proof.
-  intros n d H1 H2. unfold next_Qpos. destruct d; simpl; try lia.
-  destruct d; simpl; try lia.
-Qed.
-
-Fixpoint func2 (iter n d : nat) : (nat * nat) :=
-  match iter with
-  | 0%nat => (n, d)
-  | S iter' => func2 iter' (fst (next_Qpos n d)) (snd (next_Qpos n d))
-  end.
-
-Lemma func2_fst_gt_0 : forall n d iter, n > 0 -> d > 0 -> fst (func2 iter n d) > 0.
-Proof.
-  intros n d iter. generalize dependent n. generalize dependent d. induction iter as [| k IH]. 
-  - simpl. lia.
-  - intros d n H1 H2. simpl. specialize (IH (snd (next_Qpos n d)) (fst (next_Qpos n d)) ltac:(apply next_Qpos_fst_gt_0; auto) ltac:(apply next_Qpos_snd_gt_0; auto)).
-    auto.
-Qed.
-
-Lemma func2_snd_gt_0 : forall n d iter, n > 0 -> d > 0 -> snd (func2 iter n d) > 0.
-Proof.
-  intros n d iter. generalize dependent n. generalize dependent d. induction iter as [| k IH]. 
-  - simpl. lia.
-  - intros d n H1 H2. simpl. specialize (IH (snd (next_Qpos n d)) (fst (next_Qpos n d)) ltac:(apply next_Qpos_fst_gt_0; auto) ltac:(apply next_Qpos_snd_gt_0; auto)).
-    auto.
-Qed.
-
-Definition Npos_Qpos_bijection (n : Npos_T) : subType Qpos' :=
-  let n' := val Npos_S n in
-  let n'' := (fst (func2 n' 1 1)) in
-  let d'' := (snd (func2 n' 1 1)) in
-  let n''' := mkSubType ℕ Npos_S n'' ltac:(apply func2_fst_gt_0; auto) in
-  let d''' := mkSubType ℕ Npos_S d'' ltac:(apply func2_snd_gt_0; auto) in
-  let q := mkSubType (Npos_T * Npos_T) Qpos' (n''', d''') ltac:(constructor) in q.
-
-Lemma card_Npos_eq_card_Qpos : ‖ Npos_S ‖ = ‖ Qpos' ‖.
-Proof.
-  unfold cardinal_eq. right. repeat split.
-  - apply not_Empty_In. admit.
-  - admit.
-  - exists Npos_Qpos_bijection. split.
-    -- intros [n1 H1] [n2 H2] H3. apply subType_eq. simpl. injection H3; intros H4 H5. admit.
-    -- intros [[[n H1] [d H2]] H3]. unfold Ensembles.In, Npos_S in *. unfold Qpos', Ensembles.In in H1. unfold Npos_Qpos_bijection. admit.
-Admitted.

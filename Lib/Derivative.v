@@ -519,6 +519,13 @@ Proof.
   specialize (H2 a H3) as [[H4 H5] | [[H4 H5] | [H4 H5]]]; auto_interval.
 Qed.
 
+Lemma derivative_on_open_imp_differentiable_at : forall a b c f f',
+  a < c < b -> ⟦ der ⟧ f (a, b) = f' -> differentiable_at f c.
+Proof.
+  intros a b c f f' H1 H2.
+  exists (f' c). specialize (H2 c ltac:(solve_R)) as [H2 | [H2 | H2]]; auto_interval.
+Qed.
+
 Theorem derivative_unique : forall f f1' f2',
   ⟦ der ⟧ f = f1' -> ⟦ der ⟧ f = f2' -> f1' = f2'.
 Proof.
@@ -2105,6 +2112,52 @@ Proof.
   exists (-1 * L). 
   replace ((λ h : ℝ, (- f (x + h) - - f x) / h)) with ((λ h : ℝ, -1 * ((f (x + h) - f x) / h))).
   apply limit_mult; solve_lim. extensionality h. lra.
+Qed.
+
+Theorem closed_interval_method_min : forall f f' a b,
+  a < b -> 
+  continuous_on f [a, b] -> 
+  ⟦ der ⟧ f (a, b) = f' -> 
+  exists c, minimum_point f [a, b] c /\ (c = a \/ c = b \/ (a < c < b /\ f' c = 0)).
+Proof.
+  intros f f' a b H1 H2 H3.
+  pose proof continuous_on_interval_attains_minimum f a b H1 H2 as [c [H4 H5]].
+  exists c. split. split; auto.
+  assert (c = a \/ c = b \/ a < c < b) as [H7 | [H7 | H7]] by (solve_R).
+  - left; auto.
+  - right; left; auto.
+  - right; right; split; auto.
+    assert (H8 : minimum_point f (a, b) c).
+    { split. solve_R. intros y H8. apply H5; solve_R. }
+    assert (H9 : differentiable_at f c).
+    { apply (derivative_on_open_imp_differentiable_at a b c f f'); solve_R. }
+    assert (H10 : ⟦ der c ⟧ f = f').
+    { apply derivative_on_imp_derivative_at with (D := (a, b)); auto_interval. }
+    pose proof derivative_at_minimum_point_zero f a b c H8 H9 as H11.
+    apply (derivative_at_unique f f' (λ _ : ℝ, 0) c H10 H11).
+Qed.
+
+Theorem closed_interval_method_max : forall f f' a b,
+  a < b -> 
+  continuous_on f [a, b] -> 
+  ⟦ der ⟧ f (a, b) = f' -> 
+  exists c, maximum_point f [a, b] c /\ (c = a \/ c = b \/ (a < c < b /\ f' c = 0)).
+Proof.
+  intros f f' a b H1 H2 H3.
+  pose proof continuous_on_interval_attains_maximum f a b H1 H2 as [c [H4 H5]].
+  exists c. split. split; auto. intros y H6. specialize (H5 y H6). lra.
+  assert (c = a \/ c = b \/ a < c < b) as [H7 | [H7 | H7]] by (solve_R).
+  - left; auto.
+  - right; left; auto.
+  - right; right; split; auto.
+    assert (H8 : maximum_point f (a, b) c).
+    { split. solve_R. intros y H8. specialize (H5 y ltac:(solve_R)). lra. }
+    assert (H9 : differentiable_at f c).
+    { apply (derivative_on_open_imp_differentiable_at a b c f f'); solve_R. }
+    assert (H10 : ⟦ der c ⟧ f = f').
+    { apply derivative_on_imp_derivative_at with (D := (a, b)); auto_interval. }
+    pose proof derivative_at_maximum_point_eq_zero f a b c H8 H9 as H11.
+    apply (derivative_at_unique f f' (λ _ : ℝ, 0) c H10 H11).
 Qed.
 
 Definition critical_point (f: ℝ -> ℝ) (A : Ensemble ℝ) (x : ℝ) :=
