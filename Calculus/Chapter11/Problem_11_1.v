@@ -126,6 +126,9 @@ Proof.
     destruct H6 as [H6 | [H6 | [H6 H7]]]; subst.
     + unfold f. lra.
     + destruct H5 as [_ H5]. specialize (H5 (-1) ltac:(solve_R)). unfold f in *. lra.
-    + admit.
+    + destruct H5 as [_ H5]. specialize (H5 (-1) ltac:(solve_R)). unfold f, f' in *.
+      assert (0 < (d + 1) / (d ^ 2 + 1)) as H8 by (apply Rdiv_pos_pos; nra).
+      nra.
   - admit.
 Admitted.
+
