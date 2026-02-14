@@ -474,9 +474,36 @@ Definition sin (x : ℝ) : ℝ :=
 Definition tan (x : ℝ) : ℝ :=
   sin x / cos x.
 
-Lemma continuous_sin : continuous sin.
+Lemma sin_periodic : ∀ x, sin (x + 2 * π) = sin x.
 Proof.
-Admitted.
+  intros x. unfold sin. 
+  destruct (red_0_2π_spec x) as [H1 [k1 H2]].
+  destruct (red_0_2π_spec (x + 2 * π)) as [H3 [k2 H4]].
+  set (y1 := proj1_sig (red_0_2π x)) in *.
+  set (y2 := proj1_sig (red_0_2π (x + 2 * π))) in *.
+  assert (H5: y1 = y2).
+  {
+    assert (|(y1 - y2)| < 2 * π) as H5 by solve_R.
+    rewrite H2 in H4.
+    replace (y1 - y2) with ((IZR k2 - IZR k1 - 1) * 2 * π) in H5 by lra.
+    set (k := (k2 - k1 - 1)%Z).
+    replace (IZR k2 - IZR k1 - 1) with (IZR k) in H5.
+    2:{ unfold k. repeat rewrite minus_IZR. simpl. reflexivity. }
+    assert (|(IZR k * 2 * π)| = |(IZR k)| * 2 * π) as H6 by solve_R.
+    rewrite H6 in H5.
+    destruct (Z.eq_dec k 0) as [H7 | H7].
+    - subst k. replace k2 with (k1 + 1)%Z in H4 by lia. rewrite plus_IZR in H4. lra.
+    - assert (|(IZR k)| >= 1) as H8.
+      {
+        assert ((k <= -1)%Z \/ (k = 0)%Z \/ (k >= 1)%Z) as [H9 | [H9 | H9]] by lia.
+        - apply IZR_le in H9. solve_R.
+        - contradiction.
+        - apply IZR_ge in H9. solve_R.
+      }
+      nra.
+  }
+  rewrite H5. reflexivity.
+Qed.
 
 Lemma continuous_cos : continuous cos.
 Proof.
@@ -513,6 +540,12 @@ Proof.
   apply derivative_at_sin.
 Qed.
 
+Lemma continuous_sin : continuous sin.
+Proof.
+  apply differentiable_imp_continuous.
+  apply differentiable_sin.
+Qed.
+
 Lemma sin_consistency_on_0_π : ∀ x, 0 <= x <= π -> sin x = sin_0_π x.
 Proof. admit. Admitted.
 
@@ -523,6 +556,9 @@ Lemma sin_π : sin π = 0.
 Proof. admit. Admitted.
 
 Lemma sin_π_over_2 : sin (π / 2) = 1.
+Proof. admit. Admitted.
+
+Lemma sin_3_π_over_2 : sin (3 * π / 2) = -1.
 Proof. admit. Admitted.
 
 Lemma cos_π : cos π = -1.
@@ -967,3 +1003,53 @@ Lemma sin_bounds : forall x,
 Proof.
   admit.
 Admitted.
+
+Lemma sin_increasing_on : increasing_on sin [-(π/2), π/2].
+Proof.
+  apply derivative_on_pos_imp_increasing_on with (f' := cos); try lra.
+  - pose proof π_pos as H1. lra.
+  - apply derivative_imp_derivative_on.
+    + apply differentiable_domain_closed; pose proof π_pos as H1. lra.
+    + apply derivative_sin.
+  - intros x H1. admit.
+Admitted.
+
+Definition arcsin (y : R) : R := 
+  epsilon (inhabits 0) (fun x => x ∈ [-(π/2), π/2] /\ sin x = y).
+
+Lemma arcsin_inverse : inverse_on sin arcsin [-(π/2), π/2] [-1, 1].
+Proof.
+  assert (bijective_on sin [-(π/2), π/2] [-1, 1]).
+  {
+    split; [| split].
+    - intros x H1. pose proof sin_bounds x. solve_R.
+    - apply increasing_on_imp_one_to_one_on. apply sin_increasing_on.
+    - intros y H1. exists (arcsin y). split.
+      + assert (H2 : exists x, x ∈ [- (π / 2), π / 2] /\ sin x = y).
+      {
+        assert (y = -1 \/ y = 1 \/ -1 < y < 1) as [H2 | [H2 | H2]] by solve_R.
+        - exists (-π/2). split.
+          + pose proof π_pos; solve_R.
+          + pose proof sin_periodic (-π/2) as H3. replace (- π / 2 + 2 * π) with (3 * π / 2) in H3 by lra.
+            rewrite <- H3. rewrite sin_3_π_over_2. solve_R.
+        - exists (π/2). split.
+          + pose proof π_pos; solve_R.
+          + rewrite sin_π_over_2. auto.
+        - pose proof intermediate_value_theorem sin (-π/2) (π/2) y as [x [H3 H4]].
+          + pose proof π_pos as H4. lra.
+          + apply continuous_imp_continuous_on, continuous_sin.
+          + rewrite sin_π_over_2. pose proof sin_periodic (-π/2) as H4. replace (- π / 2 + 2 * π) with (3 * π / 2) in H4 by lra.
+            rewrite <- H4. rewrite sin_3_π_over_2. solve_R.
+          + exists x; split; solve_R.
+      }
+      unfold arcsin. destruct (epsilon_spec (inhabits 0) _ H2) as [H3 H4]; auto.
+      + unfold arcsin.
+  }
+  pose proof exists_inverse_on_iff sin [-(π/2), π/2] [-1, 1] as [H1 _].
+  specialize (H1 H).
+  destruct H1 as [g Hg].
+  (* Since arcsin is defined via epsilon, it satisfies the predicate if one exists *)
+  unfold arcsin.
+  apply (logic_of_epsilon) in Hg. (* conceptual step: epsilon returns the witness *)
+  exact Hg.
+Qed.

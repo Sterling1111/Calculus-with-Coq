@@ -126,6 +126,58 @@ Proof.
     destruct H6 as [H6 | [H6 | [H6 H7]]]; subst.
     + unfold f. lra.
     + destruct H5 as [_ H5]. specialize (H5 (-1) ltac:(solve_R)). unfold f in *. lra.
-    + admit.
-  - admit.
-Admitted.
+    + destruct H5 as [_ H5]. specialize (H5 (-1) ltac:(solve_R)). unfold f in *.
+      assert (d + 1 > 0). { nra. }
+      assert (d^2 + 1 > 0). { nra. }
+      assert (f d > 0). { unfold f. nra. }
+      lra.
+  - exists c. split; auto.
+    destruct H4 as [c_eq | [c_eq | [c_int H_deriv]]]; subst.
+    + unfold f. 
+      assert (sqrt 2 > 1). { replace 1 with (sqrt 1) by (apply sqrt_1). apply sqrt_lt_1_alt. lra. }
+      lra.
+    + destruct H3 as [_ H3]. 
+      assert (H_sqrt2: 1.4 < sqrt 2 < 1.5). 
+      { split. 
+        - apply Rsqr_incrst_0; try lra. replace (Rsqr (sqrt 2)) with 2 by (rewrite Rsqr_sqrt; lra). 
+          replace (Rsqr 1.4) with 1.96 by (unfold Rsqr; lra). lra.
+        - apply Rsqr_incrst_0; try lra. replace (Rsqr (sqrt 2)) with 2 by (rewrite Rsqr_sqrt; lra). 
+          replace (Rsqr 1.5) with 2.25 by (unfold Rsqr; lra). lra.
+      }
+      specialize (H3 (-1 + sqrt 2) ltac:(lra)).
+      unfold f in *.
+      replace (-1 + sqrt 2 + 1) with (sqrt 2) in H3 by lra.
+      replace ((-1 + sqrt 2) ^ 2 + 1) with (4 - 2 * sqrt 2) in H3.
+      2 : { field_simplify. replace (sqrt 2 ^ 2) with 2 by (apply sqrt_pow2; lra). lra. }
+      replace ((sqrt 2 + 1) / 2) with (sqrt 2 / (4 - 2 * sqrt 2)) in H3.
+      2 : { 
+        field_simplify_eq. 2 : { assert (sqrt 2 < 2). { replace 2 with (sqrt 4) by (apply sqrt_sqrt; lra). apply sqrt_lt_1_alt. lra. } lra. }
+        replace (sqrt 2 ^ 2) with 2 by (apply sqrt_pow2; lra). lra.
+      }
+      lra.
+    + unfold f' in H_deriv.
+      assert (1 - 2 * c - c ^ 2 = 0).
+      { apply Rmult_eq_reg_l with (r := / (c ^ 2 + 1) ^ 2). field_simplify in H_deriv; auto. nra. apply Rinv_neq_0_compat. nra. }
+      assert (c = -1 + sqrt 2 \/ c = -1 - sqrt 2) as [c_sol | c_sol].
+      {
+        replace (1 - 2 * c - c ^ 2) with (2 - (c + 1) ^ 2) in H0 by nra.
+        assert ((c + 1) ^ 2 = 2) by lra.
+        assert (Rsqr (c+1) = Rsqr (sqrt 2)). { unfold Rsqr. rewrite Rsqr_sqrt; lra. }
+        apply Rsqr_eq_abs_0 in H1.
+        rewrite Rabs_right in H1.
+        - rewrite Rabs_right in H1; [ | apply sqrt_pos ].
+          destruct H1; [left | right]; lra.
+        - rewrite Rabs_right in H1; [ | apply sqrt_pos ].
+          destruct H1; [left | right]; lra.
+        - nra.
+      }
+      * subst. unfold f.
+        replace (-1 + sqrt 2 + 1) with (sqrt 2) by lra.
+        replace ((-1 + sqrt 2) ^ 2 + 1) with (4 - 2 * sqrt 2).
+        2 : { field_simplify. replace (sqrt 2 ^ 2) with 2 by (apply sqrt_pow2; lra). lra. }
+        field_simplify_eq. 2 : { assert (sqrt 2 < 2). { replace 2 with (sqrt 4) by (apply sqrt_sqrt; lra). apply sqrt_lt_1_alt. lra. } lra. }
+        replace (sqrt 2 ^ 2) with 2 by (apply sqrt_pow2; lra). lra.
+      * (* c = -1 - sqrt 2 *)
+        assert (sqrt 2 > 0). { apply sqrt_lt_R0. lra. }
+        lra.
+Qed.
