@@ -5418,3 +5418,41 @@ Proof.
       * apply derivative_id.
       * apply nth_derivative_const; lia.
 Qed.
+
+Lemma zero_differential_eq_2nd_order : forall f f' f'' : R -> R,
+  ⟦ der ⟧ f = f' ->
+  ⟦ der ⟧ f' = f'' ->
+  (forall x, f'' x + f x = 0) ->
+  f 0 = 0 ->
+  f' 0 = 0 ->
+  forall x, f x = 0.
+Proof.
+  intros f f' f'' H1 H2 H3 H4 H5 x.
+  set (g := fun x => (f' x)^2 + (f x)^2).
+  assert (derivative g (fun _ => 0)) as H6.
+  {
+    unfold g.
+    replace (fun _ => 0) with (fun x => (f'' x * f' x + f' x * f'' x) + (f' x * f x + f x * f' x)).
+    2: { extensionality y. specialize (H3 y). nra. }
+    apply derivative_plus.
+    - replace (fun x => (f' x)^2) with (f' ⋅ f')%function by (extensionality y; simpl; nra).
+      apply derivative_mult; auto.
+    - replace (fun x => (f x)^2) with (f ⋅ f)%function by (extensionality y; simpl; nra).
+      apply derivative_mult; auto.
+  }
+  assert (forall y, g y = g 0) as H7.
+  {
+    intro y. destruct (Rlt_dec 0 y) as [H8 | H8].
+    - pose proof (derivative_zero_imp_const g 0 y H8) as [c H9].
+      + apply derivative_imp_derivative_on; auto. apply differentiable_domain_closed; auto.
+      + rewrite H9, H9; solve_R.
+    - destruct (Rlt_dec y 0) as [H9 | H9].
+      + pose proof (derivative_zero_imp_const g y 0 H9) as [c H10].
+        * apply derivative_imp_derivative_on; auto. apply differentiable_domain_closed; auto.
+        * rewrite H10, H10; solve_R.
+      + replace y with 0 by lra. auto.
+  }
+  specialize (H7 x). unfold g in H7. rewrite H4, H5 in H7.
+  simpl in H7. replace (0 ^ 2 + 0 ^ 2) with 0 in H7 by lra.
+  apply Rsqr_eq_0. unfold Rsqr. pose proof (pow2_ge_0 (f' x)). nra.
+Qed.

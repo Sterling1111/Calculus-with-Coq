@@ -1,5 +1,5 @@
 From Lib Require Import Imports Notations Reals_util Functions Sums Sets Exponential
-                        Limit Continuity Derivative Trigonometry Interval Binomial Polynomial.
+                        Limit Continuity Derivative Trigonometry Interval Binomial Polynomial Tactics.
 Import FunctionNotations SumNotations LimitNotations DerivativeNotations SetNotations IntervalNotations.
 
 Open Scope R_scope.
@@ -868,4 +868,382 @@ Proof.
       lra.
   }
   unfold e. lra.
+Qed.
+
+Lemma nth_derivative_arctan_1 : ⟦ der^1 ⟧ arctan = fun x => 1 / (1 + x ^ 2).
+Proof.
+  apply nth_derivative_1, derivative_arctan.
+Qed.
+
+Lemma nth_derivative_arctan_2 : ⟦ der^2 ⟧ arctan = (λ x, -2 * x / (1 + x ^ 2) ^ 2).
+Proof.
+  exists (fun x => 1 / (1 + x^2)).
+  split; [ apply nth_derivative_arctan_1 | auto_diff ].
+Qed.
+
+Lemma nth_derivative_arctan_3 : ⟦ der^3 ⟧ arctan = (λ x, (6 * x^2 - 2) / (1 + x ^ 2) ^ 3).
+Proof.
+  exists (fun x => -2 * x / (1 + x^2)^2).
+  split; [ apply nth_derivative_arctan_2 | auto_diff ].
+Qed.
+
+Lemma nth_derivative_arctan_4 : ⟦ der^4 ⟧ arctan = (λ x, (24 * x - 24 * x^3) / (1 + x ^ 2) ^ 4).
+Proof.
+  exists (fun x => (6 * x^2 - 2) / (1 + x^2)^3).
+  split; [ apply nth_derivative_arctan_3 | auto_diff ].
+Qed.
+
+Lemma nth_derivative_arctan_5 : ⟦ der^5 ⟧ arctan = (λ x, (120 * x^4 - 240 * x^2 + 24) / (1 + x ^ 2) ^ 5).
+Proof.
+  exists (fun x => (24 * x - 24 * x^3) / (1 + x^2)^4).
+  split; [ apply nth_derivative_arctan_4 | auto_diff ].
+Qed.
+
+Lemma nth_derivative_arctan_6 : ⟦ der^6 ⟧ arctan = (λ x, (-720 * x^5 + 2400 * x^3 - 720 * x) / (1 + x ^ 2) ^ 6).
+Proof.
+  exists (fun x => (120 * x^4 - 240 * x^2 + 24) / (1 + x^2)^5).
+  split; [ apply nth_derivative_arctan_5 | auto_diff ].
+Qed.
+
+Lemma nth_derivative_arctan_7 : ⟦ der^7 ⟧ arctan = (λ x, (5040 * x^6 - 25200 * x^4 + 15120 * x^2 - 720) / (1 + x ^ 2) ^ 7).
+Proof.
+  exists (fun x => (-720 * x^5 + 2400 * x^3 - 720 * x) / (1 + x ^ 2) ^ 6).
+  split; [ apply nth_derivative_arctan_6 | auto_diff ].
+Qed.
+
+Lemma nth_derivative_arctan_8 : ⟦ der^8 ⟧ arctan = (λ x, (-40320 * x^7 + 282240 * x^5 - 282240 * x^3 + 40320 * x) / (1 + x ^ 2) ^ 8).
+Proof.
+  exists (fun x => (5040 * x^6 - 25200 * x^4 + 15120 * x^2 - 720) / (1 + x^2)^7).
+  split; [ apply nth_derivative_arctan_7 | auto_diff ].
+Qed.
+
+Lemma nth_derivative_arctan_9 : ⟦ der^9 ⟧ arctan = (λ x, (362880 * x^8 - 3386880 * x^6 + 5080320 * x^4 - 1451520 * x^2 + 40320) / (1 + x ^ 2) ^ 9).
+Proof.
+  exists (fun x => (-40320 * x^7 + 282240 * x^5 - 282240 * x^3 + 40320 * x) / (1 + x^2)^8).
+  split; [ apply nth_derivative_arctan_8 | auto_diff ].
+Qed.
+
+Lemma nth_derivative_arctan_10 :
+  ⟦ der^10 ⟧ arctan = (λ x, (-3628800 * x^9 + 43545600 * x^7 - 91445760 * x^5 + 43545600 * x^3 - 3628800 * x) / (1 + x ^ 2) ^ 10).
+Proof.
+  exists (fun x => (362880 * x^8 - 3386880 * x^6 + 5080320 * x^4 - 1451520 * x^2 + 40320) / (1 + x^2) ^ 9).
+  split; [ apply nth_derivative_arctan_9 | auto_diff ].
+Qed.
+
+Lemma nth_derive_arctan_0 : ⟦ Der^0 ⟧ arctan = arctan.
+Proof. auto. Qed.
+
+Lemma nth_derive_arctan_1 : ⟦ Der^1 ⟧ arctan = fun x => 1 / (1 + x ^ 2).
+Proof.
+  apply nth_derivative_imp_nth_derive, nth_derivative_arctan_1.
+Qed.
+
+Lemma nth_derive_arctan_2 : ⟦ Der^2 ⟧ arctan = (λ x, -2 * x / (1 + x ^ 2) ^ 2).
+Proof.
+  apply nth_derivative_imp_nth_derive, nth_derivative_arctan_2.
+Qed.
+
+Lemma nth_derive_arctan_3 : ⟦ Der^3 ⟧ arctan = (λ x, (6 * x^2 - 2) / (1 + x ^ 2) ^ 3).
+Proof.
+  apply nth_derivative_imp_nth_derive, nth_derivative_arctan_3.
+Qed.
+
+Lemma nth_derive_arctan_4 : ⟦ Der^4 ⟧ arctan = (λ x, (24 * x - 24 * x^3) / (1 + x ^ 2) ^ 4).
+Proof.
+  apply nth_derivative_imp_nth_derive, nth_derivative_arctan_4.
+Qed.
+
+Lemma nth_derive_arctan_5 : ⟦ Der^5 ⟧ arctan = (λ x, (120 * x^4 - 240 * x^2 + 24) / (1 + x ^ 2) ^ 5).
+Proof.
+  apply nth_derivative_imp_nth_derive, nth_derivative_arctan_5.
+Qed.
+
+Lemma nth_derive_arctan_6 : ⟦ Der^6 ⟧ arctan = (λ x, (-720 * x^5 + 2400 * x^3 - 720 * x) / (1 + x ^ 2) ^ 6).
+Proof.
+  apply nth_derivative_imp_nth_derive, nth_derivative_arctan_6.
+Qed.
+
+Lemma nth_derive_arctan_7 : ⟦ Der^7 ⟧ arctan = (λ x, (5040 * x^6 - 25200 * x^4 + 15120 * x^2 - 720) / (1 + x ^ 2) ^ 7).
+Proof.
+  apply nth_derivative_imp_nth_derive, nth_derivative_arctan_7.
+Qed.
+
+Lemma nth_derive_arctan_8 : ⟦ Der^8 ⟧ arctan = (λ x, (-40320 * x^7 + 282240 * x^5 - 282240 * x^3 + 40320 * x) / (1 + x ^ 2) ^ 8).
+Proof.
+  apply nth_derivative_imp_nth_derive, nth_derivative_arctan_8.
+Qed.
+
+Lemma nth_derive_arctan_9 : ⟦ Der^9 ⟧ arctan = (λ x, (362880 * x^8 - 3386880 * x^6 + 5080320 * x^4 - 1451520 * x^2 + 40320) / (1 + x ^ 2) ^ 9).
+Proof.
+  apply nth_derivative_imp_nth_derive, nth_derivative_arctan_9.
+Qed.
+
+Lemma nth_derive_arctan_10 :
+  ⟦ Der^10 ⟧ arctan = (λ x, (-3628800 * x^9 + 43545600 * x^7 - 91445760 * x^5 + 43545600 * x^3 - 3628800 * x) / (1 + x ^ 2) ^ 10).
+Proof.
+  apply nth_derivative_imp_nth_derive, nth_derivative_arctan_10.
+Qed.
+
+Lemma nth_derive_arctan_0_0 : ⟦ Der^0 0 ⟧ arctan = 0.
+Proof. simpl; apply arctan_0. Qed.
+
+Lemma nth_derive_arctan_1_0 : ⟦ Der^1 0 ⟧ arctan = 1.
+Proof. replace (⟦ Der^1 0 ⟧ arctan) with ((⟦ Der^1 ⟧ arctan) 0) by auto.
+       rewrite nth_derive_arctan_1. simpl. lra.
+Qed.
+
+Lemma nth_derive_arctan_2_0 : ⟦ Der^2 0 ⟧ arctan = 0.
+Proof. replace (⟦ Der^2 0 ⟧ arctan) with ((⟦ Der^2 ⟧ arctan) 0) by auto.
+       rewrite nth_derive_arctan_2. simpl. lra.
+Qed.
+
+Lemma nth_derive_arctan_3_0 : ⟦ Der^3 0 ⟧ arctan = -2.
+Proof. replace (⟦ Der^3 0 ⟧ arctan) with ((⟦ Der^3 ⟧ arctan) 0) by auto.
+       rewrite nth_derive_arctan_3. simpl. lra.
+Qed.
+
+Lemma nth_derive_arctan_4_0 : ⟦ Der^4 0 ⟧ arctan = 0.
+Proof. replace (⟦ Der^4 0 ⟧ arctan) with ((⟦ Der^4 ⟧ arctan) 0) by auto.
+       rewrite nth_derive_arctan_4. simpl. lra.
+Qed.
+
+Lemma nth_derive_arctan_5_0 : ⟦ Der^5 0 ⟧ arctan = 24.
+Proof. replace (⟦ Der^5 0 ⟧ arctan) with ((⟦ Der^5 ⟧ arctan) 0) by auto.
+       rewrite nth_derive_arctan_5. simpl. lra.
+Qed.
+
+Lemma nth_derive_arctan_6_0 : ⟦ Der^6 0 ⟧ arctan = 0.
+Proof. replace (⟦ Der^6 0 ⟧ arctan) with ((⟦ Der^6 ⟧ arctan) 0) by auto.
+       rewrite nth_derive_arctan_6. simpl. lra.
+Qed.
+
+Lemma nth_derive_arctan_7_0 : ⟦ Der^7 0 ⟧ arctan = -720.
+Proof. replace (⟦ Der^7 0 ⟧ arctan) with ((⟦ Der^7 ⟧ arctan) 0) by auto.
+       rewrite nth_derive_arctan_7. simpl. lra.
+Qed.
+
+Lemma nth_derive_arctan_8_0 : ⟦ Der^8 0 ⟧ arctan = 0.
+Proof. replace (⟦ Der^8 0 ⟧ arctan) with ((⟦ Der^8 ⟧ arctan) 0) by auto.
+       rewrite nth_derive_arctan_8. simpl. lra.
+Qed.
+
+Lemma nth_derive_arctan_9_0 : ⟦ Der^9 0 ⟧ arctan = 40320.
+Proof. replace (⟦ Der^9 0 ⟧ arctan) with ((⟦ Der^9 ⟧ arctan) 0) by auto.
+       rewrite nth_derive_arctan_9. simpl. lra.
+Qed.
+
+Lemma nth_derive_arctan_10_0 : ⟦ Der^10 0 ⟧ arctan = 0.
+Proof. replace (⟦ Der^10 0 ⟧ arctan) with ((⟦ Der^10 ⟧ arctan) 0) by auto.
+       rewrite nth_derive_arctan_10. simpl. lra.
+Qed.
+
+Lemma arctan_1_div_5_bounds : 0.1973955 < arctan (1 / 5) < 0.19739571.
+Proof.
+  assert (H1 : exists δ, δ > 0 /\ nth_differentiable_on (S 9) arctan (0 - δ, (1 / 5) + δ)).
+  {
+    exists 1. split; [lra |].
+    apply nth_differentiable_imp_nth_differentiable_on.
+    - apply differentiable_domain_open; lra.
+    - apply nth_derivative_imp_nth_differentiable with (fn := (λ x, (-3628800 * x^9 + 43545600 * x^7 - 91445760 * x^5 + 43545600 * x^3 - 3628800 * x) / (1 + x ^ 2) ^ 10)).
+      apply nth_derivative_arctan_10.
+  }
+  pose proof (Taylors_Theorem 9 0 (1 / 5) arctan ltac:(lra) H1) as [t [H2 H3]].
+
+  assert (H4 : P(9, 0, arctan) (1/5) = 10294562666412158203125 / 52151945972442626953125).
+  {
+    unfold Taylor_polynomial.
+    repeat rewrite sum_f_i_Sn_f; try lia.
+    rewrite sum_f_0_0; try lia.
+    simplify_factorials.
+    
+    replace (⟦ Der ^ 0 0 ⟧ arctan) with 0 by (rewrite nth_derive_arctan_0_0; simpl; lra).
+    replace (⟦ Der ^ 1 0 ⟧ arctan) with 1 by (rewrite nth_derive_arctan_1_0; simpl; lra).
+    replace (⟦ Der ^ 2 0 ⟧ arctan) with 0 by (rewrite nth_derive_arctan_2_0; simpl; lra).
+    replace (⟦ Der ^ 3 0 ⟧ arctan) with (-2) by (rewrite nth_derive_arctan_3_0; simpl; lra).
+    replace (⟦ Der ^ 4 0 ⟧ arctan) with 0 by (rewrite nth_derive_arctan_4_0; simpl; lra).
+    replace (⟦ Der ^ 5 0 ⟧ arctan) with 24 by (rewrite nth_derive_arctan_5_0; simpl; lra).
+    replace (⟦ Der ^ 6 0 ⟧ arctan) with 0 by (rewrite nth_derive_arctan_6_0; simpl; lra).
+    replace (⟦ Der ^ 7 0 ⟧ arctan) with (-720) by (rewrite nth_derive_arctan_7_0; simpl; lra).
+    replace (⟦ Der ^ 8 0 ⟧ arctan) with 0 by (rewrite nth_derive_arctan_8_0; simpl; lra).
+    replace (⟦ Der ^ 9 0 ⟧ arctan) with 40320 by (rewrite nth_derive_arctan_9_0; simpl; lra).
+    field.
+  }
+
+  unfold Taylor_remainder in H3.
+  rewrite H4 in H3.
+  
+  assert (H5 : ⟦ Der ^ 10 t ⟧ arctan = (λ x, (-3628800 * x^9 + 43545600 * x^7 - 91445760 * x^5 + 43545600 * x^3 - 3628800 * x) / (1 + x ^ 2) ^ 10) t).
+  { replace (⟦ Der ^ 10 t ⟧ arctan) with ((⟦ Der ^ 10 ⟧ arctan) t) by auto.
+    rewrite nth_derive_arctan_10. auto.
+  }
+  
+  replace (9 + 1)%nat with 10%nat in H3 by lia.
+  rewrite Rminus_0_r in H3.
+  rewrite H5 in H3.
+  replace (INR (10!)) with 3628800 in H3 by (simplify_factorials; lra).
+  apply Rplus_eq_compat_r with (r := 10294562666412158203125 / 52151945972442626953125) in H3.
+  replace (arctan (1 / 5) - 10294562666412158203125 / 52151945972442626953125 + 10294562666412158203125 / 52151945972442626953125) with (arctan (1 / 5)) in H3 by lra.
+  rewrite H3.
+  split.
+  - field_simplify. 2 : { solve_R. }
+    set (n := (364813564490980856323242187500000000 * t ^ 20 + 3648135644909808563232421875000000000 * t ^ 18 +
+        16416610402094138534545898437500000000 * t ^ 16 + 43777627738917702758789062500000000000 * t ^ 14 +
+        76610848543105979827880859375000000000 * t ^ 12 + 91933018251727175793457031250000000000 * t ^ 10 -
+        189248981544799804687500000000 * t ^ 9 + 76610848543105979827880859375000000000 * t ^ 8 +
+        2270987778537597656250000000000 * t ^ 7 + 43777627738917702758789062500000000000 * t ^ 6 -
+        4769074334928955078125000000000 * t ^ 5 + 16416610402094138534545898437500000000 * t ^ 4 +
+        2270987778537597656250000000000 * t ^ 3 + 3648135644909808563232421875000000000 * t ^ 2 -
+        189248981544799804687500000000 * t + 364813564490980856323242187500000000)).
+    set (d := (1848134585398435592651367187500000000 * t ^ 20 + 18481345853984355926513671875000000000 * t ^ 18 +
+        83166056342929601669311523437500000000 * t ^ 16 + 221776150247812271118164062500000000000 * t ^ 14 +
+        388108262933671474456787109375000000000 * t ^ 12 + 465729915520405769348144531250000000000 * t ^ 10 +
+        388108262933671474456787109375000000000 * t ^ 8 + 221776150247812271118164062500000000000 * t ^ 6 +
+        83166056342929601669311523437500000000 * t ^ 4 + 18481345853984355926513671875000000000 * t ^ 2 +
+        1848134585398435592651367187500000000)).
+
+    assert (H6 : d > 0).
+    { unfold d. solve_R. }
+
+    apply Rmult_lt_reg_r with (r := d); auto. field_simplify. 2 : { lra. }
+
+    assert (0.1973955 * 1848134585398435592651367187500000000 < 364813564490980856323242187500000000). { lra. }
+    assert (0.1973955 * 18481345853984355926513671875000000000 < 3648135644909808563232421875000000000). { lra. }
+    assert (0.1973955 * 83166056342929601669311523437500000000 < 16416610402094138534545898437500000000). { lra. }
+    assert (0.1973955 * 221776150247812271118164062500000000000 < 43777627738917702758789062500000000000). { lra. }
+    assert (0.1973955 * 388108262933671474456787109375000000000 < 76610848543105979827880859375000000000). { lra. }
+    assert (0.1973955 * 465729915520405769348144531250000000000 < 91933018251727175793457031250000000000). { lra. }
+    assert (0.1973955 * 388108262933671474456787109375000000000 < 76610848543105979827880859375000000000). { lra. }
+    assert (0.1973955 * 221776150247812271118164062500000000000 < 43777627738917702758789062500000000000). { lra. }
+    assert (0.1973955 * 83166056342929601669311523437500000000 < 16416610402094138534545898437500000000). { lra. }
+    assert (0.1973955 * 18481345853984355926513671875000000000 < 3648135644909808563232421875000000000). { lra. }
+    assert (0.1973955 * 1848134585398435592651367187500000000 < 364813564490980856323242187500000000). { lra. }
+
+    unfold n, d; nra.
+
+  - field_simplify. 2 : { solve_R. }
+    set (n := (364813564490980856323242187500000000 * t ^ 20 + 3648135644909808563232421875000000000 * t ^ 18 +
+        16416610402094138534545898437500000000 * t ^ 16 + 43777627738917702758789062500000000000 * t ^ 14 +
+        76610848543105979827880859375000000000 * t ^ 12 + 91933018251727175793457031250000000000 * t ^ 10 -
+        189248981544799804687500000000 * t ^ 9 + 76610848543105979827880859375000000000 * t ^ 8 +
+        2270987778537597656250000000000 * t ^ 7 + 43777627738917702758789062500000000000 * t ^ 6 -
+        4769074334928955078125000000000 * t ^ 5 + 16416610402094138534545898437500000000 * t ^ 4 +
+        2270987778537597656250000000000 * t ^ 3 + 3648135644909808563232421875000000000 * t ^ 2 -
+        189248981544799804687500000000 * t + 364813564490980856323242187500000000)).
+    set (d := (1848134585398435592651367187500000000 * t ^ 20 + 18481345853984355926513671875000000000 * t ^ 18 +
+        83166056342929601669311523437500000000 * t ^ 16 + 221776150247812271118164062500000000000 * t ^ 14 +
+        388108262933671474456787109375000000000 * t ^ 12 + 465729915520405769348144531250000000000 * t ^ 10 +
+        388108262933671474456787109375000000000 * t ^ 8 + 221776150247812271118164062500000000000 * t ^ 6 +
+        83166056342929601669311523437500000000 * t ^ 4 + 18481345853984355926513671875000000000 * t ^ 2 +
+        1848134585398435592651367187500000000)).
+
+    assert (H6 : d > 0). { unfold d. solve_R. }
+
+    apply Rmult_lt_reg_r with (r := d); auto. field_simplify. 2 : { lra. }
+
+    assert (364813564490980856323242187500000000 < 0.19739571 * 1848134585398435592651367187500000000). { lra. }
+    assert (3648135644909808563232421875000000000 < 0.19739571 * 18481345853984355926513671875000000000). { lra. }
+    assert (16416610402094138534545898437500000000 < 0.19739571 * 83166056342929601669311523437500000000). { lra. }
+    assert (43777627738917702758789062500000000000 < 0.19739571 * 221776150247812271118164062500000000000). { lra. }
+    assert (76610848543105979827880859375000000000 < 0.19739571 * 388108262933671474456787109375000000000). { lra. }
+    assert (91933018251727175793457031250000000000 < 0.19739571 * 465729915520405769348144531250000000000). { lra. }
+    assert (76610848543105979827880859375000000000 < 0.19739571 * 388108262933671474456787109375000000000). { lra. }
+    assert (43777627738917702758789062500000000000 < 0.19739571 * 221776150247812271118164062500000000000). { lra. }
+    assert (16416610402094138534545898437500000000 < 0.19739571 * 83166056342929601669311523437500000000). { lra. }
+    assert (3648135644909808563232421875000000000 < 0.19739571 * 18481345853984355926513671875000000000). { lra. }
+    assert (364813564490980856323242187500000000 < 0.19739571 * 1848134585398435592651367187500000000). { lra. }
+
+    unfold n, d; nra.
+Qed.
+
+Lemma arctan_1_div_239_bounds : 0.00418407 < arctan (1 / 239) < 0.00418411.
+Proof.
+  assert (H1 : exists δ, δ > 0 /\ nth_differentiable_on (S 4) arctan (0 - δ, (1 / 239) + δ)).
+  {
+    exists 1. split; [lra |].
+    apply nth_differentiable_imp_nth_differentiable_on.
+    - apply differentiable_domain_open; lra.
+    - apply nth_derivative_imp_nth_differentiable with (fn := (λ x, (120 * x^4 - 240 * x^2 + 24) / (1 + x ^ 2) ^ 5)).
+      apply nth_derivative_arctan_5.
+  }
+  pose proof (Taylors_Theorem 4 0 (1 / 239) arctan ltac:(lra) H1) as [t [H2 H3]].
+
+  assert (H4 : P(4, 0, arctan) (1/239) = 171362 / 40955757).
+  {
+    unfold Taylor_polynomial.
+    repeat rewrite sum_f_i_Sn_f; try lia.
+    rewrite sum_f_0_0; try lia.
+    simplify_factorials.
+    
+    replace (⟦ Der ^ 0 0 ⟧ arctan) with 0 by (rewrite nth_derive_arctan_0_0; simpl; lra).
+    replace (⟦ Der ^ 1 0 ⟧ arctan) with 1 by (rewrite nth_derive_arctan_1_0; simpl; lra).
+    replace (⟦ Der ^ 2 0 ⟧ arctan) with 0 by (rewrite nth_derive_arctan_2_0; simpl; lra).
+    replace (⟦ Der ^ 3 0 ⟧ arctan) with (-2) by (rewrite nth_derive_arctan_3_0; simpl; lra).
+    replace (⟦ Der ^ 4 0 ⟧ arctan) with 0 by (rewrite nth_derive_arctan_4_0; simpl; lra).
+    field.
+  }
+
+  unfold Taylor_remainder in H3.
+  rewrite H4 in H3.
+  
+  assert (H5 : ⟦ Der ^ 5 t ⟧ arctan = (λ x, (120 * x^4 - 240 * x^2 + 24) / (1 + x ^ 2) ^ 5) t).
+  { replace (⟦ Der ^ 5 t ⟧ arctan) with ((⟦ Der ^ 5 ⟧ arctan) t) by auto.
+    rewrite nth_derive_arctan_5. auto.
+  }
+  
+  replace (4 + 1)%nat with 5%nat in H3 by lia.
+  rewrite Rminus_0_r in H3.
+  rewrite H5 in H3.
+  replace (INR (5!)) with 120 in H3 by (simplify_factorials; auto).
+  apply Rplus_eq_compat_r with (r := 171362 / 40955757) in H3.
+  replace (arctan (1/239) - 171362 / 40955757 + 171362 / 40955757) with (arctan (1/239)) in H3 by lra.
+  rewrite H3.
+  split.
+  - field_simplify. 2 : { solve_R. }
+    set (n := (16035602163243724560 * t ^ 10 + 80178010816218622800 * t ^ 8 +
+        160356021632437245600 * t ^ 6 + 160356021637351936440 * t ^ 4 +
+        80178010806389241120 * t ^ 2 + 16035602164226662728)).
+    set (d := (3832531282002336077160 * t ^ 10 + 19162656410011680385800 * t ^ 8 +
+        38325312820023360771600 * t ^ 6 + 38325312820023360771600 * t ^ 4 +
+        19162656410011680385800 * t ^ 2 + 3832531282002336077160)).
+
+    assert (H6 : d > 0). { unfold d. solve_R. }
+    
+    assert (0.00418407 * 11697179501985 < 48941844010). { lra. }
+    assert (0.00418407 * 58485897509925 < 244709220050). { lra. }
+    assert (0.00418407 * 116971795019850 < 489418440100). { lra. }
+    assert (0.00418407 * 116971795019850 < 489418440115). { lra. }
+    assert (0.00418407 * 58485897509925 < 244709220020). { lra. }
+    assert (0.00418407 * 11697179501985 < 48941844013). { lra. }
+
+    apply Rmult_lt_reg_r with (r := d); auto. field_simplify. 2 : { lra. }
+    
+    unfold n, d; nra.
+
+  - field_simplify. 2 : { solve_R. }
+    set (n := (16035602163243724560 * t ^ 10 + 80178010816218622800 * t ^ 8 +
+        160356021632437245600 * t ^ 6 + 160356021637351936440 * t ^ 4 +
+        80178010806389241120 * t ^ 2 + 16035602164226662728)).
+    set (d := (3832531282002336077160 * t ^ 10 + 19162656410011680385800 * t ^ 8 +
+        38325312820023360771600 * t ^ 6 + 38325312820023360771600 * t ^ 4 +
+        19162656410011680385800 * t ^ 2 + 3832531282002336077160)).
+
+    assert (H6 : d > 0). { unfold d. solve_R. }
+
+    assert (0.00418411 * 11697179501985 > 48941844010). { lra. }
+    assert (0.00418411 * 58485897509925 > 244709220050). { lra. }
+    assert (0.00418411 * 116971795019850 > 489418440100). { lra. }
+    assert (0.00418411 * 116971795019850 > 489418440115). { lra. }
+    assert (0.00418411 * 58485897509925 > 244709220020). { lra. }
+    assert (0.00418411 * 11697179501985 > 48941844013). { lra. }
+
+    apply Rmult_lt_reg_r with (r := d); auto. field_simplify. 2 : { lra. }
+    unfold n, d; nra.
+Qed.
+
+Theorem π_bounds : 3.141591 < π < 3.141596.
+Proof.
+  pose proof problem_6_b as H1.
+  pose proof arctan_1_div_5_bounds as H2.
+  pose proof arctan_1_div_239_bounds as H3.
+  nra.
 Qed.

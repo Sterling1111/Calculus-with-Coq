@@ -452,6 +452,10 @@ Lemma cos_sign_q4 : ∀ x, (3*π)/2 <= x <= 2 * π -> 0 <= cos x.
 Proof.
 Admitted.
 
+Lemma cos_gt_0_on_open_pi_2 : ∀ x, 0 < x < π/2 -> cos x > 0.
+Proof.
+Admitted.
+
 Lemma cos_derivative_on_0_π :
   ∀ x, 0 < x < π -> ⟦ der x ⟧ cos = - sin_0_π.
 Proof.
@@ -473,6 +477,27 @@ Definition sin (x : ℝ) : ℝ :=
 
 Definition tan (x : ℝ) : ℝ :=
   sin x / cos x.
+
+Definition sec (x : ℝ) : ℝ :=
+  1 / cos x.
+
+Definition csc (x : ℝ) : ℝ :=
+  1 / sin x.
+
+Definition cot (x : ℝ) : ℝ :=
+  1 / tan x.
+
+Lemma pythagorean_identity : ∀ x, (sin x)^2 + (cos x)^2 = 1.
+Proof.
+  intros x. unfold sin, cos.
+  destruct (red_0_2π_spec x) as [H1 [k H2]].
+  set (y := proj1_sig (red_0_2π x)) in *.
+  assert (H3: 0 <= y < 2 * π) by (apply red_0_2π_spec).
+  unfold sin_0_2π, cos_0_2π.
+  destruct (Rle_dec y π) as [H4 | H4].
+  - apply test; lra.
+  - admit.
+Admitted.
 
 Lemma sin_periodic : ∀ x, sin (x + 2 * π) = sin x.
 Proof.
@@ -533,6 +558,21 @@ Proof.
   apply derivative_at_sin.
 Qed.
 
+Lemma derivative_at_tan : forall x,
+  cos x ≠ 0 -> ⟦ der x ⟧ tan = sec ^ 2.
+Proof.
+  intros x H1. unfold tan. 
+  replace (sec ^ 2)%function with ((λ x : ℝ, (cos x * cos x - (- sin x) * sin x) / (cos x * cos x))).
+  2 : { extensionality y. unfold sec. assert (cos y = 0 \/ cos y <> 0) as [H2 | H2] by lra.
+        - rewrite H2. rewrite Rmult_0_r, Rdiv_0_r, Rdiv_0_r. lra.
+        - field_simplify; auto. pose proof pythagorean_identity y as H3. 
+          rewrite Rplus_comm in H3. rewrite <- H3. reflexivity.
+        }
+  apply derivative_at_div; auto.
+  - apply derivative_sin.
+  - apply derivative_cos.
+Qed.
+
 Lemma differentiable_sin : differentiable sin.
 Proof.
   intros x.
@@ -561,6 +601,12 @@ Proof. admit. Admitted.
 Lemma sin_3_π_over_2 : sin (3 * π / 2) = -1.
 Proof. admit. Admitted.
 
+Lemma sin_π_over_4 : sin (π / 4) = √2 / 2.
+Proof. admit. Admitted.
+
+Lemma cos_π_over_4 : cos (π / 4) = √2 / 2.
+Proof. admit. Admitted.
+
 Lemma cos_π : cos π = -1.
 Proof. admit. Admitted. 
 
@@ -572,6 +618,11 @@ Proof. admit. Admitted.
 
 Lemma cos_0 : cos 0 = 1.
 Proof. admit. Admitted. 
+
+Lemma tan_0 : tan 0 = 0.
+Proof. 
+  unfold tan. rewrite sin_0, cos_0. lra. 
+Qed.
 
 Lemma left_limit_cos : forall a,
   ⟦ lim a⁻ ⟧ cos = cos a.
@@ -606,6 +657,15 @@ Proof.
   intros a.
   apply limit_iff; split; [ apply left_limit_sin | apply right_limit_sin ].
 Qed.
+
+Lemma continuous_on_tan : continuous_on tan (-π / 2, π / 2).
+Proof.
+  apply differentiable_on_imp_continuous_on_open.
+  - pose proof π_pos; lra.
+  - apply derivative_on_imp_differentiable_on with (f' := (sec ^ 2)%function); try lra.
+    intros x H1. left. split. auto_interval. apply derivative_at_tan.
+    admit.
+Admitted.
 
 Lemma inf_differentiable_cos : inf_differentiable cos.
 Proof.
@@ -1014,42 +1074,319 @@ Proof.
   - intros x H1. admit.
 Admitted.
 
-Definition arcsin (y : R) : R := 
-  epsilon (inhabits 0) (fun x => x ∈ [-(π/2), π/2] /\ sin x = y).
-
-Lemma arcsin_inverse : inverse_on sin arcsin [-(π/2), π/2] [-1, 1].
+Lemma cos_decreasing_on : decreasing_on cos [0, π].
 Proof.
-  assert (bijective_on sin [-(π/2), π/2] [-1, 1]).
+  apply derivative_on_neg_imp_decreasing_on with (f' := (- sin)%function); try lra.
+  - pose proof π_pos as H1. lra.
+  - apply derivative_imp_derivative_on.
+    + apply differentiable_domain_closed; pose proof π_pos as H1. lra.
+    + apply derivative_cos.
+  - intros x H1. admit.
+Admitted.
+
+Lemma tan_increasing_on : increasing_on tan (-(π/2), π/2).
+Proof.
+
+Admitted.
+
+Lemma sin_bijective : bijective_on sin [- (π / 2), π / 2] [-1, 1].
+Proof.
+  split; [| split].
+  - intros x H1. pose proof sin_bounds x. solve_R.
+  - apply increasing_on_imp_one_to_one_on. apply sin_increasing_on.
+  - intros y H1. assert (y = -1 \/ y = 1 \/ -1 < y < 1) as [H2 | [H2 | H2]] by solve_R.
+    + exists (-π/2). split.
+      * pose proof π_pos; solve_R.
+      * pose proof sin_periodic (-π/2) as H3. replace (- π / 2 + 2 * π) with (3 * π / 2) in H3 by lra.
+       rewrite <- H3. rewrite sin_3_π_over_2. solve_R.
+    + exists (π/2). split.
+      * pose proof π_pos; solve_R.
+      * rewrite sin_π_over_2. auto.
+    + pose proof intermediate_value_theorem sin (-π/2) (π/2) y as [x [H3 H4]].
+      * pose proof π_pos as H3. lra.
+      * apply continuous_imp_continuous_on, continuous_sin.
+      * rewrite sin_π_over_2. pose proof sin_periodic (-π/2) as H3. replace (- π / 2 + 2 * π) with (3 * π / 2) in H3 by lra.
+        rewrite <- H3. rewrite sin_3_π_over_2. solve_R.
+      * exists x; split; solve_R.
+Qed.
+
+Lemma cos_bijective : bijective_on cos [0, π] [-1, 1].
+Proof.
+  split; [| split].
+  - intros x H1. pose proof cos_bounds x. solve_R.
+  - apply decreasing_on_imp_one_to_one_on. apply cos_decreasing_on.
+  - intros y H1. assert (y = -1 \/ y = 1 \/ -1 < y < 1) as [H2 | [H2 | H2]] by solve_R.
+    + exists π. split.
+      * pose proof π_pos; solve_R.
+      * rewrite cos_π. auto.
+    + exists 0. split.
+      * pose proof π_pos; solve_R.
+      * rewrite cos_0. auto.
+    + pose proof intermediate_value_theorem_decreasing cos 0 π y as [x [H3 H4]].
+      * pose proof π_pos as H3. lra.
+      * apply continuous_imp_continuous_on, continuous_cos.
+      * rewrite cos_0, cos_π. solve_R.
+      * exists x; split; solve_R.
+Qed.
+
+Lemma tan_bijective : bijective_on tan (-(π / 2), π / 2) R.
+Proof.
+  split; [| split].
+  - intros x H1. apply Full_intro.
+  - apply increasing_on_imp_one_to_one_on. apply tan_increasing_on.
+  - intros y H1. admit.
+Admitted.
+
+Lemma exists_sin_inverse : exists f, inverse_on sin f [-(π/2), π/2] [-1, 1].
+Proof.
+  pose proof sin_bijective as H1.
+  pose proof exists_inverse_on_iff sin [-(π/2), π/2] [-1, 1] as H2.
+  apply H2; auto.
+Qed.
+
+Lemma exists_cos_inverse : exists f, inverse_on cos f [0, π] [-1, 1].
+Proof.
+  pose proof cos_bijective as H1.
+  pose proof exists_inverse_on_iff cos [0, π] [-1, 1] as H2.
+  apply H2; auto.
+Qed.
+
+Lemma exists_tan_inverse : exists f, inverse_on tan f (-(π / 2), π / 2) R.
+Proof.
+  pose proof tan_bijective as H1.
+  pose proof exists_inverse_on_iff tan (-(π / 2), π / 2) R as H2.
+  apply H2; auto.
+Qed.
+
+Definition arcsin_sig : {f : R -> R | inverse_on sin f [-(π/2), π/2] [-1, 1]}.
+Proof.
+  apply constructive_indefinite_description, exists_sin_inverse.
+Qed.
+
+Definition arccos_sig : {f : R -> R | inverse_on cos f [0, π] [-1, 1]}.
+Proof.
+  apply constructive_indefinite_description, exists_cos_inverse.
+Qed.
+
+Definition arctan_sig : {f : R -> R | inverse_on tan f (-(π / 2), π / 2) R}.
+Proof.
+  apply constructive_indefinite_description, exists_tan_inverse.
+Qed.
+
+Definition arcsin (y : R) : R := proj1_sig arcsin_sig y.
+
+Definition arccos (y : R) : R := proj1_sig arccos_sig y.
+
+Definition arctan (y : R) : R := proj1_sig arctan_sig y.
+
+Lemma arcsin_spec : inverse_on sin arcsin [-(π/2), π/2] [-1, 1].
+Proof.
+  unfold arcsin. destruct arcsin_sig as [f_inv H1]. auto.
+Qed.
+
+Lemma arccos_spec : inverse_on cos arccos [0, π] [-1, 1].
+Proof.
+  unfold arccos. destruct arccos_sig as [f_inv H1]. auto.
+Qed.
+
+Lemma arctan_spec : inverse_on tan arctan (-(π / 2), π / 2) R.
+Proof.
+  unfold arctan. destruct arctan_sig as [f_inv H1]. auto.
+Qed.
+
+Theorem theorem_4 : forall f f' f'' a b,
+  ⟦ der ⟧ f = f' ->
+  ⟦ der ⟧ f' = f'' ->
+  (forall x, f'' x + f x = 0) ->
+  f 0 = a ->
+  f' 0 = b ->
+  forall x, f x = b * sin x + a * cos x.
+Proof.
+  intros f f' f'' a b H1 H2 H3 H4 H5 x.
+  set (g := fun x => f x - (b * sin x + a * cos x)).
+  set (g' := fun x => f' x - (b * cos x - a * sin x)).
+  set (g'' := fun x => f'' x - (- b * sin x - a * cos x)).
+  assert (⟦ der ⟧ g = g') as H6.
   {
-    split; [| split].
-    - intros x H1. pose proof sin_bounds x. solve_R.
-    - apply increasing_on_imp_one_to_one_on. apply sin_increasing_on.
-    - intros y H1. exists (arcsin y). split.
-      + assert (H2 : exists x, x ∈ [- (π / 2), π / 2] /\ sin x = y).
-      {
-        assert (y = -1 \/ y = 1 \/ -1 < y < 1) as [H2 | [H2 | H2]] by solve_R.
-        - exists (-π/2). split.
-          + pose proof π_pos; solve_R.
-          + pose proof sin_periodic (-π/2) as H3. replace (- π / 2 + 2 * π) with (3 * π / 2) in H3 by lra.
-            rewrite <- H3. rewrite sin_3_π_over_2. solve_R.
-        - exists (π/2). split.
-          + pose proof π_pos; solve_R.
-          + rewrite sin_π_over_2. auto.
-        - pose proof intermediate_value_theorem sin (-π/2) (π/2) y as [x [H3 H4]].
-          + pose proof π_pos as H4. lra.
-          + apply continuous_imp_continuous_on, continuous_sin.
-          + rewrite sin_π_over_2. pose proof sin_periodic (-π/2) as H4. replace (- π / 2 + 2 * π) with (3 * π / 2) in H4 by lra.
-            rewrite <- H4. rewrite sin_3_π_over_2. solve_R.
-          + exists x; split; solve_R.
-      }
-      unfold arcsin. destruct (epsilon_spec (inhabits 0) _ H2) as [H3 H4]; auto.
-      + unfold arcsin.
+    unfold g, g'. apply derivative_minus; auto.
+    apply derivative_ext with (f1' := (fun x => b * cos x + a * (- sin x))).
+    { intros y. lra. }
+    apply derivative_plus. apply derivative_mult_const_l. apply derivative_sin.
+    apply derivative_mult_const_l. apply derivative_cos.
   }
-  pose proof exists_inverse_on_iff sin [-(π/2), π/2] [-1, 1] as [H1 _].
-  specialize (H1 H).
-  destruct H1 as [g Hg].
-  (* Since arcsin is defined via epsilon, it satisfies the predicate if one exists *)
-  unfold arcsin.
-  apply (logic_of_epsilon) in Hg. (* conceptual step: epsilon returns the witness *)
-  exact Hg.
+  assert (⟦ der ⟧ g' = g'') as H7.
+  {
+    unfold g', g''. apply derivative_minus; auto.
+    apply derivative_ext with (f1' := (fun x => b * (- sin x) + -a * cos x)).
+    { intros y. lra. }
+    apply derivative_plus. apply derivative_mult_const_l. apply derivative_cos.
+    replace (fun x => - (a * sin x)) with (fun x => - a * sin x) by (extensionality y; lra).
+    apply derivative_mult_const_l. apply derivative_sin.
+  }
+  assert (forall y, g'' y + g y = 0) as H8.
+  { intro y. unfold g, g''. specialize (H3 y). lra. }
+  assert (g 0 = 0) as H9.
+  { unfold g. rewrite H4, sin_0, cos_0. lra. }
+  assert (g' 0 = 0) as H10.
+  { unfold g'. rewrite H5, sin_0, cos_0. lra. }
+  pose proof zero_differential_eq_2nd_order g g' g'' H6 H7 H8 H9 H10 x as H11.
+  unfold g in H11. lra.
+Qed.
+
+Lemma sin_plus : forall x y,
+  sin (x + y) = sin x * cos y + cos x * sin y.
+Proof.
+  intros x y.
+  set (f := fun t => sin (t + y)).
+  set (f' := fun t => cos (t + y)).
+  set (f'' := fun t => - sin (t + y)).
+  pose proof theorem_4 f f' f'' (sin y) (cos y) as H1.
+  assert (⟦ der ⟧ f = f') as H2.
+  {
+    unfold f, f'.
+    apply derivative_ext with (f1' := (fun u => cos (u + y) * 1)).
+    { intros z. lra. } apply (derivative_comp (fun u => u + y) sin (fun _ => 1) cos).
+    - replace 1 with (1 + 0) by lra. apply derivative_plus; [apply derivative_id | apply derivative_const].
+    - apply derivative_sin.
+  }
+  assert (⟦ der ⟧ f' = f'') as H3.
+  {
+    unfold f', f''.
+    apply derivative_ext with (f1' := (fun u => - sin (u + y) * 1)).
+    { intros z. lra. } apply (derivative_comp (fun u => u + y) cos (fun _ => 1) (- sin)).
+    - replace 1 with (1 + 0) by lra. apply derivative_plus; [apply derivative_id | apply derivative_const].
+    - apply derivative_cos.
+  }
+  specialize (H1 H2 H3).
+  assert (forall t, f'' t + f t = 0) as H4 by (intro t; unfold f, f''; lra).
+  specialize (H1 H4).
+  assert (f 0 = sin y) as H5 by (unfold f; replace (0 + y) with y by lra; reflexivity).
+  assert (f' 0 = cos y) as H6 by (unfold f'; replace (0 + y) with y by lra; reflexivity).
+  specialize (H1 H5 H6 x).
+  unfold f in H1. rewrite H1. lra.
+Qed.
+
+Lemma cos_plus : forall x y,
+  cos (x + y) = cos x * cos y - sin x * sin y.
+Proof.
+  intros x y.
+  set (f := fun t => cos (t + y)).
+  set (f' := fun t => - sin (t + y)).
+  set (f'' := fun t => - cos (t + y)).
+  pose proof theorem_4 f f' f'' (cos y) (- sin y) as H1.
+  assert (⟦ der ⟧ f = f') as H2.
+  {
+    unfold f, f'.
+    apply derivative_ext with (f1' := (fun u => - sin (u + y) * 1)).
+    { intros z. lra. } apply (derivative_comp (fun u => u + y) cos (fun _ => 1) (- sin)).
+    - replace 1 with (1 + 0) by lra. apply derivative_plus; [apply derivative_id | apply derivative_const].
+    - apply derivative_cos.
+  }
+  assert (⟦ der ⟧ f' = f'') as H3.
+  {
+    unfold f', f''.
+    apply derivative_ext with (f1' := (fun u => - cos (u + y) * 1)).
+    { intros z. lra. } apply (derivative_comp (fun u => u + y) (- sin) (fun _ => 1) (- cos)).
+    - replace 1 with (1 + 0) by lra. apply derivative_plus; [apply derivative_id | apply derivative_const].
+    - apply derivative_neg. apply derivative_sin.
+  }
+  specialize (H1 H2 H3).
+  assert (forall t, f'' t + f t = 0) as H4 by (intro t; unfold f, f''; lra).
+  specialize (H1 H4).
+  assert (f 0 = cos y) as H5 by (unfold f; replace (0 + y) with y by lra; reflexivity).
+  assert (f' 0 = - sin y) as H6 by (unfold f'; replace (0 + y) with y by lra; reflexivity).
+  specialize (H1 H5 H6 x).
+  unfold f in H1. rewrite H1. lra.
+Qed.
+
+Lemma tan_plus : forall x y,
+  cos x <> 0 -> cos y <> 0 -> cos (x + y) <> 0 ->
+  tan (x + y) = (tan x + tan y) / (1 - tan x * tan y).
+Proof.
+  intros x y H1 H2 H3.
+  unfold tan. rewrite sin_plus, cos_plus.
+  field. rewrite <- cos_plus. lra.
+Qed.
+
+Lemma arctan_plus : forall x y,
+  x * y < 1 ->
+  arctan x + arctan y = arctan ((x + y) / (1 - x * y)).
+Proof.
+  intros x y H1.
+  pose proof arctan_spec as [H2 [H3 [H4 H5]]].
+  rewrite <- (H4 (arctan x + arctan y)); [ f_equal | ].
+  rewrite tan_plus.
+  - rewrite !H5; try apply Full_intro. reflexivity.
+  - admit.
+  - admit.
+  - admit.
+  - admit. 
+Admitted.
+
+Lemma tan_pi_div_4 : tan (π / 4) = 1.
+Proof. 
+  unfold tan. rewrite sin_π_over_4, cos_π_over_4. field.
+  intros H1. apply Rmult_eq_compat_r with (r := sqrt 2) in H1.
+  rewrite sqrt_def in H1; try lra.
+Qed.
+
+Lemma arctan_1 : arctan 1 = π / 4.
+Proof.
+  pose proof arctan_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- tan_pi_div_4.
+  rewrite H3; auto.
+  pose proof π_pos as H5. solve_R.
+Qed.
+
+Lemma arctan_neg : forall x, arctan (-x) = - arctan x.
+Proof. admit. Admitted.
+
+Lemma problem_6_a : π / 4 = arctan (1/2) + arctan (1/3).
+Proof.
+  rewrite arctan_plus; try lra.
+  - replace ((1 / 2 + 1 / 3) / (1 - 1 / 2 * (1 / 3))) with 1 by field.
+    symmetry; apply arctan_1.
+Qed.
+
+Lemma problem_6_b : π / 4 = 4 * arctan (1/5) - arctan (1/239).
+Proof.
+  assert (2 * arctan (1/5) = arctan (5/12)) as H1.
+  {
+    replace (2 * arctan (1/5)) with (arctan (1/5) + arctan (1/5)) by lra.
+    rewrite arctan_plus; try lra.
+    f_equal; field.
+  }
+  assert (4 * arctan (1/5) = arctan (120/119)) as H2.
+  {
+    replace (4 * arctan (1/5)) with (2 * arctan (1/5) + 2 * arctan (1/5)) by lra.
+    rewrite H1.
+    rewrite arctan_plus; try lra. f_equal; field.
+  }
+  rewrite H2.
+  replace (arctan (120/119) - arctan (1/239)) with (arctan (120/119) + arctan (-(1/239))).
+  2: { rewrite arctan_neg; lra. }
+  rewrite arctan_plus; try lra.
+  - replace ((120 / 119 + -(1 / 239)) / (1 - 120 / 119 * -(1 / 239))) with 1 by field.
+    symmetry; apply arctan_1.
+Qed.
+
+Lemma derivative_at_arcsin : forall x, -1 < x < 1 -> ⟦ der x ⟧ arcsin = (fun x => 1 / sqrt (1 - x ^ 2)).
+Proof.
+  intros x H1.
+Admitted.
+
+Lemma derivative_at_arccos : forall x, -1 < x < 1 -> ⟦ der x ⟧ arccos = (fun x => - 1 / sqrt (1 - x ^ 2)).
+Proof.
+  intros x H1.
+Admitted.
+
+Lemma derivative_arctan : ⟦ der ⟧ arctan = (fun x => 1 / (1 + x ^ 2)).
+Proof.
+Admitted.
+
+Lemma arctan_0 : arctan 0 = 0.
+Proof.
+  pose proof arctan_spec as [H1 [H2 [H3 H4]]].
+  rewrite <- H3; auto. rewrite tan_0; auto.
+  pose proof π_pos as H5. solve_R.
 Qed.
