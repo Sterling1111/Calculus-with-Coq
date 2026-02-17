@@ -19,11 +19,16 @@ Proof.
   - replace (S k - 1)%nat with k by lia.
     apply limit_eq with (f1 := λ x, x^k + y * ((x^k - y^k) / (x - y))).
     + exists 1. split; try lra. intros x H1. solve_R.
-    + replace (S k * y ^ k) with (y^k + y * (INR k * y ^ (k - 1))) by admit.
+    + replace (S k * y ^ k) with (y^k + y * (INR k * y ^ (k - 1))).
+       2 : {
+         destruct k.
+         - simpl. lra.
+         - repeat rewrite S_INR. rewrite <- tech_pow_Rmult. replace (S k - 1)%nat with k by lia. lra.
+       }
       apply limit_plus.
       * apply limit_pow; apply limit_id.
       * apply limit_mul; [apply limit_const | exact IH].
-Admitted.
+Qed.
 
 Lemma lemma_5_1_v : forall x n, ⟦ lim x ⟧ (λ y, (x^n - y^n) / (x - y)) = (INR n) * x^(n - 1).
 Proof.

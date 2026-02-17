@@ -9,7 +9,7 @@ Proof.
     rewrite H2. unfold derivative_at.
     apply limit_eq with (f1 := (λ h, ((-2 * a - h) / (a^2 * (a + h)^2))) ).
     - exists (|a/2|). split; [| intros h H5 ]; solve_R.
-    - auto_limit; rewrite Rplus_0_r, Rmult_1_r; repeat apply Rmult_integral_contrapositive; auto.
+    - auto_limit; simpl; rewrite Rplus_0_r, Rmult_1_r; repeat apply Rmult_integral_contrapositive; auto.
   }
   rewrite (derivative_at_unique f f' (λ x, -2 / (x ^ 3)) a H3 H4); auto.
 Qed.
