@@ -20,27 +20,21 @@ Proof.
   intros x. nra.
 Qed.
 
-Axiom PI_gt_3 : PI > 3.
-
 Lemma lemma_1_4_ix : forall x : R,
-  (x > -5 /\ x < 3) \/ (x > PI) <-> (x - PI) * (x + 5) * (x - 3) > 0.
+  (x > -5 /\ x < 3) \/ (x > π) <-> (x - π) * (x + 5) * (x - 3) > 0.
 Proof.
-  intros x. split.
+  intros x. pose proof π_bounds as H0. split.
   - intros [[H1 H2] | H3].
-    -- assert (x < PI). { pose proof PI_gt_3 as H6. lra. } assert ((x - PI) * (x + 5) < 0) by nra. nra.
-    -- assert (x > 3). { pose proof PI_gt_3 as H6. lra. } assert ((x - PI) * (x - 3) > 0) by nra. nra.
-  - intro H. pose proof PI_gt_3 as H1. assert (x <=PI \/ x >= PI) by lra. destruct H0 as [H0 | H0].
-    -- left. split. assert (x <= -5 \/ x > -5) by lra. destruct H2 as [H2 | H2].
-       --- assert ((x - PI) * (x + 5) < 0) by nra. nra.
-       --- assert (x < 3 \/ x >= 3) by lra. destruct H3 as [H3 | H3].
-           ---- assert ((x - PI) * (x + 5) < 0) by nra. nra.
-           ---- apply H2.
-      --- assert (x <= 3 \/ x > 3) by lra. destruct H2 as [H2 | H2].
-           ---- destruct H2. apply H2. nra.
-           ---- destruct H0. assert (H3 : (x - PI) * (x - 3) > 0) by nra. nra. nra.
-    -- right. assert (x <= 3 \/ x > 3) by lra. destruct H2 as [H2 | H2].
-      --- assert ((x - PI) * (x - 3) < 0) by nra. nra.
-           --- destruct H0. auto. nra.
+    + assert (x < π) as H3 by lra. assert ((x - π) * (x + 5) < 0) as H4 by nra. nra.
+    + assert (x > 3) as H1 by lra. assert ((x - π) * (x - 3) > 0) as H2 by nra. nra.
+  - intro H1. assert (x <=π \/ x >= π) as [H2 | H2] by lra.
+    + left. split. assert (x <= -5 \/ x > -5) as [H3 | H3] by lra; auto.
+      * assert ((x - π) * (x + 5) < 0) as H4 by nra. nra.
+      * assert (x < 3 \/ x >= 3) as [H4 | H4] by lra; auto.
+        assert ((x - π) * (x + 5) < 0) as H5; nra.
+    + right. assert (x <= 3 \/ x > 3) as [H3 | H3] by lra.
+      * assert ((x - π) * (x - 3) < 0) as H4 by nra. nra.
+      * nra.
 Qed.
 
 Lemma lemma_1_4_x : forall x : R,
