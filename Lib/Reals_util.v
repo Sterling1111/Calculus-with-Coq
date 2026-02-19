@@ -654,3 +654,24 @@ Lemma no_integer_between : forall (n : ℤ) r,
 Proof.
   intros n r [H1 H2] [k H3]. rewrite H3 in *. apply lt_IZR in H1. rewrite <- plus_IZR in H2. apply lt_IZR in H2. lia.
 Qed.
+
+Lemma Rabs_div : forall r1 r2,
+  |r1 / r2| = |r1| / |r2|.
+Proof.
+  intros r1 r2.
+  destruct (Rtotal_order r1 r2) as [H1 | [H1 | H1]];
+  destruct (Rtotal_order r2 0) as [H2 | [H2 | H2]]; 
+  destruct (Rtotal_order r1 0) as [H3 | [H3 | H3]];
+  subst; try solve [solve_R].
+  - solve_R. pose proof Rdiv_neg_neg r1 r2 ltac:(lra) ltac:(lra). nra.
+  - repeat rewrite Rabs_R0, Rdiv_0_r; reflexivity.
+  - pose proof Rdiv_neg_pos r1 r2 ltac:(lra) ltac:(lra). solve_R.
+  - pose proof Rdiv_pos_pos r1 r2 ltac:(lra) ltac:(lra). solve_R.
+  - rewrite Rdiv_diag; solve_R.
+  - rewrite Rabs_R0, Rdiv_0_r. solve_R.
+  - rewrite Rdiv_diag; solve_R.
+  - pose proof Rdiv_neg_neg r1 r2 ltac:(lra) ltac:(lra). solve_R.
+  - pose proof Rdiv_pos_neg r1 r2 ltac:(lra) ltac:(lra). solve_R.
+  - repeat rewrite Rabs_R0, Rdiv_0_r; reflexivity.
+  - pose proof Rdiv_pos_pos r1 r2 ltac:(lra) ltac:(lra). solve_R.
+Qed.
