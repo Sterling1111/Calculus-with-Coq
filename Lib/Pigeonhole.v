@@ -188,7 +188,16 @@ Lemma not_NoDup_nth : forall (A : Type) (l : list A) (d : A),
 Proof.
   intros A l d H1.
   pose proof (NoDup_nth l d) as H2.
-Admitted.
+  apply NNPP.
+  intro H3.
+  apply H1.
+  destruct H2 as [_ H4].
+  apply H4.
+  intros i j H5 H6 H7.
+  destruct (Nat.lt_trichotomy i j) as [H8 | [H8 | H8]]; auto.
+  - exfalso. apply H3. exists i, j. split; auto.
+  - exfalso. apply H3. exists j, i. split; auto.
+Qed.
 
 Theorem longer_list:
     forall U : Type, forall l1 l2 : list U,
