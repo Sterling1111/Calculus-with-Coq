@@ -118,6 +118,40 @@ Proof.
   intros n k r H1.
   rewrite f_n_is_polynomial in H1.
   rewrite nth_derive_mult_const_l in H1.
+  2 : { 
+    apply nth_derivative_imp_nth_differentiable with (fn := fun x => ∑ n (2 * n) (fun i => (⟦ Der ^ k ⟧ (fun x0 => (-1) ^ (i - n) * INR (n ∁ (i - n)) * x0 ^ i)) x)).
+    apply nth_derivative_sum; try lia.
+    intros l Hl. apply nth_derive_spec. apply nth_differentiable_mult_const_l.
+    replace (λ x : ℝ, x ^ l) with (λ x : ℝ, (x - 0) ^ l).
+    2: { extensionality x0. rewrite Rminus_0_r. reflexivity. }
+    apply nth_differentiable_pow_shift. 
+  }
+  rewrite nth_derive_sum in H1; try lia.
+  2 : { 
+    intros j. apply nth_differentiable_mult_const_l. 
+    replace (λ x : ℝ, x ^ j) with (λ x : ℝ, (x - 0) ^ j).
+    2: { extensionality x0. rewrite Rminus_0_r. reflexivity. }
+    apply nth_differentiable_pow_shift. 
+  }
+  replace (λ k0 : ℕ, (⟦ Der^k ⟧ (λ x : ℝ, (-1) ^ (k0 - n) * n ∁ (k0 - n) * x ^ k0)) 0) with (λ k0 : ℕ, (-1) ^ (k0 - n) * n ∁ (k0 - n) * (⟦ Der^k 0 ⟧ (λ x : ℝ, x ^ k0))) in H1.
+  2 : { 
+    extensionality k0. rewrite nth_derive_mult_const_l. auto. 
+    replace (λ x : ℝ, x ^ k0) with (λ x : ℝ, (x - 0) ^ k0).
+    2: { extensionality x0. rewrite Rminus_0_r. reflexivity. }
+    apply nth_differentiable_pow_shift. 
+  }
+  pose proof nth_derivative_pow as H2.
+  pose proof nth_derivative_pow_gt as H3.
+  
+  admit.
+Admitted.
+
+Lemma f_n_derivatives_at_0_are_integers : ∀ (n k: nat) (r : R),
+  ⟦ Der ^ k 0 ⟧ (f n) = r -> is_integer r.
+Proof.
+  intros n k r H1.
+  rewrite f_n_is_polynomial in H1.
+  rewrite nth_derive_mult_const_l in H1.
   2 : { admit. }
   rewrite nth_derive_sum in H1; try lia.
   2 : { intros j. apply nth_differentiable_mult_const_l. admit. }

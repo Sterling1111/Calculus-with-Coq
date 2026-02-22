@@ -21,8 +21,8 @@ Definition upper_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition a 
   let n : ℕ := length l2 in
   ∑ 0 (n-1) (fun i => (l2.[i]) * (l1.[(i+1)] - l1.[(i)])).
 
-Notation "L( f , P )" := (lower_sum _ _ f P) (at level 70, f, P at level 0, format "L( f ,  P )").
-Notation "U( f , P )" := (upper_sum _ _ f P) (at level 70, f, P at level 0, format "U( f ,  P )").
+Notation "L( f , P )" := (lower_sum _ _ f P) (at level 0, f, P at level 0, format "L( f ,  P )").
+Notation "U( f , P )" := (upper_sum _ _ f P) (at level 0, f, P at level 0, format "U( f ,  P )").
 
 Lemma upper_sum_nonneg : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b),
   let f := bf.(bounded_f a b) in
@@ -887,12 +887,6 @@ Proof.
   - assert (a = b) as H5 by lra. subst. rewrite smallest_upper_sum_n_n. lra.
 Qed.
 
-Lemma integral_b_a_neg' : forall a b f,
-  ∫ a b f = ∫ b a -f.
-Proof.
-
-Admitted.
-
 Lemma integral_n_n : forall a f,
   ∫ a a f = 0.
 Proof.
@@ -1446,27 +1440,486 @@ Proof.
     rewrite integral_b_a_neg with (a := b). lra. apply integrable_on_sub_interval with (a := Rmin a (Rmin b c)) (b := Rmax a (Rmax b c)); solve_R.
 Qed.
 
+Lemma lower_sum_mult_pos : forall a b f c bf bf' P,
+  (forall x, bf.(bounded_f a b) x = f x) -> (forall x, bf'.(bounded_f a b) x = c * f x) -> 0 <= c -> L(bf', P) = c * L(bf, P).
+Proof.
+  intros a b f c bf bf' P H1 H2 H3.
+  unfold lower_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_inf (bounded_f a b bf') a b P _) as [l1 [H4 H5]].
+  destruct (partition_sublist_elem_has_inf (bounded_f a b bf) a b P _) as [l2 [H6 H7]].
+  assert (H8 : length l1 = length l2) by lia.
+  replace (length l1) with (length l2) by lia.
+  rewrite r_mult_sum_f_i_n_f_l.
+  apply sum_f_equiv; try lia. intros k H9.
+  assert (H10 : l1.[k] = c * l2.[k]).
+  {
+    apply glb_unique with (E := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = c * f x).
+    - set (E := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = c * f x).
+      assert (H11 : E = fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bf') x).
+      { apply set_equal_def. intros y. split; intros [x [H12 H13]]; exists x; split; auto.
+        - rewrite H2. auto.
+        - rewrite <- H2. auto. }
+      rewrite H11. apply (H5 k ltac:(pose proof partition_length a b P; lia)).
+    - assert (H11 : (fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = c * f x) =
+                    (fun y => exists z, (exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ z = f x) /\ y = c * z)).
+      { apply set_equal_def. intros y. split.
+        - intros [x [H12 H13]]. exists (f x). split; auto. exists x. split; auto.
+        - intros [z [[x [H12 H13]] H14]]. exists x. split; auto. subst. auto. }
+      rewrite H11.
+      apply is_glb_mult_pos with (x0 := f ((points a b P).[k])); auto.
+      + exists ((points a b P).[k]). split; auto.
+        unfold Ensembles.In.
+        assert (H12 : (k < k + 1 < length (points a b P))%nat).
+        { pose proof partition_length a b P. lia. }
+        assert (H13 : Sorted Rlt (points a b P)).
+        { destruct P; auto. }
+        pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 H13 H12 as H14.
+        lra.
+      + assert (H12 : (fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = f x) =
+                      (fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bf) x)).
+        { apply set_equal_def. intros y. split; intros [x [H13 H14]]; exists x; split; auto.
+          - rewrite H1. auto.
+          - rewrite <- H1. auto. }
+        rewrite H12. apply (H7 k). pose proof partition_length a b P as H13. lia.
+  }
+  rewrite H10. lra.
+Qed.
+
+Lemma upper_sum_mult_pos : forall a b f c bf bf' P,
+  (forall x, bf.(bounded_f a b) x = f x) -> (forall x, bf'.(bounded_f a b) x = c * f x) -> 0 <= c -> U(bf', P) = c * U(bf, P).
+Proof.
+  intros a b f c bf bf' P H1 H2 H3.
+  unfold upper_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_sup (bounded_f a b bf') a b P _) as [l1 [H4 H5]].
+  destruct (partition_sublist_elem_has_sup (bounded_f a b bf) a b P _) as [l2 [H6 H7]].
+  assert (H8 : length l1 = length l2) by lia.
+  replace (length l1) with (length l2) by lia.
+  rewrite r_mult_sum_f_i_n_f_l.
+  apply sum_f_equiv; try lia. intros k H9.
+  assert (H10 : l1.[k] = c * l2.[k]).
+  {
+    apply lub_unique with (E := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = c * f x).
+    - set (E := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = c * f x).
+      assert (H11 : E = fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bf') x).
+      { apply set_equal_def. intros y. split; intros [x [H12 H13]]; exists x; split; auto.
+        - rewrite H2. auto.
+        - rewrite <- H2. auto. }
+      rewrite H11. apply (H5 k ltac:(pose proof partition_length a b P; lia)).
+    - assert (H11 : (fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = c * f x) =
+                    (fun y => exists z, (exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ z = f x) /\ y = c * z)).
+      { apply set_equal_def. intros y. split.
+        - intros [x [H12 H13]]. exists (f x). split; auto. exists x. split; auto.
+        - intros [z [[x [H12 H13]] H14]]. exists x. split; auto. subst. auto. }
+      rewrite H11.
+      apply is_lub_mult_pos with (x0 := f ((points a b P).[k])); auto.
+      + exists ((points a b P).[k]). split; auto.
+        unfold Ensembles.In.
+        assert (H12 : (k < k + 1 < length (points a b P))%nat).
+        { pose proof partition_length a b P. lia. }
+        assert (H13 : Sorted Rlt (points a b P)).
+        { destruct P; auto. }
+        pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 H13 H12 as H14.
+        lra.
+      + assert (H12 : (fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = f x) =
+                      (fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bf) x)).
+        { apply set_equal_def. intros y. split; intros [x [H13 H14]]; exists x; split; auto.
+          - rewrite H1. auto.
+          - rewrite <- H1. auto. }
+        rewrite H12. apply (H7 k). pose proof partition_length a b P as H13. lia.
+  }
+  rewrite H10. lra.
+Qed.
+
+Lemma lower_sum_mult_neg : forall a b f c bf bf' P,
+  (forall x, bf.(bounded_f a b) x = f x) -> (forall x, bf'.(bounded_f a b) x = c * f x) -> c <= 0 -> L(bf', P) = c * U(bf, P).
+Proof.
+  intros a b f c bf bf' P H1 H2 H3.
+  unfold lower_sum, upper_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_inf (bounded_f a b bf') a b P _) as [l1 [H4 H5]].
+  destruct (partition_sublist_elem_has_sup (bounded_f a b bf) a b P _) as [l2 [H6 H7]].
+  assert (H8 : length l1 = length l2) by lia.
+  replace (length l1) with (length l2) by lia.
+  rewrite r_mult_sum_f_i_n_f_l.
+  apply sum_f_equiv; try lia. intros k H9.
+  assert (H10 : l1.[k] = c * l2.[k]).
+  {
+    apply glb_unique with (E := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = c * f x).
+    - set (E := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = c * f x).
+      assert (H11 : E = fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bf') x).
+      { apply set_equal_def. intros y. split; intros [x [H12 H13]]; exists x; split; auto.
+        - rewrite H2. auto.
+        - rewrite <- H2. auto. }
+      rewrite H11. apply (H5 k ltac:(pose proof partition_length a b P; lia)).
+    - assert (H11 : (fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = c * f x) =
+                    (fun y => exists z, (exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ z = f x) /\ y = c * z)).
+      { apply set_equal_def. intros y. split.
+        - intros [x [H12 H13]]. exists (f x). split; auto. exists x. split; auto.
+        - intros [z [[x [H12 H13]] H14]]. exists x. split; auto. subst. auto. }
+      rewrite H11.
+      apply is_glb_mult_neg with (x0 := f ((points a b P).[k])); auto.
+      + exists ((points a b P).[k]). split; auto.
+        unfold Ensembles.In.
+        assert (H12 : (k < k + 1 < length (points a b P))%nat).
+        { pose proof partition_length a b P. lia. }
+        assert (H13 : Sorted Rlt (points a b P)).
+        { destruct P; auto. }
+        pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 H13 H12 as H14.
+        lra.
+      + assert (H12 : (fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = f x) =
+                      (fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bf) x)).
+        { apply set_equal_def. intros y. split; intros [x [H13 H14]]; exists x; split; auto.
+          - rewrite H1. auto.
+          - rewrite <- H1. auto. }
+        rewrite H12. apply (H7 k). pose proof partition_length a b P as H13. lia.
+  }
+  rewrite H10. lra.
+Qed.
+
+Lemma upper_sum_mult_neg : forall a b f c bf bf' P,
+  (forall x, bf.(bounded_f a b) x = f x) -> (forall x, bf'.(bounded_f a b) x = c * f x) -> c <= 0 -> U(bf', P) = c * L(bf, P).
+Proof.
+  intros a b f c bf bf' P H1 H2 H3.
+  unfold upper_sum, lower_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_sup (bounded_f a b bf') a b P _) as [l1 [H4 H5]].
+  destruct (partition_sublist_elem_has_inf (bounded_f a b bf) a b P _) as [l2 [H6 H7]].
+  assert (H8 : length l1 = length l2) by lia.
+  replace (length l1) with (length l2) by lia.
+  rewrite r_mult_sum_f_i_n_f_l.
+  apply sum_f_equiv; try lia. intros k H9.
+  assert (H10 : l1.[k] = c * l2.[k]).
+  {
+    apply lub_unique with (E := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = c * f x).
+    - set (E := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = c * f x).
+      assert (H11 : E = fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bf') x).
+      { apply set_equal_def. intros y. split; intros [x [H12 H13]]; exists x; split; auto.
+        - rewrite H2. auto.
+        - rewrite <- H2. auto. }
+      rewrite H11. apply (H5 k ltac:(pose proof partition_length a b P; lia)).
+    - assert (H11 : (fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = c * f x) =
+                    (fun y => exists z, (exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ z = f x) /\ y = c * z)).
+      { apply set_equal_def. intros y. split.
+        - intros [x [H12 H13]]. exists (f x). split; auto. exists x. split; auto.
+        - intros [z [[x [H12 H13]] H14]]. exists x. split; auto. subst. auto. }
+      rewrite H11.
+      apply is_lub_mult_neg with (x0 := f ((points a b P).[k])); auto.
+      + exists ((points a b P).[k]). split; auto.
+        unfold Ensembles.In.
+        assert (H12 : (k < k + 1 < length (points a b P))%nat).
+        { pose proof partition_length a b P. lia. }
+        assert (H13 : Sorted Rlt (points a b P)).
+        { destruct P; auto. }
+        pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 H13 H12 as H14.
+        lra.
+      + assert (H12 : (fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = f x) =
+                      (fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bf) x)).
+        { apply set_equal_def. intros y. split; intros [x [H13 H14]]; exists x; split; auto.
+          - rewrite H1. auto.
+          - rewrite <- H1. auto. }
+        rewrite H12. apply (H7 k). pose proof partition_length a b P as H13. lia.
+  }
+  rewrite H10. lra.
+Qed.
+
+Lemma lower_sum_add : forall a b f g bf bg bfg P,
+  (forall x, bf.(bounded_f a b) x = f x) ->
+  (forall x, bg.(bounded_f a b) x = g x) ->
+  (forall x, bfg.(bounded_f a b) x = f x + g x) ->
+  (L(bf, P) + L(bg, P)) <= L(bfg, P).
+Proof.
+  intros a b f g bf bg bfg P H1 H2 H3.
+  unfold lower_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_inf (bounded_f a b bf) a b P _) as [l1 [H4 H5]].
+  destruct (partition_sublist_elem_has_inf (bounded_f a b bg) a b P _) as [l2 [H6 H7]].
+  destruct (partition_sublist_elem_has_inf (bounded_f a b bfg) a b P _) as [l3 [H8 H9]].
+  assert (H10 : length l1 = length l3) by lia.
+  assert (H11 : length l2 = length l3) by lia.
+  replace (length l1) with (length l3) by lia.
+  replace (length l2) with (length l3) by lia.
+  rewrite sum_f_plus; try lia.
+  apply sum_f_congruence_le; try lia. intros k H12.
+  rewrite <- Rmult_plus_distr_r.
+  apply Rmult_le_compat_r.
+  - pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(pose proof partition_length a b P; lia). lra.
+  - apply glb_add_le with (E1 := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bf) x)
+                          (E2 := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bg) x)
+                          (E3 := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bfg) x).
+    + apply (H5 k ltac:(pose proof partition_length a b P; lia)).
+    + apply (H7 k ltac:(pose proof partition_length a b P; lia)).
+    + apply (H9 k ltac:(pose proof partition_length a b P; lia)).
+    + intros y [x [H13 H14]]. exists (bf.(bounded_f a b) x), (bg.(bounded_f a b) x).
+      split; [exists x; auto | split; [exists x; auto | ]].
+      rewrite H14, H1, H2, H3. reflexivity.
+Qed.
+
+Lemma upper_sum_add : forall a b f g bf bg bfg P,
+  (forall x, bf.(bounded_f a b) x = f x) ->
+  (forall x, bg.(bounded_f a b) x = g x) ->
+  (forall x, bfg.(bounded_f a b) x = f x + g x) ->
+  (U(bfg, P) <= U(bf, P) + U(bg, P))%R.
+Proof.
+  intros a b f g bf bg bfg P H1 H2 H3.
+  unfold upper_sum, proj1_sig; simpl.
+  destruct (partition_sublist_elem_has_sup (bounded_f a b bf) a b P _) as [l1 [H4 H5]].
+  destruct (partition_sublist_elem_has_sup (bounded_f a b bg) a b P _) as [l2 [H6 H7]].
+  destruct (partition_sublist_elem_has_sup (bounded_f a b bfg) a b P _) as [l3 [H8 H9]].
+  assert (H10 : length l1 = length l3) by lia.
+  assert (H11 : length l2 = length l3) by lia.
+  replace (length l1) with (length l3) by lia.
+  replace (length l2) with (length l3) by lia.
+  rewrite sum_f_plus; try lia.
+  apply sum_f_congruence_le; try lia. intros k H12.
+  rewrite <- Rmult_plus_distr_r.
+  apply Rmult_le_compat_r.
+  - pose proof Sorted_Rlt_nth (points a b P) k (k+1) 0 ltac:(destruct P; auto) ltac:(pose proof partition_length a b P; lia). lra.
+  - apply lub_add_le with (E1 := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bf) x)
+                          (E2 := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bg) x)
+                          (E3 := fun y => exists x, x ∈ [(points a b P).[k], (points a b P).[(k + 1)]] /\ y = (bounded_f a b bfg) x).
+    + apply (H5 k ltac:(pose proof partition_length a b P; lia)).
+    + apply (H7 k ltac:(pose proof partition_length a b P; lia)).
+    + apply (H9 k ltac:(pose proof partition_length a b P; lia)).
+    + intros y [x [H13 H14]]. exists (bf.(bounded_f a b) x), (bg.(bounded_f a b) x).
+      split; [exists x; auto | split; [exists x; auto | ]].
+      rewrite H14, H1, H2, H3. reflexivity.
+Qed.
+
+Lemma theorem_13_5_a : forall f g a b,
+  a < b -> integrable_on a b f -> integrable_on a b g -> integrable_on a b (fun x => f x + g x).
+Proof.
+  intros f g a b H1 H2 H3.
+  pose proof H2 as H4. pose proof H3 as H5.
+  destruct H2 as [H2 | [bf [supf [inff [H6 [H7 [H8 H9]]]]]]]; [left; lra |].
+  destruct H3 as [H3 | [bg [supg [infg [H10 [H11 [H12 H13]]]]]]]; [left; lra |].
+  assert (H14 : bounded_on (fun x => f x + g x) [a, b]).
+  {
+    apply bounded_on_add.
+    - destruct bf as [f' H14 H15]. simpl in *. subst f'. exact H15.
+    - destruct bg as [g' H16 H17]. simpl in *. subst g'. exact H17.
+  }
+  assert (H15 : a <= b) by lra.
+  set (bfg := mkbounded_function_R a b (fun x => f x + g x) H15 H14).
+  assert (H16 : integrable_on a b (bounded_f a b bf)). { rewrite H6. exact H4. }
+  assert (H17 : integrable_on a b (bounded_f a b bg)). { rewrite H10. exact H5. }
+  assert (H18 : integrable_on a b (bounded_f a b bfg) <-> (forall ε, ε > 0 -> exists P : partition a b, (U(bfg, P) - L(bfg, P)) < ε)).
+  { apply (theorem_13_2_a a b bfg); auto. }
+  destruct H18 as [_ H18].
+  change (integrable_on a b (bounded_f a b bfg)).
+  apply H18. intros ε H19.
+  pose proof (proj1 (theorem_13_2_a a b bf H1) H16 (ε / 2) ltac:(lra)) as [P1 H20].
+  pose proof (proj1 (theorem_13_2_a a b bg H1) H17 (ε / 2) ltac:(lra)) as [P2 H21].
+  pose proof exists_partition_includes_both a b P1 P2 as [P [H22 H23]].
+  exists P.
+  pose proof lemma_13_1_a a b bf P P1 H22 as H24.
+  pose proof lemma_13_1_b a b bf P P1 H22 as H25.
+  pose proof lemma_13_1_a a b bg P P2 H23 as H26.
+  pose proof lemma_13_1_b a b bg P P2 H23 as H27.
+  assert (H28 : forall x, bounded_f a b bf x = f x) by (intros z; rewrite H6; reflexivity).
+  assert (H29 : forall x, bounded_f a b bg x = g x) by (intros z; rewrite H10; reflexivity).
+  assert (H30 : forall x, bounded_f a b bfg x = f x + g x) by (intros z; reflexivity).
+  pose proof upper_sum_add a b f g bf bg bfg P H28 H29 H30 as H31.
+  pose proof lower_sum_add a b f g bf bg bfg P H28 H29 H30 as H32.
+  lra.
+Qed.
+
+Lemma theorem_13_5_b : forall f g a b,
+  a < b -> integrable_on a b f -> integrable_on a b g -> ∫ a b (f + g) = ∫ a b f + ∫ a b g.
+Proof.
+  intros f g a b H1 H2 H3.
+  pose proof theorem_13_5_a f g a b H1 H2 H3 as H4.
+  destruct (integral_eq' a b f H1 H2) as [bf1 [r1 [H5 [H6 [H7 H8]]]]].
+  destruct (integral_eq' a b g H1 H3) as [bf2 [r2 [H9 [H10 [H11 H12]]]]].
+  destruct (integral_eq' a b (fun x => f x + g x) H1 H4) as [bf3 [r3 [H13 [H14 [H15 H16]]]]].
+  assert (H17 : integrable_on a b (bounded_f a b bf1)). { rewrite H5. exact H2. }
+  assert (H18 : integrable_on a b (bounded_f a b bf2)). { rewrite H9. exact H3. }
+  rewrite H6, H10, H14.
+  apply Rle_antisym.
+  - apply Rnot_lt_le. intros H19.
+    set (ε := r3 - (r1 + r2)).
+    assert (H20 : ε > 0) by (unfold ε; lra).
+    pose proof (proj1 (theorem_13_2_a a b bf1 H1) H17 (ε / 2) ltac:(lra)) as [P1 H21].
+    pose proof (proj1 (theorem_13_2_a a b bf2 H1) H18 (ε / 2) ltac:(lra)) as [P2 H22].
+    pose proof exists_partition_includes_both a b P1 P2 as [P [H23 H24]].
+    pose proof lemma_13_1_b a b bf1 P P1 H23 as H25.
+    pose proof lemma_13_1_b a b bf2 P P2 H24 as H26.
+    assert (H27 : forall x, bounded_f a b bf1 x = f x) by (intros z; rewrite H5; reflexivity).
+    assert (H28 : forall x, bounded_f a b bf2 x = g x) by (intros z; rewrite H9; reflexivity).
+    assert (H29 : forall x, bounded_f a b bf3 x = f x + g x) by (intros z; rewrite H13; reflexivity).
+    pose proof upper_sum_add a b f g bf1 bf2 bf3 P H27 H28 H29 as H30.
+    assert (H31 : L(bf1, P1) <= r1).
+    { destruct H8 as [H8a _]. apply H8a. exists P1. reflexivity. }
+    assert (H32 : L(bf2, P2) <= r2).
+    { destruct H12 as [H12a _]. apply H12a. exists P2. reflexivity. }
+    assert (H33 : r3 <= U(bf3, P)).
+    { destruct H15 as [H15a _]. apply Rge_le, H15a. exists P. reflexivity. }
+    unfold ε in H20, H21, H22. lra.
+  - apply Rnot_lt_le. intros H19.
+    set (ε := (r1 + r2) - r3).
+    assert (H20 : ε > 0) by (unfold ε; lra).
+    pose proof (proj1 (theorem_13_2_a a b bf1 H1) H17 (ε / 2) ltac:(lra)) as [P1 H21].
+    pose proof (proj1 (theorem_13_2_a a b bf2 H1) H18 (ε / 2) ltac:(lra)) as [P2 H22].
+    pose proof exists_partition_includes_both a b P1 P2 as [P [H23 H24]].
+    pose proof lemma_13_1_a a b bf1 P P1 H23 as H25.
+    pose proof lemma_13_1_a a b bf2 P P2 H24 as H26.
+    assert (H27 : forall x, bounded_f a b bf1 x = f x) by (intros z; rewrite H5; reflexivity).
+    assert (H28 : forall x, bounded_f a b bf2 x = g x) by (intros z; rewrite H9; reflexivity).
+    assert (H29 : forall x, bounded_f a b bf3 x = f x + g x) by (intros z; rewrite H13; reflexivity).
+    pose proof lower_sum_add a b f g bf1 bf2 bf3 P H27 H28 H29 as H30.
+    assert (H31 : r1 <= U(bf1, P1)).
+    { destruct H7 as [H7a _]. apply Rge_le, H7a. exists P1. reflexivity. }
+    assert (H32 : r2 <= U(bf2, P2)).
+    { destruct H11 as [H11a _]. apply Rge_le, H11a. exists P2. reflexivity. }
+    assert (H33 : L(bf3, P) <= r3).
+    { destruct H16 as [H16a _]. apply H16a. exists P. reflexivity. }
+    unfold ε in H20, H21, H22. lra.
+Qed.
+
 Lemma theorem_13_6_a : forall f a b c,
   a < b -> integrable_on a b f -> integrable_on a b (c * f).
 Proof.
   intros f a b c H1 H2. destruct H2 as [H2 | [bf [sup [inf [H3 [H4 [H5 H6]]]]]]]; [ left; lra |].
-  assert (H7 : bounded_on (c * f) [a, b]) by admit.
+  assert (H7 : bounded_on (c * f) [a, b]).
+  {
+    destruct bf as [f' H8 H9]. simpl in *. subst f'.
+    destruct H9 as [[m H10] [M H11]]. split.
+    - destruct (Rle_lt_dec 0 c) as [H12|H12].
+      + exists (c * m). intros y [x [H13 H14]]. subst y.
+        assert (H15 : f x >= m). { pose proof H10 as H14. apply H14. exists x. split; auto. }
+        nra.
+      + exists (c * M). intros y [x [H13 H14]]. subst y.
+        assert (H15 : f x <= M). { pose proof H11 as H14. apply H14. exists x. split; auto. }
+        nra.
+    - destruct (Rle_lt_dec 0 c) as [H12|H12].
+      + exists (c * M). intros y [x [H13 H14]]. subst y.
+        assert (H15 : f x <= M). { pose proof H11 as H14. apply H14. exists x. split; auto. }
+        nra.
+      + exists (c * m). intros y [x [H13 H14]]. subst y.
+        assert (H15 : f x >= m). { pose proof H10 as H14. apply H14. exists x. split; auto. }
+        nra.
+  }
+    
   assert (H8 : a <= b) by lra.
-  set (bf' := mkbounded_function_R a b (λ x, c * f x) H8 H7). 
-  right. exists bf', (c * sup), (c  * inf). repeat split; solve_R; admit.
-Admitted.
+  set (bf' := mkbounded_function_R a b (c * f) H8 H7). 
+  right. exists bf', (c * sup), (c * inf). split; [| split; [| split]].
+  - reflexivity.
+  - pose proof exists_partition_a_b a b ltac:(lra) as [P1 _].
+    destruct (Rle_lt_dec 0 c) as [H9 | H9].
+    + assert (H10 : (λ x : ℝ, ∃ p : partition a b, x = L(bf', p)) = (fun y => exists x0, (λ x : ℝ, ∃ p : partition a b, x = L(bf, p)) x0 /\ y = c * x0)).
+      { 
+        apply set_equal_def. intros y. split.
+        - intros [P H11]. subst y. exists (L(bf, P)). split; [exists P; reflexivity|]. apply lower_sum_mult_pos with (f := f); auto.
+          intros z. rewrite H3. reflexivity.
+        - intros [y0 [[P H11] H12]]. subst. exists P. symmetry. apply lower_sum_mult_pos with (f := bounded_f a b bf); auto. 
+      }
+      rewrite H10. apply is_lub_mult_pos with (x0 := L(bf, P1)); auto.
+      exists P1. reflexivity.
+    + assert (H10 : (λ x : ℝ, ∃ p : partition a b, x = L(bf', p)) = (fun y => exists x0, (λ x : ℝ, ∃ p : partition a b, x = U(bf, p)) x0 /\ y = c * x0)).
+      { apply set_equal_def. intros y. split.
+        - intros [P H11]. subst y. exists (U(bf, P)). split; [exists P; reflexivity|]. apply lower_sum_mult_neg with (f := f); auto; try lra.
+          intros z. rewrite H3. reflexivity.
+        - intros [y0 [[P H11] H12]]. subst. exists P. symmetry. apply lower_sum_mult_neg with (f := bounded_f a b bf); auto; try lra. }
+      rewrite H10. replace (c * sup) with (c * inf) by nra.
+      apply is_lub_mult_neg with (x0 := U(bf, P1)); auto; try lra.
+      exists P1. reflexivity.
+  - pose proof exists_partition_a_b a b ltac:(lra) as [P1 _].
+    destruct (Rle_lt_dec 0 c) as [H9 | H9].
+    + assert (H10 : (λ x : ℝ, ∃ p : partition a b, x = U(bf', p)) = (fun y => exists x0, (λ x : ℝ, ∃ p : partition a b, x = U(bf, p)) x0 /\ y = c * x0)).
+      { apply set_equal_def. intros y. split.
+        - intros [P H11]. subst y. exists (U(bf, P)). split; [exists P; reflexivity|]. apply upper_sum_mult_pos with (f := f); auto.
+          intros z. rewrite H3. reflexivity.
+        - intros [y0 [[P H11] H12]]. subst. exists P. symmetry. apply upper_sum_mult_pos with (f := bounded_f a b bf); auto. }
+      rewrite H10. apply is_glb_mult_pos with (x0 := U(bf, P1)); auto.
+      exists P1. reflexivity.
+    + assert (H10 : (λ x : ℝ, ∃ p : partition a b, x = U(bf', p)) = (fun y => exists x0, (λ x : ℝ, ∃ p : partition a b, x = L(bf, p)) x0 /\ y = c * x0)).
+      { apply set_equal_def. intros y. split.
+        - intros [P H11]. subst y. exists (L(bf, P)). split; [exists P; reflexivity|]. apply upper_sum_mult_neg with (f := f); auto; try lra.
+          intros z. rewrite H3. reflexivity.
+        - intros [y0 [[P H11] H12]]. subst. exists P. symmetry. apply upper_sum_mult_neg with (f := bounded_f a b bf); auto; try lra. }
+      rewrite H10. replace (c * inf) with (c * sup) by nra.
+      apply is_glb_mult_neg with (x0 := L(bf, P1)); auto; try lra.
+      exists P1. reflexivity.
+  - nra.
+Qed.
 
 Lemma theorem_13_6_b : forall f a b c,
   a < b -> integrable_on a b f -> ∫ a b (c * f) = c * ∫ a b f.
 Proof.
   intros f a b c H1 H2. pose proof theorem_13_6_a f a b c H1 H2 as H3.
-  destruct (integral_eq' a b f H1 H2) as [bf1 [sup1 [inf1 [H4 [H5 [H6 H7]]]]]].
-  destruct (integral_eq' a b (c * f) H1 H3) as [bf2 [sup2 [inf2 [H8 [H9 [H10 H11]]]]]].
-  rewrite H4, H8. pose proof Rtotal_order c 0 as [H12 | [H12 | H12]].
-  - admit.
-  - admit.
-  - admit.
-Admitted.
+  destruct (integral_eq' a b f H1 H2) as [bf1 [r1 [H4 [H5 [H6 H7]]]]].
+  destruct (integral_eq' a b (c * f) H1 H3) as [bf2 [r2 [H8 [H9 [H10 H11]]]]].
+  rewrite H5, H9.
+  apply glb_unique with (E := fun x : ℝ => ∃ p : partition a b, x = U(bf2, p)).
+  - exact H10.
+  - pose proof exists_partition_a_b a b ltac:(lra) as [P1 _].
+    destruct (Rle_lt_dec 0 c) as [H12 | H12].
+    + assert (H13 : (λ x : ℝ, ∃ p : partition a b, x = U(bf2, p)) = (fun y => exists x0, (λ x : ℝ, ∃ p : partition a b, x = U(bf1, p)) x0 /\ y = c * x0)).
+      { apply set_equal_def. intros y. split.
+        - intros [P H14]. subst y. exists (U(bf1, P)). split; [exists P; reflexivity | ].
+          apply upper_sum_mult_pos with (f := bounded_f a b bf1); auto.
+          intros z. rewrite H8, H4. reflexivity.
+        - intros [x0 [[P H14] H15]]. subst. exists P. symmetry.
+          apply upper_sum_mult_pos with (f := bounded_f a b bf1); auto.
+          intros z. rewrite H8. reflexivity. }
+      rewrite H13. apply is_glb_mult_pos with (x0 := U(bf1, P1)); auto.
+      exists P1. reflexivity.
+    + assert (H13 : (λ x : ℝ, ∃ p : partition a b, x = U(bf2, p)) = (fun y => exists x0, (λ x : ℝ, ∃ p : partition a b, x = L(bf1, p)) x0 /\ y = c * x0)).
+      { apply set_equal_def. intros y. split.
+        - intros [P H14]. subst y. exists (L(bf1, P)). split; [exists P; reflexivity | ].
+          apply upper_sum_mult_neg with (f := bounded_f a b bf1); auto; try lra.
+          intros z. rewrite H8, H4. reflexivity.
+        - intros [x0 [[P H14] H15]]. subst. exists P. symmetry.
+          apply upper_sum_mult_neg with (f := bounded_f a b bf1); auto; try lra.
+          intros z. rewrite H8. reflexivity. }
+      rewrite H13. apply is_glb_mult_neg with (x0 := L(bf1, P1)); auto; try lra.
+      exists P1. reflexivity.
+Qed.
+
+Lemma integral_b_a_neg' : forall a b f,
+  ∫ a b f = ∫ b a -f.
+Proof.
+  intros a b f.
+  pose proof Rtotal_order a b as [H1 | [H1 | H1]].
+  - rewrite integral_b_a_neg.
+    assert (H2: integrable_on a b f \/ ~integrable_on a b f) by apply classic.
+    destruct H2 as [H2 | H2].
+    + assert (H3: integrable_on b a f \/ ~integrable_on b a f) by apply classic.
+      destruct H3 as [H3 | H3].
+      * rewrite <- (integral_b_a_neg a b f).
+        assert (H4 : ∫ b a (- f) = - ∫ a b (- f)) by (pose proof (integral_b_a_neg a b (- f)); lra).
+        rewrite H4.
+        replace (- f)%function with (-1 * f)%function by (extensionality x; lra).
+        rewrite theorem_13_6_b; auto; try lra.
+      * rewrite <- (integral_b_a_neg a b f).
+        assert (H4 : ∫ b a (- f) = - ∫ a b (- f)) by (pose proof (integral_b_a_neg a b (- f)); lra).
+        rewrite H4.
+        replace (- f)%function with (-1 * f)%function by (extensionality x; lra).
+        rewrite theorem_13_6_b; auto; try lra.
+    + assert (H3: ~ integrable_on a b (- f)).
+      { intros H4. apply H2. replace f with (-1 * (- f)%function)%function by (extensionality x; lra).
+      apply theorem_13_6_a; auto. } 
+    unfold definite_integral.
+    destruct (Rle_dec b a) as [H4|H4]; try (exfalso; lra).
+    destruct (Rle_dec a b) as [H5|H5]; try lra.
+    destruct (integrable_dec a b f) as [H6|H6]; try tauto.
+    destruct (integrable_dec a b (-f)) as [H7|H7]; try tauto.
+    lra.
+  - subst. repeat rewrite integral_n_n. lra.
+  - rewrite integral_b_a_neg with (a := b).
+    assert (H2: integrable_on b a f \/ ~integrable_on b a f) by apply classic.
+    destruct H2 as [H2 | H2].
+    + rewrite (integral_b_a_neg a b f).
+      rewrite (integral_b_a_neg a b (- f)).
+      replace (- f)%function with (-1 * f)%function by (extensionality x; lra).
+      rewrite theorem_13_6_b; auto; try lra.
+    + assert (H3: ~ integrable_on b a (- f)).
+      { intros H4. apply H2. 
+        replace f with (-1 * (- f)%function)%function by (extensionality x; lra).
+        apply theorem_13_6_a; auto. }
+      unfold definite_integral.
+      destruct (Rle_dec a b) as [H4 | H4]; try (exfalso; lra).
+      destruct (Rle_dec b a) as [H5 | H5]; try (exfalso; lra).
+      destruct (integrable_dec b a f) as [H6 | H6]; try tauto.
+      destruct (integrable_dec b a (- f)) as [H7 | H7]; try tauto.
+      lra.
+Qed.
 
 Lemma integral_nonneg : forall a b f,
   a <= b -> (forall x, x ∈ [a, b] -> 0 <= f x) -> integrable_on a b f -> 0 <= ∫ a b f.  
@@ -1639,38 +2092,155 @@ Lemma integral_bounds_strong_open : forall a b f m M,
     m * (b - a) < ∫ a b f < M * (b - a).
 Proof.
   intros a b f m M H1 H2 H3.
-  
-  assert (H5 : forall x, x ∈ [a, b] -> m <= f x <= M).
+  assert (H4: forall x, x ∈ [a, b] -> m <= f x).
   {
-    intros x H4. assert (x = a \/ x = b \/ (a < x < b)) as [H5 | [H5 | H5]] by solve_R.
-    - subst. admit.
-    - subst. admit.
-    - specialize (H2 x H5). lra.
+    intros x H5.
+    destruct (Rle_lt_dec m (f x)) as [H6 | H6]; auto.
+    exfalso.
+    assert (H7: x = a \/ x = b \/ a < x < b) by (unfold Ensembles.In in H5; solve_R).
+    destruct H7 as [H8 | [H8 | H8]].
+    - subst x.
+      set (eps := (m - f a) / 2).
+      assert (H9: eps > 0) by (unfold eps; lra).
+      pose proof H3 as H10.
+      apply continuous_on_closed_interval_iff in H10 as H11; auto.
+      destruct H11 as [_ [H12 _]].
+      specialize (H12 eps H9) as [del [H13 H14]].
+      set (y := a + Rmin (del/2) ((b-a)/2)).
+      assert (H15: Rabs (f y - f a) < eps).
+      { apply H14; unfold y; solve_R. }
+      assert (H16: m < f y).
+      { apply H2. unfold Ensembles.In in *. unfold y; solve_R. }
+      unfold eps in H15.
+      unfold Rabs in H15; destruct (Rcase_abs (f y - f a)); lra.
+    - subst x.
+      set (eps := (m - f b) / 2).
+      assert (H9: eps > 0) by (unfold eps; lra).
+      pose proof H3 as H10.
+      apply continuous_on_closed_interval_iff in H10 as H11; auto.
+      destruct H11 as [_ [_ H12]].
+      specialize (H12 eps H9) as [del [H13 H14]].
+      set (y := b - Rmin (del/2) ((b-a)/2)).
+      assert (H15: Rabs (f y - f b) < eps).
+      { apply H14; unfold y; solve_R. }
+      assert (H16: m < f y).
+      { apply H2. unfold Ensembles.In in *. unfold y; solve_R. }
+      unfold eps in H15.
+      unfold Rabs in H15; destruct (Rcase_abs (f y - f b)); lra.
+    - specialize (H2 x H8). lra.
   }
-  assert (H6 : integrable_on a b f). { apply theorem_13_3; try lra; auto. }
+  
+  assert (H17: forall x, x ∈ [a, b] -> f x <= M).
+  {
+    intros x H18.
+    destruct (Rle_lt_dec (f x) M) as [H19 | H19]; auto.
+    exfalso.
+    assert (H20: x = a \/ x = b \/ a < x < b) by (unfold Ensembles.In in H18; solve_R).
+    destruct H20 as [H21 | [H21 | H21]].
+    - subst x.
+      set (eps := (f a - M) / 2).
+      assert (H22: eps > 0) by (unfold eps; lra).
+      pose proof H3 as H23.
+      apply continuous_on_closed_interval_iff in H23 as H24; auto.
+      destruct H24 as [_ [H25 _]].
+      specialize (H25 eps H22) as [del [H26 H27]].
+      set (y := a + Rmin (del/2) ((b-a)/2)).
+      assert (H28: Rabs (f y - f a) < eps).
+      { apply H27; unfold y; solve_R. }
+      assert (H29: f y < M).
+      { apply H2. unfold Ensembles.In in *. unfold y; solve_R. }
+      unfold eps in H28.
+      unfold Rabs in H28; destruct (Rcase_abs (f y - f a)); lra.
+    - subst x.
+      set (eps := (f b - M) / 2).
+      assert (H22: eps > 0) by (unfold eps; lra).
+      pose proof H3 as H23.
+      apply continuous_on_closed_interval_iff in H23 as H24; auto.
+      destruct H24 as [_ [_ H25]].
+      specialize (H25 eps H22) as [del [H26 H27]].
+      set (y := b - Rmin (del/2) ((b-a)/2)).
+      assert (H28: Rabs (f y - f b) < eps).
+      { apply H27; unfold y; solve_R. }
+      assert (H29: f y < M).
+      { apply H2. unfold Ensembles.In in *. unfold y; solve_R. }
+      unfold eps in H28.
+      unfold Rabs in H28; destruct (Rcase_abs (f y - f b)); lra.
+    - specialize (H2 x H21). lra.
+  }
 
+  set (c1 := (2*a + b) / 3).
+  set (c2 := (a + 2*b) / 3).
+  assert (H30: a < c1) by (unfold c1; lra).
+  assert (H31: c1 < c2) by (unfold c1, c2; lra).
+  assert (H32: c2 < b) by (unfold c2; lra).
+  assert (H33: a < c2) by (unfold c2; lra).
+  assert (H34: c1 < b) by (unfold c1; lra).
+  
+  assert (H35: integrable_on a c1 f).
+  { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]).
+    - intros x H36. unfold Ensembles.In in *. solve_R.
+    - exact H3. }
+  assert (H37: integrable_on c1 c2 f).
+  { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]).
+    - intros x H38. unfold Ensembles.In in *. solve_R.
+    - exact H3. }
+  assert (H39: integrable_on c2 b f).
+  { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]).
+    - intros x H40. unfold Ensembles.In in *. solve_R.
+    - exact H3. }
+  assert (H41: integrable_on a c2 f).
+  { apply theorem_13_3; try lra. apply continuous_on_subset with (A2 := [a, b]).
+    - intros x H42. unfold Ensembles.In in *. solve_R.
+    - exact H3. }
+  assert (H43: integrable_on a b f).
+  { apply theorem_13_3; try lra. auto. }
+
+  assert (H44: m * (c1 - a) <= ∫ a c1 f <= M * (c1 - a)).
+  { apply theorem_13_7; try lra; auto. intros x H45. split; [apply H4 | apply H17]; unfold Ensembles.In in *; solve_R. }
+  
+  assert (H46: m * (b - c2) <= ∫ c2 b f <= M * (b - c2)).
+  { apply theorem_13_7; try lra; auto. intros x H47. split; [apply H4 | apply H17]; unfold Ensembles.In in *; solve_R. }
+
+  assert (H48: continuous_on f [c1, c2]).
+  { apply continuous_on_subset with (A2 := [a, b]).
+    - intros x H49. unfold Ensembles.In in *. solve_R.
+    - exact H3. }
+  pose proof continuous_on_interval_attains_glb f c1 c2 H31 H48 as [x1 [H50 H51]].
+  pose proof continuous_on_interval_attains_lub f c1 c2 H31 H48 as [x2 [H52 H53]].
+  
+  assert (H54: m < f x1).
+  { apply H2. unfold Ensembles.In in *. solve_R. }
+  assert (H55: f x2 < M).
+  { apply H2. unfold Ensembles.In in *. solve_R. }
+  
+  assert (H56: f x1 * (c2 - c1) <= ∫ c1 c2 f <= f x2 * (c2 - c1)).
+  {
+    apply theorem_13_7; try lra; auto. intros x H57.
+    split.
+    - destruct H51 as [H58 _]. apply Rge_le, H58. exists x. split; [exact H57 | reflexivity].
+    - destruct H53 as [H59 _]. apply H59. exists x. split; [exact H57 | reflexivity].
+  }
+
+  assert (H60: ∫ a b f = ∫ a c2 f + ∫ c2 b f).
+  { apply integral_plus; try lra; auto. }
+  assert (H61: ∫ a c2 f = ∫ a c1 f + ∫ c1 c2 f).
+  { apply integral_plus; try lra; auto. }
+  
+  destruct H44 as [H62 H63].
+  destruct H46 as [H64 H65].
+  destruct H56 as [H66 H67].
+  
+  rewrite H60, H61.
   split.
-  - assert (0 < ∫ a b (fun x => f x - m)) as H7.
-    {
-      apply integral_pos'; auto.
-      - intros x H7. specialize (H5 x H7). lra.
-      - exists ((a + b) / 2). split; solve_R.
-        specialize (H2 ((a + b) / 2) ltac:(solve_R)). lra.
-      - admit.
-    }
-    rewrite integral_minus' with (b := a + (b - a) / 2). admit.
-    apply integrable_on_sub_interval with (a := a) (b := b); solve_R.
-  - assert (0 < ∫ a b (fun x => M - f x)) as H7.
-    {
-      apply integral_pos'; auto.
-      - intros x H7. specialize (H5 x H7). lra.
-      - exists ((a + b) / 2). split; solve_R.
-        specialize (H2 ((a + b) / 2) ltac:(solve_R)). lra.
-      - admit.
-    }
-    rewrite integral_minus' with (b := a + (b - a) / 2). admit.
-    apply integrable_on_sub_interval with (a := a) (b := b); solve_R.
-Admitted.
+  - apply Rlt_le_trans with (r2 := m * (c1 - a) + f x1 * (c2 - c1) + m * (b - c2)).
+    + assert (H68: c2 - c1 > 0) by lra.
+      nra.
+    + nra.
+  - apply Rle_lt_trans with (r2 := M * (c1 - a) + f x2 * (c2 - c1) + M * (b - c2)).
+    + nra.
+    + assert (H69: c2 - c1 > 0) by lra.
+      nra.
+Qed.
 
 Theorem FTC1 : ∀ f a b,
   a < b -> continuous_on f [a, b] -> ⟦ der ⟧ (λ x, ∫ a x f) [a, b] = f.

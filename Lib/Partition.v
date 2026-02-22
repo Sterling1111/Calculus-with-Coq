@@ -743,3 +743,17 @@ Proof.
         specialize (partition_P5 c b P2 x H). lra. }
   exists (mkpartition a b l H2 H5 H6 H7 H8). auto.
 Qed.
+
+Lemma bounded_on_add : forall f g a b,
+  bounded_on f [a, b] -> bounded_on g [a, b] -> bounded_on (fun x => f x + g x) [a, b].
+Proof.
+  intros f g a b [[m1 H1] [M1 H2]] [[m2 H3] [M2 H4]]. split.
+  - exists (m1 + m2). intros y [x [H5 H6]]. subst y.
+    assert (H7 : m1 <= f x). { apply Rge_le, H1. exists x. split; auto. }
+    assert (H8 : m2 <= g x). { apply Rge_le, H3. exists x. split; auto. }
+    nra.
+  - exists (M1 + M2). intros y [x [H5 H6]]. subst y.
+    assert (H7 : f x <= M1). { apply H2. exists x. split; auto. }
+    assert (H8 : g x <= M2). { apply H4. exists x. split; auto. }
+    nra.
+Qed.

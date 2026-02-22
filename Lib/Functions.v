@@ -84,9 +84,6 @@ Proof.
   - left. split; destruct H2; auto.
 Qed.
 
-Coercion Type_to_Ensemble (A : Type) : Ensemble A :=
-  Full_set A.
-
 Lemma eq_cardinality_Full_set_Type : forall (A B : Type),
   ‖A‖ = ‖B‖ <-> ‖Full_set A‖ = ‖Full_set B‖.
 Proof.

@@ -244,3 +244,56 @@ Proof.
         tauto. tauto. apply NoDup_cons_iff in H4. tauto. }
        lia.
 Qed.
+
+Lemma list_split_indices : forall {A : Type} (l : list A) (i j : nat),
+  (i < j)%nat -> (j <= length l)%nat ->
+  exists x y z, l = x ++ y ++ z /\ length x = i /\ length y = (j - i)%nat.
+Proof.
+  intros A l i j H1 H2. revert i j H1 H2.
+  induction l as [| h t IH]; intros i j H1 H2.
+  - simpl in H2. lia.
+  - destruct i as [| i'].
+    + exists [], (firstn j (h :: t)), (skipn j (h :: t)).
+      split.
+      * rewrite firstn_skipn. reflexivity.
+      * split; try reflexivity. rewrite Nat.sub_0_r, length_firstn. apply Nat.min_l, H2.
+    + destruct j as [| j']; try lia.
+      assert (H3 : (i' < j')%nat) by lia.
+      assert (H4 : (j' <= length t)%nat) by (simpl in H2; lia).
+      destruct (IH i' j' H3 H4) as [x [y [z [H5 [H6 H7]]]]].
+      exists (h :: x), y, z.
+      split; simpl; try lia. f_equal. auto.
+Qed.
+
+Lemma pigeonhole_prefix : forall (U : Type) (l1 l2 : list U) (d : U) (p : nat),
+  (forall x, In x l1 -> In x l2) ->
+  length l2 = p ->
+  (p < length l1)%nat ->
+  exists i j, (i < j)%nat /\ (j <= p)%nat /\ nth i l1 d = nth j l1 d.
+Proof.
+  intros U l1 l2 d p H1 H2 H3.
+  assert (H4 : forall x, In x (firstn (S p) l1) -> In x l2).
+  { intros x H4. apply H1. pose proof (firstn_skipn (S p) l1) as H5.
+    rewrite <- H5. apply in_app_iff. left. exact H4. }
+  assert (H5 : ~ NoDup (firstn (S p) l1)).
+  { apply pigeonhole_principle_list with (l2 := l2).
+    - exact H4.
+    - rewrite length_firstn. rewrite H2. lia. }
+  pose proof (not_NoDup_nth U (firstn (S p) l1) d H5) as [i [j [H6 H7]]].
+  exists i, j. split; try lia.
+  split.
+  - rewrite length_firstn in H6. lia.
+  - assert (H8 : nth i l1 d = nth i (firstn (S p) l1) d).
+    { rewrite <- (firstn_skipn (S p) l1) at 1. rewrite app_nth1; auto; lia. }
+    assert (H9 : nth j l1 d = nth j (firstn (S p) l1) d).
+    { rewrite <- (firstn_skipn (S p) l1) at 1. rewrite app_nth1; auto; lia. }
+    rewrite H8, H9. auto.
+Qed.
+
+Lemma firstn_exact_length : forall {A : Type} (x y : list A),
+  firstn (length x) (x ++ y) = x.
+Proof.
+  intros A x y. induction x as [| h t H1].
+  - simpl. reflexivity.
+  - simpl. f_equal. exact H1.
+Qed.

@@ -1,6 +1,6 @@
-From Lib Require Import Imports Limit Continuity Sets Reals_util Notations Functions Completeness.
+From Lib Require Import Imports Limit Continuity Sets Reals_util Notations Functions Completeness Polynomial.
 Require Export ATTAM.Chapter36.
-Import SetNotations Function_Notations LimitNotations.
+Import SetNotations FunctionNotations LimitNotations.
 
 Lemma lemma_37_1 : continuous_at R_sqrt.sqrt 9.
 Proof.
@@ -33,13 +33,13 @@ Section section_37_3.
 End section_37_3.
 
 Lemma lemma_37_4 : forall f1 f2 a L1 L2,
-  L1 = 0 -> L2 = 0 -> ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> ⟦ lim a ⟧ (f1 ∙ f2) = L1 * L2.
+  L1 = 0 -> L2 = 0 -> ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> ⟦ lim a ⟧ (f1 ⋅ f2) = L1 * L2.
 Proof.
   intros f1 f2 a L1 L2 H1 H2 H3 H4. apply limit_mult; auto.
 Qed.
 
 Lemma lemma_37_4' : forall f1 f2 a L1 L2,
-  L1 = 0 -> L2 = 0 -> ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> ⟦ lim a ⟧ (f1 ∙ f2) = L1 * L2.
+  L1 = 0 -> L2 = 0 -> ⟦ lim a ⟧ f1 = L1 -> ⟦ lim a ⟧ f2 = L2 -> ⟦ lim a ⟧ (f1 ⋅ f2) = L1 * L2.
 Proof.
   intros f1 f2 a L1 L2 H1 H2 H3 H4 ε H5. specialize (H3 (R_sqrt.sqrt ε)) as [δ1 [H6 H7]]. apply sqrt_lt_R0; auto.
   specialize (H4 (R_sqrt.sqrt ε)) as [δ2 [H8 H9]]. apply sqrt_lt_R0; auto. exists (Rmin δ1 δ2). split. solve_R.
@@ -51,7 +51,7 @@ Section section_37_5.
   Variables l1 l2 : list ℝ.
   Let g := polynomial l1.
   Let h := polynomial l2.
-  Let f := (g / h)%f.
+  Let f := (g / h)%function.
 
   Lemma lemma_37_5 : forall a,
     h a <> 0 -> continuous_at f a.

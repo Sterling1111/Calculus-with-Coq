@@ -235,3 +235,111 @@ Proof.
   intros E1 E2 r1 r2 H1 H2 H3. unfold is_lub in H1, H2. destruct H1 as [H1 H4], H2 as [H2 H5].
   specialize (H4 r2). apply H4. intros x H6. specialize (H3 x H6). specialize (H2 x). apply H2. auto.
 Qed.
+
+Lemma is_glb_mult_pos : forall E c m x0,
+  0 <= c -> E x0 -> is_glb E m -> is_glb (fun y => exists x, E x /\ y = c * x) (c * m).
+Proof.
+  intros E c m x0 H1 H2 [H3 H4]. split.
+  - intros y [x [H5 H6]]. subst y. specialize (H3 x H5). nra.
+  - intros b H5. destruct (Rle_lt_dec c 0) as [H6|H6].
+    + assert (c = 0) by lra. subst c. assert (b <= 0). { apply Rge_le, H5. exists x0; split; auto; lra. } lra.
+    + assert (is_lower_bound E (b / c)) as H7.
+      { intros x H8. assert (H9 : b <= c * x). { apply Rge_le, H5. exists x; split; auto; lra. }
+        apply Rmult_le_compat_l with (r := / c) in H9; [|apply Rlt_le, Rinv_0_lt_compat; lra].
+        replace (/ c * (c * x)) with x in H9 by (field; lra).
+        replace (/ c * b) with (b / c) in H9 by (field; lra). lra. }
+      specialize (H4 _ H7). apply Rmult_ge_compat_l with (r := c) in H4; try lra.
+      replace (c * (b / c)) with b in H4 by (field; lra). auto.
+Qed.
+
+Lemma is_lub_mult_pos : forall E c m x0,
+  0 <= c -> E x0 -> is_lub E m -> is_lub (fun y => exists x, E x /\ y = c * x) (c * m).
+Proof.
+  intros E c m x0 H1 H2 [H3 H4]. split.
+  - intros y [x [H5 H6]]. subst y. specialize (H3 x H5). apply Rmult_le_compat_l; lra.
+  - intros b H5. destruct (Rle_lt_dec c 0) as [H6|H6].
+    + assert (c = 0) by lra. subst c. assert (0 <= b). { apply H5. exists x0; split; auto; lra. } lra.
+    + assert (is_upper_bound E (b / c)) as H7.
+      { intros x H8. assert (H9 : c * x <= b). { apply H5. exists x; split; auto; lra. }
+        apply Rmult_le_compat_l with (r := / c) in H9; [|apply Rlt_le, Rinv_0_lt_compat; lra].
+        replace (/ c * (c * x)) with x in H9 by (field; lra).
+        replace (/ c * b) with (b / c) in H9 by (field; lra). auto. }
+      specialize (H4 _ H7). apply Rmult_le_compat_l with (r := c) in H4; [|lra].
+      replace (c * (b / c)) with b in H4 by (field; lra). auto.
+Qed.
+
+Lemma is_glb_mult_neg : forall E c m x0,
+  c <= 0 -> E x0 -> is_lub E m -> is_glb (fun y => exists x, E x /\ y = c * x) (c * m).
+Proof.
+  intros E c m x0 H1 H2 [H3 H4]. split.
+  - intros y [x [H5 H6]]. subst y. specialize (H3 x H5). nra.
+  - intros b H5. destruct (Rle_lt_dec 0 c) as [H6|H6].
+    + assert (c = 0) by lra. subst c. assert (b <= 0). { apply Rge_le, H5. exists x0; split; auto; lra. } lra.
+    + assert (is_upper_bound E (b / c)) as H7.
+      { intros x H8. assert (H9 : b <= c * x). { apply Rge_le, H5. exists x; split; auto; lra. }
+        apply Rmult_le_compat_neg_l with (r := / c) in H9; [|apply Rlt_le, Rinv_lt_0_compat; lra].
+        replace (/ c * (c * x)) with x in H9 by (field; lra).
+        replace (/ c * b) with (b / c) in H9 by (field; lra). auto. }
+      specialize (H4 _ H7). apply Rmult_le_compat_neg_l with (r := c) in H4; [|lra].
+      replace (c * (b / c)) with b in H4 by (field; lra). lra.
+Qed.
+
+Lemma is_lub_mult_neg : forall E c m x0,
+  c <= 0 -> E x0 -> is_glb E m -> is_lub (fun y => exists x, E x /\ y = c * x) (c * m).
+Proof.
+  intros E c m x0 H1 H2 [H3 H4]. split.
+  - intros y [x [H5 H6]]. subst y. specialize (H3 x H5). apply Rmult_le_compat_neg_l; lra.
+  - intros b H5. destruct (Rle_lt_dec 0 c) as [H6|H6].
+    + assert (c = 0) by lra. subst c. assert (0 <= b). { apply H5. exists x0; split; auto; lra. } lra.
+    + assert (is_lower_bound E (b / c)) as H7.
+      { intros x H8. assert (H9 : c * x <= b). { apply H5. exists x; split; auto; lra. }
+        apply Rmult_le_compat_neg_l with (r := / c) in H9; [|apply Rlt_le, Rinv_lt_0_compat; lra].
+        replace (/ c * (c * x)) with x in H9 by (field; lra).
+        replace (/ c * b) with (b / c) in H9 by (field; lra). lra. }
+      specialize (H4 _ H7). apply Rge_le, Rmult_le_compat_neg_l with (r := c) in H4; [|lra].
+      replace (c * (b / c)) with b in H4 by (field; lra). auto.
+Qed.
+
+Lemma is_glb_sum : forall E1 E2 m1 m2,
+  is_glb E1 m1 -> is_glb E2 m2 -> is_glb (fun y => exists x1 x2, E1 x1 /\ E2 x2 /\ y = x1 + x2) (m1 + m2).
+Proof.
+  intros E1 E2 m1 m2 [H1 H2] [H3 H4]. split.
+  - intros y [x1 [x2 [H5 [H6 H7]]]]. subst y. specialize (H1 x1 H5). specialize (H3 x2 H6). lra.
+  - intros b H5. assert (H6 : is_lower_bound E1 (b - m2)).
+    { intros x1 H6. assert (H7 : is_lower_bound E2 (b - x1)).
+      { intros x2 H7. assert (H8 : b <= x1 + x2). { apply Rge_le, H5. exists x1, x2. auto. } lra. }
+      specialize (H4 (b - x1) H7). lra. }
+    specialize (H2 (b - m2) H6). lra.
+Qed.
+
+Lemma is_lub_sum : forall E1 E2 M1 M2,
+  is_lub E1 M1 -> is_lub E2 M2 -> is_lub (fun y => exists x1 x2, E1 x1 /\ E2 x2 /\ y = x1 + x2) (M1 + M2).
+Proof.
+  intros E1 E2 M1 M2 [H1 H2] [H3 H4]. split.
+  - intros y [x1 [x2 [H5 [H6 H7]]]]. subst y. specialize (H1 x1 H5). specialize (H3 x2 H6). lra.
+  - intros b H5. assert (H6 : is_upper_bound E1 (b - M2)).
+    { intros x1 H6. assert (H7 : is_upper_bound E2 (b - x1)).
+      { intros x2 H7. assert (H8 : x1 + x2 <= b). { apply H5. exists x1, x2. auto. } lra. }
+      specialize (H4 (b - x1) H7). lra. }
+    specialize (H2 (b - M2) H6). lra.
+Qed.
+
+Lemma glb_add_le : forall (E1 E2 E3 : Ensemble ℝ) m1 m2 m3,
+  is_glb E1 m1 -> is_glb E2 m2 -> is_glb E3 m3 ->
+  E3 ⊆ (fun y => exists x1 x2, E1 x1 /\ E2 x2 /\ y = x1 + x2) ->
+  m1 + m2 <= m3.
+Proof.
+  intros E1 E2 E3 m1 m2 m3 H1 H2 H3 H4.
+  eapply glb_subset with (E2 := fun y => exists x1 x2, E1 x1 /\ E2 x2 /\ y = x1 + x2); eauto.
+  apply is_glb_sum; auto.
+Qed.
+
+Lemma lub_add_le : forall (E1 E2 E3 : Ensemble ℝ) M1 M2 M3,
+  is_lub E1 M1 -> is_lub E2 M2 -> is_lub E3 M3 ->
+  E3 ⊆ (fun y => exists x1 x2, E1 x1 /\ E2 x2 /\ y = x1 + x2) ->
+  M3 <= M1 + M2.
+Proof.
+  intros E1 E2 E3 M1 M2 M3 H1 H2 H3 H4.
+  eapply lub_subset with (E2 := fun y => exists x1 x2, E1 x1 /\ E2 x2 /\ y = x1 + x2); eauto.
+  apply is_lub_sum; auto.
+Qed.

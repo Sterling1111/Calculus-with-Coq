@@ -72,6 +72,16 @@ Definition Infinite_set {U : Type} (A : Ensemble U) : Prop :=
 
 Open Scope set_scope.
 
+Coercion Type_to_Ensemble (A : Type) : Ensemble A :=
+  Full_set A.
+
+Class FiniteType (A : Type) := {
+  Finite_l : list A;
+  Finite_P1 : forall x, List.In x Finite_l;
+  Finite_P2 : NoDup Finite_l;
+  Finite_P3 : forall x y : A, {x = y} + {x <> y}
+}.
+
 Lemma exists_no_Dup : forall (U : Type) (l : list U),
   exists (l' : list U), NoDup l' /\ (forall x, List.In x l <-> List.In x l').
 Proof.
@@ -666,6 +676,76 @@ Proof.
       ++ right. apply IH. auto.
 Qed.
 
+Lemma list_to_Full_set_finite : forall (A : Type) (l : list A),
+  (forall x, List.In x l) -> NoDup l -> Finite_sets.Finite A (Full_set A).
+Proof.
+  intros A l H1 H2.
+  assert (H3 : Full_set A = list_to_ensemble l).
+  { apply Extensionality_Ensembles. split; intros x H3.
+    - apply In_list_to_ensemble. apply H1.
+    - apply Full_intro. }
+  rewrite H3. clear H1 H3. induction l as [| h t IH].
+  - rewrite list_to_ensemble_nil. apply Empty_is_finite.
+  - rewrite list_to_ensemble_cons. apply NoDup_cons_iff in H2 as [H2 H3].
+    replace (Singleton A h ⋃ list_to_ensemble t) with (Ensembles.Add A (list_to_ensemble t) h).
+    2 : { apply Extensionality_Ensembles; split; intros x H4; destruct H4; autoset. }
+    apply Union_is_finite.
+    + apply IH. auto.
+    + intros H4. apply In_list_to_ensemble in H4. contradiction.
+Qed.
+
+Lemma FiniteType_is_Finite : forall {A : Type} `{FiniteType A}, 
+  Finite_sets.Finite A (Full_set A).
+Proof.
+  intros A [l H1 H2 H3]. apply list_to_Full_set_finite with (l := l); auto.
+Qed.
+
+Fixpoint build_subType_list {U : Type} {A : Ensemble U} (l : list U) (H1 : forall x, List.In x l -> x ∈ A) : list (subType A) :=
+  match l as l' return (forall x, List.In x l' -> x ∈ A) -> list (subType A) with
+  | [] => fun _ => []
+  | h :: t => fun H2 =>
+      @mkSubType U A h (H2 h (or_introl eq_refl)) ::
+      build_subType_list t (fun x H3 => H2 x (or_intror H3))
+  end H1.
+
+Lemma build_subType_list_In_val : forall (U : Type) (A : Ensemble U) (l : list U)
+  (H1 : forall x, List.In x l -> x ∈ A) (x : subType A),
+  List.In x (build_subType_list l H1) -> List.In (@val U A x) l.
+Proof.
+  intros U A l. induction l as [| h t IH]; intros H1 x H2.
+  - inversion H2.
+  - simpl in H2. destruct H2 as [H2 | H2].
+    + subst. simpl. left. reflexivity.
+    + right. eapply IH; eauto.
+Qed.
+
+Lemma build_subType_list_In : forall (U : Type) (A : Ensemble U) (l : list U)
+  (H1 : forall x, List.In x l -> x ∈ A) (x : subType A),
+  List.In (@val U A x) l -> List.In x (build_subType_list l H1).
+Proof.
+  intros U A l. induction l as [| h t IH]; intros H1 x H2.
+  - inversion H2.
+  - simpl in H2. simpl. destruct H2 as [H2 | H2].
+    + left. destruct x as [v p]. simpl in H2. subst. f_equal. apply proof_irrelevance.
+    + right. apply IH. auto.
+Qed.
+
+Lemma build_subType_list_NoDup : forall (U : Type) (A : Ensemble U) (l : list U)
+  (H1 : forall x, List.In x l -> x ∈ A),
+  NoDup l -> NoDup (build_subType_list l H1).
+Proof.
+  intros U A l. induction l as [| h t IH]; intros H1 H2.
+  - constructor.
+  - apply NoDup_cons_iff in H2 as [H2 H3]. simpl. constructor.
+    + intros H4. apply H2. apply build_subType_list_In_val in H4. auto.
+    + apply IH. auto.
+Qed.
+
+Lemma subType_eq_dec : forall (U : Type) (A : Ensemble U) (x y : subType A), {x = y} + {x <> y}.
+Proof.
+  intros U A x y. apply excluded_middle_informative.
+Qed.
+
 Lemma list_eq_In : forall (U : Type) (l1 l2 : list U),
   l1 = l2 -> (forall x, List.In x l1 -> List.In x l2).
 Proof.
@@ -699,6 +779,84 @@ Proof.
   - pose proof (exists_no_Dup _ l) as [l' [H2 H3]]. exists l'. split; auto.
     rewrite <- H1. apply list_to_ensemble_eq_iff. intros x. specialize (H3 x). tauto.
   - exists l. tauto.
+Qed.
+
+Theorem FiniteType_Finite_set : forall (A : Type),
+  FiniteType A -> Finite_set A.
+Proof.
+  intros A [H1 H2 H3 H4].
+  exists H1. apply set_equal_def. intros x. split; intros H5.
+  - apply Full_intro.
+  - apply In_list_to_ensemble. apply H2.
+Qed.
+
+Theorem Finite_set_FiniteType : forall (U : Type) (A : Ensemble U),
+  Finite_set A -> FiniteType (subType A).
+Proof.
+  intros U A H1. apply Finite_set_iff_Finite_set' in H1.
+  pose proof (constructive_indefinite_description (fun l => NoDup l /\ list_to_ensemble l = A) H1) as [l [H2 H3]].
+  assert (H4 : forall x, List.In x l -> x ∈ A).
+  { intros x H4. rewrite <- H3. apply In_list_to_ensemble. auto. }
+  exists (build_subType_list l H4).
+  - intros x. apply build_subType_list_In. destruct x as [v p]. simpl.
+    apply In_list_to_ensemble. rewrite H3. auto.
+  - apply build_subType_list_NoDup. auto.
+  - apply subType_eq_dec.
+Qed.
+
+Lemma NoDup_app_disjoint : forall {A} (l1 l2 : list A),
+  NoDup l1 -> NoDup l2 -> (forall x, List.In x l1 -> ~ List.In x l2) -> NoDup (l1 ++ l2).
+Proof.
+  intros A l1 l2 H1 H2 H3. induction l1 as [| h t IH]; auto.
+  simpl. inversion H1; subst. constructor.
+  - intro H6. apply in_app_iff in H6. destruct H6 as [H6 | H6]; auto.
+    apply (H3 h); auto. left; auto.
+  - apply IH; auto. intros z H6. apply H3; right; auto.
+Qed.
+
+Lemma NoDup_list_prod : forall {A B : Type} (l1 : list A) (l2 : list B),
+  NoDup l1 -> NoDup l2 -> NoDup (list_prod l1 l2).
+Proof.
+  intros A B l1 l2 H1 H2. induction l1 as [| h t IH].
+  - simpl. constructor.
+  - simpl. inversion H1; subst.
+    apply NoDup_app_disjoint.
+    + apply FinFun.Injective_map_NoDup; auto. intros x y H5. inversion H5; auto.
+    + apply IH; assumption.
+    + intros [x y] H5 H6.
+      apply in_map_iff in H5. destruct H5 as [z [H5 H7]]. inversion H5; subst.
+      apply in_prod_iff in H6. destruct H6 as [H6 H8].
+      contradiction.
+Qed.
+
+Lemma FiniteType_sum : forall {A B : Type}, FiniteType A -> FiniteType B -> FiniteType (A + B).
+Proof.
+  intros A B [l1 H1 H2 H3] [l2 H4 H5 H6]. exists (map inl l1 ++ map inr l2).
+  - intros [x | y].
+    + apply in_app_iff. left. apply in_map. auto.
+    + apply in_app_iff. right. apply in_map. auto.
+  - apply NoDup_app_disjoint.
+    + apply FinFun.Injective_map_NoDup; auto. intros x y H7. injection H7 as H7. auto.
+    + apply FinFun.Injective_map_NoDup; auto. intros x y H7. injection H7 as H7. auto.
+    + intros x H7 H8. apply in_map_iff in H7. destruct H7 as [y1 [H9 H10]]. apply in_map_iff in H8. destruct H8 as [y2 [H11 H12]]. rewrite <- H9 in H11. discriminate.
+  - intros [x1 | y1] [x2 | y2]; try (right; discriminate).
+    + destruct (H3 x1 x2) as [H7 | H7]. left; subst; auto. right; intro H8; injection H8 as H8; auto.
+    + destruct (H6 y1 y2) as [H7 | H7]. left; subst; auto. right; intro H8; injection H8 as H8; auto.
+Qed.
+
+Lemma FiniteType_option : forall {A : Type}, FiniteType A -> FiniteType (option A).
+Proof.
+  intros A [l1 H1 H2 H3]. exists (None :: map Some l1).
+  - intros [x |].
+    + right. apply in_map. auto.
+    + left. reflexivity.
+  - constructor.
+    + intro H4. apply in_map_iff in H4. destruct H4 as [x [H5 H6]]. discriminate.
+    + apply FinFun.Injective_map_NoDup; auto. intros x y H4. injection H4 as H4. auto.
+  - intros [x |] [y |]; try (right; discriminate); try (left; reflexivity).
+    destruct (H3 x y) as [H4 | H4].
+    + left. subst. reflexivity.
+    + right. intro H5. injection H5 as H5. auto.
 Qed.
 
 Lemma In_Power_set_def : forall (U : Type) (A B : Ensemble U),
@@ -1130,6 +1288,32 @@ Proof.
   intros U A n H1. pose proof H1 as H2. apply cardinal_finite in H1. apply Finite_set_equiv_Finite in H1.
   apply Finite_set_iff_Finite_set' in H1 as [l' [H1 H3]]. exists l'. split; auto. split; auto.
   apply list_to_ensemble_card_nodup in H1. subst. apply cardinal_unicity with (U := U) (X := (list_to_ensemble l')); auto.
+Qed.
+
+Lemma cardinal_finite : forall (U : Type) (A : Ensemble U) (n : nat),
+  ‖A‖ = n -> Finite_set A.
+Proof.
+  intros U A n H1. induction H1 as [| A' n' H2 H3 x H4].
+  - exists []. apply list_to_ensemble_nil.
+  - destruct H3 as [l H5]. exists (x :: l).
+    rewrite list_to_ensemble_cons. rewrite H5.
+    unfold Ensembles.Add. apply Union_comm.
+Qed.
+
+Lemma finite_cardinal : forall (U : Type) (A : Ensemble U),
+  Finite_set A -> exists n : nat, ‖A‖ = n.
+Proof.
+  intros U A H1. apply Finite_set_equiv_Finite in H1. induction H1 as [| A' H2 IH x H3].
+  - exists 0. apply card_empty.
+  - destruct IH as [n H4]. exists (S n). apply card_add; auto.
+Qed.
+
+Lemma powerset_finite : forall (U : Type) (A : Ensemble U),
+  Finite_set A -> Finite_set (ℙ(A)).
+Proof.
+  intros U A H1. pose proof prop_14_6 U A as H2.
+  pose proof finite_cardinal U A H1 as [n H3].
+  specialize (H2 n H1 H3). apply cardinal_finite with (n := 2 ^ n) in H2. auto.
 Qed.
 
 Theorem Pigeonhole : forall (U V : Type) (A : Ensemble U) (B : Ensemble V)
