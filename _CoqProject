@@ -42,6 +42,10 @@ Lib/Vector.v
 Lib/Matrix.v
 Lib/Exponential.v
 Lib/Asymptotics.v
+Lib/PolySimp.v
+Lib/Psatz.v
+Lib/Simplex.v
+
 
 # ==========================
 # ATTAM (depends on Lib only)
@@ -90,3 +94,10 @@ Calculus/Chapter7/Prelude.v
 Calculus/Chapter9/Prelude.v
 Calculus/Chapter10/Prelude.v
 Calculus/Chapter11/Prelude.v
+
+-generate-meta-for-package simplex_plugin
+-I src
+
+src/simplex_main.ml
+src/g_simplex.mlg
+src/simplex_plugin.mlpack

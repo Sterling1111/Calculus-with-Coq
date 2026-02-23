@@ -6,7 +6,7 @@ Lemma lemma_7_10 : forall a b f g,
   exists x, x ∈ [a, b] /\ f x = g x.
 Proof.
   intros a b f g H1 H2 H3 H4 H5.
-  set (h := (f - g)%f).
+  set (h := (f - g)%function).
   assert (H6 : continuous_on h [a, b]). 
   {
     unfold h. intros x H6. specialize (H2 x H6).

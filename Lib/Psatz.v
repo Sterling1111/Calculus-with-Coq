@@ -1,44 +1,8 @@
-Require Import Imports.
-From Stdlib Require Import FMapPositive.
-
-Module PMap := PositiveMap.
-
-Definition Env := PMap.t Z.
-
-Inductive Expr :=
-  | Var (v : positive)
-  | Const (c : Z)
-  | Mult (e1 e1 : Expr)
-  | Add (e1 e2 : Expr)
-  | Neg (e : Expr).
-
-Definition Formulae := list Expr.
-
-Definition get_env (env : Env) (v : positive) : Z :=
-  match PMap.find v env with
-  | Some val => val
-  | None => 0%Z
-  end.
-
-Fixpoint eval_expr (env : Env) (exp : Expr) : Z :=
-  match exp with 
-  | Var v => get_env env v
-  | Const c => c
-  | Mult e1 e2 => (eval_expr env e1) * (eval_expr env e2)
-  | Add e1 e2 => (eval_expr env e1) + (eval_expr env e2)
-  | Neg e => - (eval_expr env e)
-  end.
-
-Definition make_env (l : list (positive * Z)) : Env :=
-  fold_right (fun p env => PMap.add (fst p) (snd p) env) (PMap.empty Z) l.
-
-Open Scope positive_scope.
-
-Definition env_1 := make_env [ (1, 2%Z); (2, 3%Z) ].
-
-Compute (eval_expr env_1 (Add (Var 1) (Mult (Const 3) (Var 2)))).
+Require Import Imports PolySimp.
 
 Open Scope Z_scope.
+
+Definition Formulae := list Expr.
 
 Fixpoint eval_form (env : Env) (f : Formulae) : Prop :=
   match f with
@@ -85,4 +49,57 @@ Proof.
   apply cone_pos with (env := env) in H1; auto.
   rewrite H2 in H1.
   compute in H1. apply H1. reflexivity.
+Qed.
+
+Inductive Certificate : Set :=
+  | Cert_isGen (n : nat)
+  | Cert_isSquare (e : Expr)
+  | Cert_isMult (c1 c2 : Certificate)
+  | Cert_isAdd (c1 c2 : Certificate)
+  | Cert_isZpos (p : positive)
+  | Cert_IsZ0.
+
+Fixpoint decode (P : list Expr) (c : Certificate) : Expr :=
+  match c with
+  | Cert_isGen n => nth n P (Const 0)
+  | Cert_isSquare p => Mult p p
+  | Cert_isMult p q => Mult (decode P p) (decode P q)
+  | Cert_isAdd p q => Add (decode P p) (decode P q)
+  | Cert_isZpos p => Const (Z.pos p)
+  | Cert_IsZ0 => Const 0
+  end.
+
+Lemma cert_in_cone : forall f c, Cone f (decode f c).
+Proof.
+  intros f c.
+  induction c as [n | e | c1 H1 c2 H2 | c1 H1 c2 H2 | p | ]; simpl.
+  - destruct (lt_dec n (length f)) as [H1 | H1].
+    + apply IsGen, nth_In, H1.
+    + rewrite nth_overflow.
+      * apply IsPos. compute. intros H2. discriminate H2.
+      * apply Nat.nlt_ge, H1.
+  - apply IsSquare.
+  - apply IsMult; assumption.
+  - apply IsAdd; assumption.
+  - apply IsPos, Z.le_ge, Zle_0_pos.
+  - apply IsPos. compute. intros H1. discriminate H1.
+Qed.
+
+Definition checker (c : Certificate) (P : list Expr) : bool :=
+  (polynomial_simplify (decode P c)) == -1.
+
+Theorem checker_sound : forall f c env,
+  checker c f = true ->
+  eval_form env f.
+Proof.
+  intros f c env H1.
+  apply positivstellensatz.
+  exists (decode f c).
+  split.
+  - apply cert_in_cone.
+  - intros env'.
+    unfold checker in H1.
+    apply expr_eqb_correct with (env := env') in H1.
+    rewrite <- polynomial_simplify_correct.
+    exact H1.
 Qed.

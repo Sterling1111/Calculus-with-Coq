@@ -1,6 +1,6 @@
 Set Warnings "-all".
 
-From Coq Require Export 
+From Stdlib Require Export 
   (* Real numbers *)
   Reals 
   Lra 
@@ -40,7 +40,8 @@ From Coq Require Export
   Sets.Powerset
   Sets.Finite_sets
   Sets.Image
-  Lists.List.
+  Lists.List
+  FMapPositive.
   
 
 Export ListNotations.

@@ -11,17 +11,17 @@ Qed.
 Lemma exercise_7_8 : forall f g,
   continuous f ->
   continuous g ->
-  (f^2 = g^2)%f ->
+  (f^2 = g^2)%function ->
   (forall x, f x <> 0) ->
   (forall x, f x = g x) \/ (forall x, f x = - g x).
 Proof.
   intros f g H1 H2 H3 H4.
-  set (h := (g / f)%f).
+  set (h := (g / f)%function).
   assert (H5 : continuous h).
   { unfold h. intros a. specialize (H1 a). specialize (H2 a). auto_cont. }
   assert (H6 : forall x, h x = 1 \/ h x = -1).
   {
-    intros x. unfold h. apply (example (f^2)%f (g^2)%f) with (x := x) in H3.
+    intros x. unfold h. apply (example (f^2)%function (g^2)%function) with (x := x) in H3.
     simpl in H3. specialize (H4 x).
     assert (f x * f x = g x * g x) by nra.
     apply Rsqr_eq in H. destruct H;
