@@ -1029,3 +1029,270 @@ Module NonRegular.
   Qed.
 
 End NonRegular.
+
+Module RE.
+
+  Inductive RegEx (Σ : Type) `{FiniteType Σ} : Type :=
+  | RE_Empty : RegEx
+  | RE_Epsilon : RegEx
+  | RE_Char : Σ -> RegEx
+  | RE_Union : RegEx -> RegEx -> RegEx
+  | RE_Concat : RegEx -> RegEx -> RegEx
+  | RE_Star : RegEx -> RegEx.
+
+  Arguments RegEx Σ {H}.
+  Arguments RE_Empty {Σ} {H}.
+  Arguments RE_Epsilon {Σ} {H}.
+  Arguments RE_Char {Σ} {H} c.
+  Arguments RE_Union {Σ} {H} r1 r2.
+  Arguments RE_Concat {Σ} {H} r1 r2.
+  Arguments RE_Star {Σ} {H} r.
+
+  Fixpoint regex_lang {Σ : Type} {H1 : FiniteType Σ} (r : RegEx Σ) : Ensemble (list Σ) :=
+    match r with
+    | RE_Empty => ∅
+    | RE_Epsilon => Singleton _ []
+    | RE_Char c => Singleton _ [c]
+    | RE_Union r1 r2 => (regex_lang r1) ⋃ (regex_lang r2)
+    | RE_Concat r1 r2 => (regex_lang r1) ○ (regex_lang r2)
+    | RE_Star r1 => (regex_lang r1) ^*
+    end.
+
+  Lemma regex_is_regular : forall {Σ : Type} {H1 : FiniteType Σ} (r : RegEx Σ),
+    regular_language (regex_lang r).
+  Proof.
+    intros Σ H1 r. induction r as [| | c | r1 H2 r2 H3 | r1 H2 r2 H3 | r1 H2].
+    - simpl. apply empty_language_regular.
+    - simpl. apply singleton_language_regular.
+    - simpl. apply singleton_language_regular.
+    - simpl. apply union_regular; auto.
+    - simpl. apply concatenation_regular; auto.
+    - simpl. apply star_regular; auto.
+  Qed.
+
+End RE.
+
+Import RE.
+
+Definition path_restricted {Σ : Type} {H1 : FiniteType Σ} (M : DFA Σ) (k : list (Q M)) (i j : Q M) (w : list Σ) : Prop :=
+  DFA_compute M w i = j /\
+  (forall n1, (n1 > 0)%nat -> (n1 < length w)%nat -> In (nth n1 (DFA_compute_list M w i) (q0 M)) k).
+
+Lemma DFA_to_RegEx_path : forall {Σ : Type} {H1 : FiniteType Σ} (M : DFA Σ) (k : list (Q M)) (i j : Q M),
+  exists r : RegEx Σ, forall w, w ∈ regex_lang r <-> path_restricted M k i j w.
+Proof.
+  intros Σ H1 M k. induction k as [| h t H2]; intros i j.
+  - pose proof H1 as [l1 H2 H3 H4].
+  destruct (DFA_P1 M) as [l2 H5 H6 H7].
+  set (r := (fix f (l : list Σ) : RegEx Σ :=
+    match l with
+    | [] => if H7 i j then RE_Epsilon else RE_Empty
+    | c :: t => if H7 (M.(δ) (i, c)) j then RE_Union (RE_Char c) (f t) else f t
+    end) l1).
+  exists r.
+  intros w. split.
+  + assert (H8 : forall l w_, w_ ∈ regex_lang ((fix f (l0 : list Σ) : RegEx Σ :=
+      match l0 with
+      | [] => if H7 i j then RE_Epsilon else RE_Empty
+      | c :: t => if H7 (M.(δ) (i, c)) j then RE_Union (RE_Char c) (f t) else f t
+      end) l) -> path_restricted M [] i j w_).
+    { intros l w_. induction l as [| h t H9]; intros H10.
+      * simpl in H10. destruct (H7 i j) as [H11 | H11].
+        -- inversion H10. subst. split; auto. intros n1 H12 H13. simpl in *. lia.
+        -- inversion H10.
+      * simpl in H10. destruct (H7 (M.(δ) (i, h)) j) as [H11 | H11].
+        -- destruct H10 as [w' H10 | w' H10].
+           ++ inversion H10. subst. split; auto. intros n1 H12 H13. simpl in H13. lia.
+           ++ apply H9. exact H10.
+        -- apply H9. exact H10. }
+    apply H8.
+  + intros [H8 H9]. destruct w as [| c w].
+    * assert (H10 : i = j) by auto.
+      assert (H11 : [] ∈ regex_lang ((fix f (l0 : list Σ) : RegEx Σ :=
+        match l0 with
+        | [] => if H7 i j then RE_Epsilon else RE_Empty
+        | c0 :: t0 => if H7 (M.(δ) (i, c0)) j then RE_Union (RE_Char c0) (f t0) else f t0
+        end) l1)).
+      { clear H2 H3. induction l1 as [| h t H11].
+        -- simpl. destruct (H7 i j) as [H12 | H12]; [constructor | contradiction].
+        -- simpl. destruct (H7 (M.(δ) (i, h)) j) as [H12 | H12].
+           ++ right. exact H11.
+           ++ exact H11. }
+      exact H11.
+    * destruct w as [| c2 w].
+      -- assert (H10 : In c l1) by apply H2.
+         simpl in H8.
+         assert (H11 : [c] ∈ regex_lang ((fix f (l0 : list Σ) : RegEx Σ :=
+           match l0 with
+           | [] => if H7 i j then RE_Epsilon else RE_Empty
+           | c0 :: t0 => if H7 (M.(δ) (i, c0)) j then RE_Union (RE_Char c0) (f t0) else f t0
+           end) l1)).
+         { clear H2 H3. induction l1 as [| h t H11].
+           ++ inversion H10.
+           ++ simpl. destruct (H7 (M.(δ) (i, h)) j) as [H12 | H12].
+              ** destruct H10 as [H10 | H10].
+                 --- subst h. left. constructor.
+                 --- right. apply H11; auto.
+              ** destruct H10 as [H10 | H10].
+                 --- subst h. contradiction.
+                 --- apply H11; auto. }
+         exact H11.
+      -- assert (H10 : 1 > 0) by lia.
+         assert (H11 : 1 < length (c :: c2 :: w)) by (simpl; lia).
+         specialize (H9 1 H10 H11). inversion H9.
+  - destruct (H2 i j) as [r1 H3].
+    destruct (H2 i h) as [r2 H4].
+    destruct (H2 h h) as [r3 H5].
+    destruct (H2 h j) as [r4 H6].
+    exists (RE_Union r1 (RE_Concat r2 (RE_Concat (RE_Star r3) r4))).
+    intros w. split.
+    + intros H7. destruct H7 as [w H8 | w H8].
+      * apply H3 in H8. destruct H8 as [H9 H10]. split; auto.
+        intros n1 H11 H12. right. apply H10; auto.
+      * destruct H8 as [w1 [w2 [H9 [H10 H11]]]].
+        destruct H10 as [w3 [w4 [H12 [H13 H14]]]].
+        subst w. subst w2. apply H4 in H9. apply H6 in H13.
+        destruct H9 as [H15 H16]. destruct H13 as [H17 H18].
+        split.
+        -- repeat rewrite DFA_compute_app. rewrite H15.
+           clear H2 H3 H4 H6 H16 H18.
+           destruct H12 as [H19 H20]. generalize dependent w3.
+           induction H19 as [| H19 H21]; intros w3 H20.
+           ++ inversion H20. auto.
+           ++ destruct H20 as [w5 [w6 [H22 [H23 H24]]]]. subst.
+              rewrite DFA_compute_app. apply H5 in H22. destruct H22 as [H25 H26].
+              rewrite H25. apply H21. exact H23.
+        -- intros n1 H19 H20.
+            assert (H21 : n1 <= length (w1 ++ w3 ++ w4)).
+  { repeat rewrite length_app in *; lia. }
+  rewrite DFA_compute_list_nth; auto.
+
+  assert (H22 : forall w2 m_idx, w2 ∈ regex_lang (RE_Star r3) -> m_idx <= length w2 -> In (DFA_compute M (firstn m_idx w2) h) (h :: t)).
+  { intros w2 m_idx H22 H23.
+    destruct H22 as [n2 H22]. generalize dependent w2. generalize dependent m_idx.
+    induction n2 as [| n2 H24]; intros m_idx w2 H22 H23.
+    - apply power_zero_inv in H22. subst. simpl in *. replace m_idx with 0 by lia. simpl. left. reflexivity.
+    - destruct H22 as [w5 [w6 [H25 [H26 H27]]]]. subst w2.
+      rewrite length_app in H23.
+      rewrite firstn_app. rewrite DFA_compute_app.
+      apply H5 in H25. destruct H25 as [H28 H29].
+      destruct (le_dec m_idx (length w5)) as [H30 | H30].
+      + replace (m_idx - length w5) with 0 by lia. simpl.
+        destruct (eq_nat_dec m_idx (length w5)) as [H31 | H31].
+        * left. subst m_idx. replace (firstn (length w5) w5) with w5 by (symmetry; apply firstn_all2; lia).
+          symmetry. exact H28.
+        * destruct (eq_nat_dec m_idx 0) as [H32 | H32].
+          -- left. subst m_idx. simpl. reflexivity.
+          -- right. assert (H33 : m_idx < length w5) by lia.
+             specialize (H29 m_idx ltac:(lia) H33).
+             rewrite DFA_compute_list_nth in H29; try lia. exact H29.
+      + replace (firstn m_idx w5) with w5 by (symmetry; apply firstn_all2; lia).
+        rewrite H28. apply H24; auto; try lia. }
+
+        assert (H23 : forall w2, w2 ∈ regex_lang (RE_Star r3) -> DFA_compute M w2 h = h).
+  { intros w2 H24. destruct H24 as [n2 H25]. generalize dependent w2.
+    induction n2 as [| n2 H26]; intros w2 H27.
+    - apply power_zero_inv in H27. subst. reflexivity.
+    - destruct H27 as [w5 [w6 [H28 [H29 H30]]]]. subst w2.
+      rewrite DFA_compute_app. apply H5 in H28. destruct H28 as [H31 H32]. 
+      rewrite H31. apply H26; auto. }
+  specialize (H23 w3 H12).
+  rewrite firstn_app. rewrite DFA_compute_app.
+  destruct (lt_dec n1 (length w1)) as [H24 | H24].
+  ++ replace (n1 - length w1) with 0 by lia. simpl.
+    right. assert (H25 : nth n1 (DFA_compute_list M w1 i) (q0 M) = DFA_compute M (firstn n1 w1) i) by (apply DFA_compute_list_nth; lia).
+    rewrite <- H25. apply H16; auto.
+  ++ destruct (eq_nat_dec n1 (length w1)) as [H25 | H25].
+    ** left. subst n1. replace (length w1 - length w1) with 0 by lia. simpl.
+      rewrite firstn_all2; try lia. symmetry. exact H15.
+    ** replace (firstn n1 w1) with w1 by (symmetry; apply firstn_all2; lia).
+       rewrite H15.
+       rewrite firstn_app. rewrite DFA_compute_app.
+       destruct (le_dec (n1 - length w1) (length w3)) as [H26 | H26].
+       --- replace (n1 - length w1 - length w3) with 0 by lia. simpl.
+           apply H22; auto.
+       --- replace (firstn (n1 - length w1) w3) with w3 by (symmetry; apply firstn_all2; lia).
+           rewrite H23. right.
+           assert (H27 : n1 - length w1 - length w3 > 0) by lia.
+           assert (H28 : n1 - length w1 - length w3 < length w4) by (repeat rewrite length_app in H20; lia).
+           specialize (H18 (n1 - length w1 - length w3) H27 H28).
+           assert (H29 : nth (n1 - length w1 - length w3) (DFA_compute_list M w4 h) (q0 M) = DFA_compute M (firstn (n1 - length w1 - length w3) w4) h) by (apply DFA_compute_list_nth; lia).
+           rewrite <- H29. exact H18.
+
+    + intros H7. destruct H7 as [H8 H9].
+      assert (H10 : (forall n1, n1 > 0 -> n1 < length w -> In (nth n1 (DFA_compute_list M w i) (q0 M)) t) \/
+                (exists w1 w2 w3, w = w1 ++ w2 ++ w3 /\
+                 DFA_compute M w1 i = h /\
+                 (forall n1, n1 > 0 -> n1 < length w1 -> In (nth n1 (DFA_compute_list M w1 i) (q0 M)) t) /\
+                 w2 ∈ regex_lang (RE_Star r3) /\
+                 DFA_compute M w3 h = j /\
+                 (forall n1, n1 > 0 -> n1 < length w3 -> In (nth n1 (DFA_compute_list M w3 h) (q0 M)) t))).
+  { 
+
+    admit.
+
+   }
+  destruct H10 as [H10 | H10].
+  * left. apply H3. split; auto.
+  * right. destruct H10 as [w1 [w2 [w3 [H11 [H12 [H13 [H14 [H15 H16]]]]]]]].
+    exists w1, (w2 ++ w3). split.
+    -- apply H4. split; auto.
+    -- split; auto.
+       exists w2, w3. repeat split; auto. apply H6; split; auto.
+Admitted.
+
+Theorem DFA_equivalent_to_RegEx : forall {Σ : Type} {H1 : FiniteType Σ} (M : DFA Σ),
+  exists r : RegEx Σ, DFA_recognizes_language M (regex_lang r).
+Proof.
+  intros Σ H1 M. destruct (DFA_P1 M) as [l1 H2 H3 H4].
+  assert (H5 : forall q, {q ∈ F M} + {~ q ∈ F M}).
+  { intros q. apply excluded_middle_informative. } 
+  assert (H6 : forall l2 : list (Q M), exists r : RegEx Σ, forall w : list Σ, w ∈ regex_lang r <-> exists q, In q l2 /\ q ∈ F M /\ path_restricted M l1 (q0 M) q w).
+  {
+    intros l2. induction l2 as [| h t H7].
+    - exists RE_Empty. intros w. split.
+      + intros H8. inversion H8.
+      + intros [q [H8 _]]. inversion H8.
+    - destruct H7 as [r1 H7].
+      pose proof (DFA_to_RegEx_path M l1 (q0 M) h) as [r2 H8].
+      destruct (H5 h) as [H9 | H9].
+      + exists (RE_Union r2 r1). intros w. split.
+        * intros H10. destruct H10 as [w' H10 | w' H10].
+          -- apply H8 in H10. exists h. split; [left; reflexivity | split; auto].
+          -- apply H7 in H10. destruct H10 as [q [H11 H12]].
+             exists q. split; [right; exact H11 | exact H12].
+        * intros [q [H10 [H11 H12]]]. destruct H10 as [H10 | H10].
+          -- left. subst q. apply H8. exact H12.
+          -- right. apply H7. exists q. split; auto.
+      + exists r1. intros w. split.
+        * intros H10. apply H7 in H10. destruct H10 as [q [H11 H12]].
+          exists q. split; [right; exact H11 | exact H12].
+        * intros [q [H10 [H11 H12]]]. destruct H10 as [H10 | H10].
+          -- subst q. contradiction.
+          -- apply H7. exists q. split; auto.
+  }
+  destruct (H6 l1) as [r1 H7].
+  exists r1.
+  intros w. split.
+  - intros H8. apply H7 in H8. destruct H8 as [q [H9 [H10 H11]]].
+    unfold path_restricted in H11. destruct H11 as [H11 H12].
+    unfold DFA_accepts. rewrite H11. exact H10.
+  - intros H8. apply H7. exists (DFA_compute M w (q0 M)).
+    split.
+    + apply H2.
+    + split.
+      * exact H8.
+      * unfold path_restricted. split; auto.
+Qed.
+
+Theorem regular_iff_regex : forall {Σ : Type} {H1 : FiniteType Σ} (L : Ensemble (list Σ)),
+  regular_language L <-> exists r : RegEx Σ, forall w, w ∈ L <-> w ∈ regex_lang r.
+Proof.
+  intros Σ H1 L. split.
+  - intros [M H2]. pose proof (DFA_equivalent_to_RegEx M) as [r H3].
+    exists r. intros w. split; intros H4.
+    + apply H3. apply H2; auto.
+    + apply H2. apply H3; auto.
+  - intros [r H2]. pose proof (regex_is_regular r) as [M H3].
+    exists M. intros w. rewrite H2. apply H3.
+Qed.
