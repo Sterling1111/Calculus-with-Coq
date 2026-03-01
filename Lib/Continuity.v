@@ -623,6 +623,22 @@ Proof.
   - apply H2.
 Qed.
 
+Lemma continuous_on_comp : forall f g D1 D2,
+  continuous_on g D1 -> 
+  (forall x, x ∈ D1 -> g x ∈ D2) ->
+  continuous_on f D2 -> 
+  continuous_on (f ∘ g) D1.
+Proof.
+  intros f g D1 D2 H1 H2 H3 a H4 ε H5.
+  specialize (H3 (g a) (H2 a H4) ε H5) as [δ1 [H6 H7]].
+  specialize (H1 a H4 δ1 H6) as [δ2 [H8 H9]].
+  exists δ2. split; auto. intros x H10 H11.
+  specialize (H9 x H10 H11). specialize (H7 (g x) (H2 x H10)).
+  pose proof classic (g x = g a) as [H12 | H12].
+  - unfold compose. rewrite H12. solve_R.
+  - specialize (H7 ltac:(solve_R)). auto.
+Qed.
+
 Lemma continuous_on_pow_shift : forall n a D,
   continuous_on (fun x => (x - a) ^ n) D.
 Proof.

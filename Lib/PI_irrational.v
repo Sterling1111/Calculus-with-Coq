@@ -154,6 +154,7 @@ Admitted.
 Lemma pow_over_factorial_tends_to_0 : ∀ x ε,
   x > 0 -> ε > 0 -> ∃ n, x^n / n! < ε.
 Proof.
+  intros x ε H1 H2. 
 Admitted.
 
 Theorem theorem_16_1 : irrational π.
@@ -260,16 +261,33 @@ Proof.
         rewrite r_mult_sum_f_i_n_f_l. do 2 rewrite r_mult_sum_f_i_n_f_l.
         set (A := fun i => b ^ n * ((-1) ^ i * π ^ (2 * n - 2 * i) * (⟦ Der^(2 * i + 2) x ⟧ (f n)))).
         set (B := fun i => π ^ 2 * (b ^ n * ((-1) ^ i * π ^ (2 * n - 2 * i) * (⟦ Der^(2 * i) x ⟧ (f n))))).
-        assert (H9 : ∀ i : ℕ, A i + B (i + 1)%nat = 0). 
+        assert (H9 : ∀ i : ℕ, (i < n)%nat -> A i + B (i + 1)%nat = 0). 
         {
-          intros i. unfold A, B. replace (2 * (i + 1))%nat with (2 * i + 2)%nat by lia.
+          intros i H9. unfold A, B. replace (2 * (i + 1))%nat with (2 * i + 2)%nat by lia.
           replace (b ^ n * ((-1) ^ i * π ^ (2 * n - 2 * i) * (⟦ Der^(2 * i + 2) x ⟧ (f n))) + π ^ 2 * (b ^ n * ((-1) ^ (i + 1) * π ^ (2 * n - (2 * i + 2)) * (⟦ Der^(2 * i + 2) x ⟧ (f n))))) with
           ((b ^ n * (⟦ Der^(2 * i + 2) x ⟧ (f n))) * ((-1) ^ i * π ^ (2 * n - 2 * i) + π ^ 2 * ((-1) ^ (i + 1) * π ^ (2 * n - (2 * i + 2))))) by lra.
-          apply Rmult_eq_0_compat_l. admit.
+          apply Rmult_eq_0_compat_l. replace ((2 * n - 2 * i)%nat) with (2 * n - (2 * i + 2) + 2)%nat by lia.
+          replace (i + 1)%nat with (1 + i)%nat by lia. repeat rewrite pow_add. lra.
         }
-        rewrite sum_f_plus; try lia. 
-        replace (λ i : ℕ, A i + B i) with (λ i : ℕ, B i - B (i + 1)%nat).
-        2 : { extensionality i. specialize (H9 i). lra. }
+        assert (H10 : ∀ i : ℕ, (i >= n)%nat → A i + B (i + 1)%nat = 0).
+        {
+          intros i H10.
+          unfold A, B.
+          replace (2 * (i + 1))%nat with (2 * i + 2)%nat by lia.
+          rewrite nth_derive_f_n_0; try lia.
+          lra.
+        }
+        rewrite sum_f_plus; try lia.
+        assert (H11 : ∑ 0 n (λ i : ℕ, A i + B i) = ∑ 0 n (λ i : ℕ, B i - B (i + 1)%nat)).
+        { 
+          apply sum_f_equiv; try lia.
+          intros k H11.
+          assert (H12 : (k < n)%nat \/ k = n) by lia.
+          destruct H12 as [H12 | H12].
+          - specialize (H9 k H12). lra.
+          - subst. specialize (H10 n ltac:(lia)). lra. 
+        }
+        rewrite H11.
         rewrite sum_f_0_n_fi_minus_fSi. replace (B (n + 1)%nat) with (0).
         2 : { unfold B. rewrite nth_derive_f_n_0; try lia. lra. }
         rewrite Rminus_0_r. unfold B. rewrite pow_O. rewrite Rmult_1_l. rewrite Nat.mul_0_r.
@@ -320,7 +338,7 @@ Proof.
   assert (H5 : ∀ n x, (n > 0)%nat -> 0 < x < 1 -> 0 < π * a^n * f n x * sin (π * x) < π * a^n / n!).
   {
     intros n x H5 H6. pose proof π_pos as H7. pose proof Rpow_gt_0 n (IZR a) H2 as H8.
-    assert (H9 : 0 < sin (π * x) < 1) by admit. pose proof f_bounds n x H5 H6 as [H10 H11]. split; try lra.
+    assert (H9 : 0 < sin (π * x) <= 1) by (apply sin_pi_x_bounds; auto). pose proof f_bounds n x H5 H6 as [H10 H11]. split; try lra.
     - do 2 (apply Rmult_lt_0_compat; try nra).
     - apply Rmult_lt_reg_l with (r := n! / (π * a ^ n)).
       apply Rdiv_pos_pos; try nra. apply INR_fact_lt_0.
@@ -346,7 +364,7 @@ Proof.
     - pose proof integral_bounds_strong_open 0 1 (λ x, π * a^n * f n x * sin (π * x)) 0 (π * a^n / n!) ltac:(lra) as [H7 H8]; try lra. 
       -- intros x H7. pose proof π_pos as H8. pose proof Rpow_gt_0 n a H2 as H9.
          pose proof f_bounds n x H6 ltac:(solve_R) as [H10 H11].
-         assert (H12 : 0 < sin (π * x) < 1) by admit. pose proof f_bounds n x H6 H7 as [H13 H14]. split.
+         assert (H12 : 0 < sin (π * x) <= 1). { apply sin_pi_x_bounds; auto. } pose proof f_bounds n x H6 H7 as [H13 H14]. split.
          ++ do 2 (apply Rmult_lt_0_compat; try nra).
          ++ apply Rmult_lt_reg_l with (r := n! / (π * a ^ n)).
             apply Rdiv_pos_pos; try nra. apply INR_fact_lt_0.
@@ -371,4 +389,4 @@ Proof.
   assert (n <> 0)%nat as H9. { intros H9. subst. simpl in *; lra. }
   specialize (H6 n ltac:(lia)).
   apply (no_integer_between 0 (∫ 0 1 (λ x : ℝ, π * a ^ n * f n x * sin (π * x))) ltac:(lra)); auto.
-Admitted.
+Qed.

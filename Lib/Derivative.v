@@ -2372,6 +2372,64 @@ Proof.
    pose proof derivative_at_unique f f' (fun _ => (f b - f a) / (b - a)) x H3 H5 as H6; rewrite H6; solve_R.
 Qed.
 
+Theorem limit_derivative_imp_derivative_at : forall f f' a L,
+  continuous_at f a ->
+  (exists δ, δ > 0 /\ forall x, x ∈ (a - δ, a + δ) -> x <> a -> ⟦ der x ⟧ f = f') ->
+  ⟦ lim a ⟧ f' = L ->
+  ⟦ der a ⟧ f = (λ _, L).
+Proof.
+  intros f f' a L H1 [δ1 [H2 H3]] H4.
+  intros ε H5.
+  specialize (H4 ε H5) as [δ2 [H6 H7]].
+  exists (Rmin δ1 δ2). split; [solve_R |].
+  intros h H8.
+  assert (h > 0 \/ h < 0) as [H9 | H9] by solve_R.
+  - assert (H10 : continuous_on f [a, a + h]).
+    {
+      intros y H11.
+      destruct (Req_dec_T y a) as [H12 | H12].
+      - subst y. apply limit_imp_limit_on; auto.
+      - apply limit_imp_limit_on. apply differentiable_at_imp_continuous_at.
+        exists (f' y). apply H3; solve_R.
+    }
+    assert (H11 : ⟦ der ⟧ f (a, a + h) = f').
+    {
+      intros y H12. left. split; [auto_interval |]. apply H3; solve_R.
+    }
+    assert (H12 : differentiable_on f (a, a + h)).
+    {
+      apply derivative_on_imp_differentiable_on with (f' := f'); auto.
+    }
+    pose proof mean_value_theorem f a (a + h) ltac:(solve_R) H10 H12 as [c [H13 H14]].
+    assert (H15 : ⟦ der c ⟧ f = f') by (apply H3; solve_R).
+    pose proof derivative_at_unique f (λ _, (f (a + h) - f a) / (a + h - a)) f' c H14 H15 as H16.
+    simpl in H16.
+    replace ((f (a + h) - f a) / h) with (f' c) by (rewrite <- H16; solve_R).
+    apply H7. solve_R.
+  - assert (H10 : continuous_on f [a + h, a]).
+    {
+      intros y H11.
+      destruct (Req_dec_T y a) as [H12 | H12].
+      - subst y. apply limit_imp_limit_on; auto.
+      - apply limit_imp_limit_on. apply differentiable_at_imp_continuous_at.
+        exists (f' y). apply H3; solve_R.
+    }
+    assert (H11 : ⟦ der ⟧ f (a + h, a) = f').
+    {
+      intros y H12. left. split; [auto_interval |]. apply H3; solve_R.
+    }
+    assert (H12 : differentiable_on f (a + h, a)).
+    {
+      apply derivative_on_imp_differentiable_on with (f' := f'); auto.
+    }
+    pose proof mean_value_theorem f (a + h) a ltac:(solve_R) H10 H12 as [c [H13 H14]].
+    assert (H15 : ⟦ der c ⟧ f = f') by (apply H3; solve_R).
+    pose proof derivative_at_unique f (λ _, (f a - f (a + h)) / (a - (a + h))) f' c H14 H15 as H16.
+    simpl in H16.
+    replace ((f (a + h) - f a) / h) with (f' c) by (rewrite <- H16; solve_R).
+    apply H7. solve_R.
+Qed.
+
 Corollary derivative_on_pos_imp_increasing_on : forall f f' a b, 
   a < b -> ⟦ der ⟧ f [a, b] = f' -> (forall x, x ∈ [a, b] -> f' x > 0) -> increasing_on f [a, b].
 Proof.

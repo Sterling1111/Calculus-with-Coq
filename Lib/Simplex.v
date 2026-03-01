@@ -221,9 +221,9 @@ Lemma gt_implies_succ_le :
   forall a b : Z, a > b -> b + 1 <= a.
 Proof.
   intros a b H.
-  unfold Z.gt in H.              (* H : b < a *)
-  apply Z.lt_succ_r.             (* goal: b + 1 < a + 1 *)
-  apply Z.add_lt_mono_r.         (* add 1 to both sides of b < a *)
+  unfold Z.gt in H.
+  apply Z.lt_succ_r.
+  apply Z.add_lt_mono_r.
   apply Z.compare_gt_iff.
   exact H.
 Qed.
@@ -234,12 +234,10 @@ Theorem chain_gt_three :
 Proof.
   intros x y z w Hxy Hyz Hzw.
 
-  (* Turn each strict inequality into a "+1 ≤" fact *)
-  pose proof gt_implies_succ_le x y Hxy as Hy1.  (* y + 1 <= x *)
-  pose proof gt_implies_succ_le y z Hyz as Hz1.  (* z + 1 <= y *)
-  pose proof gt_implies_succ_le z w Hzw as Hw1.  (* w + 1 <= z *)
+  pose proof gt_implies_succ_le x y Hxy as Hy1.
+  pose proof gt_implies_succ_le y z Hyz as Hz1.
+  pose proof gt_implies_succ_le z w Hzw as Hw1.
 
-  (* From w+1 <= z and z+1 <= y, get w+2 <= y *)
   assert (Hw2 : w + 2 <= y).
   {
     replace (w + 2) with (w + (1 + 1)) by reflexivity.
@@ -249,14 +247,13 @@ eapply Z.le_trans.
 - exact Hz1.
   }
 
-  (* From w+2 <= y and y+1 <= x, get w+3 <= x *)
   assert (Hw3 : w + 3 <= x).
   {
     replace (w + 3) with (w + (2 + 1)) by reflexivity.
     rewrite Z.add_assoc.
     eapply Z.le_trans.
-    - apply Z.add_le_mono_r. exact Hw2.  (* (w+2)+1 <= y+1 *)
-    - exact Hy1.                          (* y+1 <= x *)
+    - apply Z.add_le_mono_r. exact Hw2.
+    - exact Hy1.
   }
 
   apply Z.le_ge.
