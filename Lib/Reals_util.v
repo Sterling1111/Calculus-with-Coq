@@ -4,6 +4,7 @@ Open Scope R_scope.
 
 Coercion INR : nat >-> R.
 Coercion IZR : Z >-> R.
+Coercion Q2R : Q >-> R.
 
 Ltac break_INR :=
   repeat match goal with
@@ -674,4 +675,62 @@ Proof.
   - pose proof Rdiv_pos_neg r1 r2 ltac:(lra) ltac:(lra). solve_R.
   - repeat rewrite Rabs_R0, Rdiv_0_r; reflexivity.
   - pose proof Rdiv_pos_pos r1 r2 ltac:(lra) ltac:(lra). solve_R.
+Qed.
+
+Lemma pow_over_factorial_tends_to_0 : ∀ x ε,
+  x > 0 -> ε > 0 -> ∃ n, x^n / n! < ε.
+Proof.
+  intros x ε H1 H2.
+  set (n0 := (⌊ 2 * x ⌋ + 1)%nat).
+  assert (H3 : INR n0 >= 2 * x).
+  {
+    unfold n0. rewrite plus_INR. simpl.
+    pose proof floor_spec (2 * x) ltac:(lra) as [H4 H5].
+    lra.
+  }
+  set (C := x ^ n0 / INR (fact n0)).
+  assert (H4 : exists k : nat, 2 ^ k > C / ε).
+  {
+    destruct (pow_unbounded 2 (C / ε + 1) ltac:(lra)) as [k H4].
+    exists k. lra.
+  }
+  destruct H4 as [k H4].
+  exists (n0 + k)%nat.
+  
+  assert (H5 : x^(n0 + k) / INR (fact (n0 + k)) <= (1/2)^k * C).
+  {
+    unfold C.
+    clear H4 H2.
+    induction k as [| k H6].
+    - replace (n0 + 0)%nat with n0 by lia.
+      simpl. lra.
+    - replace (n0 + S k)%nat with (S (n0 + k)) by lia.
+      simpl (fact (S (n0 + k))).
+      pose proof (INR_fact_lt_0 (n0 + k)) as H7.
+      assert (H8 : 0 < INR (S (n0 + k))).
+      { rewrite S_INR; pose proof pos_INR (n0 + k) as H8; lra. }
+      assert (H9 : x / INR (S (n0 + k)) <= 1 / 2).
+      {
+        apply Rmult_le_reg_r with (r := INR (S (n0 + k)) * 2); [apply Rmult_lt_0_compat; lra |].
+        replace (x / INR (S (n0 + k)) * (INR (S (n0 + k)) * 2)) with (2 * x) by (field; lra).
+        replace (1 / 2 * (INR (S (n0 + k)) * 2)) with (INR (S (n0 + k))) by (field; lra).
+        rewrite S_INR, plus_INR.
+        pose proof pos_INR k as H10.
+        lra.
+      }
+      replace (INR ((n0 + k)! + (n0 + k) * (n0 + k)!)) with (INR (S (n0 + k)) * INR ((n0 + k)!)) by solve_R.
+      replace (x ^ S (n0 + k) / (INR (S (n0 + k)) * INR ((n0 + k)!))) with ((x / INR (S (n0 + k))) * (x ^ (n0 + k) / INR ((n0 + k)!))).
+      2 : { solve_R. split. apply INR_fact_neq_0. pose proof pos_INR n0. pose proof pos_INR k. lra. }
+      replace ((1 / 2) ^ S k * (x ^ n0 / INR (n0!))) with ((1 / 2) * ((1 / 2) ^ k * (x ^ n0 / INR (n0!)))).
+      2 : { solve_R. apply INR_fact_neq_0. }
+      apply Rle_trans with ((1 / 2) * (x ^ (n0 + k) / INR ((n0 + k)!))); try lra.
+      apply Rmult_le_compat_r; auto. apply Rlt_le, Rdiv_pos_pos; auto. apply Rpow_gt_0; lra.
+  }
+  
+  apply Rle_lt_trans with ((1 / 2) ^ k * C); auto.
+  assert (H6 : 2 ^ k > 0). { apply Rpow_gt_0; lra. }
+  assert (H7 : (1 / 2) ^ k = 1 / 2 ^ k). { rewrite Rdiv_pow_distr, pow1; lra. }
+  rewrite H7.
+  apply Rmult_lt_reg_r with (r := 2 ^ k / ε). apply Rdiv_pos_pos; auto.
+  field_simplify; try lra.
 Qed.

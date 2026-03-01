@@ -664,13 +664,18 @@ Proof.
   - rewrite sum_f_i_Sn_f. 2 : { lia. } rewrite IH. replace (S n') with (n' + 1)%nat by lia. lra .
 Qed.
 
-Lemma is_integer_sum : forall (f : nat -> R) (n : nat),
-  (forall k : nat, k <= n -> is_integer (f k)) -> is_integer (∑ 0 n f).
+Lemma is_integer_sum : forall (f : nat -> R) (i n : nat),
+  (i <= n)%nat ->
+  (forall k : nat, (i <= k <= n)%nat -> is_integer (f k)) -> 
+  is_integer (∑ i n f).
 Proof.
-  intros f n H1. induction n as [| n' IH].
-  - rewrite sum_f_0_0. apply H1. lra.
-  - rewrite sum_f_i_Sn_f; try lia. apply is_integer_plus. 2 : { apply H1. lra. }
-    apply IH. intros k H2. apply H1. apply INR_le in H2. apply le_INR. lia.
+  intros f i n H1 H2. induction n as [| n' IH].
+  - replace i with 0%nat by lia. rewrite sum_f_0_0. apply H2. lia.
+  - assert (i = S n' \/ i <= n')%nat as [H3 | H3] by lia.
+    + rewrite H3. rewrite sum_f_n_n. apply H2. lia.
+    + rewrite sum_f_i_Sn_f; try lia. apply is_integer_plus.
+      * apply IH; try lia. intros k H4. apply H2. lia.
+      * apply H2. lia.
 Qed.
 
 Lemma sum_f_0 : forall (i n : nat) f,

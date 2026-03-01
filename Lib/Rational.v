@@ -1,4 +1,4 @@
-From Lib Require Import Imports Reals_util.
+From Lib Require Import Imports Reals_util Notations.
 Open Scope Z_scope.
 
 Definition rational (r : R) : Prop :=
@@ -159,7 +159,37 @@ Lemma exists_irrational_between : forall a b,
   a < b -> exists c, (a < c < b)%R /\ irrational c.
 Proof.
   intros a b H1.
-Admitted.
+  assert (H2 : 0 < b - a) by lra.
+  assert (H3 : 0 < 1 / (b - a)) by (apply Rdiv_pos_pos; lra).
+  pose proof (archimed (1 / (b - a))) as [H4 H5].
+  set (z2 := up (1 / (b - a))).
+  assert (H6 : 0 < IZR z2). { unfold z2. lra. }
+  pose proof (archimed ((a - sqrt 2) * IZR z2)) as [H7 H8].
+  set (z1 := up ((a - sqrt 2) * IZR z2)).
+  set (q := IZR z1 / IZR z2).
+  exists (q + sqrt 2).
+  split.
+  - assert (H9 : a - sqrt 2 < q).
+    { unfold q. apply Rmult_lt_reg_r with (r := IZR z2); try lra.
+      replace (IZR z1 / IZR z2 * IZR z2) with (IZR z1) by (field; lra).
+      solve_R. }
+    assert (H10 : q < b - sqrt 2).
+    { unfold q. apply Rmult_lt_reg_r with (r := IZR z2); try lra.
+      replace (IZR z1 / IZR z2 * IZR z2) with (IZR z1) by (field; lra).
+      assert (H11 : 1 < (b - a) * IZR z2).
+      { apply Rmult_lt_reg_l with (r := 1 / (b - a)); try lra.
+        replace (1 / (b - a) * 1) with (1 / (b - a)) by lra.
+        replace (1 / (b - a) * ((b - a) * IZR z2)) with (IZR z2) by (field; lra).
+        solve_R. } unfold z1, z2 in *. lra.
+     }
+    lra.
+  - unfold irrational, not in *. intros H9.
+    assert (H10 : rational (sqrt 2)).
+    { apply rational_plus_rev with (a := q).
+      - exact H9.
+      - unfold rational, q. exists z1, z2. reflexivity. }
+    apply sqrt_2_irrational. exact H10.
+Qed.
 
 Lemma irrational_square_imp_irrational : forall r,
   irrational (r^2) -> irrational r.
@@ -168,3 +198,43 @@ Proof.
   intros _. apply H1. replace (r^2) with (r * r) by lra.
   apply mult_rational; auto.
 Qed.
+
+Lemma rational_representation_positive : forall r,
+  rational r ->
+  r > 0 ->
+  exists a b : Z, r = a / b /\ a > 0 /\ b > 0.
+Proof.
+  intros r [a [b H1]] H2.
+  pose proof Rtotal_order a 0 as [H3 | [H3 | H3]]; pose proof Rtotal_order b 0 as [H4 | [H4 | H4]];
+  pose proof Rdiv_neg_neg a b as H5; pose proof Rdiv_pos_pos a b as H6; pose proof Rdiv_neg_pos a b as H7; pose proof Rdiv_pos_neg a b as H8;
+  try nra; try (rewrite H4 in H1; rewrite Rdiv_0_r in H1; lra).
+  - exists (- a)%Z, (- b)%Z. repeat rewrite opp_IZR. split; try nra. rewrite H1. field. nra.
+  - exists a, b. auto.
+Qed.
+
+Module RationalNotations.
+  Declare Scope rational_scope.
+  Delimit Scope rational_scope with rat.
+
+  Notation "'ℚ'" := (fun r : R => exists q : Q, r = Q2R q) (at level 40) : rational_scope.
+
+End RationalNotations.
+
+Import RationalNotations.
+Open Scope rational_scope.
+
+Lemma rational_iff : forall r,
+  irrational r <-> (~ Ensembles.In R (ℚ%rat) r).
+Proof.
+  intros r. unfold irrational, rational, Ensembles.In. split.
+  - intros H1 [q H2]. apply H1. destruct q as [n d].
+    exists n, (Z.pos d). rewrite H2. unfold Q2R. reflexivity.
+  - intros H1 [z1 [z2 H2]]. apply H1.
+    assert (H3 : (z2 = 0 \/ z2 > 0 \/ z2 < 0)%Z) by lia. destruct H3 as [H3 | [H3 | H3]].
+    + exists (0 # 1). rewrite H2, H3. unfold Q2R. simpl. rewrite Rdiv_0_r. lra.
+    + exists (z1 # Z.to_pos z2). rewrite H2. unfold Q2R. simpl. rewrite Z2Pos.id; try lia. reflexivity.
+    + exists ((-z1) # Z.to_pos (-z2)). rewrite H2. unfold Q2R. simpl. rewrite Z2Pos.id; try lia.
+      repeat rewrite opp_IZR. field. apply not_0_IZR. lia.
+Qed.
+
+Close Scope rational_scope.

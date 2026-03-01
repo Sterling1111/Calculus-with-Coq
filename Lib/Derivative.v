@@ -4577,6 +4577,14 @@ Proof.
     extensionality x. rewrite pow_i; try lia. lra.
 Qed.
 
+Lemma nth_derive_at_zero_pow : forall n k,
+  ⟦ Der^k 0 ⟧ (fun x => x ^ n) = if Nat.eq_dec n k then INR (fact k) else 0.
+Proof.
+  intros n k.
+  apply nth_derivative_at_imp_nth_derive_at with (f' := fun _ => if Nat.eq_dec n k then INR (fact k) else 0).
+  apply nth_derivative_at_zero_pow.
+Qed.
+
 Lemma nth_derivative_at_sum : forall n m i (f : nat -> R -> R) a,
   (i <= m)%nat ->
   (forall k, (i <= k <= m)%nat -> nth_differentiable_at n (f k) a) ->
@@ -5513,4 +5521,54 @@ Proof.
   specialize (H7 x). unfold g in H7. rewrite H4, H5 in H7.
   simpl in H7. replace (0 ^ 2 + 0 ^ 2) with 0 in H7 by lra.
   apply Rsqr_eq_0. unfold Rsqr. pose proof (pow2_ge_0 (f' x)). nra.
+Qed.
+
+Lemma inf_diff_nth_derive_diff : forall k h,
+  inf_differentiable h -> differentiable (⟦ Der ^ k ⟧ h).
+Proof.
+  intros k h H1.
+  apply nth_differentiable_imp_differentiable with (n := 1%nat); try lia.
+  apply nth_derive_nth_differentiable with (n := k).
+  replace (k + 1)%nat with (S k) by lia.
+  apply H1.
+Qed.
+
+Lemma derive_at_1_minus_x : forall h a,
+  differentiable h ->
+  ⟦ Der a ⟧ (fun x => h (1 - x)) = - ⟦ Der (1 - a) ⟧ h.
+Proof.
+  intros h a H1.
+  replace (fun x => h (1 - x)) with (h ∘ (fun x => (1 - x))%R)%function by reflexivity.
+  rewrite derive_at_comp.
+  - assert (H2 : ⟦ Der a ⟧ (λ x0 : ℝ, 1 - x0) = -1).
+    { replace (λ x0 : ℝ, 1 - x0) with ( (λ _ : ℝ, 1) - (λ x0 : ℝ, x0) )%function by (extensionality y; lra).
+      rewrite derive_at_minus.
+      - rewrite derive_at_const, derive_at_id. lra.
+      - apply differentiable_at_const.
+      - apply differentiable_at_id.
+    }
+    rewrite H2. lra.
+  - apply differentiable_at_minus; [apply differentiable_at_const|apply differentiable_at_id].
+  - apply H1.
+Qed.
+
+Lemma nth_derive_1_minus_x : forall k h,
+  inf_differentiable h ->
+  ⟦ Der ^ k ⟧ (fun x => h (1 - x)) = (fun x => (-1)^k * (⟦ Der ^ k ⟧ h) (1 - x)).
+Proof.
+  intros k h H1. induction k as [| k IH].
+  - simpl. extensionality x. lra.
+  - replace (⟦ Der ^ (S k) ⟧ (λ x : ℝ, h (1 - x))) with (⟦ Der ⟧ (⟦ Der ^ k ⟧ (λ x : ℝ, h (1 - x)))) by reflexivity.
+    rewrite IH.
+    extensionality a.
+    replace ((⟦ Der ⟧ (λ x : ℝ, (-1) ^ k * (⟦ Der^k ⟧ h) (1 - x))) a) with (⟦ Der a ⟧ (λ x : ℝ, (-1) ^ k * (⟦ Der^k ⟧ h) (1 - x))) by reflexivity.
+    replace (λ x : ℝ, (-1) ^ k * (⟦ Der^k ⟧ h) (1 - x)) with (((-1)^k) * (fun y => (⟦ Der^k ⟧ h) (1 - y)))%function by (extensionality y; reflexivity).
+    rewrite derive_at_mult_const_l.
+    + rewrite derive_at_1_minus_x.
+      * replace (⟦ Der (1 - a) ⟧ (⟦ Der^k ⟧ h)) with ((⟦ Der^(S k) ⟧ h) (1 - a)) by reflexivity.
+        simpl. lra.
+      * apply inf_diff_nth_derive_diff. apply H1.
+    + apply (differentiable_comp (⟦ Der^k ⟧ h) (fun x => 1 - x)).
+      * apply inf_diff_nth_derive_diff. apply H1.
+      * intros x; apply differentiable_at_minus; [apply differentiable_at_const|apply differentiable_at_id].
 Qed.

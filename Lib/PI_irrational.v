@@ -1,8 +1,10 @@
 From Lib Require Import Imports Notations Integral Derivative Functions Continuity Taylor
                         Limit Sets Reals_util Inverse Trigonometry Sums Rational Binomial Tactics Interval.
-Import IntervalNotations SetNotations SumNotations FunctionNotations DerivativeNotations LimitNotations Choose_Notations.
+Import IntervalNotations SetNotations SumNotations FunctionNotations 
+       DerivativeNotations LimitNotations Choose_Notations RationalNotations.
 
 Open Scope R_scope.
+Open Scope rational_scope.
 
 Definition f n x :=
   (x^n * (1 - x)^n) / n!.
@@ -121,7 +123,7 @@ Proof.
   2 : { 
     apply nth_derivative_imp_nth_differentiable with (fn := fun x => ∑ n (2 * n) (fun i => (⟦ Der ^ k ⟧ (fun x0 => (-1) ^ (i - n) * INR (n ∁ (i - n)) * x0 ^ i)) x)).
     apply nth_derivative_sum; try lia.
-    intros l Hl. apply nth_derive_spec. apply nth_differentiable_mult_const_l.
+    intros l H2. apply nth_derive_spec. apply nth_differentiable_mult_const_l.
     replace (λ x : ℝ, x ^ l) with (λ x : ℝ, (x - 0) ^ l).
     2: { extensionality x0. rewrite Rminus_0_r. reflexivity. }
     apply nth_differentiable_pow_shift. 
@@ -142,34 +144,62 @@ Proof.
   }
   pose proof nth_derivative_pow as H2.
   pose proof nth_derivative_pow_gt as H3.
-  
-  admit.
-Admitted.
+  rewrite <- H1.
+  rewrite r_mult_sum_f_i_n_f_l.
+  apply is_integer_sum; try lia.
+  intros k0 H4.
+  rewrite nth_derive_at_zero_pow.
+  destruct (Nat.eq_dec k0 k) as [H5 | H5].
+  - subst k0.
+    pose proof (fact_div'' k n ltac:(lia)) as [m H6].
+    replace (1 / n! * ((-1) ^ (k - n) * n ∁ (k - n) * INR (fact k))) with (((-1) ^ (k - n) * INR (n ∁ (k - n))) * INR m).
+    2 : {
+      rewrite H6. rewrite mult_INR.
+      field. apply INR_fact_neq_0.
+    }
+    apply is_integer_mult.
+    + apply is_integer_mult.
+      * apply is_integer_pow. exists (-1)%Z. reflexivity.
+      * exists (Z.of_nat (n ∁ (k - n))). apply INR_IZR_INZ.
+    + exists (Z.of_nat m). apply INR_IZR_INZ.
+  - replace (1 / n! * ((-1) ^ (k0 - n) * n ∁ (k0 - n) * 0)) with 0 by lra.
+    exists 0%Z. reflexivity.
+Qed.
+
+Lemma f_n_sym : forall n x, f n x = f n (1 - x).
+Proof.
+  intros n x. unfold f. f_equal.
+  replace (1 - (1 - x)) with x by lra.
+  rewrite Rmult_comm. reflexivity.
+Qed.
+
+Lemma f_n_inf_differentiable : forall n, inf_differentiable (f n).
+Proof. intros n k. apply f_n_nth_differentiable. Qed.
 
 Lemma f_n_derivatives_at_1_are_integers : ∀ (n k: nat) (r : R),
   ⟦ Der ^ k 1 ⟧ (f n) = r -> is_integer r.
 Proof.
-Admitted.
+  intros n k r H1.
+  assert (H2 : f n = fun x => f n (1 - x)).
+  { extensionality x. apply f_n_sym. }
+  rewrite H2 in H1.
+  unfold nth_derive_at in H1.
+  rewrite nth_derive_1_minus_x in H1.
+  2 : { apply f_n_inf_differentiable. }
+  replace (1 - 1) with 0 in H1 by lra.
+  pose proof f_n_derivatives_at_0_are_integers n k (⟦ Der^k 0 ⟧ (f n)) ltac:(reflexivity) as H3.
+  rewrite <- H1.
+  apply is_integer_mult.
+  - apply is_integer_pow. exists (-1)%Z. reflexivity.
+  - unfold nth_derive_at in H3. apply H3.
+Qed.
 
-Lemma pow_over_factorial_tends_to_0 : ∀ x ε,
-  x > 0 -> ε > 0 -> ∃ n, x^n / n! < ε.
+Theorem theorem_16_1 : π ∉ ℚ.
 Proof.
-  intros x ε H1 H2. 
-Admitted.
-
-Theorem theorem_16_1 : irrational π.
-Proof.
-  apply irrational_square_imp_irrational. intros [a [b H1]].
-  assert (exists a b : Z, π^2 = (a / b) /\ a > 0 /\ b > 0) as [a' [b' [H2 [H3 H4]]]].
-  {
-    pose proof π_pos as H2. assert (H3 : π^2 > 0) by nra.
-    pose proof Rtotal_order a 0 as [H4 | [H4 | H4]]; pose proof Rtotal_order b 0 as [H5 | [H5 | H5]];
-    pose proof Rdiv_neg_neg a b as H6; pose proof Rdiv_pos_pos a b as H7; pose proof Rdiv_neg_pos a b as H8; pose proof Rdiv_pos_neg a b as H9;
-    try nra; try (rewrite H5 in H1; rewrite Rdiv_0_r in H1; lra).
-    - exists (- a)%Z, (- b)%Z. repeat rewrite opp_IZR. split; try nra. rewrite H1. field. nra.
-    - exists a, b. auto.
-  }
-  clear a b H1. rename a' into a. rename b' into b. rename H2 into H1. rename H3 into H2. rename H4 into H3.
+  apply rational_iff, irrational_square_imp_irrational. intros H1.
+  assert (H2 : π ^ 2 > 0) by (pose proof π_pos; nra).
+  pose proof rational_representation_positive (π ^ 2) H1 H2 as [a [b [H3 [H4 H5]]]].
+  clear H1 H2. rename H3 into H1. rename H4 into H2. rename H5 into H3.
   assert (H4 : forall n, is_integer (∫ 0 1 (λ x, π * a^n * f n x * sin (π * x)))).
   {
     intros n.
@@ -182,24 +212,24 @@ Proof.
     assert (H4 : is_integer (G 0)).
     {
       unfold G. rewrite r_mult_sum_f_i_n_f_l.
-      apply is_integer_sum. intros k H4. rewrite <- Rmult_assoc. apply is_integer_mult.
+      apply is_integer_sum; try lia. intros k H4. rewrite <- Rmult_assoc. apply is_integer_mult.
       - replace (π ^ (2 * n - 2 * k)) with ((π ^ 2) ^ (n - k)). 2 : { rewrite <- pow_mult. f_equal. lia. }
         rewrite H1. rewrite Rmult_comm. rewrite Rmult_assoc. apply is_integer_mult.
         -- apply is_integer_pow. exists (-1)%Z. reflexivity.
         -- rewrite Rdiv_pow_distr; auto. replace (a ^ (n - k) / b ^ (n - k) * b ^ n) with (a^(n-k) * ((b^n) / (b^(n-k)))) by lra.
-           rewrite <- pow_div_sub; solve_R. replace (n - (n - k))%nat with k. 2 : { apply INR_le in H4. lia. }
+           rewrite <- pow_div_sub; solve_R. replace (n - (n - k))%nat with k by lia.
            apply is_integer_mult; apply is_integer_pow; [ exists a | exists b ]; reflexivity.
       - apply (f_n_derivatives_at_0_are_integers n (2 * k)); auto.
     }
     assert (H5 : is_integer (G 1)).
     {
       unfold G. rewrite r_mult_sum_f_i_n_f_l.
-      apply is_integer_sum. intros k H5. rewrite <- Rmult_assoc. apply is_integer_mult.
+      apply is_integer_sum; try lia. intros k H5. rewrite <- Rmult_assoc. apply is_integer_mult.
       - replace (π ^ (2 * n - 2 * k)) with ((π ^ 2) ^ (n - k)). 2 : { rewrite <- pow_mult. f_equal. lia. }
         rewrite H1. rewrite Rmult_comm. rewrite Rmult_assoc. apply is_integer_mult.
         -- apply is_integer_pow. exists (-1)%Z. reflexivity.
         -- rewrite Rdiv_pow_distr; auto. replace (a ^ (n - k) / b ^ (n - k) * b ^ n) with (a^(n-k) * ((b^n) / (b^(n-k)))) by lra.
-           rewrite <- pow_div_sub; solve_R. replace (n - (n - k))%nat with k. 2 : { apply INR_le in H5. lia. }
+           rewrite <- pow_div_sub; solve_R. replace (n - (n - k))%nat with k by lia.
            apply is_integer_mult; apply is_integer_pow; [ exists a | exists b ]; reflexivity.
       - apply (f_n_derivatives_at_1_are_integers n (2 * k)); auto.
     }

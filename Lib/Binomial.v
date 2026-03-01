@@ -390,6 +390,17 @@ Proof.
   apply Binomial_R.choose_natural.
 Qed.
 
+Lemma fact_div'' : forall k n, (n <= k)%nat -> exists m, (fact k = fact n * m)%nat.
+Proof.
+  intros k. induction k as [| k IH].
+  - intros n H1. assert (H2 : (n = 0)%nat) by lia. subst. exists 1%nat. simpl. lia.
+  - intros n H1. destruct (Nat.eq_dec n (S k)) as [H2 | H2].
+    + subst. exists 1%nat. lia.
+    + assert (H3 : (n <= k)%nat) by lia.
+      specialize (IH n H3) as [m H4].
+      exists (S k * m)%nat. simpl. rewrite H4. lia.
+Qed.
+
 Import Binomial_R.
 
 Open Scope nat_scope.
