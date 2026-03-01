@@ -103,3 +103,10 @@ Proof.
     rewrite <- polynomial_simplify_correct.
     exact H1.
 Qed.
+
+Section dogs.
+
+  Let P := [Var 0; Var 1].
+
+
+End dogs.

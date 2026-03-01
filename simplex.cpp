@@ -39,15 +39,23 @@ BigInt lcm(BigInt a, BigInt b) {
     return (a / gcd(a, b)) * b;
 }
 
+void skipWhitespace(const std::string& s, size_t& pos) {
+    while (pos < s.length() && std::isspace(s[pos])) pos++;
+}
+
 void match(const std::string& s, size_t& pos, const std::string& target) {
+    skipWhitespace(s, pos);
     if (s.substr(pos, target.length()) == target) pos += target.length();
+    skipWhitespace(s, pos);
 }
 
 int parseNum(const std::string& s, size_t& pos) {
+    skipWhitespace(s, pos);
     int sign = 1;
-    if (s[pos] == '-') { sign = -1; pos++; }
+    if (pos < s.length() && s[pos] == '-') { sign = -1; pos++; }
     int res = 0;
     while (pos < s.length() && std::isdigit(s[pos])) res = res * 10 + (s[pos++] - '0');
+    skipWhitespace(s, pos);
     return res * sign;
 }
 
@@ -74,6 +82,7 @@ Row multRows(const Row& a, const Row& b) {
 }
 
 Row parseRow(const std::string& s, size_t& pos) {
+    skipWhitespace(s, pos);
     if (s.substr(pos, 4) == "Var(") {
         match(s, pos, "Var(");
         int v = parseNum(s, pos);
@@ -92,47 +101,52 @@ Row parseRow(const std::string& s, size_t& pos) {
     } else if (s.substr(pos, 4) == "Add(") {
         match(s, pos, "Add(");
         Row left = parseRow(s, pos);
-        match(s, pos, ", ");
+        match(s, pos, ",");
         Row right = parseRow(s, pos);
         match(s, pos, ")");
         return addRows(left, right);
     } else if (s.substr(pos, 5) == "Mult(") {
         match(s, pos, "Mult(");
         Row left = parseRow(s, pos);
-        match(s, pos, ", ");
+        match(s, pos, ",");
         Row right = parseRow(s, pos);
         match(s, pos, ")");
         return multRows(left, right);
     }
-    return Row();
+    throw std::runtime_error("Parse error at position " + std::to_string(pos) + " for string: " + s);
 }
 
 class SimplexSolver {
 private:
     MatrixXR D;
     std::vector<int> dep_vars;
+    std::vector<int> col_vars;
     int n, m;
     std::vector<Rational> multipliers;
 
     void pivot(int p_row, int p_col) {
-        Rational neg_p = -D(p_row, p_col);
-        for (int j = 0; j < D.cols(); ++j) D(p_row, j) /= neg_p;
+        Rational a = D(p_row, p_col);
         D(p_row, p_col) = Rational(-1);
+        for (int j = 0; j < D.cols(); ++j) D(p_row, j) /= -a;
 
         for (int i = 0; i <= m; ++i) {
             if (i != p_row) {
                 Rational factor = D(i, p_col);
-                for (int j = 0; j < D.cols(); ++j) D(i, j) += factor * D(p_row, j);
                 D(i, p_col) = Rational(0);
+                for (int j = 0; j < D.cols(); ++j) D(i, j) += factor * D(p_row, j);
             }
         }
-        dep_vars[p_row - 1] = p_col - 1;
+        
+        int leaving_var = dep_vars[p_row - 1];
+        int entering_var = col_vars[p_col - 1];
+        dep_vars[p_row - 1] = entering_var;
+        col_vars[p_col - 1] = leaving_var;
     }
 
     void solve_loop() {
         while (true) {
             int p_col = -1;
-            for (int j = 1; j < D.cols(); ++j) {
+            for (int j = 1; j <= n + 1; ++j) {
                 if (D(0, j) < 0) {
                     p_col = j;
                     break;
@@ -172,11 +186,14 @@ public:
         for (int j = 0; j < n; ++j) D(0, j + 1) = c(j, 0);
         for (int i = 0; i < m; ++i) D(i + 1, 0) = b(i, 0);
         
+        for (int j = 1; j <= n; ++j) col_vars.push_back(j - 1);
+        col_vars.push_back(n); 
+
         for (int i = 0; i < m; ++i) {
             for (int j = 0; j < n; ++j) D(i + 1, j + 1) = -A(i, j);
             D(i + 1, n + 1) = Rational(1); 
             D(i + 1, n + 2 + i) = Rational(-1);
-            dep_vars.push_back(n + 1 + i);
+            dep_vars.push_back(n + 1 + i); 
         }
     }
 
@@ -202,19 +219,9 @@ public:
                 for (int i = 0; i < m; ++i) multipliers.push_back(D(0, n + 2 + i));
                 throw std::runtime_error("Contradiction");
             }
-
-            D.row(0) = orig_obj;
-            for (int i = 1; i <= m; ++i) {
-                int basic_var_col = dep_vars[i - 1] + 1;
-                if (D(0, basic_var_col) != Rational(0)) {
-                    Rational factor = D(0, basic_var_col);
-                    for (int k = 0; k < D.cols(); ++k) D(0, k) += factor * D(i, k);
-                    D(0, basic_var_col) = Rational(0);
-                }
-            }
+        } else {
+            solve_loop();
         }
-
-        solve_loop();
     }
 
     std::string get_result_string() {
@@ -270,9 +277,8 @@ int main(int argc, char* argv[]) {
 
         for (int i = 0; i < m; ++i) {
             for (auto const& [v, coeff] : parsed_rows[i]) {
-                if (v == 0) {
-                    b(i, 0) = Rational(-coeff);
-                } else {
+                if (v == 0) b(i, 0) = Rational(-coeff);
+                else {
                     A(i, v - 1) = Rational(coeff);
                     A(i, n + v - 1) = Rational(-coeff);
                 }

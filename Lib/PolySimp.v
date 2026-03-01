@@ -336,3 +336,22 @@ Proof.
     simpl. rewrite (H1 l2 H4 env). rewrite (H2 r2 H5 env). reflexivity.
   - simpl. rewrite (H1 e2' H3 env). reflexivity.
 Qed.
+
+Section Test.
+
+Definition test_env : Env := 
+  make_env [(1%positive, 5%Z); (2%positive, 7%Z)].
+
+Compute (polynomial_simplify (Add (Mult (Var 1) (Var 2)) (Neg (Const 4)))).
+
+Compute (eval_expr test_env (Add (Mult (Var 1) (Var 2)) (Neg (Const 4)))).
+
+Compute (eval_expr test_env (polynomial_simplify (Add (Mult (Var 1) (Var 2)) (Neg (Const 4))))).
+
+Compute (polynomial_simplify (Mult (Add (Var 1) (Const 1)) (Add (Var 1) (Neg (Const 1))))).
+
+Compute (eval_expr test_env (Mult (Add (Var 1) (Const 1)) (Add (Var 1) (Neg (Const 1))))).
+
+Compute (eval_expr test_env (polynomial_simplify (Mult (Add (Var 1) (Const 1)) (Add (Var 1) (Neg (Const 1)))))).
+
+End Test.

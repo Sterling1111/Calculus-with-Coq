@@ -123,14 +123,20 @@ let run_dummy_executable expr_list =
   let in_file = Filename.temp_file "rocq_in_" ".txt" in
   let out_file = Filename.temp_file "rocq_out_" ".txt" in
   let oc = open_out in_file in
-  List.iter (fun e -> output_string oc (string_of_expr (Neg e) ^ "\n")) expr_list;
+  List.iter (fun e -> 
+    let s = string_of_expr (Neg e) in
+    output_string oc (s ^ "\n")
+  ) expr_list;
   close_out oc;
   let cmd = Printf.sprintf "./simplex_solver %s %s" in_file out_file in
+  
+  let t1 = Unix.gettimeofday () in
   let exit_code = Sys.command cmd in
-  if exit_code <> 0 then failwith "Executable failed";
+  let t2 = Unix.gettimeofday () in
+  Printf.eprintf "C++ solver time: %f seconds\n%!" (t2 -. t1);
+  
+  if exit_code <> 0 then failwith (Printf.sprintf "Executable failed with code %d" exit_code);
   let ic = open_in out_file in
   let result = try input_line ic with End_of_file -> "" in
   close_in ic;
-  Sys.remove in_file;
-  Sys.remove out_file;
   result

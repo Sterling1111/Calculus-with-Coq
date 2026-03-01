@@ -939,9 +939,9 @@ Qed.
 Lemma finite_language_regular : forall {Σ : Type} `{FiniteType Σ} (L : Ensemble (list Σ)),
   finite_language L -> regular_language L.
 Proof.
-  intros Σ H1 L [l H2]. subst. induction l as [| h t IH].
+  intros Σ H1 L [l H2]. subst. induction l as [| h t IH]; simpl.
   - apply empty_language_regular.
-  - simpl. apply union_regular.
+  - apply union_regular.
     + apply singleton_language_regular.
     + apply IH. 
 Qed.
@@ -979,7 +979,7 @@ Module NonRegular.
     - decide equality.
   Qed.
 
-  Lemma not_regular_L : ~ regular_language L.
+  Lemma not_regular_L : ¬ regular_language L.
   Proof.
     intros H1. pose proof (pumping_lemma H1) as [p H2].
     set (w := [0] ^ p ++ [1] ^ p).

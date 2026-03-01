@@ -1,4 +1,4 @@
-From Lib Require Import Imports Notations Integral Derivative Functions Continuity 
+From Lib Require Import Imports Notations Integral Derivative Functions Continuity Taylor
                         Limit Sets Reals_util Inverse Trigonometry Sums Rational Binomial Tactics Interval.
 Import IntervalNotations SetNotations SumNotations FunctionNotations DerivativeNotations LimitNotations Choose_Notations.
 
@@ -143,22 +143,6 @@ Proof.
   pose proof nth_derivative_pow as H2.
   pose proof nth_derivative_pow_gt as H3.
   
-  admit.
-Admitted.
-
-Lemma f_n_derivatives_at_0_are_integers : ∀ (n k: nat) (r : R),
-  ⟦ Der ^ k 0 ⟧ (f n) = r -> is_integer r.
-Proof.
-  intros n k r H1.
-  rewrite f_n_is_polynomial in H1.
-  rewrite nth_derive_mult_const_l in H1.
-  2 : { admit. }
-  rewrite nth_derive_sum in H1; try lia.
-  2 : { intros j. apply nth_differentiable_mult_const_l. admit. }
-  replace (λ k0 : ℕ, (⟦ Der^k ⟧ (λ x : ℝ, (-1) ^ (k0 - n) * n ∁ (k0 - n) * x ^ k0)) 0) with (λ k0 : ℕ, (-1) ^ (k0 - n) * n ∁ (k0 - n) * (⟦ Der^k 0 ⟧ (λ x : ℝ, x ^ k0))) in H1.
-  2 : { extensionality k0. rewrite nth_derive_mult_const_l. auto. admit. }
-  pose proof nth_derivative_pow as H2.
-  pose proof nth_derivative_pow_gt as H3.
   admit.
 Admitted.
 
@@ -382,7 +366,7 @@ Proof.
     - subst. simpl in H7. lra.
     - apply Rmult_le_reg_l with (r := n!). apply INR_fact_lt_0. field_simplify; try apply INR_fact_neq_0.
       rewrite Rpow_mult_distr. rewrite Rmult_comm. apply Rmult_le_compat_l. apply pow_le; lra.
-      rewrite <- pow_1 at 1. apply Rle_pow. apply Rlt_le. admit. lia.
+      rewrite <- pow_1 at 1. apply Rle_pow. pose proof π_bounds as H9. lra. lia.
   }
   assert (n <> 0)%nat as H9. { intros H9. subst. simpl in *; lra. }
   specialize (H6 n ltac:(lia)).

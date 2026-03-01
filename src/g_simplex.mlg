@@ -2,34 +2,29 @@ DECLARE PLUGIN "simplex_plugin.plugin"
 
 {
 open Pp
+open Stdarg
 module Tacentries = Ltac_plugin.Tacentries
 }
 
 TACTIC EXTEND call_simplex_plugin
-| [ "call_simplex_plugin" ] -> {
+| [ "call_simplex_plugin" ident(cert_name) constr(f_term) ] -> {
     Proofview.Goal.enter (fun gl ->
       let env = Proofview.Goal.env gl in
       let sigma = Proofview.Goal.sigma gl in
-      let concl = Proofview.Goal.concl gl in
       
-      let open EConstr in
-      match kind sigma concl with
-      | App (ev_f, args) ->
-          let f_term = args.(1) in
-          (try
-            let ocaml_ast_list = Simplex_main.parse_list env sigma f_term in
-            let result = Simplex_main.run_dummy_executable ocaml_ast_list in
-            let multipliers = Simplex_main.extract_multipliers result in
-            
-            if multipliers = [] then
-              Tacticals.tclZEROMSG (str ("Solver failed: " ^ result))
-            else
-              let cert_term = Simplex_main.build_certificate multipliers ocaml_ast_list in
-              let name = Names.Name (Names.Id.of_string "c") in
-              Tactics.pose_tac name cert_term
-          with Failure msg ->
-            Tacticals.tclZEROMSG (str msg))
-      | _ -> Tacticals.tclZEROMSG (str "Goal is not of the form (eval_form env f)")
+      (try
+        let ocaml_ast_list = Simplex_main.parse_list env sigma f_term in
+        let result = Simplex_main.run_dummy_executable ocaml_ast_list in
+        let multipliers = Simplex_main.extract_multipliers result in
+        
+        if multipliers = [] then
+          Tacticals.tclZEROMSG (str "Cannot find witness.")
+        else
+          let cert_term = Simplex_main.build_certificate multipliers ocaml_ast_list in
+          let name = Names.Name cert_name in
+          Tactics.pose_tac name cert_term
+      with Failure msg ->
+        Tacticals.tclZEROMSG (str msg))
     )
   }
 END
