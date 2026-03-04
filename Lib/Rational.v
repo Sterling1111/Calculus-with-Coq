@@ -217,6 +217,7 @@ Module RationalNotations.
   Delimit Scope rational_scope with rat.
 
   Notation "'ℚ'" := (fun r : R => exists q : Q, r = Q2R q) (at level 40) : rational_scope.
+  Notation "'Q'" := (fun r : R => exists q : Q, r = Q2R q) (at level 40) : rational_scope.
 
 End RationalNotations.
 
@@ -224,7 +225,7 @@ Import RationalNotations.
 Open Scope rational_scope.
 
 Lemma rational_iff : forall r,
-  irrational r <-> (~ Ensembles.In R (ℚ%rat) r).
+  irrational r <-> (~ Ensembles.In R (Q%rat) r).
 Proof.
   intros r. unfold irrational, rational, Ensembles.In. split.
   - intros H1 [q H2]. apply H1. destruct q as [n d].

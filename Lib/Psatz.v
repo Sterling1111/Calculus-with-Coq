@@ -59,15 +59,18 @@ Inductive Certificate : Set :=
   | Cert_isZpos (p : positive)
   | Cert_IsZ0.
 
-Fixpoint decode (P : list Expr) (c : Certificate) : Expr :=
+Fixpoint decode (f : Formulae) (c : Certificate) : Expr :=
   match c with
-  | Cert_isGen n => nth n P (Const 0)
+  | Cert_isGen n => nth n f (Const 0)
   | Cert_isSquare p => Mult p p
-  | Cert_isMult p q => Mult (decode P p) (decode P q)
-  | Cert_isAdd p q => Add (decode P p) (decode P q)
+  | Cert_isMult p q => Mult (decode f p) (decode f q)
+  | Cert_isAdd p q => Add (decode f p) (decode f q)
   | Cert_isZpos p => Const (Z.pos p)
   | Cert_IsZ0 => Const 0
   end.
+
+Definition checker (c : Certificate) (f : list Expr) : bool :=
+  (polynomial_simplify (decode f c)) == -1.
 
 Lemma cert_in_cone : forall f c, Cone f (decode f c).
 Proof.
@@ -85,8 +88,17 @@ Proof.
   - apply IsPos. compute. intros H1. discriminate H1.
 Qed.
 
-Definition checker (c : Certificate) (P : list Expr) : bool :=
-  (polynomial_simplify (decode P c)) == -1.
+Lemma checker_correct_value :
+  forall f c,
+    checker c f = true ->
+    forall env', eval_expr env' (decode f c) = -1.
+Proof.
+  intros f c H env'.
+  unfold checker in H.
+  apply expr_eqb_correct with (env := env') in H.
+  rewrite <- polynomial_simplify_correct.
+  exact H.
+Qed.
 
 Theorem checker_sound : forall f c env,
   checker c f = true ->
@@ -95,11 +107,5 @@ Proof.
   intros f c env H1.
   apply positivstellensatz.
   exists (decode f c).
-  split.
-  - apply cert_in_cone.
-  - intros env'.
-    unfold checker in H1.
-    apply expr_eqb_correct with (env := env') in H1.
-    rewrite <- polynomial_simplify_correct.
-    exact H1.
+  split; [apply cert_in_cone | apply checker_correct_value; auto ].
 Qed.

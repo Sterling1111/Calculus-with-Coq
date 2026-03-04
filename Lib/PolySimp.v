@@ -29,6 +29,28 @@ Fixpoint eval_expr (env : Env) (exp : Expr) : Z :=
 Definition make_env (l : list (positive * Z)) : Env :=
   fold_right (fun p env => PMap.add (fst p) (snd p) env) (PMap.empty Z) l.
 
+Section Expr_Demo.
+
+  Open Scope positive_scope.
+  Open Scope Z_scope.
+
+  Definition demo_env : Env :=
+    make_env [(1%positive, 10); (2%positive, 25)].
+
+  Definition expr_a : Expr :=
+    Add (Mult (Const 2) (Var 1)) (Var 2).
+
+  Definition expr_b : Expr :=
+    Neg (Add (Var 1) (Const 5)).
+
+  Compute (eval_expr demo_env expr_a).
+
+  Compute (eval_expr demo_env expr_b).
+
+  Compute (eval_expr demo_env (Var 3)).
+
+End Expr_Demo.
+
 Open Scope positive_scope.
 Open Scope Z_scope.
 
@@ -322,7 +344,7 @@ Proof.
 Qed.
 
 Lemma expr_eqb_correct : forall e1 e2,
-  expr_eqb e1 e2 = true -> forall env, eval_expr env e1 = eval_expr env e2.
+  e1 == e2 = true -> forall env, eval_expr env e1 = eval_expr env e2.
 Proof.
   intros e1.
   induction e1 as [v1 | c1 | l1 H1 r1 H2 | l1 H1 r1 H2 | e1' H1];
@@ -337,21 +359,40 @@ Proof.
   - simpl. rewrite (H1 e2' H3 env). reflexivity.
 Qed.
 
-Section Test.
+Section Presentation_Demos.
 
-Definition test_env : Env := 
-  make_env [(1%positive, 5%Z); (2%positive, 7%Z)].
+  Variable x : Z.
+  Variable y : Z.
 
-Compute (polynomial_simplify (Add (Mult (Var 1) (Var 2)) (Neg (Const 4)))).
+  Definition test_env : Env := 
+    make_env [(1%positive, x); (2%positive, y)].
+  
+  Definition raw1 : Z := x + 3 * x + 2 * y.
 
-Compute (eval_expr test_env (Add (Mult (Var 1) (Var 2)) (Neg (Const 4)))).
+  Definition raw2 : Z := 4 * x + 2 * y.
 
-Compute (eval_expr test_env (polynomial_simplify (Add (Mult (Var 1) (Var 2)) (Neg (Const 4))))).
+  Definition expr1 := Add (Add (Var 1) (Mult (Const 3) (Var 1))) (Mult (Const 2) (Var 2)).
 
-Compute (polynomial_simplify (Mult (Add (Var 1) (Const 1)) (Add (Var 1) (Neg (Const 1))))).
+  Definition expr2 := Add (Mult (Const 4) (Var 1)) (Mult (Const 2) (Var 2)).
 
-Compute (eval_expr test_env (Mult (Add (Var 1) (Const 1)) (Add (Var 1) (Neg (Const 1))))).
+  Compute (polynomial_simplify expr1).
+  
+  Compute (polynomial_simplify expr2).
+  
+  Definition expr3 := Eval compute in (polynomial_simplify expr1).
 
-Compute (eval_expr test_env (polynomial_simplify (Mult (Add (Var 1) (Const 1)) (Add (Var 1) (Neg (Const 1)))))).
+  Definition expr4 := Eval compute in (polynomial_simplify expr2).
 
-End Test.
+  Eval cbv -[Z.add Z.mul Z.sub Z.opp] in (eval_expr test_env expr1).
+
+  Eval cbv -[Z.add Z.mul Z.sub Z.opp] in (eval_expr test_env expr2).
+
+  Eval cbv -[Z.add Z.mul Z.sub Z.opp] in (eval_expr test_env expr3).
+
+  Eval cbv -[Z.add Z.mul Z.sub Z.opp] in (eval_expr test_env expr4).
+
+  Compute (expr1 == expr2).
+
+  Compute (polynomial_simplify expr1 == polynomial_simplify expr2).
+
+End Presentation_Demos.

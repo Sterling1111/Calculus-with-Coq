@@ -182,6 +182,18 @@ Proof.
   exact H2.
 Qed.
 
+Ltac reify_step :=
+  match goal with
+  | |- ?G =>
+      let vars := get_vars_from_goal G (@nil Z) in
+      let e := mk_env vars in
+      let f' := reify_goal vars G in
+      let e_cbv := eval cbv in e in
+      let f_cbv := eval cbv in f' in
+      pose (env := e_cbv);
+      pose (f := f_cbv)
+  end.
+
 Ltac simplex_core :=
   normalize_hyps;
   revert_hyps;
@@ -213,54 +225,68 @@ Lemma test_chain : forall x y z w : Z,
   z > w ->
   x >= w + 3.
 Proof.
-  simplex.
-  Show Proof.
+  intros.
+  negate_goal.
+  normalize_hyps.
+  revert_hyps.
+  reify_step.
+  apply vm_cast_prop with (P := eval_form env f).
+  cbv -[Z.add Z.sub Z.mul Z.opp Z.ge Z.gt Z.le Z.lt].
+  reflexivity.
+  let f_cbv := eval cbv in f in call_simplex_plugin cert f_cbv.
+  apply checker_sound with (c := cert).
+  vm_compute. reflexivity.
 Qed.
 
 Lemma gt_implies_succ_le :
   forall a b : Z, a > b -> b + 1 <= a.
 Proof.
-  intros a b H.
-  unfold Z.gt in H.
+  intros a b H1.
+  unfold Z.gt in H1.
   apply Z.lt_succ_r.
   apply Z.add_lt_mono_r.
   apply Z.compare_gt_iff.
-  exact H.
+  exact H1.
 Qed.
 
 Theorem chain_gt_three :
   forall x y z w : Z,
     x > y -> y > z -> z > w -> x >= w + 3.
 Proof.
-  intros x y z w Hxy Hyz Hzw.
+  intros x y z w H1 H2 H3.
 
-  pose proof gt_implies_succ_le x y Hxy as Hy1.
-  pose proof gt_implies_succ_le y z Hyz as Hz1.
-  pose proof gt_implies_succ_le z w Hzw as Hw1.
+  pose proof gt_implies_succ_le x y H1 as H4.
+  pose proof gt_implies_succ_le y z H2 as H5.
+  pose proof gt_implies_succ_le z w H3 as H6.
 
-  assert (Hw2 : w + 2 <= y).
+  assert (H7 : w + 2 <= y).
   {
     replace (w + 2) with (w + (1 + 1)) by reflexivity.
     rewrite Z.add_assoc.
-eapply Z.le_trans.
-- apply Z.add_le_mono_r. exact Hw1.
-- exact Hz1.
+    apply Z.le_trans with (m := z + 1).
+    - apply Z.add_le_mono_r. apply H6.
+    - apply H5.
   }
 
-  assert (Hw3 : w + 3 <= x).
+  assert (H8 : w + 3 <= x).
   {
     replace (w + 3) with (w + (2 + 1)) by reflexivity.
     rewrite Z.add_assoc.
-    eapply Z.le_trans.
-    - apply Z.add_le_mono_r. exact Hw2.
-    - exact Hy1.
+    apply Z.le_trans with (m := y + 1).
+    - apply Z.add_le_mono_r. apply H7.
+    - apply H4.
   }
 
   apply Z.le_ge.
-apply Hw3.
+  apply H8.
 Qed.
 
-
+Theorem new :
+  forall x y z w : Z,
+    x > y -> y > z -> z > w -> x >= w + 3.
+Proof.
+  simplex.
+Qed.
 
 Lemma test_dense : forall a b c : Z,
   a + b >= 10 ->

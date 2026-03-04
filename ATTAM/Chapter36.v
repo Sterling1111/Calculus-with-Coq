@@ -8,11 +8,34 @@ Proof.
   solve_R.
 Qed.
 
-Lemma lemma_36_1' : ⟦ lim 4 ⟧ (fun x => 2 * x + 3) = 11.
+Lemma lemma_36_1' : ⟦ lim 4 ⟧ (fun x => x^3 + 3 * x^2 + 2 * x - 15) = 105.
 Proof. solve_lim. Qed.
 
-Lemma lemma_36_1'' : ⟦ lim 4 ⟧ (fun x => 2 * x + 3) = 11.
-Proof. auto_limit. Qed.
+Lemma lemma_36_1'' : ⟦ lim 4 ⟧ (fun x => x^3 + 3 * x^2 + 2 * x - 15) = 105.
+Proof.
+  change_fun_to_expr;
+  set (e := (ESub (EAdd (EAdd (EPow EVar 3) 
+            (EMul (EConst 3) (EPow EVar 2))) (EMul (EConst 2) EVar)) (EConst 15))).
+  apply limit_subst with (L1 := eval_expr e 4).
+  - simpl. field_simplify. reflexivity.
+  - apply limit_eval_expr. compute. tauto.
+Qed.
+
+Lemma lemma_36_1''' : ⟦ lim 4 ⟧ (fun x => x^3 + 3 * x^2 + 2 * x - 15) = 105.
+Proof.
+  replace 105 with (4^3 + 3 * 4^2 + 2 * 4 - 15) by field.
+  apply limit_plus.
+  - apply limit_plus.
+    + apply limit_plus.
+      * apply limit_pow. apply limit_id.
+      * apply limit_mult.
+        -- apply limit_const.
+        -- apply limit_pow. apply limit_id.
+    + apply limit_mult.
+      * apply limit_const.
+      * apply limit_id.
+  - apply limit_const.
+Qed.
 
 Lemma lemma_36_2 : forall a c d, ⟦ lim a ⟧ (fun x => c * x + d) = c * a + d.
 Proof.
