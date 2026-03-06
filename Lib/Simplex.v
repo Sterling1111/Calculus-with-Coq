@@ -228,11 +228,10 @@ Proof.
   intros.
   negate_goal.
   normalize_hyps.
-  revert_hyps.
+  revert_hyps;
   reify_step.
   apply vm_cast_prop with (P := eval_form env f).
-  cbv -[Z.add Z.sub Z.mul Z.opp Z.ge Z.gt Z.le Z.lt].
-  reflexivity.
+  cbv -[Z.add Z.sub Z.mul Z.opp Z.ge Z.gt Z.le Z.lt]; auto.
   let f_cbv := eval cbv in f in call_simplex_plugin cert f_cbv.
   apply checker_sound with (c := cert).
   vm_compute. reflexivity.
@@ -311,6 +310,7 @@ Proof.
   Set Ltac Profiling.
   Time simplex.
   Show Ltac Profile.
+  Show Proof.
 Qed.
 
 Lemma massive_test_8 : forall x0 x1 x2 x3 x4 x5 x6 x7 : Z,
