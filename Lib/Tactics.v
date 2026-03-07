@@ -142,14 +142,32 @@ Proof.
     2 : { extensionality t. rewrite Rmult_1_r. lra. }
     apply H4; auto.
   - intros x H1. apply derivative_at_neg; auto.
-  - intros x H1. admit.
-  - intros x H1. admit.
-  - intros x [H1 H2]. admit.
-  - intros x H1. admit.
+  - intros x H1.
+    replace (λ t : ℝ, sin (eval_expr e t)) with ((sin) ∘ (λ t:ℝ, eval_expr e t))%function by reflexivity.
+    replace (λ t : ℝ, cos (eval_expr e t) * eval_expr (derive_expr e) t) with ((cos) ∘ (λ t : ℝ, eval_expr e t) ⋅ (λ t, eval_expr (derive_expr e) t))%function by reflexivity.
+    apply derivative_at_comp.
+    + apply IHe; auto.
+    + apply derivative_at_sin.
+  - intros x H1.
+    replace (λ t : ℝ, cos (eval_expr e t)) with ((cos) ∘ (λ t:ℝ, eval_expr e t))%function by reflexivity.
+    replace (λ t : ℝ, - sin (eval_expr e t) * eval_expr (derive_expr e) t) with ((- sin) ∘ (λ t : ℝ, eval_expr e t) ⋅ (λ t, eval_expr (derive_expr e) t))%function by reflexivity.
+    apply derivative_at_comp.
+    + apply IHe; auto.
+    + apply derivative_at_cos.
+  - intros x [H1 H2].
+    apply derivative_at_sqrt_comp; auto.
+  - intros x H1. destruct n.
+    + replace (λ t, eval_expr e t ^ 0) with (fun t:ℝ => 1) by (extensionality t; simpl; lra).
+      replace (λ t : ℝ, eval_expr (EConst 0) t) with (fun t:ℝ => 0) by (extensionality t; simpl; lra).
+      apply derivative_at_const.
+    + replace (fun t:ℝ => pow (eval_expr e t) (S n)) with ((fun y:ℝ => pow y (S n)) ∘ λ t, eval_expr e t)%function by reflexivity.
+      replace (λ t : ℝ, eval_expr (EMul (EMul (EConst (S n)) (EPow e n)) (derive_expr e)) t) with (((λ y : ℝ, Rmult (INR (S n)) (y ^ (S n - 1))) ∘ λ t : ℝ, eval_expr e t) ⋅ eval_expr (derive_expr e))%function.
+      1: { apply derivative_at_comp; [apply IHe; auto | apply derivative_at_pow]. }
+      extensionality t. replace (S n - 1)%nat with n by lia. reflexivity.
   - intros x. destruct df.
     -- intros [H1 H2]. apply derivative_at_comp; auto.
     -- tauto.
-Admitted.
+Qed.
 
 Lemma derive_correct_global : forall e,
   (forall x, wf_derive e x) -> ⟦ der ⟧ (fun x => eval_expr e x) = (fun x => eval_expr (derive_expr e) x).
