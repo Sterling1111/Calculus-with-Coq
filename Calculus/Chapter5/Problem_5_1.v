@@ -1,7 +1,9 @@
 From Calculus.Chapter5 Require Import Prelude.
 
 Lemma lemma_5_1_i : ⟦ lim 1 ⟧ (λ x, (x^2 - 1) / (x + 1)) = 0.
-Proof. auto_limit. Qed.
+Proof. 
+  auto_limit.
+Qed.
 
 Lemma lemma_5_1_ii : ⟦ lim 2 ⟧ (λ x, (x^3 - 8) / (x - 2)) = 12.
 Proof. apply limit_eq with (f1 := λ x, x^2 + 2 * x + 4). exists 1. split; try lra.

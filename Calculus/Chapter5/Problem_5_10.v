@@ -34,3 +34,7 @@ Proof.
   specialize (H7 (δ) ltac:(unfold δ in *; solve_R)).
   solve_R.
 Admitted.
+
+Lemma lemma_5_10_d : ∃ (f : R -> R) L, ⟦ lim 0 ⟧ (fun x => f (x^2)) = L /\ (∀ L', ¬ (⟦ lim 0 ⟧ f = L')).
+Proof.
+Admitted.
