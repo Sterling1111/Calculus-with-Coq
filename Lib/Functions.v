@@ -68,7 +68,7 @@ Proof.
 Qed.
 
 Lemma eq_cardinality_Full_set : forall (A B : Type),
-  ((exists f : A -> B, bijective f) /\ (exists (a : A) (b : B), True)) \/ ((Full_set A = ∅) /\ (Full_set B = ∅)) -> ‖Full_set A‖ = ‖Full_set B‖.
+  ((exists f : A -> B, bijective f) /\ (exists (a : A) (b : B), True)) \/ ((Full_set A = ∅) /\ (Full_set B = ∅)) -> (#| (Full_set A) | = #| (Full_set B) |).
 Proof.
   intros A B [[[f [H1 H2]] [a [b _]]] | H2].
   - unfold injective in H1. unfold surjective in H2. right; 
@@ -85,13 +85,13 @@ Proof.
 Qed.
 
 Lemma eq_cardinality_Full_set_Type : forall (A B : Type),
-  ‖A‖ = ‖B‖ <-> ‖Full_set A‖ = ‖Full_set B‖.
+  #| A | = #| B | <-> #| Full_set A | = #| Full_set B |.
 Proof.
   intros A B. split; intro H1; unfold Type_to_Ensemble in H1; auto.
 Qed.
 
 Lemma eq_cardinality_Type : forall A B : Type,
-  ((exists f : A -> B, bijective f) /\ (exists (a : A) (b : B), True)) \/ ((Full_set A = ∅) /\ (Full_set B = ∅)) -> ‖A‖ = ‖B‖.
+  ((exists f : A -> B, bijective f) /\ (exists (a : A) (b : B), True)) \/ ((Full_set A = ∅) /\ (Full_set B = ∅)) -> #| A | = #| B |.
 Proof.
   intros A B [[[f H1] [a [b _]]] | [H1 H2]]; apply eq_cardinality_Full_set; auto. left. split. exists f. auto. exists a, b. auto.
 Qed.

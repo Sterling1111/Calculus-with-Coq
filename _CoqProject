@@ -36,6 +36,7 @@ Lib/Interval.v
 Lib/Notations.v
 Lib/Inverse.v
 Lib/Trigonometry.v
+Lib/Trig_Identities.v
 Lib/Tactics.v
 Lib/Taylor.v
 Lib/Vector.v
@@ -92,6 +93,9 @@ Calculus/Chapter3/Prelude.v
 Calculus/Chapter5/Prelude.v
 Calculus/Chapter6/Prelude.v
 Calculus/Chapter7/Prelude.v
+Calculus/Chapter8/Prelude.v
+Calculus/Chapter8/Problem_8_18.v
+Calculus/Chapter8/Problem_8_19.v
 Calculus/Chapter9/Prelude.v
 Calculus/Chapter10/Prelude.v
 Calculus/Chapter11/Prelude.v

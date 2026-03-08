@@ -37,7 +37,7 @@ Notation "A − B" := (Setminus _ A B) (at level 30) : set_scope.
 Notation "A × B" := (set_prod A B) (at level 30) : set_scope.
 Notation "A ′" := (Complement _ A) (at level 20, format "A ′") : set_scope.
 Notation "∅" := (Empty_set _) : set_scope.
-Notation "‖ A ‖ = n" := (@cardinal _ A n) (at level 70, format "‖ A ‖  =  n") : set_scope.
+Notation "#| A | = n" := (@cardinal _ A n) (at level 70, format "#| A |  =  n") : set_scope.
 
 
 Definition FromList {U : Type} (l : list U) : Ensemble U :=
@@ -112,11 +112,11 @@ Definition cardinal_lt {A B : Type} (X : Ensemble A) (Y : Ensemble B) : Prop :=
 Definition cardinal_le {A B : Type} (X : Ensemble A) (Y : Ensemble B) : Prop :=
   exists f : (subType X) -> (subType Y), injective f.
 
-Notation "‖ X ‖ = ‖ Y ‖" := (cardinal_eq X Y) (at level 70, format "‖ X ‖  =  ‖ Y ‖") : set_scope.
-Notation "‖ X ‖ <= ‖ Y ‖" := (cardinal_le X Y) (at level 70, format "‖ X ‖  <=  ‖ Y ‖") : set_scope.
-Notation "‖ X ‖ < ‖ Y ‖" := (cardinal_lt X Y) (at level 70, format "‖ X ‖  <  ‖ Y ‖") : set_scope.
-Notation "‖ X ‖ >= ‖ Y ‖" := (cardinal_le Y X) (at level 70, format "‖ X ‖  >=  ‖ Y ‖") : set_scope.
-Notation "‖ X ‖ > ‖ Y ‖" := (cardinal_lt Y X) (at level 70, format "‖ X ‖  >  ‖ Y ‖") : set_scope.
+Notation "#| X | = #| Y |" := (cardinal_eq X Y) (at level 70, format "#| X |  =  #| Y |") : set_scope.
+Notation "#| X | <= #| Y |" := (cardinal_le X Y) (at level 70, format "#| X |  <=  #| Y |") : set_scope.
+Notation "#| X | < #| Y |" := (cardinal_lt X Y) (at level 70, format "#| X |  <  #| Y |") : set_scope.
+Notation "#| X | >= #| Y |" := (cardinal_le Y X) (at level 70, format "#| X |  >=  #| Y |") : set_scope.
+Notation "#| X | > #| Y |" := (cardinal_lt Y X) (at level 70, format "#| X |  >  #| Y |") : set_scope.
 
 End SetNotations.
 
@@ -1016,7 +1016,7 @@ Proof.
 Qed.
 
 Lemma cardinal_Empty_2 : forall (U : Type) (n : nat),
-  ‖(∅ : Ensemble U)‖ = n -> n = 0.
+  #|(∅ : Ensemble U)| = n -> n = 0.
 Proof.
   intros U n H1. destruct n as [| n]; auto. exfalso. apply cardinal_invert in H1 as [A [x [H1 [H2 H3]]]].
   rewrite set_equal_def in H1. specialize (H1 x) as [H1 H4]. unfold Ensembles.Add in H4. assert (x ∈ A ⋃ ⦃x⦄) as H5.
@@ -1024,13 +1024,13 @@ Proof.
 Qed.
 
 Lemma cardinal_Singleton : forall (U : Type) (x : U),
-  ‖⦃x⦄‖ = 1.
+  #|⦃x⦄| = 1.
 Proof.
   intros U x. replace (Singleton U x) with (∅ ⋃ Singleton U x) by autoset. apply card_add; [apply card_empty | autoset].
 Qed.
 
 Lemma cardinal_inifinite : forall (U : Type) (A : Ensemble U),
-  ~Finite U A -> forall n : nat, ~ ‖A‖ = n.
+  ~Finite U A -> forall n : nat, ~ (#|A| = n).
 Proof.
   intros U A H1 n H2. generalize dependent A. induction n as [| k IH].
   - intros A H1 H2. apply cardinal_invert in H2. apply H1. rewrite H2. apply Empty_is_finite.
@@ -1041,7 +1041,7 @@ Proof.
 Qed.
 
 Lemma cardinal_minus : forall (U : Type) (A : Ensemble U) (h : U) (n : nat),
-  ‖A‖ = S n -> h ∈ A -> ‖A − ⦃h⦄‖ = n.
+  #|A| = S n -> h ∈ A -> #|A − ⦃h⦄| = n.
 Proof.
   intros U A h n H1 H2. replace (A − ⦃h⦄) with (Subtract U A h) by autoset.
   replace n with (Nat.pred (S n)) by lia.
@@ -1086,7 +1086,7 @@ Proof.
 Qed.
 
 Lemma cardinal_Union : forall (U : Type) (A B : Ensemble U) (n m : nat),
-  ‖A‖ = n -> ‖B‖ = m -> A ⋂ B = ∅ -> ‖A ⋃ B‖ = n + m.
+  #|A| = n -> #|B| = m -> A ⋂ B = ∅ -> #|A ⋃ B| = n + m.
 Proof.
   intros U A B n m H1 H2 H3. induction H1 as [| A n H1 IH x H4].
   - rewrite Union_Identity. simpl. auto.
@@ -1102,7 +1102,7 @@ Proof.
 Qed.
 
 Lemma Add_not_in_preserves_cardinality : forall (U : Type) (A : Ensemble (Ensemble U)) (h : U) (n : nat),
-  (forall x, x ∈ A -> h ∉ x) -> ‖A‖ = n -> ‖(Im (Ensemble U) (Ensemble U) A (fun S : Ensemble U => Ensembles.Add U S h))‖ = n.
+  (forall x, x ∈ A -> h ∉ x) -> #|A| = n -> #|(Im (Ensemble U) (Ensemble U) A (fun S : Ensemble U => Ensembles.Add U S h))| = n.
 Proof.
   intros U A h n H1 H2. induction H2 as [| A n H2 IH x H3].
   - rewrite image_empty. apply card_empty.
@@ -1121,13 +1121,13 @@ Proof.
 Qed.
 
 Lemma Power_set_Image_Add_preserves_cardinality : forall (U : Type) (A : Ensemble U) (n : nat) (h : U),
-  h ∉ A -> ‖ℙ(A)‖ = n -> ‖Im (Ensemble U) (Ensemble U) (ℙ(A)) (fun S : Ensemble U => Ensembles.Add U S h)‖ = n.
+  h ∉ A -> #|ℙ(A)| = n -> #|(Im (Ensemble U) (Ensemble U) (ℙ(A)) (fun S : Ensemble U => Ensembles.Add U S h))| = n.
 Proof.
   intros U A n h H1 H2. apply Add_not_in_preserves_cardinality. apply h_not_in_Power_set_A; auto. auto.
 Qed.
 
 Lemma cardinal_Power_set_add : forall (U : Type) (A : Ensemble U) (h : U) (n : nat),
-  ‖ℙ(A)‖ = n -> h ∉ A -> ‖ℙ(Ensembles.Add U A h)‖ = 2 * n.
+  #|ℙ(A)| = n -> h ∉ A -> #|ℙ(Ensembles.Add U A h)| = 2 * n.
 Proof.
   intros U A h n H1 H2. rewrite Power_set_Add. apply cardinal_Union; auto. rewrite Nat.add_0_r. apply Power_set_Image_Add_preserves_cardinality; auto.
   apply set_equal_def. intros x. split; intros H3; autoset. apply In_Intersection_def in H3 as [H3 H4]; autoset. rewrite In_Power_set_def in H3.
@@ -1136,7 +1136,7 @@ Proof.
 Qed.
 
 Proposition prop_14_6 : forall (U : Type) (A : Ensemble U) (n : nat),
-  Finite_set A -> ‖A‖ = n -> ‖ℙ(A)‖ = 2^n.
+  Finite_set A -> #|A| = n -> #|ℙ(A)| = 2^n.
 Proof.
   intros U A n [l H1] H2. generalize dependent A. generalize dependent n. induction l as [| h t IH].
   - intros n A H1 H2. rewrite list_to_ensemble_nil in H1. rewrite <- H1 in H2.
@@ -1171,13 +1171,13 @@ Section num_subsets.
   Variable U : Type.
 
   Definition Subsets_of_Cardinality (A : Ensemble U) (k : nat) : Ensemble (Ensemble U) :=
-    fun B => (B ⊆ A)%set /\ ‖B‖ = k.
+    fun B => (B ⊆ A)%set /\ #|B| = k.
 
   Definition Subsets_without_x (A : Ensemble U) (x : U) (k : nat) : Ensemble (Ensemble U) :=
-    fun B => (B ⊆ A)%set /\ ~ In _ B x /\ ‖B‖ = k.
+    fun B => (B ⊆ A)%set /\ ~ In _ B x /\ #|B| = k.
 
   Definition Subsets_with_x (A : Ensemble U) (x : U) (k : nat) : Ensemble (Ensemble U) :=
-    fun B => (B ⊆ A)%set /\ In _ B x /\ ‖B‖ = k.
+    fun B => (B ⊆ A)%set /\ In _ B x /\ #|B| = k.
 
   Lemma Union_of_Subsets : forall (A : Ensemble U) (k : nat) (x : U),
     x ∈ A -> Subsets_of_Cardinality A k = Subsets_without_x A x k ⋃ Subsets_with_x A x k.
@@ -1191,7 +1191,7 @@ Section num_subsets.
   Qed.
 
   Theorem theorem_16_6 : forall (A : Ensemble U) (n k : nat),
-    ‖A‖ = n -> ‖Subsets_of_Cardinality A k‖ = choose n k.
+    #|A| = n -> #|Subsets_of_Cardinality A k| = choose n k.
   Proof.
     intros A n k H1. generalize dependent k. generalize dependent A. induction n as [| m IH].
     - intros A H1 k. rewrite cardinal_Empty_1 in H1. rewrite H1. destruct (classic (k = 0)) as [H2 | H2].
@@ -1242,7 +1242,7 @@ Qed.
 End num_subsets.
 
 Lemma list_to_ensemble_card_nodup : forall (U : Type) (l : list U),
-  NoDup l -> ‖list_to_ensemble l‖ = length l.
+  NoDup l -> #|list_to_ensemble l| = length l.
 Proof.
   intros U l H1. induction l as [| h t IH].
   - rewrite list_to_ensemble_nil. apply card_empty.
@@ -1283,7 +1283,7 @@ Proof.
 Qed.
 
 Lemma cardinal_finite_eq_list_with_length : forall (U : Type) (A : Ensemble U) (n : nat),
-  ‖A‖ = n -> exists l : list U, A = list_to_ensemble l /\ length l = n /\ NoDup l.
+  #|A| = n -> exists l : list U, A = list_to_ensemble l /\ length l = n /\ NoDup l.
 Proof.
   intros U A n H1. pose proof H1 as H2. apply cardinal_finite in H1. apply Finite_set_equiv_Finite in H1.
   apply Finite_set_iff_Finite_set' in H1 as [l' [H1 H3]]. exists l'. split; auto. split; auto.
@@ -1291,7 +1291,7 @@ Proof.
 Qed.
 
 Lemma cardinal_finite : forall (U : Type) (A : Ensemble U) (n : nat),
-  ‖A‖ = n -> Finite_set A.
+  #|A| = n -> Finite_set A.
 Proof.
   intros U A n H1. induction H1 as [| A' n' H2 H3 x H4].
   - exists []. apply list_to_ensemble_nil.
@@ -1301,7 +1301,7 @@ Proof.
 Qed.
 
 Lemma finite_cardinal : forall (U : Type) (A : Ensemble U),
-  Finite_set A -> exists n : nat, ‖A‖ = n.
+  Finite_set A -> exists n : nat, #|A| = n.
 Proof.
   intros U A H1. apply Finite_set_equiv_Finite in H1. induction H1 as [| A' H2 IH x H3].
   - exists 0. apply card_empty.
@@ -1318,7 +1318,7 @@ Qed.
 
 Theorem Pigeonhole : forall (U V : Type) (A : Ensemble U) (B : Ensemble V)
   (f : subType A -> subType B) (n m : nat),
-    ‖B‖ = n -> ‖A‖ = m -> 0 < n < m -> ~ injective f.
+    #|B| = n -> #|A| = m -> 0 < n < m -> ~ injective f.
 Proof.
   intros U V A B f n m H1 H2 [H3 H4] H5. apply cardinal_finite_eq_list_with_length in H1 as [l [H1 [H6 H7]]].
   apply cardinal_finite_eq_list_with_length in H2 as [l' [H2 [H8 H9]]]. subst. unfold injective in H5.
@@ -1328,18 +1328,4 @@ Proof.
   { intros x. destruct x as [val prop]. simpl. apply In_list_to_ensemble. auto. }
   assert (forall x : subType (list_to_ensemble l'), List.In (val (list_to_ensemble l) (f x)) l) as H12.
   { intros x. specialize (H11 (f x)). auto. }
-Admitted.
-
-Lemma cardinal_eq_Finite : forall (U V : Type) (A : Ensemble U) (B : Ensemble V),
-  Finite_set A -> Finite_set B -> ‖A‖ = ‖B‖ -> exists m n : nat, ‖A‖ = m /\ ‖B‖ = n /\ m = n.
-Proof.
-  intros U V A B. repeat rewrite Finite_set_iff_Finite_set'. intros [l1 [H1 H2]] [l2 [H3 H4]] [[H5 H6] | [H5 [H6 [f H7]]]].
-  - exists 0, 0. repeat split; auto. rewrite H5. apply card_empty. rewrite H6. apply card_empty.
-  - exists (length l1), (length l2). repeat split; try (subst; apply list_to_ensemble_card_nodup; auto).
-    assert (length l1 = length l2 \/ length l2 < length l1 \/ length l2 > length l1) as [H8 | [H8 | H8]] by lia; auto.
-    -- assert (length l2 = 0 \/ length l2 > 0) as [H9 | H9] by lia.
-       + apply length_zero_iff_nil in H9. subst. simpl in H6. autoset. 
-       + exfalso. apply (Pigeonhole U V A B f (length l2) (length l1)); subst. apply list_to_ensemble_card_nodup; auto.
-         apply list_to_ensemble_card_nodup; auto. lia. destruct H7 as [H7 _]. apply H7.
-    -- admit.
 Admitted.
