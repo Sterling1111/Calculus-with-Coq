@@ -130,10 +130,7 @@ let run_dummy_executable expr_list =
   close_out oc;
   let cmd = Printf.sprintf "./simplex_solver %s %s" in_file out_file in
   
-  let t1 = Unix.gettimeofday () in
   let exit_code = Sys.command cmd in
-  let t2 = Unix.gettimeofday () in
-  Printf.eprintf "C++ solver time: %f seconds\n%!" (t2 -. t1);
   
   if exit_code <> 0 then failwith (Printf.sprintf "Executable failed with code %d" exit_code);
   let ic = open_in out_file in

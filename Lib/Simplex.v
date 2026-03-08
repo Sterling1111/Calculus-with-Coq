@@ -293,9 +293,7 @@ Lemma test_dense : forall a b c : Z,
   a + c >= 10 ->
   a + b + c >= 15.
 Proof.
-  Set Ltac Profiling.
-  Time simplex.
-  Show Ltac Profile.
+  simplex.
 Qed.
 
 Lemma test_hard : forall a b c d e f : Z,
@@ -307,10 +305,7 @@ Lemma test_hard : forall a b c d e f : Z,
   c + d <= 15 ->
   e + f >= 70.
 Proof.
-  Set Ltac Profiling.
-  Time simplex.
-  Show Ltac Profile.
-  Show Proof.
+  simplex.
 Qed.
 
 Lemma massive_test_8 : forall x0 x1 x2 x3 x4 x5 x6 x7 : Z,
@@ -328,8 +323,6 @@ Proof.
   simplex.
 Qed.
 
-Unset Ltac Profiling.
-
 Lemma massive_test_10 : forall x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 : Z,
   x0 + 2 * x1 - 3 * x2 + x3 + 4 * x4 - x5 + 2 * x6 - x7 + x8 + x9 >= 5 ->
   -2 * x0 + x1 + x2 - 2 * x3 + x4 + 3 * x5 - x6 + 2 * x7 - 2 * x8 + x9 >= -3 ->
@@ -344,7 +337,5 @@ Lemma massive_test_10 : forall x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 : Z,
   -5 * x0 - 3 * x1 - 2 * x2 - 6 * x3 - 9 * x4 - 8 * x5 - 3 * x6 - 5 * x7 - 7 * x8 - 6 * x9 >= -32 ->
   False.
 Proof.
-  Set Ltac Profiling.
-  Time simplex.
-  Show Ltac Profile.
-Time Qed.
+  simplex.
+Qed.

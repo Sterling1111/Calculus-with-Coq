@@ -265,6 +265,12 @@ Definition is_natural (r : R) : Prop :=
 Definition is_integer (r : R) : Prop :=
     exists z : Z, r = IZR z.
 
+Lemma not_integer : forall r n,
+  IZR n < r < IZR (n + 1) -> ~ is_integer r.
+Proof.
+  intros r n [H1 H2] [m H3]. rewrite H3 in H1, H2. apply lt_IZR in H1, H2. lia.
+Qed.
+
 Lemma is_natural_plus : forall r1 r2 : R,
   is_natural r1 -> is_natural r2 -> is_natural (r1 + r2).
 Proof.
@@ -733,4 +739,365 @@ Proof.
   rewrite H7.
   apply Rmult_lt_reg_r with (r := 2 ^ k / ε). apply Rdiv_pos_pos; auto.
   field_simplify; try lra.
+Qed.
+
+Lemma Rpower_gt_0 : forall r n,
+  r > 0 -> Rpower r n > 0.
+Proof.
+  intros r n H1. unfold Rpower. destruct (Rle_dec 0 r).
+  - apply exp_pos.
+  - apply exp_pos.
+Qed.
+
+Lemma Rpow_neq_0 : forall r n,
+  r <> 0 -> r ^ n <> 0.
+Proof.
+  intros r n H1. induction n as [| n' IH].
+  - simpl. nra.
+  - simpl. nra.
+Qed.
+
+Lemma Rpow_div_l : forall r1 r2 k,
+  r2 <> 0 -> r2 <> 0 -> (r1 / r2) ^ k = r1 ^ k / r2 ^ k.
+Proof.
+  intros r1 r2 k H1 H2. induction k as [| k' IH].
+  - simpl. field.
+  - simpl. rewrite IH. field. split. 2 : { nra. }
+    apply Rpow_neq_0. auto.
+Qed.
+
+Lemma Rpow_1_k : forall k,
+  1 ^ k = 1.
+Proof.
+  intros k. induction k as [| k' IH].
+  - simpl. reflexivity.
+  - simpl. rewrite IH. lra.
+Qed.
+
+Lemma pow_neg1_n_plus_1 : forall (n : nat),
+  (-1) ^ (n + 1) = (-1) ^ n * (-1) ^ 1.
+Proof.
+  intros n.
+  induction n.
+  - simpl. lra.
+  - simpl. rewrite IHn. lra.
+Qed.
+
+Lemma pow_neg1_n_plus_n : forall (n : nat),
+  (-1)^(n+n) = (-1)^n * (-1)^n.
+Proof.
+  induction n as [| k IH].
+  - simpl. lra.
+  - replace ((-1)^(S k)) with ((-1)^k * (-1)^1) by ((simpl; lra)).
+    replace ((-1)^1) with (-1) by lra.
+    replace ((-1) ^ k * -1 * ((-1) ^ k * -1)) with ((-1) ^ k * (-1) ^ k) by lra.
+    rewrite <- IH.
+    replace ((S k + S k))%nat with (((k + k) + 1) + 1)%nat by lia.
+    repeat rewrite pow_neg1_n_plus_1. lra. 
+Qed.
+
+Lemma pow_neg1_n : forall (n : nat),
+  (-1)^n = 1 \/ (-1)^n = -1.
+Proof.
+  intros n.
+  induction n as [| k IH].
+  - simpl. left. lra.
+  - destruct IH as [H | H].
+    + right. replace (S k) with (k + 1)%nat by lia. rewrite pow_neg1_n_plus_1. rewrite H. lra.
+    + left. replace (S k) with (k + 1)%nat by lia. rewrite pow_neg1_n_plus_1. rewrite H. lra.
+Qed.
+
+Lemma r_mult_r_is_Rsqr : forall r : R, r * r = Rsqr r.
+Proof.
+  intros r.
+  unfold Rsqr. reflexivity.
+Qed.
+
+Lemma pow_neg1_odd : forall k, Nat.Odd k -> (-1) ^ k = -1.
+Proof.
+  intros k Hodd.
+  destruct Hodd as [m Heq]. rewrite Heq.
+  rewrite pow_neg1_n_plus_1. simpl.
+  replace ((m + (m + 0))%nat) with (m + m)%nat by lia.
+  rewrite Rmult_1_r. rewrite pow_neg1_n_plus_n. 
+  rewrite r_mult_r_is_Rsqr. assert (H : (0 <= ((-1) ^ m)²)) by apply Rle_0_sqr.
+  destruct (pow_neg1_n m) as [Hpos | Hneg].
+  - rewrite Hpos. unfold Rsqr. lra.
+  - rewrite Hneg. unfold Rsqr. lra.
+Qed.
+
+Lemma pow_neg1_even : forall k, Nat.Even k -> (-1) ^ k = 1.
+Proof.
+  intros k. unfold Nat.Even. intros [m Heq].
+  assert (H2: (-1) ^ (2 * m + 1) = -1).
+  { apply pow_neg1_odd. exists m. reflexivity. } 
+  rewrite Heq. rewrite pow_neg1_n_plus_1 in H2. lra.
+Qed.
+
+Lemma mult_IZR_eq_1 : forall z1 z2,
+  IZR z1 * IZR z2 = 1 -> ((z1 = 1 /\ z2 = 1) \/ (z1 = -1 /\ z2 = -1))%Z.
+Proof.
+  intros z1 z2 H1. assert (z1 = 0 \/ z1 = 1 \/ z1 = -1 \/ z1 < -1 \/ z1 > 1)%Z as [H2 | [H2 | [H2 | [H2 | H2]]]] by lia.
+  - rewrite H2 in H1. lra.
+  - rewrite H2 in H1. rewrite Rmult_1_l in H1. apply eq_IZR in H1. lia.
+  - rewrite H2 in H1. simpl in H1. assert (IZR z2 = -1) as H3 by lra. apply eq_IZR in H3. lia.
+  - rewrite <- mult_IZR in H1. apply eq_IZR in H1. pose proof Ztrichotomy z2 0 as [H3 | [H3 | H3]]; lia.
+  - rewrite <- mult_IZR in H1. apply eq_IZR in H1. pose proof Ztrichotomy z2 0 as [H3 | [H3 | H3]]; lia.
+Qed.
+
+Lemma mult_IZR_eq_neg1 : forall z1 z2,
+  IZR z1 * IZR z2 = -1 -> ((z1 = 1 /\ z2 = -1) \/ (z1 = -1 /\ z2 = 1))%Z.
+Proof.
+  intros z1 z2 H1. assert (z1 = 0 \/ z1 = 1 \/ z1 = -1 \/ z1 < -1 \/ z1 > 1)%Z as [H2 | [H2 | [H2 | [H2 | H2]]]] by lia.
+  - rewrite H2 in H1. lra.
+  - rewrite H2 in H1. rewrite Rmult_1_l in H1. apply eq_IZR in H1. lia.
+  - rewrite H2 in H1. simpl in H1. assert (IZR z2 = 1) as H3 by lra. apply eq_IZR in H3. lia.
+  - rewrite <- mult_IZR in H1. apply eq_IZR in H1. pose proof Ztrichotomy z2 0 as [H3 | [H3 | H3]]; lia.
+  - rewrite <- mult_IZR in H1. apply eq_IZR in H1. pose proof Ztrichotomy z2 0 as [H3 | [H3 | H3]]; lia.
+Qed.
+
+Open Scope Z_scope.
+
+Lemma Zmult_eq_1 : forall z1 z2,
+  z1 * z2 = 1 -> ((z1 = 1 /\ z2 = 1) \/ (z1 = -1 /\ z2 = -1))%Z.
+Proof.
+  intros z1 z2 H1. pose proof Ztrichotomy z1 0 as [H2 | [H2 | H2]]; pose proof Ztrichotomy z2 0 as [H3 | [H3 | H3]]; lia.
+Qed.
+
+Lemma Zmult_eq_neg1 : forall z1 z2,
+  z1 * z2 = -1 -> ((z1 = 1 /\ z2 = -1) \/ (z1 = -1 /\ z2 = 1))%Z.
+Proof.
+  intros z1 z2 H1. pose proof Ztrichotomy z1 0 as [H2 | [H2 | H2]]; pose proof Ztrichotomy z2 0 as [H3 | [H3 | H3]]; lia.
+Qed.
+
+Lemma Even_ZEven : forall n,
+  Nat.Even n <-> Z.Even (Z.of_nat n).
+Proof.
+  intros n; split.
+  - intros [m H1]. exists (Z.of_nat m). lia.
+  - intros [m H1]. exists (Z.to_nat m). lia.
+Qed.
+
+Lemma Odd_ZOdd : forall n,
+  Nat.Odd n <-> Z.Odd (Z.of_nat n).
+Proof.
+  intros n; split.
+  - intros [m H1]. exists (Z.of_nat m). lia.
+  - intros [m H1]. exists (Z.to_nat m). lia.
+Qed.
+
+Lemma Zpow_neg1_nat_even : forall n : nat,
+  Nat.Even n -> (-1) ^ (Z.of_nat n) = 1.
+Proof.
+  intros n H1. apply Even_ZEven in H1. rewrite <- Z.pow_opp_even. simpl. rewrite Z.pow_1_l; lia. auto.
+Qed.
+
+Lemma Zpow_neg1_nat_odd : forall n : nat,
+  Nat.Odd n -> (-1) ^ (Z.of_nat n) = -1.
+Proof.
+  intros n H1. apply Odd_ZOdd in H1. rewrite Z.pow_opp_odd with (a := 1). rewrite Z.pow_1_l; lia. auto.
+Qed.
+
+Lemma Zpow_neg_nat_odd : forall n z ,
+  Nat.Odd n -> (-z) ^ (Z.of_nat n) = -z ^ (Z.of_nat n).
+Proof.
+  intros n z H1. apply Odd_ZOdd in H1. rewrite Z.pow_opp_odd with (a := z). reflexivity. auto.
+Qed.
+
+Lemma Zpow_neg_nat_even : forall n z,
+  Nat.Even n -> (-z) ^ (Z.of_nat n) = z ^ (Z.of_nat n).
+Proof.
+  intros n z H1. apply Even_ZEven in H1. rewrite Z.pow_opp_even. reflexivity. auto.
+Qed.
+
+Lemma div_trans : forall a b c,
+  (a | b) -> (b | c) -> (a | c).
+Proof.
+  intros a b c [k1 H1] [k2 H2]. unfold Z.divide. exists (k1 * k2). lia.
+Qed.
+
+Close Scope Z_scope.
+
+Lemma div_nonzero: forall x y : R, x <> 0 -> y <> 0 -> x / y <> 0.
+Proof.
+  intros x y Hx Hy.
+  unfold Rdiv.
+  apply Rmult_integral_contrapositive_currified; auto.
+  apply Rinv_neq_0_compat; auto.
+Qed.
+
+Lemma pow_sub : forall (x:R) (n m:nat), x <> 0 -> (n >= m)%nat -> x ^ (n - m) = x ^ n / x ^ m.
+Proof.
+  intros x n m H1 H2. induction m as [| k IH].
+  - simpl. rewrite Nat.sub_0_r. lra.
+  - assert (n = S k \/ n >= k)%nat as [H3 | H3] by lia.
+    -- rewrite H3. replace (S k - S k)%nat with 0%nat by lia. rewrite pow_O. field. apply pow_nonzero; auto.
+    -- apply Rmult_eq_reg_l with (r := x); auto. replace x with (x^1) at 1 by lra. rewrite <- pow_add. replace (1 + (n - S k))%nat with (n - k)%nat by lia.
+        rewrite IH; try lia. simpl. field. split; auto. apply pow_nonzero; auto.
+Qed.
+
+Definition R_divides (r1 r2 : R) : Prop :=
+  exists a b : Z, r1 = IZR a /\ r2 = IZR b /\ (a | b)%Z.
+
+Notation "( x | y )" := (R_divides x y) (at level 0) : R_scope.
+
+Lemma R_divides_refl : (3 | 6)%R.
+Proof.
+  exists (3%Z), (6%Z); repeat split; try reflexivity. exists 2%Z. reflexivity.
+Qed.
+
+Lemma R_divides_plus : forall r r1 r2,
+  (r | r1) -> (r | r2) -> (r | (r1 + r2)).
+Proof.
+  intros r r1 r2 [a [b [H1 [H2 [c H3]]]]] [e [f [H4 [H5 [g H6]]]]]. exists (a%Z), (b + f)%Z. repeat split; auto.
+  - rewrite plus_IZR. lra.
+  - exists (c + g)%Z. rewrite H3. rewrite H6. apply eq_IZR. rewrite plus_IZR. repeat rewrite mult_IZR. rewrite plus_IZR.
+    apply IZR_eq in H6, H3. rewrite mult_IZR in H3, H6. nra. 
+Qed.
+
+Lemma IZR_divides : forall a b,
+  (a | b)%Z <-> (IZR a | IZR b).
+Proof.
+  intros a b. split.
+  - exists a, b. repeat split; auto.
+  - intros [c [d [H1 [H2 H3]]]]. apply eq_IZR in H1, H2. rewrite H1, H2. auto.
+Qed.
+
+Lemma divides_neg_R : forall r1 r2,
+  (r1 | r2) -> (r1 | -r2).
+Proof.
+  intros r1 r2 [a [b [H1 [H2 H3]]]]. rewrite H1, H2. rewrite <- opp_IZR. apply IZR_divides. apply Z.divide_opp_r. auto.
+Qed.
+
+Lemma sqrt_2_weak_bound : 1.4 < sqrt 2 < 1.5.
+Proof.
+   split; (apply Rsqr_incrst_0; try lra; unfold Rsqr; repeat rewrite sqrt_sqrt; try lra; apply sqrt_pos).
+Qed.
+
+Lemma pow_incrst_0 : forall r1 r2 n,
+  r1 > 0 -> r2 > 0 -> r1^n < r2^n -> r1 < r2.
+Proof.
+  intros r1 r2 n H1 H2 H3. generalize dependent r1. generalize dependent r2. induction n as [| k IH].
+  - intros r2 H1 r1 H2 H3. simpl in H3. lra.
+  - intros r2 H1 r1 H2 H3. assert (k = 0 \/ k > 0)%nat as [H4 | H4] by lia.
+    -- rewrite H4 in H3. simpl in H3. lra.
+    -- simpl in H3. pose proof (Rtotal_order r1 r2) as [H5 | [H5 | H5]]; try nra.
+       + rewrite H5 in H3. nra.
+       + pose proof (pow_incrst_1 r2 r1 k H4 ltac:(lra) H2) as H6. apply Rgt_lt in H5. specialize (H6 H5). assert (r1 ^ k > 0). { apply pow_lt; nra. } nra.
+Qed.
+
+Lemma pow_incrst_2 : forall r1 r2 n,
+  r1 > 0 -> r2 > 0 -> r1 < r2 -> r1 ^ n <= r2 ^ n.
+Proof.
+  intros. assert (n = 0 \/ n <> 0)%nat as [H3 | H3] by lia.
+  - rewrite H3. simpl. lra.
+  - apply Rlt_le. apply pow_incrst_1 with (n := n); try lra; try lia.
+Qed.
+
+Lemma pow_incrst_3 : forall r1 r2 n,
+  (n > 0)%nat -> r1 > 0 -> r2 > 0 -> r1 ^ n <= r2 ^ n -> r1 <= r2.
+Proof.
+  intros r1 r2 n H1 H2 H3 H4. generalize dependent r1. generalize dependent r2. induction n as [| k IH].
+  - intros r2 H2 r1 H3 H4. lia.
+  - intros r2 H2 r1 H3 H4. assert (k = 0 \/ k > 0)%nat as [H5 | H5] by lia.
+    -- rewrite H5 in H4. simpl in H4. lra.
+    -- simpl in H4. pose proof (Rtotal_order r1 r2) as [H6 | [H6 | H6]]; try nra.
+       pose proof (pow_incrst_2 r2 r1 k H2 H3 H6). apply IH; auto. assert (r1 ^ k > 0). { apply pow_lt; nra. } nra.
+Qed.
+
+Lemma pow_eq_1 : forall r1 r2 n,
+  (n > 0)%nat -> r1 > 0 -> r2 > 0 -> r1 ^ n = r2 ^ n -> r1 = r2.
+Proof.
+  intros r1 r2 n H1 H2 H3 H4. generalize dependent r1. generalize dependent r2. induction n as [| k IH].
+  - intros r2 H2 r1 H3 H4. lia.
+  - intros r2 H2 r1 H3 H4. assert (k = 0 \/ k > 0)%nat as [H5 | H5] by lia.
+    -- rewrite H5 in H4. simpl in H4. lra.
+    -- pose proof (Rtotal_order r1 r2) as [H6 | [H6 | H6]]; auto.
+       + apply pow_incrst_1 with (n := S k) in H6; auto; nra.
+       + apply pow_incrst_1 with (n := S k) in H6; auto; nra.
+Qed.
+
+
+Lemma cbrt_2_weak_bound : 1.2 < Rpower 2 (1/3) < 1.3.
+Proof.
+  split; apply pow_incrst_0 with (n := 3%nat); try nra; try apply Rpower_gt_0; try lra; simpl; repeat rewrite Rmult_1_r; repeat rewrite <- Rpower_plus;
+  replace (1 / 3 + (1 / 3 + 1 / 3)) with (INR 1); try rewrite Rpower_1; try nra; try nra; simpl; nra.
+Qed.
+
+Lemma cons_neq : forall (r1 r2 : R) (t1 t2 : list R),
+  r1 :: t1 <> r2 :: t2 -> r1 <> r2 \/ t1 <> t2.
+Proof.
+ intros r1 r2 t1 t2 H1. destruct (Req_dec r1 r2) as [H2 | H2].
+ - right. intros H3. apply H1. rewrite H2. rewrite H3. reflexivity.
+ - left. auto.
+Qed.
+
+Lemma list_neq_exists_nth_neq : forall (l1 l2 : list R),
+  (length l1 = length l2)%nat -> l1 <> l2 -> exists i, (0 <= i <= length l1 - 1)%nat /\ nth i l1 0 <> nth i l2 0.
+Proof.
+  intros l1 l2 H1 H2. generalize dependent l2. induction l1 as [| h1 t1 IH].
+  - intros l2 H1 H2. simpl in H1. apply eq_sym in H1. apply length_zero_iff_nil in H1. apply eq_sym in H1. tauto.
+  - intros l2 H1 H2. destruct l2 as [| h2 t2].
+    -- simpl in H1. lia.
+    -- simpl in H1. assert (H3 : (length t1 = length t2)%nat) by lia. apply cons_neq in H2 as [H2 | H2].
+       + exists 0%nat. split; simpl; try lia; auto.
+       + specialize (IH t2 H3 H2) as [k [H4 H5]]. exists (S k). assert (H6 : t1 <> []).
+         { destruct t1. apply eq_sym in H3. apply length_zero_iff_nil in H3. rewrite <- H3. auto. discriminate. }
+         assert (H7 : (length t1 > 0)%nat). { destruct t1. tauto. simpl. lia. } split; simpl in *; try lia; auto.
+Qed.
+
+Lemma map_r_neq : forall (l1 l2 : list R) r,
+  (length l1 = length l2)%nat -> map (fun x => x * r) l2 <> l1 -> exists i, (0 <= i <= length l2 - 1)%nat /\ r * nth i l2 0 <> nth i l1 0.
+Proof.
+  intros l1 l2 r H1 H2. assert (H3 : (length l1 = length (map (fun x => x * r)%R l2))%nat) by (rewrite length_map; auto). apply list_neq_exists_nth_neq in H3 as [i [H4 H5]]; auto.
+  exists i. split; try lia. intros H6. apply H5. rewrite <- H6. set (f := fun x => x * r). replace 0 with (f 0) at 2 by (unfold f; lra). rewrite map_nth. unfold f. lra.
+Qed.
+
+Lemma map_Rmult_0 : forall (l : list R),
+  map (fun x => x * 0) l = repeat 0%R (length l).
+Proof.
+  intros l. induction l as [| h t IH].
+  - reflexivity.
+  - simpl. rewrite IH. rewrite Rmult_0_r. reflexivity.
+Qed.
+
+Lemma nth_cons_f_mult : forall (l1 l2 : list R) (i : nat),
+  (length l1 = length l2)%nat -> (nth i l1 0) * (nth i l2 0) = nth i (map (fun x => (fst x) * (snd x)) (combine l1 l2)) 0.
+Proof.
+  intros l1 l2 i H1. set (f := fun x : R * R => fst x * snd x). replace 0 with (f (0, 0)) at 3 by (compute; lra). rewrite map_nth. rewrite combine_nth; try lia. reflexivity.
+Qed.
+
+Lemma exists_pow_2_gt_n : forall n,
+  exists m, (2 ^ m > n)%nat.
+Proof.
+  intros n. induction n as [| n' IH].
+  - exists 1%nat. simpl. lia.
+  - destruct IH as [m IH]. exists (S m). simpl. lia.
+Qed.
+
+Lemma pow_minus : forall a b c,
+  a > 0 -> (b > 0)%nat -> (c > 0)%nat -> (b >= c)%nat -> a ^ (b - c) = a ^ b / a ^ c.
+Proof.
+  intros a b c H1 H2 H3 H4. induction c as [| c' IH].
+  - simpl. unfold Rdiv. rewrite Rinv_1. rewrite Rmult_1_r. rewrite Nat.sub_0_r. reflexivity.
+  - simpl. replace (a^b / (a * a^c')) with (a^b / a^c' * / a). 2 : { field. split. apply pow_nonzero. lra. lra. }
+    assert (c' = 0 \/ c' > 0)%nat as [H5 | H5] by lia.
+    -- rewrite H5. simpl. unfold Rdiv. rewrite Rinv_1. rewrite Rmult_1_r. destruct b.
+      --- lia.
+      --- simpl. rewrite Nat.sub_0_r. field. lra.
+    -- rewrite <- IH. 2 : { lia. } 2 : { lia. } replace (b - c')%nat with (S (b - S c'))%nat by lia. simpl. field. lra.
+Qed.
+
+Lemma Rle_pow_base : forall a b n,
+  0 < a -> 0 < b -> (n > 0)%nat -> a^n <= b^n -> a <= b.
+Proof.
+  intros a b n H1 H2 H3 H4. induction n as [| k IH].
+  - lia.
+  - simpl in H4. destruct k.
+    -- simpl in H4. lra.
+    -- apply IH. lia. simpl. simpl in H4. pose proof Rtotal_order a b as [H5 | [H6 | H7]].
+      --- assert (H6 : a^k <= b^k). { apply pow_incr. lra. } assert (H7 : a^k > 0). { apply pow_lt. lra. } nra.
+      --- rewrite H6. lra.
+      --- assert (H8 : b^k <= a^k). { apply pow_incr. lra. } assert (H9 : b^k > 0). { apply pow_lt. lra. }
+          assert (H10 : a * a^k > b * b^k). { nra. } assert (H11 : a * (a * a^k) > b * (b * b^k)). { apply Rmult_gt_0_lt_compat. nra. nra. nra. nra. } nra.
 Qed.

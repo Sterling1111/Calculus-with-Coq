@@ -348,12 +348,13 @@ Qed.
 
 Lemma lemma_2_7 : ∀ p,
   (p >= 1)%nat -> ∃ l : list R,
-      ∀ n, (n >= 1)%nat -> length l = p /\ Forall rational l /\
-        ∑ 1 n (λ i, i^p) = n^(p + 1) / (p + 1) + ∑ 0 (p-1) (λ i, l.[0] * n ^ (i + 1)).
+    length l = p /\ Forall rational l /\
+    ∀ n, (n >= 1)%nat -> 
+      ∑ 1 n (λ i, i^p) = n^(p + 1) / (p + 1) + ∑ 0 (p-1) (λ i, l.[i] * n ^ (i + 1)).
 Proof.
   intros p. apply strong_induction_N with (n := p). clear p. intros p IH H1.
   assert (p = 1 \/ p >= 2)%nat as [H2 | H2] by lia.
-  - subst. exists [1/2]. intros n H2. repeat split; try lra. apply Forall_cons; try apply Forall_nil. exists (1%Z), (2%Z). reflexivity.
+  - subst. exists [1/2]. split. simpl. auto. split. apply Forall_cons. exists (1%Z), (2%Z). auto. apply Forall_nil. intros n H2.
     simpl. rewrite sum_f_0_0. simpl. field_simplify. replace (λ i : nat, INR i * 1) with (fun i => INR i) by (extensionality x; lra). rewrite sum_n_nat; solve_R.
     replace 1 with (INR 1) in H2 by reflexivity. apply INR_le in H2. auto.
   - assert (H4 : forall k, (INR k + 1)^(p+1) - (INR k)^(p+1) = sum_f 2 (p+1) (fun i => choose (p+1) i * (INR k)^(p+1-i)) + INR (p + 1) * INR k ^ p).
@@ -393,7 +394,6 @@ Proof.
     assert (H9 : forall n, (n >= 1)%nat -> sum_f 1 n (fun i : nat => INR i ^ p) = INR n ^ (p + 1) / INR (p + 1) + (sum_f 1 p (fun i : nat => choose (p + 1) i * INR n ^ i) / INR (p + 1) - sum_f 2 (p + 1) (fun j : nat => choose (p + 1) j * sum_f 1 n (fun i : nat => INR i ^ (p + 1 - j))) / INR (p + 1))). 
     { intros n H9. apply Rmult_eq_reg_l with (r := INR (p + 1)). rewrite H8. field. apply not_0_INR. lia. lia. apply not_0_INR. lia. }
     assert (H10 : forall j n : nat, (2 <= j <= p + 1)%nat -> (n >= 1)%nat ->exists l : list R, length l = p%nat /\ Forall rational l /\ sum_f 1 n (fun i : nat => INR i ^ (p + 1 - j)) = sum_f 0 (p-1) (fun i : nat => nth i l 0 * INR n ^ (i+1))) by admit.
-    
 
 Admitted.
 

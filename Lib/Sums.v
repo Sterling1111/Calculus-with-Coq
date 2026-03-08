@@ -751,3 +751,39 @@ Proof.
     
     rewrite IH; solve_R.
 Qed.
+
+Lemma R_divides_sum : forall i n (f : nat -> R) (r : R),
+  (i <= n)%nat -> (forall j, (i <= j <= n)%nat -> (r | f j)) -> (r | sum_f i n f).
+Proof.
+  intros i n f r H1 H2. induction n as [| k IH].
+  - assert (i = 0)%nat as H5 by lia. rewrite H5. rewrite sum_f_0_0. specialize (H2 0%nat). auto.
+  - assert (i = S k \/ i = k \/ i < k)%nat as [H3 | [H3 | H3]] by lia.
+    -- rewrite H3. rewrite sum_f_n_n. specialize (H2 (S k)). auto.
+    -- rewrite sum_f_i_Sn_f; try lia. apply R_divides_plus; auto. apply IH; try lia. intros j H4. apply H2. lia.
+    -- rewrite sum_f_i_Sn_f; try lia. apply R_divides_plus; auto. apply IH; try lia. intros j H4. apply H2. lia.
+Qed.
+
+Lemma sum_f_eq_0 : forall i n f,
+  (i <= n)%nat -> (forall j, (i <= j <= n)%nat -> f j = 0) -> sum_f i n f = 0.
+Proof.
+  intros i n f H1 H2. induction n as [| k IH].
+  - assert (i = 0%nat) as H3 by lia. rewrite H3. rewrite sum_f_0_0. apply H2. lia.
+  - assert (H3 : (i = S k)%nat \/ (i < S k)%nat) by lia. destruct H3 as [H3 | H3].
+    -- rewrite <- H3. rewrite sum_f_n_n. apply H2. lia.
+    -- assert (i <= k)%nat as H4 by lia. assert (H2' : forall j : nat, (i <= j <= k)%nat -> f j = 0). intros j H5. apply H2; lia.
+       rewrite sum_f_i_Sn_f; try lia. rewrite IH; try lia. rewrite H2; try lia. lra. intros j H5. apply H2. lia.
+Qed.
+
+Lemma sum_f_0_terms_nonneg : forall i n f,
+  sum_f i n f = 0 -> (forall j, (i <= j <= n)%nat -> 0 <= f j) -> (forall j, (i <= j <= n)%nat -> f j = 0).
+Proof.
+  intros i n f H1 H2 j H3. induction n as [| k IH].
+  - assert (i = 0%nat) as H4 by lia. assert (j = 0%nat) as H5 by lia. rewrite H4 in H1. rewrite sum_f_0_0 in H1. rewrite H5. apply H1.
+  - assert (H4 : (i = S k)%nat \/ (i < S k)%nat) by lia. destruct H4 as [H4 | H4].
+    -- rewrite <- H4 in H1. rewrite sum_f_n_n in H1. assert (j = i)%nat as H5 by lia. rewrite H5. apply H1.
+    -- assert (i <= k)%nat as H5 by lia. assert (H2' : forall j : nat, (i <= j <= k)%nat -> 0 <= f j). intros j2 H6. apply H2; try lia.
+       pose proof (sum_f_nonneg f i k H5 H2') as H6. rewrite sum_f_i_Sn_f in H1; try lia. assert (j = S k \/ (i <= j <= k)%nat) as [H7 | H7] by lia.
+       ++ specialize (H2 j H3). rewrite <- H7 in H1. pose proof (Rtotal_order (sum_f i k f) 0) as [H8 | [H8 | H8]]; try nra.
+       ++ apply IH; try lia. destruct H6 as [H6 | H6]; try nra. assert (i <= (S k) <= S k)%nat as H8 by lia. specialize (H2 (S k) H8). nra.
+          intros j2 H9. apply H2. lia.
+Qed.

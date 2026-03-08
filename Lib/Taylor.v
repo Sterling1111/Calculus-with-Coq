@@ -1247,5 +1247,3 @@ Proof.
   pose proof arctan_1_div_239_bounds as H3.
   nra.
 Qed.
-
-Print π.
