@@ -36,3 +36,6 @@ CoqMakefile.conf
 coq_stepper.py
 __pycache__/
 *.py
+
+# Untracked MCP project
+rocq-mcp/
