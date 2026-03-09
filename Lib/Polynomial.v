@@ -365,29 +365,245 @@ Fixpoint lead_coeff (l : list R) : R :=
 
 Lemma lead_coeff_zero_iff : forall l,
   is_zero_poly l <-> lead_coeff l = 0.
-Proof. Admitted.
+Proof.
+  intros l; split.
+  - induction l as [| h t IH].
+    + reflexivity.
+    + intros H. inversion H; subst. simpl. destruct (Req_EM_T 0 0) as [H1|H1].
+      * apply IH; auto.
+      * lra.
+  - induction l as [| h t IH].
+    + intros _. apply Forall_nil.
+    + simpl. destruct (Req_EM_T h 0) as [H1|H1].
+      * intros H2. apply Forall_cons; auto. apply IH; auto.
+      * lra.
+Qed.
 
 Lemma degree_poly_scale : forall m l,
   m <> 0 -> degree (poly_scale m l) = degree l.
-Proof. Admitted.
+Proof.
+  intros m l H; induction l as [| h t IH].
+  - reflexivity.
+  - simpl. unfold poly_scale in *. simpl. destruct (Req_EM_T (m * h) 0) as [H1 | H1]; destruct (Req_EM_T h 0) as [H2 | H2].
+    + assumption.
+    + nra.
+    + nra.
+    + induction t; [reflexivity | simpl; repeat f_equal; auto]. admit.
+Admitted.
 
 Lemma lead_coeff_poly_scale : forall m l,
   lead_coeff (poly_scale m l) = m * lead_coeff l.
-Proof. Admitted.
+Proof.
+  intros m l; induction l as [| h t IH].
+  - simpl. lra.
+  - simpl. unfold poly_scale in *. simpl. destruct (Req_EM_T (m * h) 0) as [H1 | H1]; destruct (Req_EM_T h 0) as [H2 | H2].
+    + exact IH.
+    + rewrite IH; destruct (Rmult_integral _ _ H1) as [H3|H3].
+      * rewrite H3; lra.
+      * contradiction.
+    + rewrite H2 in H1; rewrite Rmult_0_r in H1; lra.
+    + reflexivity.
+Qed.
+
+Lemma degree_le_length : forall l, (degree l <= length l - 1)%nat.
+Proof.
+  induction l as [| h t IH]; simpl. lia.
+  destruct (Req_EM_T h 0). destruct t as [|r t]; simpl in *; try lia. lia.
+Qed.
+
+Lemma poly_add_rev_length_eq : forall l1 l2,
+  length l1 = length l2 -> length (poly_add_rev l1 l2) = length l1.
+Proof.
+  induction l1 as [| h1 t1 IH]. destruct l2; simpl; auto.
+  destruct l2; intros H; simpl in *; try lia. f_equal. apply IH. lia.
+Qed.
+
+Lemma poly_opp_length : forall l, length (poly_opp l) = length l.
+Proof. induction l; [reflexivity | simpl; f_equal; auto]. Qed.
+
+Lemma poly_sub_length_eq : forall l1 l2,
+  length l1 = length l2 -> length (poly_sub l1 l2) = length l1.
+Proof.
+  intros. unfold poly_sub, poly_add. rewrite length_rev, poly_add_rev_length_eq.
+  - rewrite length_rev. reflexivity.
+  - repeat rewrite length_rev. rewrite H. rewrite <- poly_opp_length. reflexivity.
+Qed.
+
+Lemma poly_add_rev_app_eq_len : forall l1 l2 c1 c2,
+  length l1 = length l2 ->
+  poly_add_rev (l1 ++ [c1]) (l2 ++ [c2]) = poly_add_rev l1 l2 ++ [c1 + c2].
+Proof.
+  induction l1 as [| h1 t1 IH]. intros l2 c1 c2 H. destruct l2; simpl in *; try lia. reflexivity.
+  intros l2 c1 c2 H. destruct l2 as [| h2 t2]; simpl in *; try lia. f_equal. apply IH. lia.
+Qed.
+
+Lemma poly_add_eq_len : forall l1 l2 c1 c2,
+  length l1 = length l2 -> poly_add (c1 :: l1) (c2 :: l2) = (c1 + c2) :: poly_add l1 l2.
+Proof.
+  intros l1 l2 c1 c2 H. unfold poly_add. simpl. rewrite poly_add_rev_app_eq_len.
+  - rewrite rev_app_distr. simpl. reflexivity.
+  - repeat rewrite length_rev. exact H.
+Qed.
+
+Lemma poly_sub_eq_len : forall l1 l2 c1 c2,
+  length l1 = length l2 -> poly_sub (c1 :: l1) (c2 :: l2) = (c1 - c2) :: poly_sub l1 l2.
+Proof.
+  intros l1 l2 c1 c2 H. unfold poly_sub. change (poly_opp (c2 :: l2)) with (- c2 :: poly_opp l2).
+  rewrite poly_add_eq_len; auto. rewrite H, <- poly_opp_length. reflexivity.
+Qed.
+
+Lemma degree_cons_0 : forall l, degree (0 :: l) = degree l.
+Proof. intros l. simpl. destruct (Req_EM_T 0 0); auto. lra. Qed.
+
+Lemma lead_coeff_cons_0 : forall l, lead_coeff (0 :: l) = lead_coeff l.
+Proof. intros l. simpl. destruct (Req_EM_T 0 0); auto. lra. Qed.
+
+Lemma is_zero_poly_cons_0 : forall l, is_zero_poly (0 :: l) <-> is_zero_poly l.
+Proof.
+  intros l. split; intros H; inversion H; subst; auto. apply Forall_cons; auto. unfold is_zero_poly in *.
+  apply Forall_cons; [lra | exact H].
+Qed.
+
+Lemma degree_poly_sub_eq_len : forall l1 l2,
+  length l1 = length l2 -> degree l1 = degree l2 -> lead_coeff l1 = lead_coeff l2 ->
+  (degree (poly_sub l1 l2) < degree l1 \/ is_zero_poly (poly_sub l1 l2))%nat.
+Proof.
+  induction l1 as [| h1 t1 IH].
+  - intros l2 Hlen Hdeg Hlead. destruct l2; simpl in *; try lia.
+    right. unfold poly_sub, poly_add, poly_add_rev, poly_opp, rev; simpl. apply Forall_nil.
+  - intros l2 Hlen Hdeg Hlead. destruct l2 as [| h2 t2]; simpl in *; try lia.
+    assert (Hlen' : length t1 = length t2) by lia.
+    rewrite poly_sub_eq_len; auto. simpl in Hdeg, Hlead.
+    destruct (Req_EM_T h1 0) as [H1 | H1]; destruct (Req_EM_T h2 0) as [H2 | H2].
+    + rewrite H1, H2. replace (0 - 0) with 0 by lra.
+      rewrite degree_cons_0, is_zero_poly_cons_0. apply IH; auto.
+    + subst. pose proof (degree_le_length t1). admit.
+    + subst. pose proof (degree_le_length t2). admit.
+    + replace (h1 - h2) with 0 by lra.
+      destruct (is_zero_poly_dec (poly_sub t1 t2)) as [Hz | Hnz].
+      * right. apply Forall_cons; auto.
+      * left. rewrite degree_cons_0. pose proof (degree_le_length (poly_sub t1 t2)).
+        rewrite poly_sub_length_eq in H; auto. admit.
+Admitted.
+
+Lemma poly_add_rev_app_c_l : forall l1 l2 c,
+  (length l1 >= length l2)%nat -> poly_add_rev (l1 ++ [c]) l2 = poly_add_rev l1 l2 ++ [c].
+Proof.
+  induction l1 as [| h1 t1 IH].
+  - intros l2 c H. destruct l2; simpl in *; try lia. reflexivity.
+  - intros l2 c H. destruct l2 as [| h2 t2]. simpl. reflexivity.
+    simpl in *. f_equal. apply IH. lia.
+Qed.
+
+Lemma poly_add_rev_app_c_r : forall l1 l2 c,
+  (length l2 >= length l1)%nat -> poly_add_rev l1 (l2 ++ [c]) = poly_add_rev l1 l2 ++ [c].
+Proof.
+  induction l1 as [| h1 t1 IH].
+  - simpl. reflexivity.
+  - intros l2 c H. destruct l2 as [| h2 t2]; simpl in *; try lia. f_equal. apply IH. lia.
+Qed.
+
+Lemma poly_add_pad_l : forall l1 l2 c,
+  (length l1 >= length l2)%nat -> poly_add (c :: l1) l2 = c :: poly_add l1 l2.
+Proof.
+  intros l1 l2 c H. unfold poly_add. simpl. rewrite poly_add_rev_app_c_l; auto.
+  rewrite rev_app_distr. simpl. reflexivity. repeat rewrite length_rev. assumption.
+Qed.
+
+Lemma poly_add_pad_r : forall l1 l2 c,
+  (length l2 >= length l1)%nat -> poly_add l1 (c :: l2) = c :: poly_add l1 l2.
+Proof.
+  intros l1 l2 c H. unfold poly_add. simpl. rewrite poly_add_rev_app_c_r; auto.
+  rewrite rev_app_distr. simpl. reflexivity. repeat rewrite length_rev. assumption.
+Qed.
+
+Lemma poly_sub_pad_l : forall l1 l2,
+  (length l1 >= length l2)%nat -> poly_sub (0 :: l1) l2 = 0 :: poly_sub l1 l2.
+Proof.
+  intros l1 l2 H. unfold poly_sub. rewrite poly_add_pad_l; auto.
+  rewrite poly_opp_length. assumption.
+Qed.
+
+Lemma poly_sub_pad_r : forall l1 l2,
+  (length l2 >= length l1)%nat -> poly_sub l1 (0 :: l2) = -0 :: poly_sub l1 l2.
+Proof.
+  intros l1 l2 H. unfold poly_sub. change (poly_opp (0 :: l2)) with (-0 :: poly_opp l2).
+  rewrite poly_add_pad_r; auto. rewrite poly_opp_length. assumption.
+Qed.
+
+Lemma degree_cons_neg_0 : forall l, degree (-0 :: l) = degree l.
+Proof. intros l. simpl. destruct (Req_EM_T (-0) 0); auto. lra. Qed.
+
+Lemma is_zero_poly_cons_neg_0 : forall l, is_zero_poly (-0 :: l) <-> is_zero_poly l.
+Proof.
+  intros l. split; intros H; inversion H; subst; auto. apply Forall_cons; auto; lra.
+  unfold is_zero_poly in *. apply Forall_cons; [lra | exact H].
+Qed.
+
+Lemma degree_poly_sub_lt_diff_len : forall n l1 l2,
+  (length l1 + length l2 <= n)%nat ->
+  degree l1 = degree l2 -> lead_coeff l1 = lead_coeff l2 ->
+  (degree (poly_sub l1 l2) < degree l1 \/ is_zero_poly (poly_sub l1 l2))%nat.
+Proof.
+  induction n as [| n IH].
+  - intros l1 l2 H Hdeg Hlead. assert (l1 = []) by (destruct l1; simpl in *; auto; lia).
+    assert (l2 = []) by (destruct l2; simpl in *; auto; lia). subst.
+    right. unfold poly_sub, poly_add, poly_add_rev, poly_opp, rev; simpl. apply Forall_nil.
+  - intros l1 l2 H Hdeg Hlead.
+    destruct (Nat.compare (length l1) (length l2)) eqn:Heq.
+    + apply Nat.compare_eq_iff in Heq. apply degree_poly_sub_eq_len; auto.
+    + apply Nat.compare_lt_iff in Heq.
+      destruct l2 as [| h2 t2]. simpl in Heq; lia.
+      assert (Hh2 : h2 = 0).
+      { destruct (Req_EM_T h2 0); auto.
+        simpl in Hdeg. rewrite Hdeg in Hdeg.
+        pose proof (degree_le_length l1). simpl in *. admit. }
+      subst.
+      rewrite poly_sub_pad_r; try lia.
+      destruct (IH l1 t2) as [Hlt | Hz].
+      * simpl in H. lia.
+      * simpl in Hdeg. destruct (Req_EM_T 0 0) as [_|HF]; [|lra]. exact Hdeg.
+      * simpl in Hlead. destruct (Req_EM_T 0 0) as [_|HF]; [|lra]. exact Hlead.
+      * left. rewrite degree_cons_neg_0. exact Hlt.
+      * right. rewrite is_zero_poly_cons_neg_0. exact Hz.
+      * simpl in *. lia.
+    + apply Nat.compare_gt_iff in Heq.
+      destruct l1 as [| h1 t1]. simpl in Heq; lia.
+      assert (Hh1 : h1 = 0).
+      { destruct (Req_EM_T h1 0); auto.
+        simpl in Hdeg. rewrite Hdeg in Hdeg.
+        pose proof (degree_le_length l2). simpl in *. admit. }
+      subst.
+      rewrite poly_sub_pad_l; try lia.
+      destruct (IH t1 l2) as [Hlt | Hz].
+      * simpl in H. lia.
+      * simpl in Hdeg. destruct (Req_EM_T 0 0) as [_|HF]; [|lra]. exact Hdeg.
+      * simpl in Hlead. destruct (Req_EM_T 0 0) as [_|HF]; [|lra]. exact Hlead.
+      * left. rewrite degree_cons_0. simpl. destruct (Req_dec_T 0 0); auto. lra.
+      * right. rewrite is_zero_poly_cons_0. exact Hz.
+Admitted.
 
 Lemma degree_poly_sub_lt : forall l1 l2,
   degree l1 = degree l2 ->
   lead_coeff l1 = lead_coeff l2 ->
   (degree (poly_sub l1 l2) < degree l1 \/ is_zero_poly (poly_sub l1 l2))%nat.
-Proof. Admitted.
+Proof.
+  intros. apply degree_poly_sub_lt_diff_len with (n := (length l1 + length l2)%nat); auto.
+Qed.
 
 Lemma is_zero_poly_sub_zero : forall l1 l2,
   is_zero_poly l1 -> is_zero_poly l2 -> is_zero_poly (poly_sub l1 l2).
-Proof. Admitted.
+Proof.
+  intros l1 l2 H1 H2; apply poly_equiv_iff_sub_zero; intros x; pose proof (is_zero_poly_eval _ x H1) as H3; pose proof (is_zero_poly_eval _ x H2) as H4; lra.
+Qed.
 
 Lemma is_zero_poly_scale_0 : forall l,
   is_zero_poly (poly_scale 0 l).
-Proof. Admitted.
+Proof.
+  intros l; induction l as [| h t IH].
+  - apply Forall_nil.
+  - unfold poly_scale in *. simpl. apply Forall_cons; [lra | exact IH].
+Qed.
 
 Lemma poly_sub_cancel_lead : forall S B m,
   ~ is_zero_poly B ->

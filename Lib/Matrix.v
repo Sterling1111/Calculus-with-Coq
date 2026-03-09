@@ -39,7 +39,6 @@ Module MatrixNotations.
   Declare Scope M_Scope.
   Delimit Scope M_Scope with M.
 
-  (* Helper to keep Vector notations available in Matrix scope *)
   Export VectorNotations.
 
   Notation "A + B" := (add A B) (at level 50, left associativity) : M_Scope.
@@ -145,10 +144,6 @@ Section Matrix_Coercion.
 
   Definition zero_matrix {A : Type} `{Zero A} (m n : nat) : matrix A m n :=
     vector_const (vector_const zero n) m.
-
-  (* ======================================================================= *)
-  (* ==================== Structural List / Vector Lemmas ================== *)
-  (* ======================================================================= *)
 
   Lemma list_nth_indep : forall {A} (l: list A) i d d',
     (i < length l)%nat -> nth i l d = nth i l d'.
@@ -257,10 +252,6 @@ Section Matrix_Coercion.
     intros m n M1 M2 H1. apply vector_ext with (d:=vector_const 0%R n). intros i H2.
     apply vector_ext with (d:=0%R). intros j H3. apply H1; auto.
   Qed.
-
-  (* ======================================================================= *)
-  (* =============== Summation framework bridging to sum_f ================= *)
-  (* ======================================================================= *)
 
   Definition mat_sum (n : nat) (f : nat -> R) : R :=
     match n with
@@ -381,10 +372,6 @@ Section Matrix_Coercion.
     apply fold_right_combine; auto.
   Qed.
 
-  (* ======================================================================= *)
-  (* ========================== Matrix Translators ========================= *)
-  (* ======================================================================= *)
-
   Lemma get_row_nth : forall m n (M : matrix R m n) i j,
     (i < m)%nat -> (j < n)%nat -> vector_nth (get_row M i) j 0%R = mat_nth M i j.
   Proof.
@@ -455,10 +442,6 @@ Section Matrix_Coercion.
     apply vector_nth_indep. lia.
   Qed.
 
-  (* ======================================================================= *)
-  (* ========================== Forall2 Inequality ========================= *)
-  (* ======================================================================= *)
-
   Lemma Forall2_nth : forall A B (R_rel : A -> B -> Prop) l1 l2 d1 d2 i,
     Forall2 R_rel l1 l2 -> (i < length l1)%nat -> R_rel (nth i l1 d1) (nth i l2 d2).
   Proof.
@@ -494,10 +477,6 @@ Section Matrix_Coercion.
     unfold matrix_mult, matrix_transpose, zero_matrix, vec_to_col, to_scalar_R, to_scalar, mat_nth, identity_matrix, get_row, get_col, vector_nth, vector_const, vector_init, vector_dot, vector_map2, vector_fold in *;
     repeat (try rewrite list_repeat_nth in * by lia; try simpl in *; auto_op);
     auto_vec.
-
-  (* ======================================================================= *)
-  (* ======================== Target Theorem Proofs ======================== *)
-  (* ======================================================================= *)
 
   Lemma matrix_assoc : forall {m n p q} (A : matrix R m n) (B : matrix R n p) (C : matrix R p q),
     (A × B) × C = A × (B × C).

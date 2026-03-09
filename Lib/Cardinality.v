@@ -5,10 +5,6 @@ Notation subType := SetNotations.subType.
 
 Open Scope R_scope.
 
-Definition n_N (n : nat) : Type := subType (fun x : nat => exists k : nat, (x = n * k)%nat).
-
-Notation "n 'N'" := (n_N n) (at level 0, format "n 'N'").
-
 Open Scope Z_scope.
 
 Lemma Nat_even_false_Odd : forall n, Nat.even n = false -> exists k, n = (2 * k + 1)%nat.
