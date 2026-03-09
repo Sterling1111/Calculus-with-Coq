@@ -176,3 +176,101 @@ Section Vector_Examples.
   End Nat_Examples.
 
 End Vector_Examples.
+
+Section Vector_Theorems.
+  Local Open Scope R_scope.
+  Local Open Scope V_Scope.
+
+  Lemma vector_add_comm_R {n : nat} (v1 v2 : vector R n) :
+  v1 + v2 = v2 + v1.
+  Proof.
+    destruct v1 as [l1 H1], v2 as [l2 H2].
+    apply vector_eq. simpl.
+    revert n l2 H1 H2. induction l1 as [|h1 t1 H3]; intros n l2 H1 H2.
+    - destruct l2 as [|h2 t2]; [reflexivity | inversion H2]; reflexivity.
+    - destruct l2 as [|h2 t2]; [inversion H2; reflexivity | ].
+      simpl in *. f_equal.
+      + apply Rplus_comm.
+      + apply (H3 (length t1) t2); congruence.
+  Qed.
+
+  Lemma vector_add_assoc_R {n : nat} (v1 v2 v3 : vector R n) :
+  (v1 + v2) + v3 = v1 + (v2 + v3).
+  Proof.
+    destruct v1 as [l1 H1], v2 as [l2 H2], v3 as [l3 H3].
+    apply vector_eq. simpl.
+    revert n l2 l3 H1 H2 H3. induction l1 as [|h1 t1 H4]; intros n l2 l3 H1 H2 H3.
+    - destruct l2; [|inversion H2]; reflexivity.
+    - destruct l2 as [|h2 t2]; [inversion H2|]; try reflexivity.
+      destruct l3 as [|h3 t3]; [inversion H3|]; try reflexivity.
+      simpl in *. f_equal.
+      + apply Rplus_assoc.
+      + apply (H4 (length t1) t2 t3); congruence.
+  Qed.
+
+  Lemma vector_add_id_r_R {n : nat} (v : vector R n) :
+  v + 0 = v.
+  Proof.
+    destruct v as [l1 H1]. unfold zero, Zero_Vector.
+    apply vector_eq. simpl.
+    revert n H1. induction l1 as [|h1 t1 H2]; intros n H1.
+    - destruct n as [|H3]; [reflexivity | inversion H1].
+    - destruct n as [|H3]; [inversion H1 |].
+      simpl in *. f_equal.
+      + apply Rplus_0_r.
+      + apply H2. congruence.
+  Qed.
+
+  Lemma vector_dot_comm_R {n : nat} (v1 v2 : vector R n) :
+  v1 · v2 = v2 · v1.
+  Proof.
+    destruct v1 as [l1 H1], v2 as [l2 H2].
+    unfold vector_dot, vector_fold, vector_map2, mul, Mul_R. simpl.
+    revert n l2 H1 H2. induction l1 as [|h1 t1 H3]; intros n l2 H1 H2.
+    - destruct l2 as [|h2 t2]; [ | inversion H2]; reflexivity.
+    - destruct l2 as [|h2 t2]; [inversion H2; reflexivity | ]. 
+      simpl in *. rewrite Rmult_comm. f_equal.
+      apply (H3 (length t1) t2); congruence.
+  Qed.
+
+  Lemma vector_dot_distr_R {n : nat} (v1 v2 v3 : vector R n) :
+  v1 · (v2 + v3) = (v1 · v2) + (v1 · v3).
+Proof.
+  destruct v1 as [l1 H1], v2 as [l2 H2], v3 as [l3 H3].
+  unfold vector_dot, vector_fold, vector_map2. simpl.
+  revert n l2 l3 H1 H2 H3. induction l1 as [|h1 t1 H4]; intros n l2 l3 H1 H2 H3; try auto_vec.
+  destruct l2 as [|h2 t2]; [inversion H2|]; try auto_vec.
+  destruct l3 as [|h3 t3]; [inversion H3|]; try auto_vec.
+  simpl in *. rewrite (H4 (length t1) t2 t3); try congruence.
+  unfold zero, Zero_R, add, Add_R, mul, Mul_R in *. lra.
+Qed.
+
+  Definition vector_nth {A : Type} {n : nat} `{Zero A} (v : vector A n) (i : nat) (H1 : i < n) : A.
+  Proof.
+    destruct v as [l1 H2].
+    exact (nth i l1 zero).
+  Defined.
+
+  Lemma vector_ext {A : Type} {n : nat} `{Zero A} (v1 v2 : vector A n) :
+  (forall i (H1 : i < n), vector_nth v1 i H1 = vector_nth v2 i H1) -> v1 = v2.
+Proof.
+  destruct v1 as [l1 H1], v2 as [l2 H2].
+  intros H4. apply vector_eq. simpl.
+  revert n l2 H1 H2 H4. induction l1 as [|h1 t1 H3]; intros n l2 H1 H2 H4.
+  - destruct l2 as [|h2 t2]; [reflexivity | simpl in H1, H2; lia].
+  - destruct l2 as [|h2 t2]; [simpl in H1, H2; lia |].
+    destruct n as [|n']; [simpl in H1; lia |].
+    f_equal.
+    + unfold lt_op, Lt_nat in *.
+      assert (H5 : (0 < S n')%nat) by lia.
+      exact (H4 0%nat H5).
+    + assert (H0 : length t1 = n') by (simpl in H1; lia).
+      assert (H5 : length t2 = n') by (simpl in H2; lia).
+      apply (H3 n' t2 H0 H5).
+      intros i H6.
+      unfold lt_op, Lt_nat in *.
+      assert (H7 : (S i < S n')%nat) by lia.
+      exact (H4 (S i) H7).
+Qed.
+
+End Vector_Theorems.

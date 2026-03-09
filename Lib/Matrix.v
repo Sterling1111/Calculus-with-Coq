@@ -587,6 +587,7 @@ Section Matrix_Coercion.
     rewrite H6 in H5.
     assert (H7: to_scalar_R (0 : matrix R 1 1) = 0%R) by reflexivity.
     rewrite H7 in H5.
+    simpl in *.
     lra.
   Qed.
 
