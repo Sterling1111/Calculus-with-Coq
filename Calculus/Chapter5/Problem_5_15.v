@@ -23,7 +23,7 @@ Proof. Admitted.
 Lemma lemma_5_15_vi : ⟦ lim 0 ⟧ (fun x => ((tan x)^2 + 2 * x) / (x + x^2)) = 2.
 Proof. Admitted.
 
-Lemma lemma_5_15_vii : ⟦ lim 0 ⟧ (fun x => x * sin x / (1 - cos x)) = 2.
+Lemma lemma_5_15_vii : ⟦ lim 0 ⟧ (fun x => x * sin x / (1 - cos x)) = 2 / α.
 Proof. Admitted.
 
 Lemma lemma_5_15_viii (x : R) : ⟦ lim 0 ⟧ (fun h => (sin (x + h) - sin x) / h) = α * cos x.

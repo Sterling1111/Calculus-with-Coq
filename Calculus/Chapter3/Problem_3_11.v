@@ -21,8 +21,3 @@ Lemma lemma_13_11_a : iter 80 H y = y.
 Proof.
   compute; repeat rewrite H1; reflexivity.
 Qed.
-
-Lemma lemma_13_11_b : iter 81 H y = H y.
-Proof.
-  rewrite iter_succ.
-Qed.

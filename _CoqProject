@@ -16,6 +16,7 @@ Lib/Complex.v
 Lib/Completeness.v
 Lib/Pigeonhole.v
 Lib/Sums.v
+Lib/Products.v
 Lib/WI_SI_WO.v
 Lib/QRT.v
 Lib/Fibonacci.v
@@ -36,7 +37,6 @@ Lib/Interval.v
 Lib/Notations.v
 Lib/Inverse.v
 Lib/Trigonometry.v
-Lib/Trig_Identities.v
 Lib/Tactics.v
 Lib/Taylor.v
 Lib/Vector.v
@@ -99,6 +99,9 @@ Calculus/Chapter8/Problem_8_19.v
 Calculus/Chapter9/Prelude.v
 Calculus/Chapter10/Prelude.v
 Calculus/Chapter11/Prelude.v
+Calculus/Chapter12/Prelude.v
+Calculus/Chapter13/Prelude.v
+
 
 -generate-meta-for-package simplex_plugin
 -I src

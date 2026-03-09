@@ -1,6 +1,14 @@
 From Lib Require Import Imports Sets Notations Functions Limit Continuity Reals_util Sums Interval.
 Import SetNotations SumNotations IntervalNotations FunctionNotations LimitNotations.
 
+Definition convex_on (f : R -> R) (D : Ensemble R) :=
+  forall a x b, a ∈ D -> x ∈ D -> b ∈ D -> a < x < b ->
+    (f x - f a) / (x - a) < (f b - f a) / (b - a).
+
+Definition weakly_convex_on (f : R -> R) (D : Ensemble R) :=
+  forall a x b, a ∈ D -> x ∈ D -> b ∈ D -> a < x < b ->
+    (f x - f a) / (x - a) <= (f b - f a) / (b - a).
+
 Definition differentiable_at (f:R -> R) (a:R) :=
   exists L, ⟦ lim 0 ⟧ (fun h => (f (a + h) - f a) / h) = L.
 

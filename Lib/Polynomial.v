@@ -1,5 +1,5 @@
-From Lib Require Import Imports Reals_util Sums Continuity Limit Notations.
-Import LimitNotations.
+From Lib Require Import Imports Reals_util Sums Continuity Limit Notations Products.
+Import LimitNotations SumNotations ProductNotations.
 
 Open Scope R_scope.
 
@@ -120,3 +120,19 @@ Proof.
     + intros x. rewrite poly_shift. reflexivity.
     + rewrite length_app. simpl. lia.
 Qed.
+
+Lemma partial_fraction_decomposition : forall (k l : nat)
+  (α : nat -> R) (r : nat -> nat)
+  (β γ : nat -> R) (s : nat -> nat)
+  (p q : list R),
+  (forall i, (1 <= i <= l)%nat -> (β i)^2 - 4 * γ i < 0) ->
+  (length p <= length q)%nat ->
+  (forall x, polynomial q x = 
+    (∏ 1 k (λ i, (x - α i)^(r i))) * (∏ 1 l (λ i, (x^2 + β i * x + γ i)^(s i)))) ->
+  exists (A B C : nat -> nat -> R),
+    forall x, polynomial q x <> 0 ->
+      (polynomial p x) / (polynomial q x) = 
+        ∑ 1 k (λ i, ∑ 1 (r i) (λ j, A i j / (x - α i)^j)) +
+        ∑ 1 l (λ i, ∑ 1 (s i) (λ j, (B i j * x + C i j) / (x^2 + β i * x + γ i)^j)).
+Proof.
+Admitted.

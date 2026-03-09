@@ -1,12 +1,19 @@
 From Calculus.Chapter10 Require Import Prelude.
 
-Lemma lemma_10_22_a : ∀ a n, ∃ g, ⟦ der ⟧ g = (λ x, a * x^n).
-Proof. Admitted.
+Lemma lemma_10_22_a : forall (l : list R),
+  exists (g : R -> R), ⟦ der ⟧ g = (fun x => polynomial l x).
+Proof.
+Admitted.
 
-Lemma lemma_10_22_b : ∀ b m, ∃ g, ⟦ der ⟧ g = (λ x, b * x^(-m)).
-Proof. Admitted.
+Lemma lemma_10_22_b : forall (m : nat) (b : nat -> R),
+  (m >= 2)%nat ->
+  exists (g : R -> R), forall x, x <> 0 -> 
+    ⟦ Der x ⟧ g = ∑ 2 m (fun k => b k / x^k).
+Proof.
+Admitted.
 
-Lemma lemma_10_22_c : ~ ∃ f,
-  (∃ a1 a2 b1 b2, f = (λ x, a1 * x + a2 * x^2 + b1 / x + b2 / x^2)) /\ 
-  ⟦ der ⟧ f = (λ x, 1 / x).
-Proof. Admitted.
+Lemma lemma_10_22_c : ~ exists (n m : nat) (a b : nat -> R),
+  forall x, x <> 0 ->
+    ⟦ Der x ⟧ (fun t => ∑ 0 n (fun k => a k * t^k) + ∑ 1 m (fun k => b k / t^k)) = 1 / x.
+Proof.
+Admitted.

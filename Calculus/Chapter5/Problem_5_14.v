@@ -6,6 +6,7 @@ Lemma lemma_5_14_a : ∀ (f : R -> R) (l b : R),
 Proof. Admitted.
 
 Lemma lemma_5_14_b : ∀ (f : R -> R) (l : R),
+  f 0 = 0 ->
   ⟦ lim 0 ⟧ (fun x => f x / x) = l ->
   ⟦ lim 0 ⟧ (fun x => f (0 * x) / x) = 0.
 Proof. Admitted.

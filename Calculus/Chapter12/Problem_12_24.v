@@ -1,6 +1,4 @@
-From Lib Require Import Imports Sets Limit Continuity Derivative Notations Reals_util Inverse Functions Interval Tactics.
-Import LimitNotations IntervalNotations SetNotations DerivativeNotations FunctionNotations.
-Open Scope R_scope.
+From Calculus.Chapter12 Require Import Prelude.
 
 Lemma lemma_12_24_a : forall f, 
   continuous f -> inverse f f -> exists x, f x = x.
@@ -25,3 +23,9 @@ Proof.
         -- replace (f 0 - 0) with (f 0) by lra. lra.
       * exists x. lra.
 Qed.
+
+Lemma lemma_12_24_c : forall f,
+  increasing f ->
+  inverse f f ->
+  forall x, f x = x.
+Admitted.

@@ -1,8 +1,6 @@
-From Lib Require Import Imports Sets Limit Continuity Derivative Notations Reals_util Inverse Interval Functions.
-Import LimitNotations IntervalNotations SetNotations DerivativeNotations FunctionNotations.
-Open Scope R_scope.
+From Calculus.Chapter12 Require Import Prelude.
 
-Lemma lemma_12_23_a : forall f g a b,
+Lemma lemma_12_23_a_helper : forall f g a b,
   increasing f -> decreasing g -> f a = g a -> f b = g b -> a = b.
 Proof.
   intros f g a b H1 H2 H3 H4.
@@ -10,3 +8,10 @@ Proof.
   specialize (H2 (Rmin a b) (Rmax a b) ltac:(apply Full_intro) ltac:(apply Full_intro)).
   pose proof Rtotal_order a b as [H5 | [H5 | H5]]; solve_R.
 Qed.
+
+Lemma lemma_12_23_a : forall f g,
+  increasing f ->
+  decreasing g ->
+  (exists x, f x = g x) ->
+  exists! x, f x = g x.
+Admitted.
