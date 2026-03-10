@@ -1227,7 +1227,108 @@ Lemma vertical_split : forall (P A : list R) (n : nat),
     forall x, polynomial A x <> 0 ->
       polynomial P x / (polynomial A x ^ n) = 
       ∑ 1 n (λ i, polynomial (C i) x / polynomial A x ^ i).
-Proof. Admitted.
+Proof.
+  intros P A n. generalize dependent P. induction n as [| n IH].
+  - intros P H_P_deg.
+    simpl in H_P_deg. lia.
+  - intros P H_P_deg.
+    assert (H_A_pos : (0 < degree A)%nat).
+    { destruct (degree A) eqn:Hdeg; lia. }
+    destruct (le_lt_dec (S n) 1) as [H_n_1 | H_n_gt_1].
+    + assert (n = 0)%nat by lia. subst n.
+      assert (HnzA : ~ is_zero_poly A) by (apply not_zero_poly_degree_gt_0; lia).
+      pose proof (poly_division_exists P A HnzA) as [Q [R_poly [H_div H_deg]]].
+      exists (fun i => if Nat.eq_dec i 1 then P else []).
+      split.
+      * intros i H_i. assert (i = 1)%nat by lia. subst i. destruct (Nat.eq_dec 1 1).
+        ** replace (1 * degree A)%nat with (degree A) in H_P_deg by lia. exact H_P_deg.
+        ** contradiction.
+      * intros x H_A_nz.
+        rewrite sum_f_n_n.
+        destruct (Nat.eq_dec 1 1).
+        ** simpl. rewrite Rmult_1_r. reflexivity.
+        ** contradiction.
+    + assert (n > 0)%nat by lia.
+      assert (HnzA : ~ is_zero_poly A) by (apply not_zero_poly_degree_gt_0; lia).
+      pose proof (poly_division_exists P A HnzA) as [Q [R_poly [H_div H_deg]]].
+      assert (H_Q_deg : (degree Q < n * degree A)%nat).
+      {
+        destruct (is_zero_poly_dec Q) as [H_Q_zero | H_Q_nZ].
+        { apply zero_poly_degree_0_val in H_Q_zero. rewrite H_Q_zero. apply Nat.mul_pos_pos; lia. }
+        {
+          pose proof (limit_poly_lead_coeff Q H_Q_nZ) as [fQ [HfQ HdQ]].
+          pose proof (limit_poly_lead_coeff A HnzA) as [fA [HfA HdA]].
+          destruct (le_lt_dec (n * degree A) (degree Q)) as [HdB_le_dU | H_Q_deg_A_lt].
+          2 : { exact H_Q_deg_A_lt. }
+          exfalso.
+          set (k := (degree Q + degree A)%nat).
+          assert (Hk_gt_P : (degree P < k)%nat) by lia.
+          assert (Hk_gt_R : (degree R_poly < k)%nat).
+          { destruct H_deg; [lia | apply zero_poly_degree_0_val in H0; lia]. }
+          
+          assert (H_P_lim : ⟦ lim 0 ⟧ (fun x : R => x ^ k * polynomial P (1 / x)) = 0).
+          { apply limit_pow_poly. exact Hk_gt_P. }
+          
+          assert (H_R_lim : ⟦ lim 0 ⟧ (fun x : R => x ^ k * polynomial R_poly (1 / x)) = 0).
+          { apply limit_pow_poly. exact Hk_gt_R. }
+          
+          assert (H_eq2 : forall x : R, x <> 0 ->
+            x ^ k * polynomial Q (1/x) * polynomial A (1/x) =
+            x ^ k * polynomial P (1/x) - x ^ k * polynomial R_poly (1/x)).
+          { intros x Hx. pose proof (H_div (1/x)) as H2. rewrite H2. lra. }
+          
+          assert (H_QA_lim : ⟦ lim 0 ⟧ (fun x : R => x ^ k * polynomial Q (1/x) * polynomial A (1/x)) = 0).
+          {
+            apply limit_eq with (f1 := fun x : R => x ^ k * polynomial P (1/x) - x ^ k * polynomial R_poly (1/x)).
+            exists 1. split; [lra |]. intros x Hx. symmetry. apply H_eq2. solve_abs.
+            replace 0 with (0 - 0) at 2 by lra. apply limit_minus; auto.
+          }
+          
+          assert (H_QA_lim2 : ⟦ lim 0 ⟧ (fun x : R => fQ x * fA x) = lead_coeff Q * lead_coeff A).
+          { apply limit_mult; auto. }
+          
+          assert (H_QA_lim3 : ⟦ lim 0 ⟧ (fun x : R => fQ x * fA x) = 0).
+          {
+            apply limit_eq with (f1 := fun x : R => x ^ k * polynomial Q (1/x) * polynomial A (1/x)).
+            exists 1. split; [lra |]. intros x Hx.
+            rewrite HfQ; try solve_abs; rewrite HfA; try solve_abs.
+            replace k with (degree Q + degree A)%nat by reflexivity.
+            rewrite pow_add. lra. unfold k. rewrite pow_add. lra.
+            exact H_QA_lim.
+          }
+          
+          pose proof (limit_unique _ 0 _ _ H_QA_lim2 H_QA_lim3) as H_prod_0.
+          apply Rmult_integral in H_prod_0.
+          destruct H_prod_0 as [H_zero | H_zero].
+          { apply lead_coeff_zero_iff in H_zero. contradiction. }
+          { apply lead_coeff_zero_iff in H_zero. contradiction. }
+        }
+      }
+      specialize (IH Q H_Q_deg) as [C' [H_C'_deg H_C'_eq]].
+      exists (fun i => if Nat.eq_dec i (S n) then R_poly else C' i).
+      split.
+      * intros i H_i. destruct (Nat.eq_dec i (S n)) as [H_eq_Sn | H_neq_Sn].
+        -- subst i. destruct H_deg as [H_lt | H_zero].
+           ++ exact H_lt.
+           ++ apply zero_poly_degree_0_val in H_zero. rewrite H_zero. exact H_A_pos.
+        -- apply H_C'_deg. lia.
+      * intros x H_A_nz.
+        rewrite sum_f_i_Sn_f; try lia.
+        destruct (Nat.eq_dec (S n) (S n)) as [H_eq_Sn | H_neq_Sn]; [| contradiction].
+        assert (H_sum_C' : ∑ 1 n (λ i : nat, polynomial (if Nat.eq_dec i (S n) then R_poly else C' i) x / polynomial A x ^ i) = ∑ 1 n (λ i : nat, polynomial (C' i) x / polynomial A x ^ i)).
+        { apply sum_f_equiv; try lia. intros k' H_k'. destruct (Nat.eq_dec k' (S n)); [lia | reflexivity]. }
+        rewrite H_sum_C'.
+        rewrite <- H_C'_eq; auto.
+        pose proof (H_div x) as H_Px.
+        rewrite H_Px.
+        unfold Rdiv.
+        rewrite Rmult_plus_distr_r.
+        f_equal.
+        replace (polynomial A x ^ S n) with (polynomial A x * polynomial A x ^ n) by (simpl; reflexivity).
+        rewrite Rinv_mult; auto.
+        replace (polynomial A x * polynomial Q x * (/ polynomial A x * / polynomial A x ^ n)) with (polynomial Q x * (/ polynomial A x ^ n) * (polynomial A x * / polynomial A x)) by lra.
+        rewrite Rinv_r; auto; lra.
+Qed.
 
 Lemma partial_fraction_decomposition : forall (k l : nat)
   (α : nat -> R) (r : nat -> nat)
