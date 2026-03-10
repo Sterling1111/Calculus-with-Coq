@@ -1,4 +1,4 @@
-From Lib Require Import Imports Complex.
+From Lib Require Import Imports.
 
 Notation ℕ := nat.
 Notation ℤ := Z.
@@ -8,9 +8,6 @@ Notation ℂ := C.
 
 Notation "| x |" := (Rabs x)
   (at level 35, x at level 0, format "| x |", no associativity) : R_scope.
-
-Notation "| c |" := (Cnorm c) 
-  (at level 35, c at level 0, format "| c |", no associativity) : C_scope.
 
 Notation "√ x" := (sqrt x) (format "√ x", at level 20).
 

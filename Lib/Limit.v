@@ -1009,19 +1009,38 @@ Proof.
       exists δ. split; auto. intros x H5.
       unfold u, α. 
       specialize (H4 x H5). apply Rle_lt_trans with (r2 := |f x - l|); auto.
-      admit.
+      assert (H_lhs : (|(fst (f x) - fst l)|)%C = Rabs (fst (f x - l))).
+      { unfold Cminus, Copp, Cplus, Cnorm, Cnorm2. simpl.
+        rewrite <- (sqrt_Rsqr_abs (fst (f x) + - fst l)).
+        f_equal. unfold Rsqr. ring. }
+      rewrite H_lhs. apply Cnorm_fst.
     + specialize (H1 ε H2) as [δ [H3 H4]].
       exists δ. split; auto. intros x H5.
       unfold v, β. 
       specialize (H4 x H5). apply Rle_lt_trans with (r2 := |f x - l|); auto.
-      admit.
+      assert (H_lhs : (|(snd (f x) - snd l)|)%C = Rabs (snd (f x - l))).
+      { unfold Cminus, Copp, Cplus, Cnorm, Cnorm2. simpl.
+        rewrite <- (sqrt_Rsqr_abs (snd (f x) + - snd l)).
+        f_equal. unfold Rsqr. ring. }
+      rewrite H_lhs. apply Cnorm_snd.
   - intros [H1 H2] ε H3. 
     specialize (H1 (ε/2)%R ltac:(lra)) as [δ1 [H4 H5]].
     specialize (H2 (ε/2)%R ltac:(lra)) as [δ2 [H6 H7]].
     set (δ := Rmin δ1 δ2). exists δ. split; [ solve_R |].
-    intros z H8. specialize (H5 z ltac:(unfold δ in *; solve_min)).
-    specialize (H7 z ltac:(unfold δ in *; solve_min)).
+    intros z H8. 
+    assert (H_z_δ1 : 0 < (|(z - a)|)%C < δ1) by (unfold δ in *; solve_min; lra).
+    assert (H_z_δ2 : 0 < (|(z - a)|)%C < δ2) by (unfold δ in *; solve_min; lra).
+    specialize (H5 z H_z_δ1).
+    specialize (H7 z H_z_δ2).
     apply Rle_lt_trans with (r2 := (|u z - α| + |v z - β|)%R).
-    + admit.
-    + replace ε with (ε / 2 + ε / 2)%R by lra. admit.
-Admitted.
+    + assert (H_u : (|u z - α|)%R = Rabs (fst ((f z - l)%C))).
+      { unfold u, α, Cminus, Copp, Cplus; simpl. reflexivity. }
+      assert (H_v : (|v z - β|)%R = Rabs (snd ((f z - l)%C))).
+      { unfold v, β, Cminus, Copp, Cplus; simpl. reflexivity. }
+      rewrite H_u, H_v. apply Cnorm_le_sum_abs.
+    + assert (H_u_C : (|(u z - α)|)%C = (|u z - α|)%R).
+      { unfold Cminus, Copp, Cplus, Cnorm, Cnorm2; simpl. rewrite <- (sqrt_Rsqr_abs (u z - α)). f_equal. unfold Rsqr, u, α. ring. }
+      assert (H_v_C : (|(v z - β)|)%C = (|v z - β|)%R).
+      { unfold Cminus, Copp, Cplus, Cnorm, Cnorm2; simpl. rewrite <- (sqrt_Rsqr_abs (v z - β)). f_equal. unfold Rsqr, v, β. ring. }
+      rewrite H_u_C in H5. rewrite H_v_C in H7. lra.
+Qed.

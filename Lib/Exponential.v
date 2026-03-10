@@ -1,6 +1,6 @@
 From Lib Require Import Imports Notations Integral Derivative Functions Continuity 
                         Limit Sets Reals_util Inverse Interval Completeness.
-Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations.
+Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations IntegralNotations.
 
 Definition log (x : R) :=
   match (Rle_dec x 0) with

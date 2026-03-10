@@ -1,5 +1,5 @@
 From Lib Require Import Imports Notations Integral Derivative Functions Continuity Limit Sets Reals_util Inverse Interval Polynomial.
-Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations.
+Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations IntegralNotations.
 
 Open Scope R_scope.
 

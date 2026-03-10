@@ -1,4 +1,4 @@
-From Lib Require Import Imports.
+From Lib Require Import Imports Reals_util.
 
 Open Scope R_scope.
 
@@ -26,6 +26,9 @@ Arguments Cnorm c /.
 
 Declare Scope C_scope.
 Delimit Scope C_scope with C.
+
+Notation "| c |" := (Cnorm c) 
+  (at level 35, c at level 0, format "| c |", no associativity) : C_scope.
 
 Infix "+" := Cplus : C_scope.
 Notation "- x" := (Copp x) : C_scope.
@@ -152,4 +155,65 @@ Infix "^" := Cpow : C_scope.
 
 Lemma Csqr_pow2 : forall x, Csqr x = x ^ 2.
   Proof. intros. unfold Cpow. unfold Csqr. rewrite Cmult_1_r. reflexivity.
-  Qed.
+Qed.
+
+Open Scope R_scope.
+
+Ltac solve_C :=
+  intros;
+  repeat match goal with
+  | c : C |- _ => destruct c
+  end;
+  simpl in *;
+  try (unfold Cnorm, Cnorm2, Cplus, Cminus, Copp, Cmult in *);
+  try field_simplify_eq;
+  solve_R.
+
+Lemma Cnorm_fst : forall c : C, Rabs (fst c) <= Cnorm c.
+Proof.
+  intros [x y]. unfold Cnorm, Cnorm2; simpl.
+  replace (Rabs x) with (sqrt (x^2)).
+  - apply sqrt_le_1_alt. 
+    assert (H_yx : x * (x * 1) + y * (y * 1) = x^2 + y^2) by (simpl; lra).
+    rewrite H_yx.
+    assert (0 <= y^2) by (apply pow2_ge_0; lra). lra.
+  - assert (H_x2 : x^2 = x * x) by (simpl; lra).
+    rewrite H_x2. rewrite <- Rsqr_def. apply sqrt_Rsqr_abs.
+Qed.
+
+Lemma Cnorm_snd : forall c : C, Rabs (snd c) <= Cnorm c.
+Proof.
+  intros [x y]. unfold Cnorm, Cnorm2; simpl.
+  replace (Rabs y) with (sqrt (y^2)).
+  - apply sqrt_le_1_alt. 
+    assert (H_yx : x * (x * 1) + y * (y * 1) = x^2 + y^2) by (simpl; lra).
+    rewrite H_yx.
+    assert (0 <= x^2) by (apply pow2_ge_0; lra). lra.
+  - assert (H_y2 : y^2 = y * y) by (simpl; lra).
+    rewrite H_y2. rewrite <- Rsqr_def. apply sqrt_Rsqr_abs.
+Qed.
+
+Lemma Cnorm_le_sum_abs : forall c : C, Cnorm c <= Rabs (fst c) + Rabs (snd c).
+Proof.
+  intros [x y]. unfold Cnorm, Cnorm2; simpl.
+  assert (H_yx : x * (x * 1) + y * (y * 1) = x^2 + y^2) by (simpl; lra).
+  rewrite H_yx.
+  replace (Rabs x + Rabs y) with (sqrt ((Rabs x + Rabs y)^2)).
+  - apply sqrt_le_1_alt.
+    assert (H_sq : (Rabs x + Rabs y)^2 = Rabs x ^ 2 + Rabs y ^ 2 + 2 * Rabs x * Rabs y) by (simpl; lra).
+    rewrite H_sq.
+    assert (Rabs x ^ 2 = x^2).
+    { assert (H_1 : Rabs x ^ 2 = Rabs x * Rabs x) by (simpl; lra).
+      rewrite H_1. rewrite <- Rsqr_def, <- Rsqr_abs, Rsqr_def. simpl; lra. }
+    assert (Rabs y ^ 2 = y^2).
+    { assert (H_2 : Rabs y ^ 2 = Rabs y * Rabs y) by (simpl; lra).
+      rewrite H_2. rewrite <- Rsqr_def, <- Rsqr_abs, Rsqr_def. simpl; lra. }
+    assert (0 <= 2 * Rabs x * Rabs y).
+    { apply Rmult_le_pos. apply Rmult_le_pos; [lra | apply Rabs_pos]. apply Rabs_pos. }
+    lra.
+  - assert (H_3 : (Rabs x + Rabs y)^2 = (Rabs x + Rabs y) * (Rabs x + Rabs y)) by (simpl; lra).
+    rewrite H_3. rewrite <- Rsqr_def. apply sqrt_Rsqr.
+    assert (0 <= Rabs x) by apply Rabs_pos.
+    assert (0 <= Rabs y) by apply Rabs_pos.
+    lra.
+Qed.

@@ -384,12 +384,11 @@ Lemma degree_poly_scale : forall m l,
 Proof.
   intros m l H; induction l as [| h t IH].
   - reflexivity.
-  - simpl. unfold poly_scale in *. simpl. destruct (Req_EM_T (m * h) 0) as [H1 | H1]; destruct (Req_EM_T h 0) as [H2 | H2].
-    + assumption.
-    + nra.
-    + nra.
-    + induction t; [reflexivity | simpl; repeat f_equal; auto]. admit.
-Admitted.
+  - simpl. unfold poly_scale in *. simpl.
+    destruct (Req_EM_T (m * h) 0) as [H1 | H1]; 
+    destruct (Req_EM_T h 0) as [H2 | H2]; auto; try nra.
+    rewrite length_map. reflexivity.
+Qed.
 
 Lemma lead_coeff_poly_scale : forall m l,
   lead_coeff (poly_scale m l) = m * lead_coeff l.
@@ -477,14 +476,21 @@ Proof.
     destruct (Req_EM_T h1 0) as [H1 | H1]; destruct (Req_EM_T h2 0) as [H2 | H2].
     + rewrite H1, H2. replace (0 - 0) with 0 by lra.
       rewrite degree_cons_0, is_zero_poly_cons_0. apply IH; auto.
-    + subst. pose proof (degree_le_length t1). admit.
-    + subst. pose proof (degree_le_length t2). admit.
+    + subst h1. destruct t1 as [| h1' t1'].
+      * simpl in Hlead; lra.
+      * pose proof (degree_le_length (h1' :: t1')). simpl in *. lia.
+    + subst h2. destruct t2 as [| h2' t2'].
+      * simpl in Hlead; lra.
+      * pose proof (degree_le_length (h2' :: t2')). simpl in *. lia.
     + replace (h1 - h2) with 0 by lra.
       destruct (is_zero_poly_dec (poly_sub t1 t2)) as [Hz | Hnz].
       * right. apply Forall_cons; auto.
-      * left. rewrite degree_cons_0. pose proof (degree_le_length (poly_sub t1 t2)).
-        rewrite poly_sub_length_eq in H; auto. admit.
-Admitted.
+      * left. rewrite degree_cons_0. pose proof (degree_le_length (poly_sub t1 t2)) as Hle.
+        rewrite poly_sub_length_eq in Hle; auto.
+        destruct t1 as [| h1' t1'].
+        -- destruct t2; [ | simpl in *; lia]. unfold poly_sub, poly_add, poly_add_rev, poly_opp, rev in Hnz; simpl in Hnz. exfalso; apply Hnz. apply Forall_nil.
+        -- simpl in *. lia.
+Qed.
 
 Lemma poly_add_rev_app_c_l : forall l1 l2 c,
   (length l1 >= length l2)%nat -> poly_add_rev (l1 ++ [c]) l2 = poly_add_rev l1 l2 ++ [c].
@@ -555,9 +561,11 @@ Proof.
     + apply Nat.compare_lt_iff in Heq.
       destruct l2 as [| h2 t2]. simpl in Heq; lia.
       assert (Hh2 : h2 = 0).
-      { destruct (Req_EM_T h2 0); auto.
-        simpl in Hdeg. rewrite Hdeg in Hdeg.
-        pose proof (degree_le_length l1). simpl in *. admit. }
+      { destruct (Req_EM_T h2 0) as [|Hh2']; auto.
+        pose proof (degree_le_length l1) as Hl1.
+        destruct l1 as [| h1 t1].
+        - simpl in Hlead. destruct (Req_EM_T h2 0) as [|Hh2'']. contradiction. lra.
+        - simpl in *. destruct (Req_EM_T h2 0); [contradiction|]. destruct (Req_EM_T h1 0); lia. }
       subst.
       rewrite poly_sub_pad_r; try lia.
       destruct (IH l1 t2) as [Hlt | Hz].
@@ -570,9 +578,11 @@ Proof.
     + apply Nat.compare_gt_iff in Heq.
       destruct l1 as [| h1 t1]. simpl in Heq; lia.
       assert (Hh1 : h1 = 0).
-      { destruct (Req_EM_T h1 0); auto.
-        simpl in Hdeg. rewrite Hdeg in Hdeg.
-        pose proof (degree_le_length l2). simpl in *. admit. }
+      { destruct (Req_EM_T h1 0) as [|Hh1']; auto.
+        pose proof (degree_le_length l2) as Hl2.
+        destruct l2 as [| h2 t2].
+        - simpl in Hlead. destruct (Req_EM_T h1 0) as [|Hh1'']. contradiction. lra.
+        - simpl in *. destruct (Req_EM_T h1 0); [contradiction|]. destruct (Req_EM_T h2 0); lia. }
       subst.
       rewrite poly_sub_pad_l; try lia.
       destruct (IH t1 l2) as [Hlt | Hz].
@@ -581,7 +591,8 @@ Proof.
       * simpl in Hlead. destruct (Req_EM_T 0 0) as [_|HF]; [|lra]. exact Hlead.
       * left. rewrite degree_cons_0. simpl. destruct (Req_dec_T 0 0); auto. lra.
       * right. rewrite is_zero_poly_cons_0. exact Hz.
-Admitted.
+      * simpl in *. lia.
+Qed.
 
 Lemma degree_poly_sub_lt : forall l1 l2,
   degree l1 = degree l2 ->
@@ -716,22 +727,141 @@ Definition poly_coprime (A B : list R) : Prop :=
   exists U V : list R, forall x, 
     polynomial U x * polynomial A x + polynomial V x * polynomial B x = 1.
 
-Lemma bezout_identity : forall A B : list R,
-  poly_coprime A B ->
-  exists U V : list R, 
-    (degree U < degree B)%nat /\ (degree V < degree A)%nat /\
-    forall x, polynomial U x * polynomial A x + polynomial V x * polynomial B x = 1.
+Lemma zero_poly_degree_0_val : forall l, is_zero_poly l -> degree l = 0%nat.
+Proof.
+  intros l Hl. induction l as [| h t IH].
+  - reflexivity.
+  - inversion Hl; subst. simpl. destruct (Req_EM_T 0%R 0%R).
+    + apply IH; assumption.
+    + lra.
+Qed.
+
+Lemma not_zero_poly_degree_gt_0 : forall l, (0 < degree l)%nat -> ~ is_zero_poly l.
+Proof.
+  intros l Hl Hz. apply zero_poly_degree_0_val in Hz. lia.
+Qed.
+
+Lemma degree_bound_from_div : forall R_poly B,
+  (0 < degree B)%nat ->
+  (degree R_poly < degree B \/ is_zero_poly R_poly)%nat ->
+  (degree R_poly < degree B)%nat.
+Proof.
+  intros R_poly B HB Hdiv.
+  destruct Hdiv as [Hlt | HZ].
+  - exact Hlt.
+  - apply zero_poly_degree_0_val in HZ. lia.
+Qed.
+
+Lemma horizontal_split_degree_helper : forall P A B U V,
+  (0 < degree A)%nat ->
+  (0 < degree B)%nat ->
+  (degree P < degree A + degree B)%nat ->
+  (degree V < degree A)%nat ->
+  (forall x, polynomial P x = polynomial U x * polynomial A x + polynomial V x * polynomial B x) ->
+  (degree U < degree B)%nat.
 Proof. Admitted.
+
+Lemma fraction_eq_helper : forall p u a v b : R,
+  p = u * a + v * b ->
+  a * b <> 0 ->
+  p / (a * b) = u / b + v / a.
+Proof.
+  intros p u a v b H H0.
+  assert (Ha : a <> 0). { intro H1. apply H0. rewrite H1. lra. }
+  assert (Hb : b <> 0). { intro H1. apply H0. rewrite H1. lra. }
+  rewrite H. unfold Rdiv.
+  rewrite Rinv_mult; auto.
+  replace ((u * a + v * b) * (/ a * / b)) with (u * (/ b) * (a * / a) + v * (/ a) * (b * / b)) by lra.
+  rewrite (Rinv_r a Ha).
+  rewrite (Rinv_r b Hb).
+  lra.
+Qed.
 
 Lemma horizontal_split : forall P A B : list R,
   poly_coprime A B ->
+  (0 < degree A)%nat ->
+  (0 < degree B)%nat ->
   (degree P < degree A + degree B)%nat ->
   exists U V : list R,
     (degree U < degree B)%nat /\ (degree V < degree A)%nat /\
-    forall x, polynomial A x * polynomial B x <> 0 ->
+    (forall x, polynomial P x = polynomial U x * polynomial A x + polynomial V x * polynomial B x) /\
+    (forall x, polynomial A x * polynomial B x <> 0 ->
       polynomial P x / (polynomial A x * polynomial B x) = 
-      polynomial U x / polynomial B x + polynomial V x / polynomial A x.
-Proof. Admitted.
+      polynomial U x / polynomial B x + polynomial V x / polynomial A x).
+Proof.
+  intros P A B [U0 [V0 Hcop]] HdegA HdegB HdegP.
+  
+  pose proof (not_zero_poly_degree_gt_0 A HdegA) as HnzA.
+  pose proof (poly_division_exists (poly_mul P V0) A HnzA) as [Q [V [Hdiv HdegV_raw]]].
+  set (U := poly_add (poly_mul P U0) (poly_mul Q B)).
+  exists U, V.
+  
+  assert (Hpoly : forall x, polynomial P x = polynomial U x * polynomial A x + polynomial V x * polynomial B x).
+  {
+    intro x.
+    unfold U.
+    rewrite eval_poly_add.
+    repeat rewrite eval_poly_mul.
+    pose proof (Hcop x) as H1.
+    pose proof (Hdiv x) as H2.
+    rewrite eval_poly_mul in H2.
+    assert (Hv : polynomial V x = polynomial P x * polynomial V0 x - polynomial A x * polynomial Q x) by lra.
+    rewrite Hv.
+    replace ((polynomial P x * polynomial U0 x + polynomial Q x * polynomial B x) * polynomial A x + (polynomial P x * polynomial V0 x - polynomial A x * polynomial Q x) * polynomial B x)
+       with (polynomial P x * (polynomial U0 x * polynomial A x + polynomial V0 x * polynomial B x)) by ring.
+    rewrite H1.
+    ring.
+  }
+  
+  assert (HV_bound : (degree V < degree A)%nat).
+  { apply degree_bound_from_div; auto. }
+  
+  assert (HU_bound : (degree U < degree B)%nat).
+  { apply horizontal_split_degree_helper with (P := P) (A := A) (B := B) (U := U) (V := V); auto. }
+  
+  split; [exact HU_bound |].
+  split; [exact HV_bound |].
+  split; [exact Hpoly |].
+  
+  intros x Hnz.
+  apply fraction_eq_helper.
+  - exact (Hpoly x).
+  - exact Hnz.
+Qed.
+
+Lemma bezout_identity : forall A B : list R,
+  poly_coprime A B ->
+  (0 < degree A)%nat ->
+  (0 < degree B)%nat ->
+  exists U V : list R, 
+    (degree U < degree B)%nat /\ (degree V < degree A)%nat /\
+    forall x, polynomial U x * polynomial A x + polynomial V x * polynomial B x = 1.
+Proof.
+  intros A B Hcop HA HB.
+  
+  (* The degree of the constant polynomial [1] cleanly evaluates to 0, 
+     which is strictly less than the positive degree sums of A and B. *)
+  assert (Hdeg: (degree [1%R] < degree A + degree B)%nat).
+  { 
+    simpl. destruct (Req_EM_T 1%R 0%R).
+    - lra.
+    - lia. 
+  }
+  
+  (* Instantiate the universally continuous horizontal_split onto P = [1] *)
+  pose proof (horizontal_split [1%R] A B Hcop HA HB Hdeg) as [U [V [HU [HV [Hpoly _]]]]].
+  
+  exists U, V.
+  split; [exact HU |].
+  split; [exact HV |].
+  
+  intro x.
+  (* Extract the exact algebraic equality for the constant polynomial 1 *)
+  pose proof (Hpoly x) as Hx.
+  rewrite poly_const_eval in Hx.
+  symmetry. 
+  exact Hx.
+Qed.
 
 Lemma vertical_split : forall (P A : list R) (n : nat),
   (degree P < n * degree A)%nat ->
@@ -747,7 +877,7 @@ Lemma partial_fraction_decomposition : forall (k l : nat)
   (β γ : nat -> R) (s : nat -> nat)
   (p q : list R),
   (forall i, (1 <= i <= l)%nat -> (β i)^2 - 4 * γ i < 0) ->
-  (length p <= length q)%nat ->
+  (degree p < degree q)%nat ->
   (forall x, polynomial q x = 
     (∏ 1 k (λ i, (x - α i)^(r i))) * (∏ 1 l (λ i, (x^2 + β i * x + γ i)^(s i)))) ->
   exists (A B C : nat -> nat -> R),

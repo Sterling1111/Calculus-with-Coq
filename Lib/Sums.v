@@ -787,3 +787,21 @@ Proof.
        ++ apply IH; try lia. destruct H6 as [H6 | H6]; try nra. assert (i <= (S k) <= S k)%nat as H8 by lia. specialize (H2 (S k) H8). nra.
           intros j2 H9. apply H2. lia.
 Qed.
+
+Lemma sum_f_rev : forall n f,
+  ∑ 0 n f = ∑ 0 n (fun i => f (n - i)%nat).
+Proof.
+  intros n f. induction n as [| k IH].
+  - simpl. repeat rewrite sum_f_0_0. auto.
+  - rewrite sum_f_i_Sn_f; try lia. rewrite IH.
+    rewrite sum_f_Si with (i := 0%nat) (n := S k) (f := fun i => f (S k - i)%nat); try lia.
+    replace (f (S k - 0)%nat) with (f (S k)) by (f_equal; lia).
+    replace (∑ 0 k (λ i, f (k - i)%nat) + f (S k)) with (f (S k) + ∑ 0 k (λ i, f (k - i)%nat)) by lra.
+    rewrite sum_f_reindex' with (s := 1%nat) (i := 0%nat) (n := k).
+    replace (k + 1)%nat with (S k) by lia.
+    rewrite Nat.add_0_l.
+    field_simplify.
+    apply Rplus_eq_compat_l.
+    apply sum_f_equiv; try lia.
+    intros j H1. f_equal. lia.
+Qed.

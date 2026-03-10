@@ -943,20 +943,61 @@ Lemma monotone_subsequence_theorem : forall a,
 Proof.
   intros a.
   destruct (classic (forall n, exists m, (n < m)%nat /\ peak_point a m)) as [H1 | H1].
-  - admit.
+  - pose (f := fix f n := match n with
+      | 0 => proj1_sig (constructive_indefinite_description _ (H1 0%nat))
+      | S n' => proj1_sig (constructive_indefinite_description _ (H1 (f n')))
+      end).
+    exists (fun n => a (f n)). split.
+    + exists f. split.
+      * intros n1 n2 H2. apply INR_lt in H2. apply lt_INR. induction H2.
+        -- simpl. pose proof (proj2_sig (constructive_indefinite_description _ (H1 (f n1)))) as [H3 H4]. exact H3.
+        -- apply Nat.lt_trans with (f m). 
+           ++ exact IHle.
+           ++ pose proof (proj2_sig (constructive_indefinite_description _ (H1 (f m)))) as [H3 H4]. exact H3.
+      * intros n; reflexivity.
+    + right. intros n. unfold nonincreasing.
+      assert (H2: peak_point a (f n)).
+      { destruct n.
+        - pose proof (proj2_sig (constructive_indefinite_description _ (H1 0%nat))) as [H3 H4]. exact H4.
+        - pose proof (proj2_sig (constructive_indefinite_description _ (H1 (f n)))) as [H3 H4]. exact H4.
+      }
+      apply Rle_ge, Rlt_le. apply H2.
+      assert (H3: (f n < f (S n))%nat).
+      { pose proof (proj2_sig (constructive_indefinite_description _ (H1 (f n)))) as [H4 H5]. exact H4. }
+      exact H3.
   - apply not_all_ex_not in H1 as [N H1].
-    assert (H_step : forall n, exists m, (n < m)%nat /\ ((n > N)%nat -> a n <= a m)).
-{ intros n. destruct (le_lt_dec (S N) n) as [H_gt | H_le].
-  - (* Case n > N: n is NOT a peak point. So there is a larger value later. *)
-    assert (~ peak_point a n) as H_not_peak.
-    { intro H_peak. apply H1. exists n. split; auto; lia. }
-    unfold peak_point in H_not_peak.
-    apply not_all_ex_not in H_not_peak as [m H_ex].
-    apply imply_to_and in H_ex as [H_lt H_val].
-    exists m. split; [lia | solve_R].
-  - (* Case n <= N: Trivial step, just pick S N to get past the "bad" zone *)
-    exists (S N). split; [lia | lia]. }
-Admitted.
+    assert (H2 : forall n, exists m, (n < m)%nat /\ ((n > N)%nat -> a n <= a m)).
+    { 
+      intros n. destruct (le_lt_dec (S N) n) as [H3 | H3].
+      - assert (~ peak_point a n) as H4.
+        { intro H5. apply H1. exists n. split; auto; lia. }
+        unfold peak_point in H4.
+        apply not_all_ex_not in H4 as [m H5].
+        apply imply_to_and in H5 as [H6 H7].
+        exists m. split; [lia | solve_R].
+      - exists (S N). split; [lia | lia].
+    }
+    pose (f := fix f n := match n with
+      | 0 => S N
+      | S n' => proj1_sig (constructive_indefinite_description _ (H2 (f n')))
+      end).
+    assert (H3 : forall n, (f n > N)%nat).
+    { induction n.
+      - simpl. lia.
+      - simpl. pose proof (proj2_sig (constructive_indefinite_description _ (H2 (f n)))) as [H4 H5]. lia.
+    }
+    exists (fun n => a (f n)). split.
+    + exists f. split.
+      * intros n1 n2 H4. apply INR_lt in H4. apply lt_INR. induction H4.
+        -- simpl. pose proof (proj2_sig (constructive_indefinite_description _ (H2 (f n1)))) as [H5 H6]. exact H5.
+        -- apply Nat.lt_trans with (f m). 
+           ++ exact IHle.
+           ++ pose proof (proj2_sig (constructive_indefinite_description _ (H2 (f m)))) as [H5 H6]. exact H5.
+      * intros n; reflexivity.
+    + left. intros n. unfold nondecreasing.
+      simpl. pose proof (proj2_sig (constructive_indefinite_description _ (H2 (f n)))) as [H4 H5].
+      apply H5. apply H3.
+Qed.
 
 Theorem cauchy_convergence_criterion : forall a,
   convergent_sequence a <-> cauchy_sequence a.

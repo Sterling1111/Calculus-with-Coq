@@ -866,8 +866,66 @@ Definition definite_integral a b (f : ℝ -> ℝ) : ℝ :=
                end
   end.
 
-Notation "∫ a b f" := (definite_integral a b f)
-   (at level 9, f at level 0, a at level 0, b at level 0, format "∫  a  b  f").
+Definition is_antiderivative (f F : ℝ -> ℝ) : Prop :=
+  ⟦ der ⟧ F = f.
+
+Definition is_indefinite_integral_or_zero (f F : ℝ -> ℝ) : Prop :=
+  is_antiderivative f F \/ (~ (exists G, is_antiderivative f G) /\ F = (fun _ => 0)).
+
+Definition indefinite_integral (f : ℝ -> ℝ) : ℝ -> ℝ :=
+  epsilon (inhabits (fun _ => 0)) (is_indefinite_integral_or_zero f).
+
+Module IntegralNotations.
+
+  Declare Scope integral_scope.
+  Delimit Scope integral_scope with int.
+
+  Notation "⟦ 'int' ⟧ f = F" := (is_antiderivative f F)
+    (at level 70, f at level 0, no associativity, format "⟦  'int'  ⟧  f  =  F") : integral_scope.
+
+  Notation "⟦ 'Int' ⟧ f" := (indefinite_integral f)
+    (at level 70, f at level 0, no associativity, format "⟦  'Int'  ⟧  f") : integral_scope.
+
+  Notation "∫ f '=' F" := (is_antiderivative f F)
+    (at level 9, f at level 0, F at level 0, no associativity, format "∫  f  '='  F") : integral_scope.
+
+  Notation "∫ f" := (indefinite_integral f)
+    (at level 9, f at level 0, no associativity, format "∫  f") : integral_scope.
+
+  Notation "∫ a b f" := (definite_integral a b f)
+    (at level 9, f at level 0, a at level 0, b at level 0, format "∫  a  b  f") : integral_scope.
+
+  Open Scope integral_scope.
+
+End IntegralNotations.
+
+Import IntegralNotations.
+
+Lemma Int_spec : forall f,
+  (exists F, ∫ f = F) -> ∫ f = ⟦ Int ⟧ f.
+Proof.
+  intros f [F H1]. unfold indefinite_integral.
+  assert (exists G, is_indefinite_integral_or_zero f G) as H2 by (exists F; left; apply H1).
+  pose proof epsilon_spec (inhabits (fun _ => 0)) (is_indefinite_integral_or_zero f) H2 as H3.
+  destruct H3 as [H3 | [H3 H4]]; [apply H3 | exfalso; apply H3; exists F; apply H1].
+Qed.
+
+Lemma int_eq_plus_const : forall f F1 F2,
+  ∫ f = F1 -> ∫ f = F2 -> exists c, forall x, F1 x = F2 x + c.
+Proof.
+  intros f F1 F2 H1 H2. exists (F1 0 - F2 0). intros x.
+  destruct (Rlt_dec 0 x) as [H3 | H3].
+  - pose proof derivative_imp_derivative_on_closed F1 f 0 x H3 H1 as H4.
+    pose proof derivative_imp_derivative_on_closed F2 f 0 x H3 H2 as H5.
+    pose proof corollary_11_2 F1 f F2 f 0 x H3 H4 H5 ltac:(auto) as [c H6].
+    specialize (H6 0 ltac:(solve_R)) as H7. specialize (H6 x ltac:(solve_R)). lra.
+  - destruct (Rgt_dec 0 x) as [H4 | H4].
+    + pose proof derivative_imp_derivative_on_closed F1 f x 0 H4 H1 as H5.
+      pose proof derivative_imp_derivative_on_closed F2 f x 0 H4 H2 as H6.
+      pose proof corollary_11_2 F1 f F2 f x 0 H4 H5 H6 ltac:(auto) as [c H7].
+      specialize (H7 0 ltac:(solve_R)) as H8. specialize (H7 x ltac:(solve_R)). lra.
+    + replace x with 0 by lra. lra.
+Qed.
 
 Lemma integral_eq : forall a b f,
   a = b -> ∫ a b f = 0.
@@ -2612,4 +2670,106 @@ Proof.
   assert (H14 : C * (b - x) < C * (ε / (C + 1))) by (apply Rmult_lt_compat_l; auto; unfold δ in H7; solve_R).
   assert (H15 : C * (ε / (C + 1)) < ε) by (pose proof Rdiv_lt_1 C (C + 1) ltac:(lra) ltac:(lra); nra).
   rewrite Rminus_0_r. nra.
+Qed.
+
+Lemma definite_integral_eval : forall f F a b,
+  a < b -> continuous_on f [a, b] -> ∫ f = F -> ∫ a b f = F b - F a.
+Proof.
+  intros f F a b H1 H2 H3. unfold is_antiderivative in H3.
+  pose proof derivative_imp_derivative_on_closed F f a b H1 H3 as H4.
+  apply (FTC2 a b f F H1 H2 H4).
+Qed.
+
+Lemma definite_integral_eval_Int : forall f a b,
+  a < b -> continuous_on f [a, b] -> (exists F, ∫ f = F) -> ∫ a b f = (⟦ Int ⟧ f) b - (⟦ Int ⟧ f) a.
+Proof.
+  intros f a b H1 H2 H3. pose proof Int_spec f H3 as H4.
+  apply definite_integral_eval; auto.
+Qed.
+
+Lemma definite_integral_eval_general : forall f F a b,
+  continuous f -> ∫ f = F -> ∫ a b f = F b - F a.
+Proof.
+  intros f F a b H1 H2. pose proof Rtotal_order a b as [H3 | [H3 | H3]].
+  - apply definite_integral_eval; auto. apply continuous_imp_continuous_on; apply H1.
+  - subst. rewrite integral_n_n. lra.
+  - rewrite integral_b_a_neg.
+    pose proof definite_integral_eval f F b a H3 ltac:(apply continuous_imp_continuous_on; apply H1) H2 as H4.
+    lra.
+Qed.
+
+Lemma integral_id : forall c,
+  ∫ (λ x, x) = (λ x, 1 / 2 * x ^ 2 + c).
+Proof.
+  intros c.
+  replace (fun x => x) with (fun x : ℝ => 1/2 * (2 * x^(2-1)) + 0).
+  2 : { extensionality x. simpl. lra. }
+  apply derivative_plus.
+  - apply derivative_mult_const_l. apply derivative_pow.
+  - apply derivative_const.
+Qed.
+
+Lemma indefinite_integral_correct : forall f,
+  (exists F, ∫ f = F) -> ⟦ der ⟧ (∫ f) = f.
+Proof.
+  intros f [F H1].
+  unfold indefinite_integral.
+  assert (exists G, is_indefinite_integral_or_zero f G) as H2 by (exists F; left; apply H1).
+  pose proof epsilon_spec (inhabits (fun _ => 0)) (is_indefinite_integral_or_zero f) H2 as H3.
+  destruct H3 as [H3 | [H3 H4]]; [apply H3 | exfalso; apply H3; exists F; apply H1].
+Qed.
+
+Lemma double_integral_example : forall f F,
+  (exists G, ∫ f = G) ->
+  ∫ (∫ f) = F -> ⟦ der ^ 2 ⟧ F = f.
+Proof.
+  intros f F H1 H2.
+  unfold is_antiderivative in H2.
+  exists (∫ f).
+  split.
+  - apply nth_derivative_1. apply H2.
+  - apply indefinite_integral_correct. apply H1.
+Qed.
+
+Lemma integral_mult_const_l : forall f F c,
+  ∫ f = F -> ∫ (fun x => c * f x) = (fun x => c * F x).
+Proof.
+  intros f F c H1.
+  unfold is_antiderivative in *.
+  apply derivative_mult_const_l; auto.
+Qed.
+
+Lemma integral_mult_const_r : forall f F c,
+  ∫ f = F -> ∫ (fun x => f x * c) = (fun x => F x * c).
+Proof.
+  intros f F c H1.
+  unfold is_antiderivative in *.
+  apply derivative_mult_const_r; auto.
+Qed.
+
+Lemma integral_by_parts : forall u v u' v' U,
+  ⟦ der ⟧ u = u' -> ⟦ der ⟧ v = v' ->
+  ∫ (u' ⋅ v) = U ->
+  ∫ (u ⋅ v') = (u ⋅ v - U)%function.
+Proof.
+  intros u v u' v' U H1 H2 H3.
+  unfold is_antiderivative in *.
+  
+  pose proof derivative_mult u v u' v' H1 H2 as H4.
+  pose proof derivative_minus _ _ _ _ H4 H3 as H5.
+  
+  apply derivative_eq with (f1 := (u ⋅ v - U)%function).
+  - intros x. reflexivity.
+  - apply derivative_ext with (f1' := ((u' ⋅ v + u ⋅ v')%function - u' ⋅ v)%function); auto.
+    intros x. simpl. lra.
+Qed.
+
+Lemma integral_subst : forall f g g' F,
+  ⟦ der ⟧ g = g' ->
+  ∫ f = F ->
+  ∫ (f ∘ g ⋅ g') = (F ∘ g)%function.
+Proof.
+  intros f g g' F H1 H2.
+  unfold is_antiderivative in *.
+  apply derivative_comp; auto.
 Qed.

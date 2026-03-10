@@ -1,5 +1,4 @@
-From Lib Require Import Imports Sets Limit Continuity Derivative Integral Notations Reals_util Interval Functions.
-Import LimitNotations IntervalNotations SetNotations DerivativeNotations FunctionNotations.
+From Calculus.Chapter13 Require Import Prelude.
 Open Scope R_scope.
 
 Lemma lemma_13_9 : ∀ a b c d f g,

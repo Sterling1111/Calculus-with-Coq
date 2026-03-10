@@ -1,5 +1,5 @@
 From Lib Require Import Imports Notations Reals_util Sets Limit Continuity Derivative Integral Trigonometry Functions Interval.
-Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations.
+Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations IntegralNotations.
 
 Inductive expr :=
 | EVar
