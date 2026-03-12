@@ -4150,6 +4150,12 @@ Proof.
   - simpl. rewrite <- IH. reflexivity.
 Qed.
 
+Lemma derive_nth_derive : forall n f,
+  ⟦ Der ⟧ (⟦ Der ^ n ⟧ f) = ⟦ Der ^ (S n) ⟧ f.
+Proof.
+  intros n f. reflexivity.
+Qed.
+
 Lemma nth_derive_at_succ : forall n f a,
   ⟦ Der ^ (S n) a ⟧ f = ⟦ Der ^ n a ⟧ (⟦ Der ⟧ f).
 Proof.

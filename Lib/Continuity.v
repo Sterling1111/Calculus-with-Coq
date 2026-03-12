@@ -1,5 +1,5 @@
-From Lib Require Import Imports Limit Sums Reals_util Sets Notations Functions Completeness Interval.
-Import SetNotations IntervalNotations FunctionNotations LimitNotations.
+From Lib Require Import Imports Limit Sums Reals_util Sets Notations Functions Completeness Interval Sums.
+Import SetNotations IntervalNotations FunctionNotations LimitNotations SumNotations.
 
 Definition continuous_at (f : ℝ -> ℝ) (a : ℝ) : Prop :=
   ⟦ lim a ⟧ f = f a.
@@ -1405,4 +1405,14 @@ Proof.
     specialize (H4 (x - a) ltac:(solve_R)). replace (a + (x - a)) with x in H4; solve_R.
   - specialize (H1 ε H2) as [δ [H3 H4]]. exists δ. split; auto. intros x H5.
     specialize (H4 (a + x) ltac:(solve_R)). replace (a + x - a) with x in H4; solve_R.
+Qed.
+
+Lemma continuous_at_sum : forall n i a f,
+  (i <= n)%nat ->
+  (forall k, (i <= k <= n)%nat -> continuous_at (f k) a) ->
+  continuous_at (fun x => ∑ i n (fun k => f k x)) a.
+Proof.
+  intros n i a f H1 H2.
+  unfold continuous_at in *.
+  apply limit_sum; auto.
 Qed.

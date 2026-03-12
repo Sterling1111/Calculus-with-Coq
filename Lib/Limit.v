@@ -1,15 +1,10 @@
-From Lib Require Import Imports Sets Reals_util Notations Functions Interval Complex.
-Import SetNotations IntervalNotations FunctionNotations.
+From Lib Require Import Imports Sets Reals_util Notations Functions Interval Complex Sums.
+Import SetNotations IntervalNotations FunctionNotations SumNotations.
 
 Open Scope R_scope.
 
 Definition limit (f : ℝ -> ℝ) (a L : ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ δ, δ > 0 /\ ∀ x, 0 < |x - a| < δ -> |f x - L| < ε.
-
-Definition limit_c (f : C -> C) (a L : C) :=
-  forall ε, ε > 0 ->
-    exists δ, δ > 0 /\
-      forall z : C, 0 < |z - a|%C < δ -> |f z - L|%C < ε.
 
 Definition left_limit (f : ℝ -> ℝ) (a L : ℝ) : Prop :=
   ∀ ε, ε > 0 -> ∃ δ, δ > 0 /\ ∀ x, 0 < a - x < δ -> |f x - L| < ε.
@@ -64,10 +59,6 @@ Module LimitNotations.
   Notation "⟦ 'lim' a ⟧ f '=' L" := 
     (limit f a L) 
       (at level 70, f at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  '='  L") : limit_scope.
-
-  Notation "⟦ 'lim' a ⟧ f '=' L" := 
-    (limit_c f a L) 
-      (at level 70, f at level 0, no associativity, format "⟦  'lim'  a  ⟧  f  '='  L") : C_scope.
 
   Notation "⟦ 'lim' a ⁺ ⟧ f '=' L" := 
     (right_limit f a L)
@@ -134,6 +125,7 @@ Module LimitNotations.
 End LimitNotations.
 
 Import LimitNotations.
+From Lib Require Import Sums.
 
 Lemma lemma_1_20 : forall x x0 y y0 ε,
   |x - x0| < ε / 2 -> |y - y0| < ε / 2 -> |(x + y) - (x0 + y0)| < ε /\ |(x - y) - (x0 - y0)| < ε.
@@ -993,54 +985,50 @@ Ltac solve_lim :=
       apply (limit_subst f a L rhs); [solve_R | exact H]
   end.
 
-Open Scope C_scope.
-  
-Theorem limit_c_component_iff_clean : forall (f : C -> C) (a l : C),
-  let u := fun z => fst (f z) in
-  let v := fun z => snd (f z) in
-  let α := fst l in
-  let β := snd l in
-  ⟦ lim a ⟧ f = l <->
-  (⟦ lim a ⟧ u = α /\ ⟦ lim a ⟧ v = β).
+Lemma limit_right_sum : forall n i a f L,
+  (i <= n)%nat ->
+  (forall k, (i <= k <= n)%nat -> ⟦ lim a⁺ ⟧ (f k) = L k) ->
+  ⟦ lim a⁺ ⟧ (fun x => ∑ i n (fun k => f k x)) = ∑ i n L.
 Proof.
-  intros f a l u v α β. split.
-  - intros H1. split; intros ε H2.
-    + specialize (H1 ε H2) as [δ [H3 H4]].
-      exists δ. split; auto. intros x H5.
-      unfold u, α. 
-      specialize (H4 x H5). apply Rle_lt_trans with (r2 := |f x - l|); auto.
-      assert (H_lhs : (|(fst (f x) - fst l)|)%C = Rabs (fst (f x - l))).
-      { unfold Cminus, Copp, Cplus, Cnorm, Cnorm2. simpl.
-        rewrite <- (sqrt_Rsqr_abs (fst (f x) + - fst l)).
-        f_equal. unfold Rsqr. ring. }
-      rewrite H_lhs. apply Cnorm_fst.
-    + specialize (H1 ε H2) as [δ [H3 H4]].
-      exists δ. split; auto. intros x H5.
-      unfold v, β. 
-      specialize (H4 x H5). apply Rle_lt_trans with (r2 := |f x - l|); auto.
-      assert (H_lhs : (|(snd (f x) - snd l)|)%C = Rabs (snd (f x - l))).
-      { unfold Cminus, Copp, Cplus, Cnorm, Cnorm2. simpl.
-        rewrite <- (sqrt_Rsqr_abs (snd (f x) + - snd l)).
-        f_equal. unfold Rsqr. ring. }
-      rewrite H_lhs. apply Cnorm_snd.
-  - intros [H1 H2] ε H3. 
-    specialize (H1 (ε/2)%R ltac:(lra)) as [δ1 [H4 H5]].
-    specialize (H2 (ε/2)%R ltac:(lra)) as [δ2 [H6 H7]].
-    set (δ := Rmin δ1 δ2). exists δ. split; [ solve_R |].
-    intros z H8. 
-    assert (H_z_δ1 : 0 < (|(z - a)|)%C < δ1) by (unfold δ in *; solve_min; lra).
-    assert (H_z_δ2 : 0 < (|(z - a)|)%C < δ2) by (unfold δ in *; solve_min; lra).
-    specialize (H5 z H_z_δ1).
-    specialize (H7 z H_z_δ2).
-    apply Rle_lt_trans with (r2 := (|u z - α| + |v z - β|)%R).
-    + assert (H_u : (|u z - α|)%R = Rabs (fst ((f z - l)%C))).
-      { unfold u, α, Cminus, Copp, Cplus; simpl. reflexivity. }
-      assert (H_v : (|v z - β|)%R = Rabs (snd ((f z - l)%C))).
-      { unfold v, β, Cminus, Copp, Cplus; simpl. reflexivity. }
-      rewrite H_u, H_v. apply Cnorm_le_sum_abs.
-    + assert (H_u_C : (|(u z - α)|)%C = (|u z - α|)%R).
-      { unfold Cminus, Copp, Cplus, Cnorm, Cnorm2; simpl. rewrite <- (sqrt_Rsqr_abs (u z - α)). f_equal. unfold Rsqr, u, α. ring. }
-      assert (H_v_C : (|(v z - β)|)%C = (|v z - β|)%R).
-      { unfold Cminus, Copp, Cplus, Cnorm, Cnorm2; simpl. rewrite <- (sqrt_Rsqr_abs (v z - β)). f_equal. unfold Rsqr, v, β. ring. }
-      rewrite H_u_C in H5. rewrite H_v_C in H7. lra.
+  intros n i a f L H1 H2.
+  induction n as [| k IH]; [ apply H2; lia |].
+  assert (i = S k \/ i <= k)%nat as [H3 | H3] by lia.
+  - rewrite H3, sum_f_n_n. 
+    replace (λ x : ℝ, ∑ (S k) (S k) λ k0 : ℕ, f k0 x) with (f (S k)).
+    2 : { extensionality x. rewrite sum_f_n_n. reflexivity. }
+    apply H2; lia.
+  - rewrite sum_f_i_Sn_f; auto.
+    replace (λ x : ℝ, ∑ i (S k) λ k0 : ℕ, f k0 x) with (fun x => ∑ i k (fun k0 => f k0 x) + f (S k) x).
+    2 : { extensionality x. rewrite sum_f_i_Sn_f; auto. }
+    apply limit_right_plus; auto. apply IH; auto. intros. apply H2; lia.
+Qed.
+
+Lemma limit_left_sum : forall n i a f L,
+  (i <= n)%nat ->
+  (forall k, (i <= k <= n)%nat -> ⟦ lim a⁻ ⟧ (f k) = L k) ->
+  ⟦ lim a⁻ ⟧ (fun x => ∑ i n (fun k => f k x)) = ∑ i n L.
+Proof.
+  intros n i a f L H1 H2.
+  induction n as [| k IH]; [ apply H2; lia |].
+  assert (i = S k \/ i <= k)%nat as [H3 | H3] by lia.
+  - rewrite H3, sum_f_n_n.
+    replace (λ x : ℝ, ∑ (S k) (S k) λ k0 : ℕ, f k0 x) with (f (S k)).
+    2 : { extensionality x. rewrite sum_f_n_n. reflexivity. }
+    apply H2; lia.
+  - rewrite sum_f_i_Sn_f; auto.
+    replace (λ x : ℝ, ∑ i (S k) λ k0 : ℕ, f k0 x) with (fun x => ∑ i k (fun k0 => f k0 x) + f (S k) x).
+    2 : { extensionality x. rewrite sum_f_i_Sn_f; auto. }
+    apply limit_left_plus; auto. apply IH; auto. intros. apply H2; lia.
+Qed.
+
+Lemma limit_sum : forall n i a f L,
+  (i <= n)%nat ->
+  (forall k, (i <= k <= n)%nat -> ⟦ lim a ⟧ (f k) = L k) ->
+  ⟦ lim a ⟧ (fun x => ∑ i n (fun k => f k x)) = ∑ i n L.
+Proof.
+  intros n i a f L H1 H2. apply limit_iff; split.
+  - apply limit_left_sum; auto. intros k H3. specialize (H2 k H3) as H4.
+    apply limit_iff in H4 as [H5 _]. exact H5.
+  - apply limit_right_sum; auto. intros k H3. specialize (H2 k H3) as H4.
+    apply limit_iff in H4 as [_ H5]. exact H5.
 Qed.

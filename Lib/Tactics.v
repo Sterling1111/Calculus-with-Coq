@@ -1,5 +1,5 @@
-From Lib Require Import Imports Notations Reals_util Sets Limit Continuity Derivative Integral Trigonometry Functions Interval.
-Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations IntegralNotations.
+From Lib Require Import Imports Notations Reals_util Sets Limit Continuity Derivative Integral Trigonometry Functions Interval Sums.
+Import IntervalNotations SetNotations FunctionNotations DerivativeNotations LimitNotations IntegralNotations SumNotations.
 
 Inductive expr :=
 | EVar
@@ -13,7 +13,8 @@ Inductive expr :=
 | ECos (e : expr)
 | ESqrt (e : expr)
 | EPow (e : expr) (n : nat)
-| EApp (f : R -> R) (df : option (R -> R)) (e : expr).
+| EApp (f : R -> R) (df : option (R -> R)) (e : expr)
+| ESum (i n : nat) (e : expr).
 
 Fixpoint eval_expr (e : expr) (x : R) : R :=
   match e with
@@ -29,6 +30,7 @@ Fixpoint eval_expr (e : expr) (x : R) : R :=
   | ESqrt e => sqrt (eval_expr e x)
   | EPow e n => (eval_expr e x) ^ n
   | EApp f _ e => f (eval_expr e x)
+  | ESum i n e => ∑ i n (fun k => eval_expr e k).
   end.
 
 Fixpoint wf_limit_right (e : expr) (a : R) : Prop :=
@@ -52,6 +54,16 @@ Fixpoint wf_limit_left (e : expr) (a : R) : Prop :=
   end.
 
 Definition wf_limit (e : expr) (a : R) : Prop := wf_limit_left e a /\ wf_limit_right e a.
+
+Fixpoint wf_cont (e : expr) (a : R) : Prop :=
+  match e with
+  | EVar | EConst _ => True
+  | EAdd e1 e2 | ESub e1 e2 | EMul e1 e2 => wf_cont e1 a /\ wf_cont e2 a
+  | EDiv e1 e2 => wf_cont e1 a /\ wf_cont e2 a /\ eval_expr e2 a <> 0
+  | ENeg e | ESin e | ECos e | EPow e _ => wf_cont e a
+  | ESqrt e => wf_cont e a /\ eval_expr e a > 0
+  | EApp f _ e => wf_cont e a /\ continuous_at f (eval_expr e a)
+  end.
 
 Fixpoint wf_derive (e : expr) (x : R) : Prop :=
   match e with
@@ -125,6 +137,27 @@ Lemma continuity_correct : forall e x,
   wf_limit e x -> continuous_at (λ t, eval_expr e t) x.
 Proof.
   intros e x H. apply limit_eval_expr in H. exact H.
+Qed.
+
+Lemma cont_correct : forall e x,
+  wf_cont e x -> continuous_at (λ t, eval_expr e t) x.
+Proof.
+  induction e; intros x H; simpl in *; try solve_R; try apply continuous_at_id || apply continuous_at_const.
+  - destruct H as [H1 H2]. apply continuous_at_plus; auto.
+  - destruct H as [H1 H2]. apply continuous_at_minus; auto.
+  - destruct H as [H1 H2]. apply continuous_at_mult; auto.
+  - destruct H as [H1 [H2 H3]]. apply continuous_at_div; auto.
+  - apply continuous_at_neg; auto.
+  - replace (λ t : ℝ, sin (eval_expr e t)) with ((sin) ∘ (λ t : ℝ, eval_expr e t))%function by reflexivity.
+    apply continuous_at_comp; [apply IHe | apply continuous_sin]; auto.
+  - replace (λ t : ℝ, cos (eval_expr e t)) with ((cos) ∘ (λ t : ℝ, eval_expr e t))%function by reflexivity.
+    apply continuous_at_comp; [apply IHe | apply continuous_cos]; auto.
+  - destruct H as [H1 H2]. replace (λ t : ℝ, √ eval_expr e t) with ((R_sqrt.sqrt) ∘ (λ t : ℝ, eval_expr e t))%function by reflexivity.
+    apply continuous_at_comp; [apply IHe | apply continuous_at_sqrt]; auto.
+  - replace (fun t : R => eval_expr e t ^ n) with ((fun y : R => pow y n) ∘ (λ t : ℝ, eval_expr e t))%function by reflexivity.
+    apply continuous_at_comp; [apply IHe | apply continuous_at_pow]; auto.
+  - destruct H as [H1 H2]. replace (λ t : ℝ, f (eval_expr e t)) with (f ∘ (λ t : ℝ, eval_expr e t))%function by reflexivity.
+    apply continuous_at_comp; auto.
 Qed.
 
 Lemma derive_correct : forall e x,
@@ -264,31 +297,52 @@ Ltac auto_limit :=
   end.
 
 Ltac auto_cont :=
+  intros;
   try solve [ solve_R ];
-  match goal with 
-  | [ |- continuous_on ?f ?I ] => apply continuous_imp_continuous_on; let a := fresh "a" in intros a
-  | [ |- continuous ?f ] => let a := fresh "a" in intros a
-  | _ => idtac 
-  end;
+  try (match goal with 
+  | [ |- continuous_on ?f ?I ] => apply continuous_at_imp_continuous_on; let a := fresh "a" in let Ha := fresh "H" in intros a Ha 
+  | [ |- continuous ?f ] => let a := fresh "a" in intros a 
+  end);
   change_fun_to_expr;
   match goal with
   | [ |- continuous_at (fun x => eval_expr ?e x) ?a ] =>
-      apply continuity_correct; repeat split; solve_R
+      apply cont_correct; repeat split; try solve_R
   end.
+
+Ltac auto_diff_step :=
+  first
+    [ apply derivative_mult_const_l
+    | apply derivative_mult_const_r
+    | apply derivative_plus
+    | apply derivative_minus
+    | apply derivative_at_mult_const_l
+    | apply derivative_at_mult_const_r
+    | apply derivative_at_plus
+    | apply derivative_at_minus
+    | apply derivative_sum; [try lia | intros ? ?]
+    | apply derivative_at_sum; [try lia | intros ? ?]
+    ].
 
 Ltac auto_diff :=
   intros;
   try solve [ solve_R ];
-  try (match goal with | [ |- ⟦ der ⟧ _ _ = _ ] => apply derivative_imp_derivative_on; [ try apply differentiable_domain_open; try apply differentiable_domain_closed; solve_R | ] end);
-  change_deriv_to_eval;
-  match goal with
-  | [ |- ⟦ der ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
-    replace rhs with (fun t => eval_expr (derive_expr e) t) by (let x := fresh "x" in extensionality x; unfold compose in *; try (simpl; lra); solve_R);
-    apply derive_correct_global; repeat split; solve_R
-  | [ |- ⟦ der _ ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
-    replace rhs with (fun t => eval_expr (derive_expr e) t) by (let x := fresh "x" in extensionality x; unfold compose in *; try (simpl; lra); solve_R);
-    apply derive_correct; repeat split; solve_R
-  end.
+  try (match goal with | [ |- ⟦ der ⟧ _ _ = _ ] => apply derivative_imp_derivative_on; [ try solve [apply differentiable_domain_open; solve_R | apply differentiable_domain_closed; solve_R] | ] end);
+  repeat auto_diff_step;
+  try (
+    change_deriv_to_eval;
+    match goal with
+    | [ |- ⟦ der ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
+      replace rhs with (fun t => eval_expr (derive_expr e) t);
+      [ apply derive_correct_global; repeat split; solve_R
+      | let x := fresh "x" in extensionality x; unfold compose in *; solve [simpl; lra | solve_R] ]
+    | [ |- ⟦ der _ ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
+      replace rhs with (fun t => eval_expr (derive_expr e) t);
+      [ apply derive_correct; repeat split; solve_R
+      | let x := fresh "x" in extensionality x; unfold compose in *; solve [simpl; lra | solve_R] ]
+    end
+  ).
+
+Module Tactic_Tests.
 
 Example FTC2_test : ∫ 0 1 (λ x : ℝ, 2 * x) = 1.
 Proof.
@@ -300,3 +354,20 @@ Proof.
   replace 1 with (g 1 - g 0) at 2 by (unfold g; lra).
   apply (FTC2 0 1 f g H1 H2 H3).
 Qed.
+
+Lemma integral_sin5_cos : ∫ (λ x, sin x ^ 5 * cos x) = (λ x, sin x ^ 6 / 6).
+Proof.
+  unfold antiderivative; auto_diff.
+Qed.
+
+Lemma test_auto_cont : continuous (λ x, sin (x^2 + 1)).
+Proof.
+  auto_cont.
+Qed.
+
+Lemma test_auto_cont_2 : continuous_on (λ x: ℝ, 1/x) (0, 1).
+Proof.
+  auto_cont.
+Qed.
+
+End Tactic_Tests.

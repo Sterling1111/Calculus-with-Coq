@@ -46,6 +46,13 @@ Lib/Asymptotics.v
 Lib/PolySimp.v
 Lib/Psatz.v
 Lib/Simplex.v
+Lib/Compat.v
+Lib/ComplexLimit.v
+Lib/ComplexContinuity.v
+Lib/ComplexDerivative.v
+Lib/ComplexSequence.v
+Lib/ComplexSeries.v
+Lib/ComplexFunctions.v
 
 
 # ==========================

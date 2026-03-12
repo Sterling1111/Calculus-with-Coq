@@ -1,7 +1,7 @@
 From Lib Require Import Imports Notations Integral Derivative Functions Continuity Taylor
                         Limit Sets Reals_util Inverse Trigonometry Sums Rational Binomial Tactics Interval.
 Import IntervalNotations SetNotations SumNotations FunctionNotations 
-       DerivativeNotations LimitNotations Choose_Notations RationalNotations.
+       DerivativeNotations LimitNotations Choose_Notations RationalNotations IntegralNotations.
 
 Open Scope R_scope.
 Open Scope rational_scope.
@@ -35,6 +35,12 @@ Lemma f_n_1 : ∀ n,
   (n > 0)%nat -> f n 1 = 0.
 Proof.
   intros n H1. unfold f. rewrite pow1. rewrite Rminus_diag. rewrite pow_i; try lia. lra.
+Qed.
+
+Lemma f_n_continuous : ∀ n,
+  continuous (f n).
+Proof.
+  intros n. unfold f. auto_cont; apply INR_fact_neq_0.
 Qed.
 
 Lemma one_minus_x_pow_n : forall n x,
@@ -197,6 +203,7 @@ Qed.
 Theorem theorem_16_1 : π ∉ ℚ.
 Proof.
   apply rational_iff, irrational_square_imp_irrational. intros H1.
+  unfold rational in H1.
   assert (H2 : π ^ 2 > 0) by (pose proof π_pos; nra).
   pose proof rational_representation_positive (π ^ 2) H1 H2 as [a [b [H3 [H4 H5]]]].
   clear H1 H2. rename H3 into H1. rename H4 into H2. rename H5 into H3.
@@ -235,51 +242,17 @@ Proof.
     }
     assert (H6 : ⟦ der ⟧ G = G').
     {
-      unfold G, G'.
+      unfold G, G'; auto_diff; unfold nth_derive_at.
       apply derive_spec.
-      - intros x. apply differentiable_at_mult_const_l. apply differentiable_at_sum; try lia.
-        intros k H6. apply differentiable_at_mult_const_l.
-        apply nth_differentiable_at_imp_differentiable_at with (n := 1%nat); try lia.
-        apply nth_differentiable_imp_nth_differentiable_at with (n := 1%nat); try lia.
-        apply nth_derive_nth_differentiable. apply f_n_nth_differentiable.
-      - rewrite derive_mult_const_l.
-        2 : {
-            intros x. apply differentiable_at_sum; try lia.
-            intros k H6. apply differentiable_at_mult_const_l.
-            apply nth_differentiable_at_imp_differentiable_at with (n := 1%nat); try lia. 
-            apply nth_differentiable_imp_nth_differentiable_at with (n := 1%nat); try lia.
-            apply nth_derive_nth_differentiable. apply f_n_nth_differentiable.
-        }
-        extensionality x. apply Rmult_eq_compat_l.
-        rewrite derive_sum; try lia. 2 : { intros k H7. apply differentiable_mult_const_l. apply nth_differentiable_imp_differentiable with (n:=1%nat); try lia. apply nth_derive_nth_differentiable. apply f_n_nth_differentiable. }
-        apply sum_f_equiv; try lia. intros k H7.
-        rewrite derive_mult_const_l. 2 : { apply nth_differentiable_imp_differentiable with (n:=1%nat); try lia. apply nth_derive_nth_differentiable. apply f_n_nth_differentiable. }
-        apply Rmult_eq_compat_l. 
-        rewrite nth_derive_add with (n := 1%nat). replace (1 + 2 * k)%nat with (2 * k + 1)%nat by lia. reflexivity.
+      - apply inf_diff_nth_derive_diff. apply f_n_inf_differentiable.
+      - replace (2 * k + 1)%nat with (S (2 * k))%nat by lia. apply derive_nth_derive.
     }
     assert (H7 : ⟦ der ⟧ G' = G'').
     {
-      unfold G', G''.
+      unfold G', G''; auto_diff; unfold nth_derive_at.
       apply derive_spec.
-      - intros x. apply differentiable_at_mult_const_l. apply differentiable_at_sum; try lia.
-        intros k H7. apply differentiable_at_mult_const_l.
-        apply nth_differentiable_at_imp_differentiable_at with (n := 1%nat); try lia.
-        apply nth_differentiable_imp_nth_differentiable_at with (n := 1%nat); try lia.
-        apply nth_derive_nth_differentiable. apply f_n_nth_differentiable.
-      - rewrite derive_mult_const_l.
-        2 : {
-            intros x. apply differentiable_at_sum; try lia.
-            intros k H7. apply differentiable_at_mult_const_l.
-            apply nth_differentiable_at_imp_differentiable_at with (n := 1%nat); try lia. 
-            apply nth_differentiable_imp_nth_differentiable_at with (n := 1%nat); try lia.
-            apply nth_derive_nth_differentiable. apply f_n_nth_differentiable.
-        }
-        extensionality x. apply Rmult_eq_compat_l.
-        rewrite derive_sum; try lia. 2 : { intros k H8. apply differentiable_mult_const_l. apply nth_differentiable_imp_differentiable with (n:=1%nat); try lia. apply nth_derive_nth_differentiable. apply f_n_nth_differentiable. }
-        apply sum_f_equiv; try lia. intros k H8.
-        rewrite derive_mult_const_l. 2 : { apply nth_differentiable_imp_differentiable with (n:=1%nat); try lia. apply nth_derive_nth_differentiable. apply f_n_nth_differentiable. }
-        apply Rmult_eq_compat_l. 
-        rewrite nth_derive_add with (n := 1%nat). replace (1 + (2 * k + 1))%nat with (2 * k + 2)%nat by lia. reflexivity.
+      - apply inf_diff_nth_derive_diff. apply f_n_inf_differentiable.
+      - replace (2 * k + 2)%nat with (S (2 * k + 1))%nat by lia. apply derive_nth_derive.
     }
     assert (H8 : ⟦ der ⟧ H = H') by (unfold H, H'; auto_diff).
     assert (H9 : H' = (fun x => π^2 * (a^n * f n x * sin (π * x)))).
@@ -288,78 +261,51 @@ Proof.
       assert (H9 : G'' x + π^2 * (G x) = π^2 * a^n * f n x).
       {
         unfold G, G''.
-        rewrite r_mult_sum_f_i_n_f_l. do 2 rewrite r_mult_sum_f_i_n_f_l.
+        repeat rewrite r_mult_sum_f_i_n_f_l.
         set (A := fun i => b ^ n * ((-1) ^ i * π ^ (2 * n - 2 * i) * (⟦ Der^(2 * i + 2) x ⟧ (f n)))).
         set (B := fun i => π ^ 2 * (b ^ n * ((-1) ^ i * π ^ (2 * n - 2 * i) * (⟦ Der^(2 * i) x ⟧ (f n))))).
-        assert (H9 : ∀ i : ℕ, (i < n)%nat -> A i + B (i + 1)%nat = 0). 
+        assert (H9 : ∀ i : ℕ, A i + B (i + 1)%nat = 0).
         {
-          intros i H9. unfold A, B. replace (2 * (i + 1))%nat with (2 * i + 2)%nat by lia.
-          replace (b ^ n * ((-1) ^ i * π ^ (2 * n - 2 * i) * (⟦ Der^(2 * i + 2) x ⟧ (f n))) + π ^ 2 * (b ^ n * ((-1) ^ (i + 1) * π ^ (2 * n - (2 * i + 2)) * (⟦ Der^(2 * i + 2) x ⟧ (f n))))) with
-          ((b ^ n * (⟦ Der^(2 * i + 2) x ⟧ (f n))) * ((-1) ^ i * π ^ (2 * n - 2 * i) + π ^ 2 * ((-1) ^ (i + 1) * π ^ (2 * n - (2 * i + 2))))) by lra.
-          apply Rmult_eq_0_compat_l. replace ((2 * n - 2 * i)%nat) with (2 * n - (2 * i + 2) + 2)%nat by lia.
-          replace (i + 1)%nat with (1 + i)%nat by lia. repeat rewrite pow_add. lra.
-        }
-        assert (H10 : ∀ i : ℕ, (i >= n)%nat → A i + B (i + 1)%nat = 0).
-        {
-          intros i H10.
-          unfold A, B.
-          replace (2 * (i + 1))%nat with (2 * i + 2)%nat by lia.
-          rewrite nth_derive_f_n_0; try lia.
-          lra.
+          intros i. unfold A, B. replace (2 * (i + 1))%nat with (2 * i + 2)%nat by lia.
+          assert ((i < n)%nat \/ (i >= n)%nat) as [H9 | H9] by lia.
+          - replace (b ^ n * ((-1) ^ i * π ^ (2 * n - 2 * i) * (⟦ Der^(2 * i + 2) x ⟧ (f n))) + π ^ 2 * (b ^ n * ((-1) ^ (i + 1) * π ^ (2 * n - (2 * i + 2)) * (⟦ Der^(2 * i + 2) x ⟧ (f n))))) with
+            ((b ^ n * (⟦ Der^(2 * i + 2) x ⟧ (f n))) * ((-1) ^ i * π ^ (2 * n - 2 * i) + π ^ 2 * ((-1) ^ (i + 1) * π ^ (2 * n - (2 * i + 2))))) by lra.
+            apply Rmult_eq_0_compat_l. replace ((2 * n - 2 * i)%nat) with (2 * n - (2 * i + 2) + 2)%nat by lia.
+            replace (i + 1)%nat with (1 + i)%nat by lia. repeat rewrite pow_add. lra.
+          - rewrite nth_derive_f_n_0; try lia. lra.
         }
         rewrite sum_f_plus; try lia.
-        assert (H11 : ∑ 0 n (λ i : ℕ, A i + B i) = ∑ 0 n (λ i : ℕ, B i - B (i + 1)%nat)).
-        { 
-          apply sum_f_equiv; try lia.
-          intros k H11.
-          assert (H12 : (k < n)%nat \/ k = n) by lia.
-          destruct H12 as [H12 | H12].
-          - specialize (H9 k H12). lra.
-          - subst. specialize (H10 n ltac:(lia)). lra. 
-        }
-        rewrite H11.
+        assert (H10 : ∑ 0 n (λ i : ℕ, A i + B i) = ∑ 0 n (λ i : ℕ, B i - B (i + 1)%nat)).
+        { apply sum_f_equiv; try lia. intros k H10. specialize (H9 k). lra. }
+        rewrite H10.
         rewrite sum_f_0_n_fi_minus_fSi. replace (B (n + 1)%nat) with (0).
         2 : { unfold B. rewrite nth_derive_f_n_0; try lia. lra. }
-        rewrite Rminus_0_r. unfold B. rewrite pow_O. rewrite Rmult_1_l. rewrite Nat.mul_0_r.
-        rewrite Nat.sub_0_r. replace (⟦ Der^0 x ⟧ (f n)) with (f n x) by reflexivity.
-        rewrite Rmult_assoc. apply Rmult_eq_compat_l. rewrite <- Rmult_assoc.
-        apply Rmult_eq_compat_r. rewrite pow_mult, H1. rewrite Rdiv_pow_distr; auto. field. apply pow_nonzero; lra.
+        unfold B. rewrite Rminus_0_r, pow_O, Rmult_1_l, Nat.mul_0_r, Nat.sub_0_r.
+        replace (⟦ Der^0 x ⟧ (f n)) with (f n x) by reflexivity.
+        rewrite Rmult_assoc. apply Rmult_eq_compat_l. rewrite <- Rmult_assoc. apply Rmult_eq_compat_r.
+        rewrite pow_mult, H1. rewrite Rdiv_pow_distr; auto. field. apply pow_nonzero; lra.
       }
       nra.
     }
     assert (H10 : ∫ 0 1 (λ x : ℝ, π ^ 2 * (a ^ n * f n x * sin (π*x))) = H 1 - H 0).
     {
       rewrite <- H9.
-      apply FTC2.
-      - lra.
-      - rewrite H9. apply continuous_imp_continuous_on. apply differentiable_imp_continuous.
-        replace (λ x : ℝ, π ^ 2 * (a ^ n * f n x * sin (π * x))) with (λ x : ℝ, π ^ 2 * (a ^ n * (f n x * sin (π * x)))).
-        2 : { extensionality x; lra. } do 2 apply differentiable_mult_const_l. apply differentiable_mult.
-        apply f_n_differentiable. apply differentiable_comp. apply differentiable_sin. apply differentiable_mult_const_l.
-        apply differentiable_id.
+      apply FTC2; [ lra | |].
+      - rewrite H9. auto_cont. apply f_n_continuous.
       - apply derivative_imp_derivative_on; try lra; auto. apply differentiable_domain_closed; lra.
     }
     assert (H11 : H 1 - H 0 = π * (G 1 + G 0)).
-    { unfold H. rewrite Rmult_1_r, Rmult_0_r. rewrite sin_0, sin_π, cos_0, cos_π. lra. }
+    { unfold H. rewrite Rmult_1_r, Rmult_0_r, sin_0, sin_π, cos_0, cos_π. lra. }
 
-    rewrite H11 in H10. rewrite theorem_13_6_b in H10; try lra.
-    2 : {
-       apply theorem_13_3; try lra. apply differentiable_on_imp_continuous_on; try lra. apply differentiable_imp_differentiable_on; try lra.
-       replace (λ x : ℝ, a ^ n * f n x * sin (π * x)) with (λ x : ℝ, a ^ n * (f n x * sin (π * x))).
-       2 : { extensionality x; lra. } apply differentiable_mult_const_l. apply differentiable_mult.
-      apply f_n_differentiable. apply differentiable_comp. apply differentiable_sin. apply differentiable_mult_const_l.
-      apply differentiable_id. apply differentiable_domain_closed; lra.
-    }
-    pose proof π_pos as H12.
+    rewrite H11 in H10.
+
+    assert (H12 : integrable_on 0 1 (λ x : ℝ, a ^ n * f n x * sin (π * x))).
+    { apply theorem_13_3; auto_cont. apply differentiable_at_imp_continuous_at, f_n_differentiable. }
+    
+    rewrite theorem_13_6_b in H10; auto; try lra.
+    pose proof π_pos as H13.
     apply Rmult_eq_compat_r with (r := 1 / π) in H10; try lra. field_simplify in H10; try lra.
-    rewrite <- theorem_13_6_b in H10; try lra.
-    2 : {
-      apply theorem_13_3; try lra. apply differentiable_on_imp_continuous_on; try lra. apply differentiable_imp_differentiable_on; try lra.
-      replace (λ x : ℝ, a ^ n * f n x * sin (π * x)) with (λ x : ℝ, a ^ n * (f n x * sin (π * x))).
-      2 : { extensionality x; lra. } apply differentiable_mult_const_l. apply differentiable_mult.
-      apply f_n_differentiable. apply differentiable_comp. apply differentiable_sin. apply differentiable_mult_const_l.
-      apply differentiable_id. apply differentiable_domain_closed; lra.
-    }
+    rewrite <- theorem_13_6_b in H10; auto; try lra.
     replace (λ x : ℝ, π * (a ^ n * f n x * sin (π * x))) with (λ x : ℝ, π * a ^ n * f n x * sin (π * x)) in H10.
     2 : { extensionality x; lra. }
     rewrite H10.
@@ -378,34 +324,17 @@ Proof.
   }
   assert (H6 : ∀ n, (n > 0)%nat -> 0 < ∫ 0 1 (λ x, π * a^n * f n x * sin (π * x)) < π * a^n / n!).
   {
-    intros n H6. split.
-    - apply integral_pos'; try lra. intros x H7. assert (x = 0 \/ x = 1 \/ (0 < x < 1)) as [H8 | [H8 | H8]] by solve_R.
-      -- subst. rewrite Rmult_0_r. rewrite sin_0. lra.
-      -- subst. rewrite Rmult_1_r. rewrite sin_π. lra.
-      -- specialize (H5 n x H6 H8). lra.
-      -- exists (1/2). split; [solve_R |]. pose proof f_bounds n (1/2) H6 ltac:(lra) as [H8 _].
-         replace (π * (1 / 2)) with (π / 2) by lra. rewrite sin_π_over_2. rewrite Rmult_1_r. 
-         pose proof π_pos as H9. pose proof Rpow_gt_0 n a H2 as H10. apply Rmult_lt_0_compat; nra.
-      -- apply continuous_imp_continuous_on. apply differentiable_imp_continuous.
-         replace (λ x : ℝ, π * a ^ n * f n x * sin (π * x)) with (λ x : ℝ, π * (a ^ n * (f n x * sin (π * x)))).
-         2 : { extensionality x; lra. } do 2 apply differentiable_mult_const_l. apply differentiable_mult.
-         apply f_n_differentiable. apply differentiable_comp. apply differentiable_sin. apply differentiable_mult_const_l.
-         apply differentiable_id.
-    - pose proof integral_bounds_strong_open 0 1 (λ x, π * a^n * f n x * sin (π * x)) 0 (π * a^n / n!) ltac:(lra) as [H7 H8]; try lra. 
-      -- intros x H7. pose proof π_pos as H8. pose proof Rpow_gt_0 n a H2 as H9.
-         pose proof f_bounds n x H6 ltac:(solve_R) as [H10 H11].
-         assert (H12 : 0 < sin (π * x) <= 1). { apply sin_pi_x_bounds; auto. } pose proof f_bounds n x H6 H7 as [H13 H14]. split.
-         ++ do 2 (apply Rmult_lt_0_compat; try nra).
-         ++ apply Rmult_lt_reg_l with (r := n! / (π * a ^ n)).
-            apply Rdiv_pos_pos; try nra. apply INR_fact_lt_0.
-            field_simplify; try lra. 2 : { split; try lra. pose proof INR_fact_lt_0 n; lra. }
-            apply Rmult_lt_reg_r with (r := 1 / n!). apply Rdiv_pos_pos; try nra. apply INR_fact_lt_0.
-            field_simplify; try apply INR_fact_neq_0. nra.
-      -- apply continuous_imp_continuous_on. apply differentiable_imp_continuous.
-          replace (λ x : ℝ, π * a ^ n * f n x * sin (π * x)) with (λ x : ℝ, π * (a ^ n * (f n x * sin (π * x)))).
-          2 : { extensionality x; lra. } do 2 apply differentiable_mult_const_l. apply differentiable_mult.
-         apply f_n_differentiable. apply differentiable_comp. apply differentiable_sin. apply differentiable_mult_const_l.
-         apply differentiable_id.
+    intros n H6. assert (H7 : continuous_on (λ x : ℝ, π * a ^ n * f n x * sin (π * x)) [0, 1]).
+    { auto_cont. apply f_n_continuous. } split.
+    - apply integral_pos'; auto; try lra.
+      + intros x H8. assert (x = 0 \/ x = 1 \/ (0 < x < 1)) as [H9 | [H9 | H9]] by solve_R.
+        * subst. rewrite Rmult_0_r. rewrite sin_0. lra.
+        * subst. rewrite Rmult_1_r. rewrite sin_π. lra.
+        * specialize (H5 n x H6 H9). lra.
+      + exists (1/2). split; [solve_R |]. pose proof f_bounds n (1/2) H6 ltac:(lra) as [H8 _].
+        replace (π * (1 / 2)) with (π / 2) by lra. rewrite sin_π_over_2, Rmult_1_r. 
+        pose proof π_pos as H9. pose proof Rpow_gt_0 n a H2 as H10. apply Rmult_lt_0_compat; nra.
+    - pose proof integral_bounds_strong_open 0 1 (λ x, π * a^n * f n x * sin (π * x)) 0 (π * a^n / n!) ltac:(lra) as [H8 H9]; auto; try lra. 
   }
   pose proof pow_over_factorial_tends_to_0 (a * π) (1) (ltac:(pose proof π_pos; nra)) (ltac:(lra)) as [n H7].
   assert (H8 : π * a ^ n / n! <= (a * π) ^ n / n!).

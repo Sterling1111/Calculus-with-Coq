@@ -217,3 +217,96 @@ Proof.
     assert (0 <= Rabs y) by apply Rabs_pos.
     lra.
 Qed.
+
+Open Scope C_scope.
+
+Lemma Cconj_real : forall c,
+  c^* = c <-> snd c = 0.
+Proof.
+  intros c. split; intros H1.
+  - apply c_proj_eq_inv in H1 as [H2 H3]. simpl in H3. lra.
+  - destruct c; simpl in *. subst. lca.
+Qed.
+
+Lemma Cconj_inv : forall c,
+  (/ c)^* = / (c^*).
+Proof.
+  intros c. apply c_proj_eq; simpl.
+  - f_equal. f_equal. ring.
+  - unfold Rdiv. replace (fst c * (fst c * 1) + snd c * (snd c * 1))%R with (fst c * (fst c * 1) + - snd c * (- snd c * 1))%R by ring. lra.
+Qed.
+
+Lemma Cmult_conj_Cnorm2 : forall c,
+  c * c^* = RtoC (Cnorm2 c).
+Proof.
+  intros c. lca.
+Qed.
+
+Lemma Cnorm_ge_0 : forall c : C,
+  (Cnorm c >= 0)%R.
+Proof.
+  intros c. unfold Cnorm. apply Rle_ge. apply sqrt_pos.
+Qed.
+
+Lemma Cnorm_eq_0 : forall c : C,
+  (Cnorm c = 0)%R <-> c = 0.
+Proof.
+  intros [x y]. split; intros H1.
+  - unfold Cnorm, Cnorm2 in H1. simpl in H1.
+    apply sqrt_eq_0 in H1.
+    + assert (H2 : (x^2)%R = 0 /\ (y^2)%R = 0).
+      { assert (H_x : (0 <= x^2)%R) by apply pow2_ge_0.
+        assert (H_y : (0 <= y^2)%R) by apply pow2_ge_0. lra. }
+      destruct H2 as [H2 H3]. apply c_proj_eq; simpl; nra.
+    + assert (H2 : (0 <= x^2)%R) by apply pow2_ge_0.
+      assert (H3 : (0 <= y^2)%R) by apply pow2_ge_0. lra.
+  - inversion H1. unfold Cnorm, Cnorm2. simpl.
+    replace (0 * (0 * 1) + 0 * (0 * 1))%R with 0%R by lra. apply sqrt_0.
+Qed.
+
+Lemma Cnorm_mult : forall c1 c2 : C,
+  Cnorm (c1 * c2) = (Cnorm c1 * Cnorm c2)%R.
+Proof.
+  intros [x1 y1] [x2 y2]. unfold Cnorm, Cnorm2, Cmult. simpl.
+  rewrite <- sqrt_mult.
+  - apply f_equal. ring.
+  - assert (H1 : (0 <= x1^2)%R) by apply pow2_ge_0.
+    assert (H2 : (0 <= y1^2)%R) by apply pow2_ge_0. lra.
+  - assert (H1 : (0 <= x2^2)%R) by apply pow2_ge_0.
+    assert (H2 : (0 <= y2^2)%R) by apply pow2_ge_0. lra.
+Qed.
+
+Lemma Cnorm_triangle : forall c1 c2 : C,
+  (Cnorm (c1 + c2)%C <= Cnorm c1 + Cnorm c2)%R.
+Proof.
+  intros [x1 y1] [x2 y2]. unfold Cnorm, Cnorm2, Cplus; simpl.
+  apply Rsqr_incr_0.
+  - repeat rewrite Rsqr_sqrt.
+    + replace ((x1 + x2) * ((x1 + x2) * 1) + (y1 + y2) * ((y1 + y2) * 1))%R with
+        (x1 * (x1 * 1) + y1 * (y1 * 1) + x2 * (x2 * 1) + y2 * (y2 * 1) + 2 * (x1 * x2 + y1 * y2))%R by ring.
+      unfold Rsqr.
+      replace ((sqrt (x1 * (x1 * 1) + y1 * (y1 * 1)) + sqrt (x2 * (x2 * 1) + y2 * (y2 * 1))) * (sqrt (x1 * (x1 * 1) + y1 * (y1 * 1)) + sqrt (x2 * (x2 * 1) + y2 * (y2 * 1))))%R with
+        (x1 * (x1 * 1) + y1 * (y1 * 1) + x2 * (x2 * 1) + y2 * (y2 * 1) + 2 * (sqrt (x1 * (x1 * 1) + y1 * (y1 * 1)) * sqrt (x2 * (x2 * 1) + y2 * (y2 * 1))))%R.
+      * apply Rplus_le_compat_l.
+        apply Rmult_le_compat_l; [lra |].
+        rewrite <- sqrt_mult.
+        -- apply Rle_trans with (r2 := Rabs (x1 * x2 + y1 * y2)).
+           { apply Rle_abs. }
+           rewrite <- sqrt_Rsqr_abs.
+           replace (Rsqr (x1 * x2 + y1 * y2))%R with ((x1 * x2 + y1 * y2) * ((x1 * x2 + y1 * y2) * 1))%R by (unfold Rsqr; ring).
+           apply sqrt_le_1_alt.
+           replace ((x1 * (x1 * 1) + y1 * (y1 * 1)) * (x2 * (x2 * 1) + y2 * (y2 * 1)))%R with
+             ((x1 * x2 + y1 * y2) * ((x1 * x2 + y1 * y2) * 1) + (x1 * y2 - x2 * y1) * ((x1 * y2 - x2 * y1) * 1))%R by ring.
+           assert (H1 : (0 <= (x1 * y2 - x2 * y1) * ((x1 * y2 - x2 * y1) * 1))%R) by apply pow2_ge_0. lra.
+        -- assert (H1 : (0 <= x1 * (x1 * 1))%R) by apply pow2_ge_0.
+           assert (H2 : (0 <= y1 * (y1 * 1))%R) by apply pow2_ge_0. lra.
+        -- assert (H1 : (0 <= x2 * (x2 * 1))%R) by apply pow2_ge_0.
+           assert (H2 : (0 <= y2 * (y2 * 1))%R) by apply pow2_ge_0. lra.
+      * rewrite Rmult_plus_distr_l, Rmult_plus_distr_r, Rmult_plus_distr_r.
+        repeat rewrite sqrt_sqrt; try (assert (H1 : (0 <= x1 * (x1 * 1))%R) by apply pow2_ge_0; assert (H2 : (0 <= y1 * (y1 * 1))%R) by apply pow2_ge_0; lra).
+        try (assert (H1 : (0 <= x2 * (x2 * 1))%R) by apply pow2_ge_0; assert (H2 : (0 <= y2 * (y2 * 1))%R) by apply pow2_ge_0; lra).
+    + assert (H1 : (0 <= (x1 + x2) * ((x1 + x2) * 1))%R) by apply pow2_ge_0.
+      assert (H2 : (0 <= (y1 + y2) * ((y1 + y2) * 1))%R) by apply pow2_ge_0. lra.
+  - apply sqrt_pos.
+  - apply Rplus_le_le_0_compat; apply sqrt_pos.
+Qed.

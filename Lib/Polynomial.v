@@ -1344,4 +1344,16 @@ Lemma partial_fraction_decomposition : forall (k l : nat)
         ∑ 1 k (λ i, ∑ 1 (r i) (λ j, A i j / (x - α i)^j)) +
         ∑ 1 l (λ i, ∑ 1 (s i) (λ j, (B i j * x + C i j) / (x^2 + β i * x + γ i)^j)).
 Proof.
+  intros k l α r β γ s p q H1 H2 H3.
+  revert p q H2 H3.
+  induction k as [|k IHk].
+  - induction l as [|l IHl].
+    + intros p q H2 H3.
+      exists (fun _ _ => 0), (fun _ _ => 0), (fun _ _ => 0).
+      intros x H4.
+      admit.
+    + intros p q H2 H3.
+      admit.
+  - intros p q H2 H3.
+    admit.
 Admitted.

@@ -24,6 +24,16 @@ Definition upper_sum (a b : ℝ) (bf : bounded_function_R a b) (p : partition a 
 Notation "L( f , P )" := (lower_sum _ _ f P) (at level 0, f, P at level 0, format "L( f ,  P )").
 Notation "U( f , P )" := (upper_sum _ _ f P) (at level 0, f, P at level 0, format "U( f ,  P )").
 
+Definition is_tagging (a b : ℝ) (p : partition a b) (c : list ℝ) : Prop :=
+  let l1 := p.(points a b) in
+  (length c = length l1 - 1)%nat /\ 
+  forall i, (i < length c)%nat -> l1.[i] <= c.[i] <= l1.[(i+1)].
+
+Definition Riemann_sum (a b : ℝ) (f : ℝ -> ℝ) (p : partition a b) (c : list ℝ) : ℝ :=
+  let l1 := p.(points a b) in
+  let n := (length l1 - 1)%nat in
+  ∑ 0 (n-1) (fun i => (f (c.[i])) * (l1.[(i+1)] - l1.[(i)])).
+
 Lemma upper_sum_nonneg : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b),
   let f := bf.(bounded_f a b) in
   (forall x, x ∈ [a, b] -> 0 <= f x) ->
@@ -866,27 +876,27 @@ Definition definite_integral a b (f : ℝ -> ℝ) : ℝ :=
                end
   end.
 
-Definition is_antiderivative (f F : ℝ -> ℝ) : Prop :=
+Definition antiderivative (f F : ℝ -> ℝ) : Prop :=
   ⟦ der ⟧ F = f.
 
-Definition is_indefinite_integral_or_zero (f F : ℝ -> ℝ) : Prop :=
-  is_antiderivative f F \/ (~ (exists G, is_antiderivative f G) /\ F = (fun _ => 0)).
+Definition indefinite_integral_or_zero (f F : ℝ -> ℝ) : Prop :=
+  antiderivative f F \/ (~ (exists G, antiderivative f G) /\ F = (fun _ => 0)).
 
 Definition indefinite_integral (f : ℝ -> ℝ) : ℝ -> ℝ :=
-  epsilon (inhabits (fun _ => 0)) (is_indefinite_integral_or_zero f).
+  epsilon (inhabits (fun _ => 0)) (indefinite_integral_or_zero f).
 
 Module IntegralNotations.
 
   Declare Scope integral_scope.
   Delimit Scope integral_scope with int.
 
-  Notation "⟦ 'int' ⟧ f = F" := (is_antiderivative f F)
+  Notation "⟦ 'int' ⟧ f = F" := (antiderivative f F)
     (at level 70, f at level 0, no associativity, format "⟦  'int'  ⟧  f  =  F") : integral_scope.
 
   Notation "⟦ 'Int' ⟧ f" := (indefinite_integral f)
     (at level 70, f at level 0, no associativity, format "⟦  'Int'  ⟧  f") : integral_scope.
 
-  Notation "∫ f '=' F" := (is_antiderivative f F)
+  Notation "∫ f '=' F" := (antiderivative f F)
     (at level 9, f at level 0, F at level 0, no associativity, format "∫  f  '='  F") : integral_scope.
 
   Notation "∫ f" := (indefinite_integral f)
@@ -905,8 +915,8 @@ Lemma Int_spec : forall f,
   (exists F, ∫ f = F) -> ∫ f = ⟦ Int ⟧ f.
 Proof.
   intros f [F H1]. unfold indefinite_integral.
-  assert (exists G, is_indefinite_integral_or_zero f G) as H2 by (exists F; left; apply H1).
-  pose proof epsilon_spec (inhabits (fun _ => 0)) (is_indefinite_integral_or_zero f) H2 as H3.
+  assert (exists G, indefinite_integral_or_zero f G) as H2 by (exists F; left; apply H1).
+  pose proof epsilon_spec (inhabits (fun _ => 0)) (indefinite_integral_or_zero f) H2 as H3.
   destruct H3 as [H3 | [H3 H4]]; [apply H3 | exfalso; apply H3; exists F; apply H1].
 Qed.
 
@@ -2675,7 +2685,7 @@ Qed.
 Lemma definite_integral_eval : forall f F a b,
   a < b -> continuous_on f [a, b] -> ∫ f = F -> ∫ a b f = F b - F a.
 Proof.
-  intros f F a b H1 H2 H3. unfold is_antiderivative in H3.
+  intros f F a b H1 H2 H3. unfold antiderivative in H3.
   pose proof derivative_imp_derivative_on_closed F f a b H1 H3 as H4.
   apply (FTC2 a b f F H1 H2 H4).
 Qed.
@@ -2714,8 +2724,8 @@ Lemma indefinite_integral_correct : forall f,
 Proof.
   intros f [F H1].
   unfold indefinite_integral.
-  assert (exists G, is_indefinite_integral_or_zero f G) as H2 by (exists F; left; apply H1).
-  pose proof epsilon_spec (inhabits (fun _ => 0)) (is_indefinite_integral_or_zero f) H2 as H3.
+  assert (exists G, indefinite_integral_or_zero f G) as H2 by (exists F; left; apply H1).
+  pose proof epsilon_spec (inhabits (fun _ => 0)) (indefinite_integral_or_zero f) H2 as H3.
   destruct H3 as [H3 | [H3 H4]]; [apply H3 | exfalso; apply H3; exists F; apply H1].
 Qed.
 
@@ -2724,7 +2734,7 @@ Lemma double_integral_example : forall f F,
   ∫ (∫ f) = F -> ⟦ der ^ 2 ⟧ F = f.
 Proof.
   intros f F H1 H2.
-  unfold is_antiderivative in H2.
+  unfold antiderivative in H2.
   exists (∫ f).
   split.
   - apply nth_derivative_1. apply H2.
@@ -2735,7 +2745,7 @@ Lemma integral_mult_const_l : forall f F c,
   ∫ f = F -> ∫ (fun x => c * f x) = (fun x => c * F x).
 Proof.
   intros f F c H1.
-  unfold is_antiderivative in *.
+  unfold antiderivative in *.
   apply derivative_mult_const_l; auto.
 Qed.
 
@@ -2743,17 +2753,17 @@ Lemma integral_mult_const_r : forall f F c,
   ∫ f = F -> ∫ (fun x => f x * c) = (fun x => F x * c).
 Proof.
   intros f F c H1.
-  unfold is_antiderivative in *.
+  unfold antiderivative in *.
   apply derivative_mult_const_r; auto.
 Qed.
 
 Lemma integral_by_parts : forall u v u' v' U,
   ⟦ der ⟧ u = u' -> ⟦ der ⟧ v = v' ->
   ∫ (u' ⋅ v) = U ->
-  ∫ (u ⋅ v') = (u ⋅ v - U)%function.
+  ∫ (u ⋅ v') = (u ⋅ v - U).
 Proof.
   intros u v u' v' U H1 H2 H3.
-  unfold is_antiderivative in *.
+  unfold antiderivative in *.
   
   pose proof derivative_mult u v u' v' H1 H2 as H4.
   pose proof derivative_minus _ _ _ _ H4 H3 as H5.
@@ -2767,9 +2777,196 @@ Qed.
 Lemma integral_subst : forall f g g' F,
   ⟦ der ⟧ g = g' ->
   ∫ f = F ->
-  ∫ (f ∘ g ⋅ g') = (F ∘ g)%function.
+  ∫ (f ∘ g ⋅ g') = (F ∘ g).
 Proof.
   intros f g g' F H1 H2.
-  unfold is_antiderivative in *.
+  unfold antiderivative in *.
   apply derivative_comp; auto.
+Qed.
+
+Theorem integration_by_parts_definite : forall f g f' g' U a b,
+  continuous f' ->
+  continuous g' ->
+  ⟦ der ⟧ f = f' ->
+  ⟦ der ⟧ g = g' ->
+  ∫ (f' ⋅ g) = U ->
+  ∫ a b (f ⋅ g') = f b * g b - f a * g a - ∫ a b (f' ⋅ g).
+Proof.
+  intros f g f' g' U a b H1 H2 H3 H4 H5.
+  assert (H6 : continuous f) by (apply differentiable_imp_continuous; eapply derivative_imp_differentiable; eauto).
+  assert (H7 : continuous g) by (apply differentiable_imp_continuous; eapply derivative_imp_differentiable; eauto).
+  assert (H8 : continuous (f ⋅ g')) by (apply continuous_mult; auto).
+  assert (H9 : continuous (f' ⋅ g)) by (apply continuous_mult; auto).
+  pose proof integral_by_parts f g f' g' U H3 H4 H5 as H10.
+  pose proof definite_integral_eval_general (f ⋅ g') (f ⋅ g - U) a b H8 H10 as H11.
+  pose proof definite_integral_eval_general (f' ⋅ g) U a b H9 H5 as H12.
+  rewrite H11, H12. simpl. lra.
+Qed.
+
+Theorem substitution_formula : forall f g g' F a b,
+  continuous f ->
+  continuous g' ->
+  antiderivative f F ->
+  ⟦ der ⟧ g = g' ->
+  ∫ (g a) (g b) f = ∫ a b (f ∘ g ⋅ g').
+Proof.
+  intros f g g' F a b H1 H2 H3 H4.
+  assert (H5 : continuous g) by (apply differentiable_imp_continuous; eapply derivative_imp_differentiable; eauto).
+  assert (H6 : continuous (f ∘ g)) by (apply continuous_comp; auto).
+  assert (H7 : continuous (f ∘ g ⋅ g')) by (apply continuous_mult; auto).
+  pose proof definite_integral_eval_general f F (g a) (g b) H1 H3 as H8.
+  pose proof integral_subst f g g' F H4 H3 as H9.
+  pose proof definite_integral_eval_general (f ∘ g ⋅ g') (F ∘ g) a b H7 H9 as H10.
+  rewrite H8, H10. reflexivity.
+Qed.
+
+Lemma riemann_sum_bounded : forall (a b : ℝ) (bf : bounded_function_R a b) (P : partition a b) (c : list ℝ),
+  let f := bf.(bounded_f a b) in
+  is_tagging a b P c ->
+  L(bf, P) <= Riemann_sum a b f P c <= U(bf, P).
+Proof.
+  intros a b bf P c f H1.
+  set (l1 := points a b P).
+  replace (points a b P) with l1 in * by auto.
+  unfold lower_sum, upper_sum, Riemann_sum, is_tagging in *.
+  destruct H1 as [H2 H3].
+  split.
+  - destruct (partition_sublist_elem_has_inf (bounded_f a b bf) a b P (bounded_function_R_P2 a b bf)) as [l2 [H4 H5]].
+    simpl. replace (points a b P) with l1 in * by auto.
+    replace (length l2 - 1)%nat with (length l1 - 1 - 1)%nat by lia.
+    apply sum_f_congruence_le; try lia. intros i [H6 H7].
+    pose proof partition_length a b P as H8.
+    replace (points a b P) with l1 in H8 by auto.
+    assert (i < length l2)%nat as H9 by lia.
+    specialize (H5 i H9). destruct H5 as [H10 H11].
+    unfold is_lower_bound in H10.
+    assert (0 <= l1.[(i+1)] - l1.[i]) as H12.
+    { assert (Sorted Rlt l1) as H13 by (unfold l1; apply partition_spec).
+      assert (l1.[i] <= l1.[(i+1)]) as H14.
+      { apply Rlt_le. apply Sorted_Rlt_nth; try lia. apply H13. }
+      lra. }
+    apply Rmult_le_compat_r; auto.
+    apply Rge_le. apply H10. exists (c.[i]). split; auto.
+    unfold Ensembles.In. specialize (H3 i).
+    assert (i < length c)%nat as H13 by lia.
+    specialize (H3 H13). split; try lra.
+  - destruct (partition_sublist_elem_has_sup (bounded_f a b bf) a b P (bounded_function_R_P2 a b bf)) as [l2 [H4 H5]].
+    simpl. replace (points a b P) with l1 in * by auto.
+    replace (length l2 - 1)%nat with (length l1 - 1 - 1)%nat by lia.
+    apply sum_f_congruence_le; try lia. intros i [H6 H7].
+    pose proof partition_length a b P as H8.
+    replace (points a b P) with l1 in H8 by auto.
+    assert (0 <= l1.[(i+1)] - l1.[i]) as H9.
+    { assert (Sorted Rlt l1) as H10 by (unfold l1; apply partition_spec).
+      assert (l1.[i] <= l1.[(i+1)]) as H11.
+      { apply Rlt_le. apply Sorted_Rlt_nth; try lia. apply H10. }
+      lra. }
+    apply Rmult_le_compat_r; auto.
+    assert (i < length l2)%nat as H10 by lia.
+    specialize (H5 i H10). destruct H5 as [H11 H12].
+    unfold is_upper_bound in H11.
+    apply H11. exists (c.[i]). split; auto.
+    unfold Ensembles.In. specialize (H3 i).
+    assert (i < length c)%nat as H13 by lia.
+    specialize (H3 H13). split; try lra.
+Qed.
+
+Lemma integrable_on_mesh_lt : forall (a b : ℝ) (bf : bounded_function_R a b),
+  let f := bf.(bounded_f a b) in
+  a < b -> integrable_on a b f ->
+  forall (ε : ℝ), ε > 0 ->
+  exists (δ : ℝ), δ > 0 /\
+  (forall (P : partition a b),
+    (forall i, (i < length (P.(points a b)) - 1)%nat -> (P.(points a b)).[(i+1)] - (P.(points a b)).[i] < δ) ->
+    U(bf, P) - L(bf, P) < ε).
+Proof.
+  intros a b bf f H1 H2 ε H3.
+  pose proof bf.(bounded_function_R_P2 a b) as [[m H4] [M H5]].
+  set (Mabs := Rmax (Rabs m) (Rabs M) + 1).
+  assert (H6 : Mabs > 0) by (unfold Mabs; solve_R).
+  pose proof (proj1 (theorem_13_2_a a b bf H1) H2 (ε/2) ltac:(lra)) as [Pstar H7].
+  set (l1 := points a b Pstar).
+  set (K := (length l1 - 1)%nat).
+  assert (H8 : (K >= 1)%nat).
+  { unfold K, l1. pose proof partition_length a b Pstar. lia. }
+  set (δ := ε / (8 * Mabs * INR K)).
+  assert (H9 : δ > 0).
+  { unfold δ. apply Rdiv_pos_pos; auto.
+    repeat apply Rmult_gt_0_compat; try lra; auto. apply lt_0_INR; lia. }
+  exists δ. split; auto.
+  intros P H10.
+  pose proof exists_partition_includes_both a b P Pstar as [R [H11 H12]].
+  pose proof lemma_13_1_b a b bf R P H11 as H13.
+  pose proof lemma_13_1_a a b bf R P H11 as H14.
+  pose proof lemma_13_1_b a b bf R Pstar H12 as H15.
+  pose proof lemma_13_1_a a b bf R Pstar H12 as H16.
+  assert (H17 : U(bf, P) - U(bf, R) <= INR K * 2 * Mabs * δ) by admit.
+  assert (H18 : L(bf, R) - L(bf, P) <= INR K * 2 * Mabs * δ) by admit.
+  assert (H19 : U(bf, R) - L(bf, R) <= U(bf, Pstar) - L(bf, Pstar)) by lra.
+  assert (H20 : INR K * 2 * Mabs * δ = ε / 4).
+  { unfold δ. assert (H21 : 8 * Mabs * INR K <> 0).
+    { apply Rgt_not_eq. repeat apply Rmult_gt_0_compat; try lra; auto. apply lt_0_INR; lia. }
+    solve_R.
+  }
+  lra.
+Admitted.
+
+Lemma darbouxs_theorem_upper : forall (a b : ℝ) (bf : bounded_function_R a b),
+  let f := bf.(bounded_f a b) in
+  a < b -> integrable_on a b f -> 
+  forall (ε : ℝ), ε > 0 ->
+  exists (δ : ℝ), δ > 0 /\ 
+  (forall (P : partition a b),
+    (forall i, (i < length (P.(points a b)) - 1)%nat -> (P.(points a b)).[(i+1)] - (P.(points a b)).[i] < δ) ->
+    U(bf, P) - definite_integral a b f < ε).
+Proof.
+  intros a b bf f H1 Hint ε Hε.
+  pose proof integrable_on_mesh_lt a b bf H1 Hint ε Hε as [δ [Hδ HUL]].
+  exists δ. split; auto. intros P Hmesh.
+  pose proof HUL P Hmesh as HULe.
+  pose proof integral_bound a b bf P H1 Hint as [HL HU].
+Admitted.
+
+Lemma darbouxs_theorem_lower : forall (a b : ℝ) (bf : bounded_function_R a b),
+  let f := bf.(bounded_f a b) in
+  a < b -> integrable_on a b f -> 
+  forall (ε : ℝ), ε > 0 ->
+  exists (δ : ℝ), δ > 0 /\ 
+  (forall (P : partition a b),
+    (forall i, (i < length (P.(points a b)) - 1)%nat -> (P.(points a b)).[(i+1)] - (P.(points a b)).[i] < δ) ->
+    definite_integral a b f - L(bf, P) < ε).
+Proof.
+  intros a b bf f H1 Hint ε Hε.
+  pose proof integrable_on_mesh_lt a b bf H1 Hint ε Hε as [δ [Hδ HUL]].
+  exists δ. split; auto. intros P Hmesh.
+  pose proof HUL P Hmesh as HULe.
+  pose proof integral_bound a b bf P H1 Hint as [HL HU].
+Admitted.
+
+Theorem riemann_sum_theorem_1 : forall (f : ℝ -> ℝ) (a b : ℝ),
+  a < b -> integrable_on a b f -> 
+  forall (ε : ℝ), ε > 0 ->
+  exists (δ : ℝ), δ > 0 /\ 
+  (forall (P : partition a b) (c : list ℝ),
+    is_tagging a b P c ->
+    (forall i, (i < length (P.(points a b)) - 1)%nat -> (P.(points a b)).[(i+1)] - (P.(points a b)).[i] < δ) ->
+    Rabs (Riemann_sum a b f P c - definite_integral a b f) < ε).
+Proof.
+  intros f a b H1 H2 ε H3.
+  assert (a <= b) as Hab by lra.
+  pose proof integrable_imp_bounded f a b Hab H2 as Hbound.
+  set (bf := mkbounded_function_R a b f Hab Hbound).
+  pose proof darbouxs_theorem_upper a b bf H1 H2 ε H3 as [d1 [Hd1 H4]].
+  pose proof darbouxs_theorem_lower a b bf H1 H2 ε H3 as [d2 [Hd2 H5]].
+  exists (Rmin d1 d2). split. { apply Rmin_pos; auto. }
+  intros P c Htag Hmesh.
+  assert (Hmesh1 : forall i, (i < length (points a b P) - 1)%nat -> (points a b P).[(i + 1)] - (points a b P).[i] < d1).
+  { intros i Hi. apply Rlt_le_trans with (Rmin d1 d2). apply Hmesh; auto. apply Rmin_l. }
+  assert (Hmesh2 : forall i, (i < length (points a b P) - 1)%nat -> (points a b P).[(i + 1)] - (points a b P).[i] < d2).
+  { intros i Hi. apply Rlt_le_trans with (Rmin d1 d2). apply Hmesh; auto. apply Rmin_r. }
+  specialize (H4 P Hmesh1). specialize (H5 P Hmesh2).
+  pose proof riemann_sum_bounded a b bf P c Htag as [H6 H7].
+  pose proof integral_bound a b bf P H1 H2 as [H8 H9].
+  simpl bounded_f in *.
+  apply Rabs_def1; lra.
 Qed.

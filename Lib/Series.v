@@ -11,6 +11,9 @@ Definition series_sum (a : sequence) (L : R) : Prop :=
 Definition series_converges (a : sequence) : Prop :=
   convergent_sequence (partial_sum a).
 
+Definition series_converges_absolutely (a : sequence) : Prop :=
+  series_converges (fun n => Rabs (a n)).
+
 Definition series_diverges (a : sequence) : Prop :=
   divergent_sequence (partial_sum a).
 
