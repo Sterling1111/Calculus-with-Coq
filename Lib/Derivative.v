@@ -5586,3 +5586,22 @@ Proof.
       * apply inf_diff_nth_derive_diff. apply H1.
       * intros x; apply differentiable_at_minus; [apply differentiable_at_const|apply differentiable_at_id].
 Qed.
+
+Lemma nth_differentiable_sum : ∀ (i n m : ℕ) (f : ℕ → ℝ → ℝ),
+  (i <= m)%nat ->
+  (∀ k : ℕ, nth_differentiable n (f k)) ->
+  nth_differentiable n (λ x : ℝ, ∑ i m (λ k : ℕ, f k x)).
+Proof.
+  intros i n m f H1 H2.
+  apply nth_derivative_imp_nth_differentiable with (fn := λ x, ∑ i m (λ k, (⟦Der^n⟧ (f k)) x)).
+  apply nth_derivative_sum; auto.
+  intros k Hl. apply nth_derive_spec; auto.
+Qed.
+
+Lemma nth_differentiable_pow : forall n k, nth_differentiable k (fun x => x ^ n).
+Proof.
+  intros n k.
+  replace (fun x => x ^ n) with (fun x => (x - 0) ^ n).
+  2: { extensionality x; rewrite Rminus_0_r; reflexivity. }
+  apply nth_differentiable_pow_shift.
+Qed.

@@ -13,8 +13,7 @@ Inductive expr :=
 | ECos (e : expr)
 | ESqrt (e : expr)
 | EPow (e : expr) (n : nat)
-| EApp (f : R -> R) (df : option (R -> R)) (e : expr)
-| ESum (i n : nat) (e : expr).
+| EApp (f : R -> R) (df : option (R -> R)) (e : expr).
 
 Fixpoint eval_expr (e : expr) (x : R) : R :=
   match e with
@@ -30,7 +29,6 @@ Fixpoint eval_expr (e : expr) (x : R) : R :=
   | ESqrt e => sqrt (eval_expr e x)
   | EPow e n => (eval_expr e x) ^ n
   | EApp f _ e => f (eval_expr e x)
-  | ESum i n e => ∑ i n (fun k => eval_expr e k).
   end.
 
 Fixpoint wf_limit_right (e : expr) (a : R) : Prop :=
@@ -309,38 +307,19 @@ Ltac auto_cont :=
       apply cont_correct; repeat split; try solve_R
   end.
 
-Ltac auto_diff_step :=
-  first
-    [ apply derivative_mult_const_l
-    | apply derivative_mult_const_r
-    | apply derivative_plus
-    | apply derivative_minus
-    | apply derivative_at_mult_const_l
-    | apply derivative_at_mult_const_r
-    | apply derivative_at_plus
-    | apply derivative_at_minus
-    | apply derivative_sum; [try lia | intros ? ?]
-    | apply derivative_at_sum; [try lia | intros ? ?]
-    ].
-
 Ltac auto_diff :=
   intros;
   try solve [ solve_R ];
-  try (match goal with | [ |- ⟦ der ⟧ _ _ = _ ] => apply derivative_imp_derivative_on; [ try solve [apply differentiable_domain_open; solve_R | apply differentiable_domain_closed; solve_R] | ] end);
-  repeat auto_diff_step;
-  try (
-    change_deriv_to_eval;
-    match goal with
-    | [ |- ⟦ der ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
-      replace rhs with (fun t => eval_expr (derive_expr e) t);
-      [ apply derive_correct_global; repeat split; solve_R
-      | let x := fresh "x" in extensionality x; unfold compose in *; solve [simpl; lra | solve_R] ]
-    | [ |- ⟦ der _ ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
-      replace rhs with (fun t => eval_expr (derive_expr e) t);
-      [ apply derive_correct; repeat split; solve_R
-      | let x := fresh "x" in extensionality x; unfold compose in *; solve [simpl; lra | solve_R] ]
-    end
-  ).
+  try (match goal with | [ |- ⟦ der ⟧ _ _ = _ ] => apply derivative_imp_derivative_on; [ try apply differentiable_domain_open; try apply differentiable_domain_closed; solve_R | ] end);
+  change_deriv_to_eval;
+  match goal with
+  | [ |- ⟦ der ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
+    replace rhs with (fun t => eval_expr (derive_expr e) t) by (let x := fresh "x" in extensionality x; unfold compose in *; try (simpl; lra); solve_R);
+    apply derive_correct_global; repeat split; solve_R
+  | [ |- ⟦ der _ ⟧ (fun t => eval_expr ?e t) = ?rhs ] =>
+    replace rhs with (fun t => eval_expr (derive_expr e) t) by (let x := fresh "x" in extensionality x; unfold compose in *; try (simpl; lra); solve_R);
+    apply derive_correct; repeat split; solve_R
+  end.
 
 Module Tactic_Tests.
 

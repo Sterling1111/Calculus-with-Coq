@@ -1,7 +1,7 @@
 From Lib Require Import Imports Notations Integral Derivative Functions Continuity Taylor
                         Limit Sets Reals_util Inverse Trigonometry Sums Rational Binomial Tactics Interval.
-Import IntervalNotations SetNotations SumNotations FunctionNotations 
-       DerivativeNotations LimitNotations Choose_Notations RationalNotations IntegralNotations.
+Import IntervalNotations SetNotations SumNotations FunctionNotations RationalNotations
+       DerivativeNotations LimitNotations Choose_Notations IntegralNotations.
 
 Open Scope R_scope.
 Open Scope rational_scope.
@@ -112,12 +112,9 @@ Lemma f_n_nth_differentiable : ∀ n k,
   nth_differentiable k (f n).
 Proof.
   intros n k. rewrite f_n_is_polynomial. apply nth_differentiable_mult_const_l.
-  apply nth_derivative_imp_nth_differentiable with (fn := fun x => ∑ n (2 * n) (fun i => (⟦ Der ^ k ⟧ (fun x0 => (-1) ^ (i - n) * INR (n ∁ (i - n)) * x0 ^ i)) x)).
-  apply nth_derivative_sum; try lia.
-  intros l Hl. apply nth_derive_spec. apply nth_differentiable_mult_const_l.
-  replace (λ x : ℝ, x ^ l) with (λ x : ℝ, (x - 0) ^ l).
-  2: { extensionality x0. rewrite Rminus_0_r. reflexivity. }
-  apply nth_differentiable_pow_shift.
+  apply nth_differentiable_sum; try lia.
+  intros l. apply nth_differentiable_mult_const_l.
+  apply nth_differentiable_pow.
 Qed.
 
 Lemma f_n_derivatives_at_0_are_integers : ∀ (n k: nat) (r : R),
@@ -127,26 +124,19 @@ Proof.
   rewrite f_n_is_polynomial in H1.
   rewrite nth_derive_mult_const_l in H1.
   2 : { 
-    apply nth_derivative_imp_nth_differentiable with (fn := fun x => ∑ n (2 * n) (fun i => (⟦ Der ^ k ⟧ (fun x0 => (-1) ^ (i - n) * INR (n ∁ (i - n)) * x0 ^ i)) x)).
-    apply nth_derivative_sum; try lia.
-    intros l H2. apply nth_derive_spec. apply nth_differentiable_mult_const_l.
-    replace (λ x : ℝ, x ^ l) with (λ x : ℝ, (x - 0) ^ l).
-    2: { extensionality x0. rewrite Rminus_0_r. reflexivity. }
-    apply nth_differentiable_pow_shift. 
+    apply nth_differentiable_sum; try lia.
+    intros l. apply nth_differentiable_mult_const_l.
+    apply nth_differentiable_pow. 
   }
   rewrite nth_derive_sum in H1; try lia.
   2 : { 
     intros j. apply nth_differentiable_mult_const_l. 
-    replace (λ x : ℝ, x ^ j) with (λ x : ℝ, (x - 0) ^ j).
-    2: { extensionality x0. rewrite Rminus_0_r. reflexivity. }
-    apply nth_differentiable_pow_shift. 
+    apply nth_differentiable_pow. 
   }
   replace (λ k0 : ℕ, (⟦ Der^k ⟧ (λ x : ℝ, (-1) ^ (k0 - n) * n ∁ (k0 - n) * x ^ k0)) 0) with (λ k0 : ℕ, (-1) ^ (k0 - n) * n ∁ (k0 - n) * (⟦ Der^k 0 ⟧ (λ x : ℝ, x ^ k0))) in H1.
   2 : { 
     extensionality k0. rewrite nth_derive_mult_const_l. auto. 
-    replace (λ x : ℝ, x ^ k0) with (λ x : ℝ, (x - 0) ^ k0).
-    2: { extensionality x0. rewrite Rminus_0_r. reflexivity. }
-    apply nth_differentiable_pow_shift. 
+    apply nth_differentiable_pow. 
   }
   pose proof nth_derivative_pow as H2.
   pose proof nth_derivative_pow_gt as H3.
@@ -155,21 +145,17 @@ Proof.
   apply is_integer_sum; try lia.
   intros k0 H4.
   rewrite nth_derive_at_zero_pow.
-  destruct (Nat.eq_dec k0 k) as [H5 | H5].
-  - subst k0.
-    pose proof (fact_div'' k n ltac:(lia)) as [m H6].
-    replace (1 / n! * ((-1) ^ (k - n) * n ∁ (k - n) * INR (fact k))) with (((-1) ^ (k - n) * INR (n ∁ (k - n))) * INR m).
-    2 : {
-      rewrite H6. rewrite mult_INR.
-      field. apply INR_fact_neq_0.
-    }
-    apply is_integer_mult.
-    + apply is_integer_mult.
-      * apply is_integer_pow. exists (-1)%Z. reflexivity.
-      * exists (Z.of_nat (n ∁ (k - n))). apply INR_IZR_INZ.
-    + exists (Z.of_nat m). apply INR_IZR_INZ.
-  - replace (1 / n! * ((-1) ^ (k0 - n) * n ∁ (k0 - n) * 0)) with 0 by lra.
-    exists 0%Z. reflexivity.
+  destruct (Nat.eq_dec k0 k) as [H5 | H5]; subst; [ | do 2 rewrite Rmult_0_r; exists 0%Z; reflexivity].
+  pose proof (fact_div'' k n ltac:(lia)) as [m H6].
+  replace (1 / n! * ((-1) ^ (k - n) * n ∁ (k - n) * INR (fact k))) with (((-1) ^ (k - n) * INR (n ∁ (k - n))) * INR m).
+  2 : {
+    rewrite H6. rewrite mult_INR.
+    field. apply INR_fact_neq_0.
+  }
+  apply is_integer_mult; [apply is_integer_mult|].
+  - apply is_integer_pow. exists (-1)%Z. reflexivity.
+  - exists (Z.of_nat (n ∁ (k - n))). apply INR_IZR_INZ.
+  - exists (Z.of_nat m). apply INR_IZR_INZ.
 Qed.
 
 Lemma f_n_sym : forall n x, f n x = f n (1 - x).
@@ -242,15 +228,15 @@ Proof.
     }
     assert (H6 : ⟦ der ⟧ G = G').
     {
-      unfold G, G'; auto_diff; unfold nth_derive_at.
-      apply derive_spec.
+      unfold G, G'. apply derivative_mult_const_l, derivative_sum; try lia.
+      intros k H6. apply derivative_mult_const_l. apply derive_spec.
       - apply inf_diff_nth_derive_diff. apply f_n_inf_differentiable.
       - replace (2 * k + 1)%nat with (S (2 * k))%nat by lia. apply derive_nth_derive.
     }
     assert (H7 : ⟦ der ⟧ G' = G'').
     {
-      unfold G', G''; auto_diff; unfold nth_derive_at.
-      apply derive_spec.
+      unfold G', G''. apply derivative_mult_const_l, derivative_sum; try lia.
+      intros k H7. apply derivative_mult_const_l. apply derive_spec.
       - apply inf_diff_nth_derive_diff. apply f_n_inf_differentiable.
       - replace (2 * k + 2)%nat with (S (2 * k + 1))%nat by lia. apply derive_nth_derive.
     }
