@@ -188,7 +188,7 @@ Qed.
 
 Theorem theorem_16_1 : π ∉ ℚ.
 Proof.
-  apply rational_iff, irrational_square_imp_irrational. intros H1.
+  unfold R_q. apply rational_iff, irrational_square_imp_irrational. intros H1.
   unfold rational in H1.
   assert (H2 : π ^ 2 > 0) by (pose proof π_pos; nra).
   pose proof rational_representation_positive (π ^ 2) H1 H2 as [a [b [H3 [H4 H5]]]].

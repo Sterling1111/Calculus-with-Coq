@@ -44,8 +44,6 @@ Lib/Matrix.v
 Lib/Exponential.v
 Lib/Asymptotics.v
 Lib/PolySimp.v
-Lib/Psatz.v
-Lib/Simplex.v
 Lib/Compat.v
 Lib/ComplexLimit.v
 Lib/ComplexContinuity.v
@@ -110,7 +108,6 @@ Calculus/Chapter10/Prelude.v
 Calculus/Chapter11/Prelude.v
 Calculus/Chapter12/Prelude.v
 Calculus/Chapter13/Prelude.v
-
 
 -generate-meta-for-package simplex_plugin
 -I src

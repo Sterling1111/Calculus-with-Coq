@@ -216,8 +216,10 @@ Module RationalNotations.
   Declare Scope rational_scope.
   Delimit Scope rational_scope with rat.
 
-  Notation "'ℚ'" := (fun r : R => exists q : Q, r = Q2R q) (at level 40) : rational_scope.
-  Notation "'Q'" := (fun r : R => exists q : Q, r = Q2R q) (at level 40) : rational_scope.
+  Definition R_q : R -> Prop := fun r => exists q : Q, r = Q2R q.
+
+  Notation "'Q'" := R_q (at level 0) : rational_scope.
+  Notation "'ℚ'" := R_q (at level 0) : rational_scope.
 
 End RationalNotations.
 
