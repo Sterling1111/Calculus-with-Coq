@@ -39,3 +39,9 @@ __pycache__/
 
 # Untracked MCP project
 rocq-mcp/
+
+# Simplex build artifacts
+src/*.cmt
+src/*.cmx
+src/*.cmxa
+src/*.cmxs
