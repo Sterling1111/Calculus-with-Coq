@@ -192,7 +192,7 @@ Proof.
   unfold rational in H1.
   assert (H2 : π ^ 2 > 0) by (pose proof π_pos; nra).
   pose proof rational_representation_positive (π ^ 2) H1 H2 as [a [b [H3 [H4 H5]]]].
-  clear H1 H2. rename H3 into H1. rename H4 into H2. rename H5 into H3.
+  clear H1 H2; rename H3 into H1; rename H4 into H2; rename H5 into H3.
   assert (H4 : forall n, is_integer (∫ 0 1 (λ x, π * a^n * f n x * sin (π * x)))).
   {
     intros n.
@@ -335,3 +335,5 @@ Proof.
   specialize (H6 n ltac:(lia)).
   apply (no_integer_between 0 (∫ 0 1 (λ x : ℝ, π * a ^ n * f n x * sin (π * x))) ltac:(lra)); auto.
 Qed.
+
+Close Scope rational_scope.

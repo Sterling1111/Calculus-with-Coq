@@ -4,7 +4,7 @@ Import LimitNotations DerivativeNotations SetNotations IntervalNotations Sequenc
 Open Scope R_scope.
 
 Lemma limit_compat : forall f a L,
-  ⟦ lim a ⟧ f = L <-> limit1_in f (fun x => x <> a) L a.
+  ⟦ lim a ⟧ f = L <-> limit1_in f (λ x : R, x ≠ a) L a.
 Proof.
   split; intros H1 ε H2.
   - unfold limit in H1. destruct (H1 ε H2) as [δ [H3 H4]].
