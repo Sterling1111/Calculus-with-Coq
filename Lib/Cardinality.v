@@ -13,7 +13,7 @@ Proof.
   rewrite <- Nat.negb_even, H1. trivial.
 Qed.
 
-Theorem theorem_29_4 : #| ℕ | = #| ℤ |.
+Theorem theorem_29_4 : card ℕ = card ℤ.
 Proof.
   apply eq_cardinality_Type.
   set (f := fun n : nat => if Nat.even n then Z.of_nat (n / 2) else - Z.of_nat (n / 2 + 1)). left. split.
@@ -39,7 +39,7 @@ Proof.
   - exists 0%nat, 0%Z. auto.
 Qed.
 
-Lemma cardinal_eq_refl : forall (T : Type) (A : Ensemble T), #| A | = #| A |.
+Lemma cardinal_eq_refl : forall (T : Type) (A : Ensemble T), card A = card A.
 Proof.
   intros T A. pose proof classic (A = ⦃⦄) as [H1 | H1]; [left | right; repeat split]; auto.
   - exists (fun x => x). split.
@@ -47,7 +47,7 @@ Proof.
     -- intros y. exists y. auto.
 Qed.
 
-Lemma cardinal_eq_sym : forall (T1 T2 : Type) (A : Ensemble T1) (B : Ensemble T2), #| A | = #| B | -> #| B | = #| A |.
+Lemma cardinal_eq_sym : forall (T1 T2 : Type) (A : Ensemble T1) (B : Ensemble T2), card A = card B -> card B = card A.
 Proof.
   intros T1 T2 A B [[H1 H2] | [H1 [H2 [f [H3 H4]]]]]; [left | right; repeat split]; auto.
   apply choice in H4 as [g H5]. exists g. split.
@@ -76,7 +76,7 @@ Proof.
     -- replace (t - 1 + 1) with t by lia. replace (t - 1 + 2) with (t + 1) by lia. unfold E in H2. auto.
 Qed.
 
-Lemma theorem_30_3 : #| ℕ | = #| ℕ × ℕ |.
+Lemma theorem_30_3 : card ℕ = card ℕ × ℕ.
 Proof.
   apply cardinal_eq_sym. unfold cardinal_eq. right. repeat split.
   - apply not_Empty_In. unfold Ensembles.In, set_prod. exists (1, 1), 1, 1. repeat split.
