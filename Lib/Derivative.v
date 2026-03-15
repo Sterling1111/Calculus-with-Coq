@@ -2291,8 +2291,9 @@ Proof.
   exists c. intros x H9. unfold h. specialize (H8 x H9). unfold h in H8. lra.
 Qed.
 
-Definition tangent_line (f f' : R -> R) (a : R) : R -> R :=
-  fun x => f' a * (x - a) + f a.
+Definition tangent_line (f : R -> R) (a : R) : R -> R :=
+  let m := ⟦ Der a ⟧ f in
+  fun x => m * (x - a) + f a.
 
 Definition increasing_on (f: ℝ -> ℝ) (A : Ensemble ℝ) :=
   forall a b, a ∈ A -> b ∈ A -> a < b -> f a < f b.

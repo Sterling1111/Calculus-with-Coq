@@ -1,5 +1,5 @@
-From Lib Require Import Imports Tactics Limit Derivative Integral Continuity Reals_util Trigonometry Sets Interval Exponential Sequence Series.
-Import LimitNotations DerivativeNotations SetNotations IntervalNotations SequenceNotations SeriesNotations.
+From Lib Require Import Imports Tactics Limit Derivative Integral Continuity Reals_util Trigonometry Sets Interval Exponential Sequence Series Sums.
+Import LimitNotations DerivativeNotations SetNotations IntervalNotations SequenceNotations SeriesNotations SumNotations.
 
 Open Scope R_scope.
 

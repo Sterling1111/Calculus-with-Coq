@@ -9,5 +9,5 @@ Admitted.
 Lemma lemma_12_4_b : forall f g,
   increasing f ->
   increasing g ->
-  increasing (f ∘ g)%function.
+  increasing (f ∘ g).
 Admitted.
