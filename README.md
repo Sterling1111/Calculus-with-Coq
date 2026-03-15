@@ -1,4 +1,4 @@
-# Calculus with Coq
+# spivak-rocq
 
 A formal, textbook-style development of single-variable calculus and supporting real analysis in the Coq proof assistant. While the project uses the standard library `Reals` type as its foundation for the real numbers, **all other calculus infrastructure (limits, continuity, derivatives, integrals, sequences, and transcendental functions) is built completely independently from scratch**. This formalization strictly follows the presentation and problem sequence of Michael Spivak’s "Calculus". The repository includes a reusable library (`Lib/`) plus worked problems for the Calculus track (`Calculus/`) and companion materials (`ATTAM/`).
 
