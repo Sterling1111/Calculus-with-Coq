@@ -203,21 +203,15 @@ Proof.
   - subst. apply RiemannInt_P7.
 Qed.
 
-Lemma continuous_implies_integrable_on_compat : forall f a b,
-  a <= b -> continuous_on f [a, b] -> integrable_on a b f.
-Proof.
-  intros f a b H1 H2. apply theorem_13_3; auto.
-Qed.
-
 Lemma integrable_on_implies_Riemann : forall f a b,
-  a <= b -> integrable_on a b f -> 
+  a <= b -> Integral.integrable_on a b f -> 
   {pr : Riemann_integrable f a b | True}.
 Proof.
 Admitted.
 
 Lemma definite_integral_compat : forall f a b pr,
   a <= b ->
-  definite_integral a b f = RiemannInt (f:=f) (a:=a) (b:=b) pr.
+  Integral.definite_integral a b f = RiemannInt (f:=f) (a:=a) (b:=b) pr.
 Proof.
   intros f a b pr H1.
   unfold definite_integral. destruct (Rle_dec a b) as [H2 | H2]; try lra.
@@ -226,7 +220,7 @@ Proof.
 Admitted.
 
 Definition trig_diff (x : R) := 
-  (cos x - Rtrigo_def.cos x)^2 + (sin x - Rtrigo_def.sin x)^2.
+  (Trigonometry.cos x - Rtrigo_def.cos x)^2 + (Trigonometry.sin x - Rtrigo_def.sin x)^2.
 
 Lemma Rtrigo_der_sin : ⟦ der ⟧ Rtrigo_def.sin = Rtrigo_def.cos.
 Proof.
@@ -272,7 +266,7 @@ Proof.
     rewrite <- H4 in H5. rewrite trig_diff_0 in H5. exact H5.
 Qed.
 
-Lemma cos_compat_pt : forall x, cos x = Rtrigo_def.cos x.
+Lemma cos_compat_pt : forall x, Trigonometry.cos x = Rtrigo_def.cos x.
 Proof.
   intros x.
   pose proof (trig_diff_const x) as H1.
@@ -286,7 +280,7 @@ Proof.
   apply Rmult_integral in H5. destruct H5; lra.
 Qed.
 
-Lemma sin_compat_pt : forall x, sin x = Rtrigo_def.sin x.
+Lemma sin_compat_pt : forall x, Trigonometry.sin x = Rtrigo_def.sin x.
 Proof.
   intros x.
   pose proof (trig_diff_const x) as H1.
@@ -323,7 +317,7 @@ Proof.
   auto_diff.
 Qed.
 
-Lemma exp_diff_const : forall x, exp x * Rtrigo_def.exp (-x) = 1.
+Lemma exp_diff_const : forall x, Exponential.exp x * Rtrigo_def.exp (-x) = 1.
 Proof.
   intros x.
   pose proof (derivative_zero_imp_const (fun x => exp x * Rtrigo_def.exp (-x)) (Rmin 0 x - 1) (Rmax 0 x + 1)) as [c H1].
@@ -340,7 +334,7 @@ Proof.
     rewrite H6 in H5. exact H5.
 Qed.
 
-Lemma exp_compat_pt : forall x, exp x = Rtrigo_def.exp x.
+Lemma exp_compat_pt : forall x, Exponential.exp x = Rtrigo_def.exp x.
 Proof.
   intros x.
   pose proof (exp_diff_const x) as H1. 
@@ -368,7 +362,7 @@ Proof.
   intros x. destruct (Rle_dec x 0) as [H1 | H1].
   - unfold log. destruct (Rle_dec x 0) as [H2 | H2]; [| exfalso; lra].
     unfold Rpower.ln. destruct (Rlt_dec 0 x) as [H3 | H3]; [exfalso; lra | reflexivity].
-  - assert (H2: Exponential.exp (Rpower.ln x) = x).
+  - assert (H2: exp (Rpower.ln x) = x).
     { rewrite exp_compat. apply Rpower.exp_ln. lra. }
     rewrite <- H2 at 1. rewrite log_exp. reflexivity.
 Qed.
@@ -383,22 +377,22 @@ Proof.
   rewrite <- log_compat. extensionality x. apply ln_eq_log.
 Qed.
 
-Lemma π_compat : Trigonometry.π = PI.
+Lemma π_compat : π = PI.
 Proof.
-  assert (H1: PI / 2 = Trigonometry.π / 2).
+  assert (H1: PI / 2 = π / 2).
   {
-    destruct (Rlt_or_le (PI / 2) (Trigonometry.π / 2)) as [H2 | H2].
+    destruct (Rlt_or_le (PI / 2) (π / 2)) as [H2 | H2].
     - exfalso.
       pose proof (cos_gt_0_on_open_pi_2 (PI / 2)) as H3.
-      assert (0 < PI / 2 < Trigonometry.π / 2) as H4.
+      assert (0 < PI / 2 < π / 2) as H4.
       { split. apply PI2_RGT_0. lra. }
       specialize (H3 H4). 
       rewrite cos_compat in H3.
       rewrite cos_PI2 in H3. lra.
-    - destruct (Rlt_or_le (Trigonometry.π / 2) (PI / 2)) as [H3 | H3].
+    - destruct (Rlt_or_le (π / 2) (PI / 2)) as [H3 | H3].
       + exfalso.
-        pose proof (cos_gt_0 (Trigonometry.π / 2)) as H4.
-        assert (- (PI / 2) < Trigonometry.π / 2 < PI / 2) as H5.
+        pose proof (cos_gt_0 (π / 2)) as H4.
+        assert (- (PI / 2) < π / 2 < PI / 2) as H5.
         { pose proof π_pos as H6. split; lra. }
         specialize (H4 (proj1 H5) (proj2 H5)).
         rewrite <- cos_compat in H4.
@@ -408,7 +402,7 @@ Proof.
   lra.
 Qed.
 
-Lemma arcsin_compat_pt : forall x, -1 <= x <= 1 -> Trigonometry.arcsin x = asin x.
+Lemma arcsin_compat_pt : forall x, -1 <= x <= 1 -> arcsin x = asin x.
 Proof.
   intros x H1.
   pose proof (arcsin_spec) as [H2 [H3 [H4 H5]]].
@@ -419,12 +413,12 @@ Proof.
   rewrite sin_compat in H5.
   rewrite asin_sin in H5.
   - exact H5.
-  - assert (- (Trigonometry.π / 2) <= Trigonometry.arcsin x <= Trigonometry.π / 2) as H7.
+  - assert (- (π / 2) <= arcsin x <= π / 2) as H7.
     { apply H3. }
     rewrite π_compat in H7. lra.
 Qed.
 
-Lemma arccos_compat_pt : forall x, -1 <= x <= 1 -> Trigonometry.arccos x = acos x.
+Lemma arccos_compat_pt : forall x, -1 <= x <= 1 -> arccos x = acos x.
 Proof.
   intros x H1.
   pose proof (arccos_spec) as [H2 [H3 [H4 H5]]].
@@ -435,12 +429,12 @@ Proof.
   rewrite cos_compat in H5.
   rewrite acos_cos in H5.
   - exact H5.
-  - assert (0 <= Trigonometry.arccos x <= Trigonometry.π) as H7.
+  - assert (0 <= arccos x <= π) as H7.
     { apply H3. }
     rewrite π_compat in H7. lra.
 Qed.
 
-Lemma arctan_compat : Trigonometry.arctan = atan.
+Lemma arctan_compat : arctan = atan.
 Proof.
   extensionality x.
   pose proof (arctan_spec) as [H1 [H2 [H3 H4]]].
@@ -451,7 +445,7 @@ Proof.
   rewrite tan_compat in H4.
   rewrite atan_tan in H4.
   - exact H4.
-  - assert (- (Trigonometry.π / 2) < Trigonometry.arctan x < Trigonometry.π / 2) as H6.
+  - assert (- (π / 2) < arctan x < π / 2) as H6.
     { apply H2. }
     rewrite π_compat in H6. lra.
 Qed.
@@ -554,7 +548,7 @@ Proof.
     specialize (H2 (- a n) (Un_in_EUn _ n)). lra.
 Qed.
 
-Lemma e_compat : Exponential.e = Rtrigo_def.exp 1.
+Lemma e_compat : e = Rtrigo_def.exp 1.
 Proof.
   unfold e. apply exp_compat_pt.
 Qed.
