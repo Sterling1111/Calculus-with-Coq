@@ -16,7 +16,7 @@ Module IntervalNotations.
   Notation "( a , ∞)" := (fun x => a < x) : interval_scope.
   Notation "[ a , ∞)" := (fun x => a <= x) : interval_scope.
 
-  Notation "(-∞ , +∞)" := (Full_set _) : interval_scope.
+  Notation "(-∞ , +∞)" := (Full_set _) (only parsing) : interval_scope.
 
   Open Scope interval_scope.
 End IntervalNotations.
