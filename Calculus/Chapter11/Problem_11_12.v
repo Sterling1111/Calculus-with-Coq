@@ -34,12 +34,12 @@ Qed.
 Lemma lemma_11_12 : forall x1 y1 x2 y2,
   x1^2 + y1^2 = a^2 -> x2^2 + y2^2 = a^2 ->
   0 < x1 -> x1 < a -> 0 < x2 -> x2 < a ->
-  x1 = a / sqrt 3 -> Volume x1 y1 >= Volume x2 y2.
+  x1 = a / √3 -> Volume x1 y1 >= Volume x2 y2.
 Proof.
   intros x1 y1 x2 y2 H2 H3 H4 H5 H6 H7 H8.
   pose proof π_pos as H9.
   rewrite (Volume_subst x1 y1 H2), (Volume_subst x2 y2 H3).
-  assert (H10 : V x2 <= V (a / sqrt 3)).
+  assert (H10 : V x2 <= V (a / √3)).
   { 
     apply first_derivative_test_domain_max with (f' := fun x => (π * (a^2 - 3 * x^2)) / 3) (D := (0, a));
     try solve [solve_R].
@@ -55,6 +55,35 @@ Proof.
       nra.
   }
   subst. lra.
+Qed.
+
+Lemma lemma_11_12' : forall x1 y1 x2 y2,
+  x1^2 + y1^2 = a^2 -> x2^2 + y2^2 = a^2 ->
+  0 < x1 -> x1 < a -> 0 < x2 -> x2 < a ->
+  x1 = a / √3 -> x1 <> x2 -> Volume x1 y1 > Volume x2 y2.
+Proof.
+  intros x1 y1 x2 y2 H2 H3 H4 H5 H6 H7 H8 H9.
+  pose proof π_pos as H10.
+  rewrite (Volume_subst x1 y1 H2), (Volume_subst x2 y2 H3).
+  assert (H11 : maximum_point_strict V (0, a) (a / √3)).
+  { 
+    apply first_derivative_test_domain_strict_max with (f' := fun x => (π * (a^2 - 3 * x^2)) / 3) (D := (0, a));
+    try solve [solve_R].
+    - apply V_differentiable.
+    - apply V_derivative.
+    - intros x H12 H13. apply pow_incrst_1 with (n := 2%nat) in H13; solve_R.
+      replace ((a / √3) ^ 2) with (a^2 / 3) in H13.
+      2 : { pose proof Rlt_sqrt3_0 as H14. rewrite Rpow_div_l; try lra. rewrite pow2_sqrt; lra. } 
+      nra.
+    - intros x H12 H13. apply pow_incrst_1 with (n := 2%nat) in H13; solve_R.
+      replace ((a / √3) ^ 2) with (a^2 / 3) in H13.
+      2 : { pose proof Rlt_sqrt3_0 as H14. rewrite Rpow_div_l; try lra. rewrite pow2_sqrt; lra. } 
+      nra.
+  }
+  destruct H11 as [_ H11].
+  subst.
+  apply H11; try solve [split; lra].
+  lra.
 Qed.
 
 End Cone.
