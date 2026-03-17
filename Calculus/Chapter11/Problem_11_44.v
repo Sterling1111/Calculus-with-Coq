@@ -7,4 +7,7 @@ Lemma lemma_11_44 : forall f f' f'' g a b,
   (forall x, f'' x + f' x * g x - f x = 0) ->
   f a = 0 -> f b = 0 ->
   forall x, x ∈ [a, b] -> f x = 0.
+Proof.
+  intros f f' f'' g a b H1 H2 H3 H4 H5 H6 x H7.
+  
 Admitted.

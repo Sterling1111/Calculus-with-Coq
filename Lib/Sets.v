@@ -37,7 +37,7 @@ Notation "A − B" := (Setminus _ A B) (at level 30) : set_scope.
 Notation "A × B" := (set_prod A B) (at level 30) : set_scope.
 Notation "A ′" := (Complement _ A) (at level 20, format "A ′") : set_scope.
 Notation "∅" := (Empty_set _) : set_scope.
-Notation "'card' A = n" := (@cardinal _ A n) (at level 70, A at level 69, format "'card' A  =  n") : set_scope.
+Notation "'card' A = n" := (@cardinal _ A n) (at level 70, A at level 69, format "'card'  A  =  n") : set_scope.
 
 
 Definition FromList {U : Type} (l : list U) : Ensemble U :=
@@ -112,11 +112,11 @@ Definition cardinal_lt {A B : Type} (X : Ensemble A) (Y : Ensemble B) : Prop :=
 Definition cardinal_le {A B : Type} (X : Ensemble A) (Y : Ensemble B) : Prop :=
   exists f : (subType X) -> (subType Y), injective f.
 
-Notation "'card' X = 'card' Y" := (cardinal_eq X Y) (at level 70, X at level 69, Y at level 69, format "'card' X  =  'card' Y") : set_scope.
-Notation "'card' X <= 'card' Y" := (cardinal_le X Y) (at level 70, X at level 69, Y at level 69, format "'card' X  <=  'card' Y") : set_scope.
-Notation "'card' X < 'card' Y" := (cardinal_lt X Y) (at level 70, X at level 69, Y at level 69, format "'card' X  <  'card' Y") : set_scope.
-Notation "'card' X >= 'card' Y" := (cardinal_le Y X) (at level 70, X at level 69, Y at level 69, format "'card' X  >=  'card' Y") : set_scope.
-Notation "'card' X > 'card' Y" := (cardinal_lt Y X) (at level 70, X at level 69, Y at level 69, format "'card' X  >  'card' Y") : set_scope.
+Notation "'card' X = 'card' Y" := (cardinal_eq X Y) (at level 70, X at level 69, Y at level 69, format "'card'  X  =  'card'  Y") : set_scope.
+Notation "'card' X <= 'card' Y" := (cardinal_le X Y) (at level 70, X at level 69, Y at level 69, format "'card' X  <=  'card'  Y") : set_scope.
+Notation "'card' X < 'card' Y" := (cardinal_lt X Y) (at level 70, X at level 69, Y at level 69, format "'card'  X  <  'card'  Y") : set_scope.
+Notation "'card' X >= 'card' Y" := (cardinal_le Y X) (at level 70, X at level 69, Y at level 69, format "'card'  X  >=  'card'  Y") : set_scope.
+Notation "'card' X > 'card' Y" := (cardinal_lt Y X) (at level 70, X at level 69, Y at level 69, format "'card'  X  >  'card'  Y") : set_scope.
 
 End SetNotations.
 

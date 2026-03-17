@@ -2303,54 +2303,38 @@ Proof.
   exists c. intros x H9. unfold h. specialize (H8 x H9). unfold h in H8. lra.
 Qed.
 
-Lemma first_derivative_test_local_max : forall f f' A c δ,
-  δ > 0 ->
-  c ∈ A ->
-  (forall x, |x - c| < δ -> x ∈ A) ->
-  continuous_on f [c - δ, c + δ] ->
-  ⟦ der ⟧ f (c - δ, c + δ) = f' ->
-  (forall x, c - δ < x < c -> f' x > 0) ->
-  (forall x, c < x < c + δ -> f' x < 0) ->
-  local_maximum_point f A c.
+Corollary derivative_at_eq_imp_diff_const : forall f f' g g' a b,
+  a < b ->
+  (forall x, x ∈ [a, b] -> ⟦ der x ⟧ f = f') ->
+  (forall x, x ∈ [a, b] -> ⟦ der x ⟧ g = g') ->
+  (forall x, x ∈ [a, b] -> f' x = g' x) ->
+  exists c, forall x, x ∈ [a, b] -> f x = g x + c.
 Proof.
-  intros f f' A c δ H1 H2 H3 H4 H5 H6 H7.
-  split; auto.
-  exists δ. split; auto.
-  split.
-  - split. apply H3. solve_R. solve_R.
-  - intros _ [y H8 H9].
-    destruct (Rlt_dec y c) as [H10 | H10].
-    + assert (H11 : continuous_on f [y, c]).
-      { apply continuous_on_subset_closed with (a := c - δ) (b := c + δ); try solve_R. }
-      assert (H12 : differentiable_on f (y, c)).
-      { apply derivative_on_imp_differentiable_on with (f' := f').
-        apply derivative_on_subset_open with (a := c - δ) (b := c + δ); auto. solve_R. }
-      pose proof mean_value_theorem f y c H10 H11 H12 as [d [H13 H14]].
-      assert (H15 : ⟦ der d ⟧ f = f').
-      { apply derivative_on_imp_derivative_at with (D := (c - δ, c + δ)); auto_interval. }
-      pose proof derivative_at_unique f f' (fun _ => (f c - f y) / (c - y)) d H15 H14 as H16.
-      simpl in H16.
-      assert (H17 : c - δ < d < c) by solve_R.
-      specialize (H6 d H17).
-      apply Rmult_eq_compat_r with (r := (c - y)) in H16.
-      field_simplify in H16; nra.
-    + destruct (Req_dec y c) as [H11 | H11].
-      * subst y. lra.
-      * assert (H12 : c < y) by lra.
-        assert (H13 : continuous_on f [c, y]).
-        { apply continuous_on_subset_closed with (a := c - δ) (b := c + δ); try solve_R. }
-        assert (H14 : differentiable_on f (c, y)).
-        { apply derivative_on_imp_differentiable_on with (f' := f').
-          apply derivative_on_subset_open with (a := c - δ) (b := c + δ); auto. solve_R. }
-        pose proof mean_value_theorem f c y H12 H13 H14 as [d [H15 H16]].
-        assert (H17 : ⟦ der d ⟧ f = f').
-        { apply derivative_on_imp_derivative_at with (D := (c - δ, c + δ)); auto_interval. }
-        pose proof derivative_at_unique f f' (fun _ => (f y - f c) / (y - c)) d H17 H16 as H18.
-        simpl in H18.
-        assert (H19 : c < d < c + δ) by solve_R.
-        specialize (H7 d H19).
-        apply Rmult_eq_compat_r with (r := (y - c)) in H18.
-        field_simplify in H18; nra.
+  intros f f' g g' a b H1 H2 H3 H4.
+  apply corollary_11_2 with (f' := f') (g' := g'); auto.
+  - apply derivative_at_imp_derivative_on; auto. apply differentiable_domain_closed; auto.
+  - apply derivative_at_imp_derivative_on; auto. apply differentiable_domain_closed; auto.
+Qed.
+
+Lemma minimum_point_neg : forall f A x,
+  minimum_point (fun y => - f y) A x -> maximum_point f A x.
+Proof.
+  intros f A x [H1 H2]. split; auto.
+  intros y H3. specialize (H2 y H3). lra.
+Qed.
+
+Lemma local_minimum_point_neg : forall f A x,
+  local_minimum_point (fun y => - f y) A x -> local_maximum_point f A x.
+Proof.
+  intros f A x [H1 [δ [H2 H3]]]. split; auto.
+  exists δ. split; auto. apply minimum_point_neg. apply H3.
+Qed.
+
+Lemma minimum_point_strict_neg : forall f A x,
+  minimum_point_strict (fun y => - f y) A x -> maximum_point_strict f A x.
+Proof.
+  intros f A x [H1 H2]. split; auto.
+  intros y H3 H4. specialize (H2 y H3 H4). lra.
 Qed.
 
 Lemma first_derivative_test_local_min : forall f f' A c δ,
@@ -2403,89 +2387,24 @@ Proof.
         field_simplify in H18; nra.
 Qed.
 
-Lemma first_derivative_test_domain_max : forall f f' D c,
-  c ∈ D ->
-  differentiable_on f D ->
-  ⟦ der ⟧ f D = f' ->
-  (forall x, x ∈ D -> x < c -> f' x > 0) ->
-  (forall x, x ∈ D -> c < x -> f' x < 0) ->
-  (forall x y, x ∈ D -> Rmin x c <= y <= Rmax x c -> y ∈ D) ->
-  maximum_point f D c.
+Lemma first_derivative_test_local_max : forall f f' A c δ,
+  δ > 0 ->
+  c ∈ A ->
+  (forall x, |x - c| < δ -> x ∈ A) ->
+  continuous_on f [c - δ, c + δ] ->
+  ⟦ der ⟧ f (c - δ, c + δ) = f' ->
+  (forall x, c - δ < x < c -> f' x > 0) ->
+  (forall x, c < x < c + δ -> f' x < 0) ->
+  local_maximum_point f A c.
 Proof.
-  intros f f' D c H1 H2 H3 H4 H5 H6.
-  split; [exact H1 | intros x H7].
-  destruct (Rlt_dec x c) as [H8 | H8].
-  - assert (H9 : continuous_on f [x, c]).
-    {
-      apply differentiable_on_imp_continuous_on_subset with (D1 := D); auto.
-      - apply differentiable_domain_closed; lra.
-      - intros y H9. apply (H6 x); auto. solve_R. 
-    }
-    assert (H10 : differentiable_on f (x, c)).
-    {
-      apply differentiable_on_subset with (D1 := D); auto.
-      - apply differentiable_domain_open; lra.
-      - intros y H10. apply (H6 x); auto. solve_R.
-    }
-    pose proof mean_value_theorem f x c H8 H9 H10 as [d [H11 H12]].
-    assert (H13 : d ∈ D) by (apply (H6 x); auto; solve_R).
-    specialize (H3 d H13).
-    destruct H3 as [[H14 H15] | [[H14 H15] | [H14 H15]]].
-    + pose proof derivative_at_unique f f' (fun _ => (f c - f x) / (c - x)) d H15 H12 as H16.
-      simpl in H16.
-      assert (H17 : d < c) by solve_R.
-      specialize (H4 d H13 H17).
-      apply Rmult_eq_compat_r with (r := (c - x)) in H16.
-      field_simplify in H16; nra.
-    + apply derivative_at_iff in H12 as [H12 _].
-      pose proof derivative_at_right_unique f f' (fun _ => (f c - f x) / (c - x)) d H15 H12 as H16.
-      simpl in H16.
-      assert (H17 : d < c) by solve_R.
-      specialize (H4 d H13 H17).
-      apply Rmult_eq_compat_r with (r := (c - x)) in H16.
-      field_simplify in H16; nra.
-    + apply derivative_at_iff in H12 as [_ H12].
-      pose proof derivative_at_left_unique f f' (fun _ => (f c - f x) / (c - x)) d H15 H12 as H16.
-      simpl in H16.
-      assert (H17 : d < c) by solve_R.
-      specialize (H4 d H13 H17).
-      apply Rmult_eq_compat_r with (r := (c - x)) in H16.
-      field_simplify in H16; nra.
-  - destruct (Req_dec x c) as [H9 | H9].
-    + subst x. lra.
-    + assert (H10 : c < x) by lra.
-      assert (H11 : continuous_on f [c, x]).
-      { apply differentiable_on_imp_continuous_on_subset with (D1 := D); auto.
-        - apply differentiable_domain_closed; lra.
-        - intros y H11. apply (H6 x); auto. solve_R. }
-      assert (H12 : differentiable_on f (c, x)).
-      { apply differentiable_on_subset with (D1 := D); auto.
-        - apply differentiable_domain_open; lra.
-        - intros y H12. apply (H6 x); auto. solve_R. }
-      pose proof mean_value_theorem f c x H10 H11 H12 as [d [H13 H14]].
-      assert (H15 : d ∈ D) by (apply (H6 x); auto; solve_R).
-      specialize (H3 d H15).
-      destruct H3 as [[H16 H17] | [[H16 H17] | [H16 H17]]].
-      * pose proof derivative_at_unique f f' (fun _ => (f x - f c) / (x - c)) d H17 H14 as H18.
-        simpl in H18.
-        assert (H19 : c < d) by solve_R.
-        specialize (H5 d H15 H19).
-        apply Rmult_eq_compat_r with (r := (x - c)) in H18.
-        field_simplify in H18; nra.
-      * apply derivative_at_iff in H14 as [H14 _].
-        pose proof derivative_at_right_unique f f' (fun _ => (f x - f c) / (x - c)) d H17 H14 as H18.
-        simpl in H18.
-        assert (H19 : c < d) by solve_R.
-        specialize (H5 d H15 H19).
-        apply Rmult_eq_compat_r with (r := (x - c)) in H18.
-        field_simplify in H18; nra.
-      * apply derivative_at_iff in H14 as [_ H14]. 
-        pose proof derivative_at_left_unique f f' (fun _ => (f x - f c) / (x - c)) d H17 H14 as H18.
-        simpl in H18.
-        assert (H19 : c < d) by solve_R.
-        specialize (H5 d H15 H19).
-        apply Rmult_eq_compat_r with (r := (x - c)) in H18.
-        field_simplify in H18; nra.
+  intros f f' A c δ H1 H2 H3 H4 H5 H6 H7.
+  apply local_minimum_point_neg.
+  apply first_derivative_test_local_min with (f' := fun x => - f' x) (δ := δ); auto.
+  - replace (fun x => - f x) with ((fun _ => 0) - f)%function by (extensionality x; lra).
+    apply continuous_on_minus; [apply continuous_on_const | apply H4].
+  - apply derivative_on_neg_open; auto. solve_R.
+  - intros x H8. specialize (H6 x H8). lra.
+  - intros x H8. specialize (H7 x H8). lra.
 Qed.
 
 Lemma first_derivative_test_domain_min : forall f f' D c,
@@ -2571,6 +2490,33 @@ Proof.
         specialize (H5 d H15 H19).
         apply Rmult_eq_compat_r with (r := (x - c)) in H18.
         field_simplify in H18; nra.
+Qed.
+
+Lemma derivative_on_imp_differentiable_domain : forall f fn' D,
+  ⟦ der ⟧ f D = fn' -> differentiable_domain D.
+Proof.
+  intros f fn' D H1 x H2.
+  specialize (H1 x H2).
+  destruct H1 as [[H1 _] | [[H1 _] | [H1 _]]]; auto.
+Qed.
+
+Lemma first_derivative_test_domain_max : forall f f' D c,
+  c ∈ D ->
+  differentiable_on f D ->
+  ⟦ der ⟧ f D = f' ->
+  (forall x, x ∈ D -> x < c -> f' x > 0) ->
+  (forall x, x ∈ D -> c < x -> f' x < 0) ->
+  (forall x y, x ∈ D -> Rmin x c <= y <= Rmax x c -> y ∈ D) ->
+  maximum_point f D c.
+Proof.
+  intros f f' D c H1 H2 H3 H4 H5 H6.
+  apply minimum_point_neg.
+  apply first_derivative_test_domain_min with (f' := fun x => - f' x); auto.
+  - apply derivative_on_imp_differentiable_on with (f' := fun x => - f' x).
+    apply derivative_on_neg; auto. eapply derivative_on_imp_differentiable_domain; eauto.
+  - apply derivative_on_neg; auto. eapply derivative_on_imp_differentiable_domain; eauto.
+  - intros x H7 H8. specialize (H4 x H7 H8). lra.
+  - intros x H7 H8. specialize (H5 x H7 H8). lra.
 Qed.
 
 Lemma first_derivative_test_domain_strict_min : forall f f' D c,
@@ -2662,73 +2608,72 @@ Lemma first_derivative_test_domain_strict_max : forall f f' D c,
   maximum_point_strict f D c.
 Proof.
   intros f f' D c H1 H2 H3 H4 H5 H6.
-  split; [exact H1 | intros x H7 H8].
-  destruct (Rlt_dec x c) as [H9 | H9].
-  - assert (H10 : continuous_on f [x, c]).
-    { apply differentiable_on_imp_continuous_on_subset with (D1 := D); auto.
-      - apply differentiable_domain_closed; lra.
-      - intros y H10. apply (H6 x); auto. solve_R. }
-    assert (H11 : differentiable_on f (x, c)).
-    { apply differentiable_on_subset with (D1 := D); auto.
-      - apply differentiable_domain_open; lra.
-      - intros y H11. apply (H6 x); auto. solve_R. }
-    pose proof mean_value_theorem f x c H9 H10 H11 as [d [H12 H13]].
-    assert (H14 : d ∈ D) by (apply (H6 x); auto; solve_R).
-    specialize (H3 d H14).
-    destruct H3 as [[H15 H16] | [[H15 H16] | [H15 H16]]].
-    + pose proof derivative_at_unique f f' (fun _ => (f c - f x) / (c - x)) d H16 H13 as H17.
-      simpl in H17.
-      assert (H18 : d < c) by solve_R.
-      specialize (H4 d H14 H18).
-      apply Rmult_eq_compat_r with (r := (c - x)) in H17.
-      field_simplify in H17; nra.
-    + apply derivative_at_iff in H13 as [H13 _].
-      pose proof derivative_at_right_unique f f' (fun _ => (f c - f x) / (c - x)) d H16 H13 as H17.
-      simpl in H17.
-      assert (H18 : d < c) by solve_R.
-      specialize (H4 d H14 H18).
-      apply Rmult_eq_compat_r with (r := (c - x)) in H17.
-      field_simplify in H17; nra.
-    + apply derivative_at_iff in H13 as [_ H13].
-      pose proof derivative_at_left_unique f f' (fun _ => (f c - f x) / (c - x)) d H16 H13 as H17.
-      simpl in H17.
-      assert (H18 : d < c) by solve_R.
-      specialize (H4 d H14 H18).
-      apply Rmult_eq_compat_r with (r := (c - x)) in H17.
-      field_simplify in H17; nra.
-  - assert (H10 : c < x) by lra.
-    assert (H11 : continuous_on f [c, x]).
-    { apply differentiable_on_imp_continuous_on_subset with (D1 := D); auto.
-      - apply differentiable_domain_closed; lra.
-      - intros y H11. apply (H6 x); auto. solve_R. }
-    assert (H12 : differentiable_on f (c, x)).
-    { apply differentiable_on_subset with (D1 := D); auto.
-      - apply differentiable_domain_open; lra.
-      - intros y H12. apply (H6 x); auto. solve_R. }
-    pose proof mean_value_theorem f c x H10 H11 H12 as [d [H13 H14]].
-    assert (H15 : d ∈ D) by (apply (H6 x); auto; solve_R).
-    specialize (H3 d H15).
-    destruct H3 as [[H16 H17] | [[H16 H17] | [H16 H17]]].
-    * pose proof derivative_at_unique f f' (fun _ => (f x - f c) / (x - c)) d H17 H14 as H18.
-      simpl in H18.
-      assert (H19 : c < d) by solve_R.
-      specialize (H5 d H15 H19).
-      apply Rmult_eq_compat_r with (r := (x - c)) in H18.
-      field_simplify in H18; nra.
-    * apply derivative_at_iff in H14 as [H14 _].
-      pose proof derivative_at_right_unique f f' (fun _ => (f x - f c) / (x - c)) d H17 H14 as H18.
-      simpl in H18.
-      assert (H19 : c < d) by solve_R.
-      specialize (H5 d H15 H19).
-      apply Rmult_eq_compat_r with (r := (x - c)) in H18.
-      field_simplify in H18; nra.
-    * apply derivative_at_iff in H14 as [_ H14]. 
-      pose proof derivative_at_left_unique f f' (fun _ => (f x - f c) / (x - c)) d H17 H14 as H18.
-      simpl in H18.
-      assert (H19 : c < d) by solve_R.
-      specialize (H5 d H15 H19).
-      apply Rmult_eq_compat_r with (r := (x - c)) in H18.
-      field_simplify in H18; nra.
+  apply minimum_point_strict_neg.
+  apply first_derivative_test_domain_strict_min with (f' := fun x => - f' x); auto.
+  - apply derivative_on_imp_differentiable_on with (f' := fun x => - f' x).
+    apply derivative_on_neg; auto. eapply derivative_on_imp_differentiable_domain; eauto.
+  - apply derivative_on_neg; auto. eapply derivative_on_imp_differentiable_domain; eauto.
+  - intros x H7 H8. specialize (H4 x H7 H8). lra.
+  - intros x H7 H8. specialize (H5 x H7 H8). lra.
+Qed.
+
+Lemma second_derivative_test_local_min : forall f f' f'' A a δ,
+  δ > 0 ->
+  a ∈ A ->
+  (forall x, |x - a| < δ -> x ∈ A) ->
+  ⟦ der ⟧ f (a - δ, a + δ) = f' ->
+  ⟦ der a ⟧ f' = f'' ->
+  f' a = 0 ->
+  f'' a > 0 ->
+  local_minimum_point f A a.
+Proof.
+  intros f f' f'' A a δ H1 H2 H3 H4 H5 H6 H7.
+  unfold derivative_at in H5.
+  specialize (H5 (f'' a) H7) as [δ' [H8 H9]].
+  apply first_derivative_test_local_min with (f' := f') (δ := Rmin δ δ' / 2); auto; try solve [solve_R].
+  - intros x H10. apply H3. solve_R.
+  - apply differentiable_on_imp_continuous_on_subset with (D1 := (a - δ, a + δ)).
+    + apply derivative_on_imp_differentiable_on with (f' := f'); auto.
+    + apply differentiable_domain_closed; solve_R.
+    + intros x H10. solve_R.
+  - apply derivative_on_subset with (D1 := (a - δ, a + δ)); auto.
+    + apply differentiable_domain_open; solve_R.
+    + intros x H10. solve_R.
+  - intros x H10.
+    specialize (H9 (x - a) ltac:(solve_R)).
+    rewrite H6 in H9.
+    replace (a + (x - a)) with x in H9 by lra.
+    replace (f' x - 0) with (f' x) in H9 by lra.
+    assert (H11 : (f' x) / (x - a) > 0) by solve_R.
+    assert (H12 : x - a < 0) by solve_R.
+    replace (f' x) with ((f' x / (x - a)) * (x - a)) by (field; lra).
+    nra.
+  - intros x H10.
+    specialize (H9 (x - a) ltac:(solve_R)).
+    rewrite H6 in H9.
+    replace (a + (x - a)) with x in H9 by lra.
+    replace (f' x - 0) with (f' x) in H9 by lra.
+    assert (H11 : (f' x) / (x - a) > 0) by solve_R.
+    assert (H12 : x - a > 0) by solve_R.
+    replace (f' x) with ((f' x / (x - a)) * (x - a)) by (field; lra).
+    nra.
+Qed.
+
+Lemma second_derivative_test_local_max : forall f f' f'' A a δ,
+  δ > 0 ->
+  a ∈ A ->
+  (forall x, |x - a| < δ -> x ∈ A) ->
+  ⟦ der ⟧ f (a - δ, a + δ) = f' ->
+  ⟦ der a ⟧ f' = f'' ->
+  f' a = 0 ->
+  f'' a < 0 ->
+  local_maximum_point f A a.
+Proof.
+  intros f f' f'' A a δ H1 H2 H3 H4 H5 H6 H7.
+  apply local_minimum_point_neg.
+  apply second_derivative_test_local_min with (f' := fun x => - f' x) (f'' := fun x => - f'' x) (δ := δ); auto; try lra.
+  - apply derivative_on_neg_open; auto. solve_R.
+  - apply derivative_at_neg; auto.
 Qed.
 
 Definition tangent_line (f : R -> R) (a : R) : R -> R :=
@@ -5223,14 +5168,6 @@ Proof.
   intros n c f [fn H1].
   exists (fun x => c * fn x).
   apply nth_derivative_mult_const_l; auto.
-Qed.
-
-Lemma derivative_on_imp_differentiable_domain : forall f fn' D,
-  ⟦ der ⟧ f D = fn' -> differentiable_domain D.
-Proof.
-  intros f fn' D H1 x H2.
-  specialize (H1 x H2).
-  destruct H1 as [[H1 _] | [[H1 _] | [H1 _]]]; auto.
 Qed.
 
 Lemma nth_derivative_on_imp_differentiable_domain : forall n f fn' D,
