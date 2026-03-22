@@ -1,5 +1,5 @@
-From Lib Require Import Imports Reals_util Sums Continuity Limit Notations Products.
-Import LimitNotations SumNotations ProductNotations.
+From Lib Require Import Imports Reals_util Sums Continuity Limit Notations Products Derivative.
+Import LimitNotations SumNotations ProductNotations DerivativeNotations.
 
 Open Scope R_scope.
 
@@ -1357,3 +1357,69 @@ Proof.
   - intros p q H2 H3.
     admit.
 Admitted.
+
+Lemma polynomial_inf_differentiable : forall l,
+  let p := polynomial l in
+  inf_differentiable p.
+Proof.
+  intros l p. induction l as [| h t IH].
+  - unfold p. replace (polynomial []) with (fun _ : R => 0).
+    2 : { extensionality x. rewrite poly_nil. reflexivity. }
+    assert (H1 : forall n, ⟦ der^n ⟧ (fun _ : R => 0) = fun _ : R => 0).
+    {
+      intro n. induction n as [| k IH]; try reflexivity.
+      exists (fun _ : R => 0). split; auto. apply derivative_const.
+    }
+    intro n. exists (fun _ : R => 0). auto.
+  - unfold p. replace (polynomial _) with (fun x : R => h * x ^ length t + polynomial t x).
+    2 : { extensionality x. rewrite poly_cons. reflexivity. }
+    unfold inf_differentiable. intro n.
+    destruct (IH n) as [gn' H1].
+    destruct (le_gt_dec n (length t)) as [H2 | H2].
+    + pose proof (nth_derivative_pow (length t) n H2) as H3.
+      pose proof (nth_derivative_mult_const_l n h _ _ H3) as H4.
+      eexists. apply nth_derivative_plus; eauto.
+    + pose proof (nth_derivative_pow_gt n (length t) H2) as H3.
+      pose proof (nth_derivative_mult_const_l n h _ _ H3) as H4.
+      eexists. apply nth_derivative_plus; eauto.
+Qed.
+
+Lemma polynomial_derive_gt_degree : forall l n, (n > degree l)%nat -> forall x, ⟦ Der^n x ⟧ (polynomial l) = 0.
+Proof.
+  intros l n H1 x.
+  pose proof (polynomial_inf_differentiable l n) as [gn' H2].
+  assert (H3 : gn' = fun _ : R => 0).
+  {
+    generalize dependent gn'. generalize dependent n. induction l as [| h t H4].
+    - intros n H5 gn' H6. replace (polynomial []) with (fun _ : R => 0) in H6.
+      2 : { extensionality y. rewrite poly_nil. reflexivity. }
+      assert (H7 : forall k, ⟦ der^k ⟧ (fun _ : R => 0) = fun _ : R => 0).
+      { clear. intro k. induction k as [| m H8]; try reflexivity.
+        unfold nth_derivative. fold nth_derivative.
+        exists (fun _ : R => 0). split. exact H8. apply derivative_const. }
+      pose proof (nth_derivative_unique n (fun _ : R => 0) gn' (fun _ : R => 0) H6 (H7 n)) as H9.
+      exact H9.
+    - intros n H5 gn' H6.
+      simpl in H5. destruct (Req_dec_T h 0) as [H7 | H8].
+      + subst h. replace (polynomial (0 :: t)) with (fun y : R => polynomial t y) in H6.
+        2 : { extensionality y. rewrite poly_cons. lra. }
+        apply (H4 n H5 gn' H6).
+      + replace (polynomial _) with (fun y : R => h * y ^ length t + polynomial t y) in H6.
+        2 : { extensionality y. rewrite poly_cons. reflexivity. }
+        assert (H9 : (n > length t)%nat).
+        { assert (length (h :: t) = S (length t)) by reflexivity. lia. }
+        pose proof (nth_derivative_pow_gt n (length t) H9) as H10.
+        pose proof (nth_derivative_mult_const_l n h _ _ H10) as H11.
+        pose proof (polynomial_inf_differentiable t n) as [H12 H13].
+        pose proof (nth_derivative_plus _ _ _ _ _ H11 H13) as H14.
+        assert (H15 : H12 = fun _ : R => 0).
+        { apply (H4 n); eauto. pose proof (degree_le_length t). lia. }
+        rewrite H15 in H14.
+        assert (H16 : (fun x0 : ℝ => h * (λ _ : ℝ, 0) x0 + (λ _ : ℝ, 0) x0) = fun _ : R => 0).
+        { extensionality z. lra. }
+        pose proof (nth_derivative_unique n (fun y : R => h * y ^ length t + polynomial t y) gn' _ H6 H14) as H17.
+        rewrite H17. exact H16.
+  }
+  rewrite H3 in H2. apply nth_derivative_imp_nth_derive in H2.
+  pose proof (f_equal (fun f => f x) H2) as H4. exact H4.
+Qed.
