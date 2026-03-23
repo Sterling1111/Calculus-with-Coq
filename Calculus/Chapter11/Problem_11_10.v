@@ -63,7 +63,7 @@ Qed.
 
 Lemma lemma_11_10' : forall x1 y1 x2 y2,
   Perimeter x1 y1 = P -> Perimeter x2 y2 = P ->
-  x1 = y1 -> x1 <> x2 -> Area x1 y1 > Area x2 y2.
+  x1 = y1 -> x2 <> y2 -> Area x1 y1 > Area x2 y2.
 Proof.
   intros x1 y1 x2 y2 H2 H3 H4 H5.
   rewrite (Area_subst x1 y1 H2), (Area_subst x2 y2 H3).
@@ -88,7 +88,7 @@ Proof.
   destruct H6 as [_ H6].
   apply H6.
   - apply Full_intro.
-  - unfold Perimeter in H2; lra.
+  - unfold Perimeter in H2, H3. lra.
 Qed.
 
 End Rectangle.
