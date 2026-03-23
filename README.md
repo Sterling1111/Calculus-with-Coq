@@ -178,6 +178,22 @@ Proof. auto_cont. Qed.
 
 - `Lib/`: Core theory (limits, continuity, derivatives, integrals, sequences/series, completeness, sets, polynomials, etc.). Reusable across problem sets.
 - `Calculus/`: Chapter- and problem-indexed files with worked formal proofs from the Calculus text. Currently features nearly 300 stated problems spanning Chapters 1 through 13, with **105 problems fully verified** (zero admitted lemmas).
+  <details>
+  <summary>View Chapter-by-Chapter Progress</summary>
+
+  - **Chapter 1** ![Progress](https://img.shields.io/badge/Completed-24%2F26-brightgreen)
+  - **Chapter 2** ![Progress](https://img.shields.io/badge/Completed-26%2F29-green)
+  - **Chapter 3** ![Progress](https://img.shields.io/badge/Completed-1%2F17-red)
+  - **Chapter 5** ![Progress](https://img.shields.io/badge/Completed-13%2F42-orange)
+  - **Chapter 6** ![Progress](https://img.shields.io/badge/Completed-8%2F17-orange)
+  - **Chapter 7** ![Progress](https://img.shields.io/badge/Completed-4%2F17-red)
+  - **Chapter 8** ![Progress](https://img.shields.io/badge/Completed-1%2F20-red)
+  - **Chapter 9** ![Progress](https://img.shields.io/badge/Completed-10%2F31-orange)
+  - **Chapter 10** ![Progress](https://img.shields.io/badge/Completed-6%2F36-red)
+  - **Chapter 11** ![Progress](https://img.shields.io/badge/Completed-11%2F41-orange)
+  - **Chapter 12** ![Progress](https://img.shields.io/badge/Completed-0%2F14-red)
+  - **Chapter 13** ![Progress](https://img.shields.io/badge/Completed-1%2F24-red)
+  </details>
 - `ATTAM/`: Companion chapters depending only on `Lib/`.
 - `_CoqProject`: Coq project configuration (logical roots and file list).
 
