@@ -178,21 +178,23 @@ Proof. auto_cont. Qed.
 
 - `Lib/`: Core theory (limits, continuity, derivatives, integrals, sequences/series, completeness, sets, polynomials, etc.). Reusable across problem sets.
 - `Calculus/`: Chapter- and problem-indexed files with worked formal proofs from the Calculus text. Currently features nearly 300 stated problems spanning Chapters 1 through 13, with **105 problems fully verified** (zero admitted lemmas).
-  <details>
+  <details open>
   <summary>View Chapter-by-Chapter Progress</summary>
 
-  - **Chapter 1** ![Progress](https://img.shields.io/badge/Completed-24%2F26-brightgreen)
-  - **Chapter 2** ![Progress](https://img.shields.io/badge/Completed-26%2F29-green)
-  - **Chapter 3** ![Progress](https://img.shields.io/badge/Completed-1%2F17-red)
-  - **Chapter 5** ![Progress](https://img.shields.io/badge/Completed-13%2F42-orange)
-  - **Chapter 6** ![Progress](https://img.shields.io/badge/Completed-8%2F17-orange)
-  - **Chapter 7** ![Progress](https://img.shields.io/badge/Completed-4%2F17-red)
-  - **Chapter 8** ![Progress](https://img.shields.io/badge/Completed-1%2F20-red)
-  - **Chapter 9** ![Progress](https://img.shields.io/badge/Completed-10%2F31-orange)
-  - **Chapter 10** ![Progress](https://img.shields.io/badge/Completed-6%2F36-red)
-  - **Chapter 11** ![Progress](https://img.shields.io/badge/Completed-11%2F41-orange)
-  - **Chapter 12** ![Progress](https://img.shields.io/badge/Completed-0%2F14-red)
-  - **Chapter 13** ![Progress](https://img.shields.io/badge/Completed-1%2F24-red)
+| Chapter | Progress | Completed |
+| :--- | :--- | :--- |
+| `Chapter  1` | <img src="https://placehold.co/184x12/28a745/28a745.png" width="184" height="12" alt=""/><img src="https://placehold.co/16x12/eeeeee/eeeeee.png" width="16" height="12" alt=""/> | `24/26` |
+| `Chapter  2` | <img src="https://placehold.co/179x12/28a745/28a745.png" width="179" height="12" alt=""/><img src="https://placehold.co/21x12/eeeeee/eeeeee.png" width="21" height="12" alt=""/> | `26/29` |
+| `Chapter  3` | <img src="https://placehold.co/11x12/28a745/28a745.png" width="11" height="12" alt=""/><img src="https://placehold.co/189x12/eeeeee/eeeeee.png" width="189" height="12" alt=""/> | ` 1/17` |
+| `Chapter  5` | <img src="https://placehold.co/61x12/28a745/28a745.png" width="61" height="12" alt=""/><img src="https://placehold.co/139x12/eeeeee/eeeeee.png" width="139" height="12" alt=""/> | `13/42` |
+| `Chapter  6` | <img src="https://placehold.co/94x12/28a745/28a745.png" width="94" height="12" alt=""/><img src="https://placehold.co/106x12/eeeeee/eeeeee.png" width="106" height="12" alt=""/> | ` 8/17` |
+| `Chapter  7` | <img src="https://placehold.co/47x12/28a745/28a745.png" width="47" height="12" alt=""/><img src="https://placehold.co/153x12/eeeeee/eeeeee.png" width="153" height="12" alt=""/> | ` 4/17` |
+| `Chapter  8` | <img src="https://placehold.co/10x12/28a745/28a745.png" width="10" height="12" alt=""/><img src="https://placehold.co/190x12/eeeeee/eeeeee.png" width="190" height="12" alt=""/> | ` 1/20` |
+| `Chapter  9` | <img src="https://placehold.co/64x12/28a745/28a745.png" width="64" height="12" alt=""/><img src="https://placehold.co/136x12/eeeeee/eeeeee.png" width="136" height="12" alt=""/> | `10/31` |
+| `Chapter 10` | <img src="https://placehold.co/33x12/28a745/28a745.png" width="33" height="12" alt=""/><img src="https://placehold.co/167x12/eeeeee/eeeeee.png" width="167" height="12" alt=""/> | ` 6/36` |
+| `Chapter 11` | <img src="https://placehold.co/53x12/28a745/28a745.png" width="53" height="12" alt=""/><img src="https://placehold.co/147x12/eeeeee/eeeeee.png" width="147" height="12" alt=""/> | `11/41` |
+| `Chapter 12` | <img src="https://placehold.co/200x12/eeeeee/eeeeee.png" width="200" height="12" alt=""/> | ` 0/14` |
+| `Chapter 13` | <img src="https://placehold.co/8x12/28a745/28a745.png" width="8" height="12" alt=""/><img src="https://placehold.co/192x12/eeeeee/eeeeee.png" width="192" height="12" alt=""/> | ` 1/24` |
   </details>
 - `ATTAM/`: Companion chapters depending only on `Lib/`.
 - `_CoqProject`: Coq project configuration (logical roots and file list).
