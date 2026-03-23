@@ -1423,3 +1423,444 @@ Proof.
   rewrite H3 in H2. apply nth_derivative_imp_nth_derive in H2.
   pose proof (f_equal (fun f => f x) H2) as H4. exact H4.
 Qed.
+
+Lemma polynomial_odd_negative : forall l, Nat.Odd (degree l) -> exists x, polynomial l x < 0.
+Proof.
+  intros l H1.
+  destruct (is_zero_poly_dec l) as [H2 | H2].
+  - apply zero_poly_degree_0_val in H2.
+    rewrite H2 in H1. destruct H1 as [k H1]. lia.
+  - destruct (Rtotal_order (lead_coeff l) 0) as [H3 | [H3 | H3]].
+    + pose proof (limit_poly_lead_coeff l H2) as [f [H4 H5]].
+      assert (H6 : - lead_coeff l / 2 > 0) by lra.
+      destruct (H5 (- lead_coeff l / 2) H6) as [δ [H7 H8]].
+      exists (1 / (δ / 2)).
+      assert (H9 : 0 < |δ / 2 - 0| < δ) by solve_abs.
+      pose proof (H8 (δ / 2) H9) as H10.
+      assert (H11 : δ / 2 <> 0) by lra.
+      pose proof (H4 (δ / 2) H11) as H12.
+      assert (H13 : (δ / 2) ^ degree l > 0) by (apply pow_lt; lra).
+      rewrite H12 in H10. solve_abs.
+    + apply lead_coeff_zero_iff in H3; contradiction.
+    + pose proof (limit_poly_lead_coeff l H2) as [f [H4 H5]].
+      assert (H6 : lead_coeff l / 2 > 0) by lra.
+      destruct (H5 (lead_coeff l / 2) H6) as [δ [H7 H8]].
+      exists (1 / (- δ / 2)).
+      assert (H9 : 0 < | -δ / 2 - 0| < δ) by solve_abs.
+      pose proof (H8 (- δ / 2) H9) as H10.
+      assert (H11 : - δ / 2 <> 0) by lra.
+      pose proof (H4 (- δ / 2) H11) as H12.
+      assert (H13 : (- δ / 2) ^ degree l < 0).
+      { apply Rpow_odd_lt_0; solve_R. }
+      rewrite H12 in H10. solve_R.
+Qed.
+
+Lemma polynomial_pos_imp_even : forall l, (forall x, polynomial l x >= 0) -> Nat.Even (degree l).
+Proof.
+  intros l H1.
+  destruct (Nat.Even_or_Odd (degree l)) as [H2 | H2]; auto.
+  exfalso.
+  pose proof (polynomial_odd_negative l H2) as [x H3].
+  pose proof (H1 x) as H4.
+  lra.
+Qed.
+
+Lemma polynomial_negative_lead_coeff : forall l, lead_coeff l < 0 -> exists x, polynomial l x < 0.
+Proof.
+  intros l H1.
+  destruct (is_zero_poly_dec l) as [H2 | H2].
+  - apply lead_coeff_zero_iff in H2. lra.
+  - pose proof (limit_poly_lead_coeff l H2) as [f [H3 H4]].
+    assert (H5 : - lead_coeff l / 2 > 0) by lra.
+    destruct (H4 (- lead_coeff l / 2) H5) as [δ [H6 H7]].
+    exists (1 / (δ / 2)).
+    assert (H8 : 0 < |δ / 2 - 0| < δ) by solve_abs.
+    pose proof (H7 (δ / 2) H8) as H9.
+    assert (H10 : δ / 2 <> 0) by lra.
+    pose proof (H3 (δ / 2) H10) as H11.
+    assert (H12 : (δ / 2) ^ degree l > 0) by (apply pow_lt; lra).
+    rewrite H11 in H9. solve_abs.
+Qed.
+
+Lemma polynomial_pos_imp_lead_coeff_nonneg : forall l, (forall x, polynomial l x >= 0) -> lead_coeff l >= 0.
+Proof.
+  intros l H1.
+  destruct (Rtotal_order (lead_coeff l) 0) as [H2 | [H2 | H2]]; try lra.
+  exfalso. pose proof (polynomial_negative_lead_coeff l H2) as [x H3]. 
+  pose proof (H1 x) as H4. lra.
+Qed.
+
+Lemma polynomial_pos_imp_lead_coeff_pos : forall l, ~ is_zero_poly l -> (forall x, polynomial l x >= 0) -> lead_coeff l > 0.
+Proof.
+  intros l H1 H2.
+  pose proof (polynomial_pos_imp_lead_coeff_nonneg l H2) as H3.
+  assert (H4 : lead_coeff l <> 0).
+  { intros H5. apply H1. apply lead_coeff_zero_iff. exact H5. }
+  lra.
+Qed.
+
+Lemma polynomial_even_limit : forall l,
+  Nat.Even (degree l) ->
+  (degree l > 0)%nat ->
+  lead_coeff l > 0 ->
+  ⟦ lim ∞ ⟧ (polynomial l) = ∞ /\ ⟦ lim -∞ ⟧ (polynomial l) = ∞.
+Proof.
+  intros l H1 H2 H3.
+  assert (H4 : ~ is_zero_poly l).
+  { intros H4. apply lead_coeff_zero_iff in H4. lra. }
+  pose proof (limit_poly_lead_coeff l H4) as [f [H5 H6]].
+  assert (H7 : lead_coeff l / 2 > 0) by lra.
+  specialize (H6 (lead_coeff l / 2) H7) as [δ [H8 H9]].
+  assert (H10 : forall m y, y >= 1 -> (m > 0)%nat -> y ^ m >= y).
+  { intros m y H10 H11. destruct m as [| m']; [lia |].
+    clear H11. induction m' as [| m' IH].
+    - simpl. lra.
+    - simpl. simpl in IH. nra. }
+  assert (H11 : forall n y, Nat.Even n -> (n > 0)%nat -> y <= -1 -> y ^ n >= - y).
+  { intros n y [k H11] H12 H13.
+    assert (H14 : (k > 0)%nat) by lia.
+    subst n. clear H12. destruct k as [| k']; [lia |].
+    clear H14. induction k' as [| k' IH].
+    - simpl. nra.
+    - replace (2 * S (S k'))%nat with (2 + 2 * S k')%nat by lia.
+      rewrite pow_add. simpl (y ^ 2).
+      nra. }
+  split.
+  - intros M.
+    set (N1 := 1 / δ).
+    set (N2 := Rmax 1 ((2 * |M| + 1) / lead_coeff l)).
+    set (N := Rmax N1 N2).
+    exists N. intros x H12.
+    assert (H13 : x > N1). { unfold N, Rmax in H12. destruct (Rle_dec N1 N2); lra. }
+    assert (H14 : x > N2). { unfold N, Rmax in H12. destruct (Rle_dec N1 N2); lra. }
+    assert (H15 : x > 1). { unfold N2, Rmax in H14. destruct (Rle_dec 1 ((2 * |M| + 1) / lead_coeff l)); lra. }
+    assert (H16 : x > 0) by lra.
+    assert (H17 : 0 < |1 / x - 0| < δ).
+    {
+      rewrite Rminus_0_r. pose proof Rdiv_pos_pos 1 x ltac:(lra) H16 as H17.
+      split; [solve_abs |]. 
+      apply Rmult_lt_reg_l with (r := x); [lra |].
+      apply Rmult_lt_reg_r with (r := 1 / δ). apply Rdiv_pos_pos; try nra.
+      replace (x * δ * (1 / δ)) with x by (field; lra).
+      replace (|(1 / x)|) with (1 / x) by solve_R.
+      replace (1 * (1 / δ)) with N1. 2 : { unfold N1. field_simplify; lra. }
+      field_simplify; try nra. fold N1. lra.
+    }
+    specialize (H9 (1 / x) H17).
+    assert (H18 : f (1 / x) > lead_coeff l / 2) by solve_abs.
+    assert (H19 : 1 / x <> 0) by solve_R.
+    specialize (H5 (1 / x) H19).
+    replace (1 / (1 / x)) with x in H5 by (field; lra).
+    assert (H20 : polynomial l x = x ^ degree l * f (1 / x)).
+    {
+      rewrite H5. rewrite <- Rmult_assoc. rewrite <- Rpow_mult_distr.
+      replace (x * (1 /x)) with 1 by (field; lra). rewrite pow1. lra.
+    }
+    rewrite H20.
+    assert (H21 : x ^ degree l * f (1 / x) >= x * (lead_coeff l / 2)).
+    { assert (H22 : x ^ degree l >= x). { apply H10; try lra; try lia. } nra. }
+    assert (H22 : x * (lead_coeff l / 2) > M).
+    {
+      assert (H23 : x > (2 * |M| + 1) / lead_coeff l).
+      { unfold N2, Rmax in H14. destruct (Rle_dec 1 ((2 * |M| + 1) / lead_coeff l)); lra. }
+      assert (H24 : lead_coeff l <> 0) by lra.
+      assert (H25 : x * lead_coeff l > 2 * |M| + 1).
+      {
+        replace (2 * |M| + 1) with (((2 * |M| + 1) / lead_coeff l) * lead_coeff l) by (field; lra).
+        assert (H26 : x * lead_coeff l - ((2 * |M| + 1) / lead_coeff l) * lead_coeff l = (x - (2 * |M| + 1) / lead_coeff l) * lead_coeff l) by ring.
+        nra.
+      }
+      solve_R.
+    }
+    lra.
+    - intros M.
+    set (N1 := - (1 / δ)).
+    set (N2 := Rmin (-1) (- ((2 * |M| + 1) / lead_coeff l))).
+    set (N := Rmin N1 N2).
+    exists N. intros x H12.
+    assert (H13 : x < N1). { unfold N, Rmin in H12. destruct (Rle_dec N1 N2); lra. }
+    assert (H14 : x < N2). { unfold N, Rmin in H12. destruct (Rle_dec N1 N2); lra. }
+    assert (H15 : x <= -1). { unfold N2, Rmin in H14. destruct (Rle_dec (-1) (- ((2 * |M| + 1) / lead_coeff l))); lra. }
+    assert (H16 : x < 0) by lra.
+    assert (H17 : 0 < |1 / x - 0| < δ).
+    {
+      rewrite Rminus_0_r.
+      pose proof Rdiv_pos_neg 1 x ltac:(lra) H16 as H17.
+      split; [solve_abs |]. 
+      apply Rmult_lt_reg_l with (r := -x); [lra |].
+      apply Rmult_lt_reg_r with (r := 1 / δ). apply Rdiv_pos_pos; try nra.
+      replace (-x * δ * (1 / δ)) with (-x) by (field; lra).
+      replace (|(1 / x)|) with (-(1 / x)) by solve_R.
+      replace (-x * - (1 / x) * (1 / δ)) with (1 * (1 / δ)) by (field; lra).
+      replace (1 * (1 / δ)) with (- N1). 2 : { unfold N1. field_simplify; lra. }
+      field_simplify; try nra.
+    }
+    specialize (H9 (1 / x) H17).
+    assert (H18 : f (1 / x) > lead_coeff l / 2) by solve_abs.
+    assert (H19 : 1 / x <> 0) by solve_R.
+    specialize (H5 (1 / x) H19).
+    replace (1 / (1 / x)) with x in H5 by (field; lra).
+    assert (H20 : polynomial l x = x ^ degree l * f (1 / x)).
+    {
+      rewrite H5. rewrite <- Rmult_assoc. rewrite <- Rpow_mult_distr.
+      replace (x * (1 /x)) with 1 by (field; lra). rewrite pow1. lra.
+    }
+    rewrite H20.
+    assert (H21 : x ^ degree l * f (1 / x) >= (- x) * (lead_coeff l / 2)).
+    { assert (H22 : x ^ degree l >= - x). { apply H11; try lra; try lia; auto. } nra. }
+    assert (H22 : (- x) * (lead_coeff l / 2) > M).
+    {
+      assert (H23 : x < - ((2 * |M| + 1) / lead_coeff l)).
+      { unfold N2, Rmin in H14. destruct (Rle_dec (-1) (- ((2 * |M| + 1) / lead_coeff l))); lra. }
+      assert (H24 : lead_coeff l <> 0) by lra.
+      assert (H25 : (- x) * lead_coeff l > 2 * |M| + 1).
+      {
+        replace (2 * |M| + 1) with (((2 * |M| + 1) / lead_coeff l) * lead_coeff l) by (field; lra).
+        assert (H26 : (- x) * lead_coeff l - ((2 * |M| + 1) / lead_coeff l) * lead_coeff l = (- x - (2 * |M| + 1) / lead_coeff l) * lead_coeff l) by ring.
+        nra.
+      }
+      solve_R.
+    }
+    lra.
+Qed.
+
+Fixpoint poly_derive (l : list ℝ) : list ℝ :=
+  match l with
+  | [] => []
+  | h :: t =>
+      match t with
+      | [] => []
+      | _ => (h * INR (length t)) :: poly_derive t
+      end
+  end.
+
+Lemma length_poly_derive : forall l,
+  length (poly_derive l) = (length l - 1)%nat.
+Proof.
+  induction l as [| h t IH]; auto.
+  destruct t as [| h' t']; auto.
+  simpl. f_equal. simpl in *. rewrite IH. lia.
+Qed.
+
+Lemma differentiable_poly : forall l a, differentiable_at (polynomial l) a.
+Proof.
+  intros l a.
+  apply nth_differentiable_at_imp_differentiable_at with (n := 1%nat); [lia |].
+  apply nth_differentiable_imp_nth_differentiable_at.
+  apply inf_differentiable_imp_nth_differentiable.
+  apply polynomial_inf_differentiable.
+Qed.
+
+Lemma eval_poly_derive : forall l x,
+  ⟦ Der x ⟧ (polynomial l) = polynomial (poly_derive l) x.
+Proof.
+  induction l as [| h t IH].
+  - intros x. simpl. 
+    replace (polynomial []) with (fun _ : ℝ => 0) by (extensionality y; rewrite poly_nil; lra).
+    apply derive_at_const.
+  - intros x. destruct t as [| h' t'].
+    + simpl. replace (polynomial [h]) with (fun _ : ℝ => h).
+      2 : { extensionality y. rewrite poly_const_eval. reflexivity. }
+      rewrite poly_nil. apply derive_at_const.
+    + replace (polynomial (h :: h' :: t')) with (fun y => h * y ^ length (h' :: t') + polynomial (h' :: t') y).
+      2: { extensionality y. repeat rewrite poly_cons. reflexivity. }
+      rewrite derive_at_plus; [| apply differentiable_at_mult_const_l, differentiable_at_pow | apply differentiable_poly].
+      rewrite IH. 
+      change (poly_derive (h :: h' :: t')) with ((h * INR (length (h' :: t'))) :: poly_derive (h' :: t')).
+      rewrite poly_cons.
+      assert (H1 : ⟦ Der x ⟧ (λ x0 : ℝ, h * x0 ^ length (h' :: t')) = h * ⟦ Der x ⟧ (λ x0 : ℝ, x0 ^ length (h' :: t'))).
+      { apply derive_at_mult_const_l. apply differentiable_at_pow. }
+      rewrite H1; clear H1.
+      rewrite derive_at_pow.
+      rewrite length_poly_derive.
+      lra.
+Qed.
+
+Fixpoint poly_derive_n (i : nat) (l : list ℝ) : list ℝ :=
+  match i with
+  | 0%nat => l
+  | S i' => poly_derive (poly_derive_n i' l)
+  end.
+
+Lemma length_poly_derive_n : forall k l,
+  length (poly_derive_n k l) = (length l - k)%nat.
+Proof.
+  induction k as [| k' IH]; intros l; [simpl; lia |].
+  simpl. rewrite length_poly_derive, IH. lia.
+Qed.
+
+Lemma eval_poly_derive_n : forall i l x,
+  ⟦ Der^i x ⟧ (polynomial l) = polynomial (poly_derive_n i l) x.
+Proof.
+  induction i as [| i' IH]; intros l x; [simpl; reflexivity |].
+  change (⟦ Der^(S i') x ⟧ (polynomial l)) with (⟦ Der x ⟧ (⟦ Der^i' ⟧ (polynomial l))).
+  rewrite derive_at_eq with (f2 := polynomial (poly_derive_n i' l)); [apply eval_poly_derive |].
+  exists 1. split; [lra |]. intros y Hy. apply IH.
+Qed.
+
+Fixpoint poly_sum_derivatives (n : nat) (l : list ℝ) : list ℝ :=
+  match n with
+  | 0%nat => poly_derive_n 0 l
+  | S n' => poly_add (poly_sum_derivatives n' l) (poly_derive_n (S n') l)
+  end.
+
+Lemma eval_poly_sum_derivatives : forall k l x,
+  ∑ 0 k (λ i, ⟦ Der^i x ⟧ (polynomial l)) = polynomial (poly_sum_derivatives k l) x.
+Proof.
+  induction k as [| k' IH]; intros l x.
+  - rewrite sum_f_0_0. simpl. reflexivity.
+  - rewrite sum_f_i_Sn_f; try lia. rewrite IH. simpl poly_sum_derivatives.
+    rewrite eval_poly_add. f_equal. apply eval_poly_derive_n.
+Qed.
+
+Lemma length_poly_add_le : forall l1 l2,
+  (length l1 >= length l2)%nat -> length (poly_add l1 l2) = length l1.
+Proof.
+  induction l1 as [| h1 t1 IH]; intros l2 Hlen; [destruct l2; simpl in *; lia |].
+  assert (length t1 >= length l2 \/ length t1 < length l2)%nat as [H1 | H1] by lia.
+  - rewrite poly_add_pad_l; auto. simpl. f_equal. apply IH; auto.
+  - assert (length (h1 :: t1) = length l2) by (simpl in *; lia).
+    destruct l2 as [| h2 t2]; simpl in *; try lia.
+    rewrite poly_add_eq_len; try lia. simpl. f_equal. apply IH; lia.
+Qed.
+
+Lemma poly_sum_derivatives_cons : forall k h t,
+  exists L_rest, poly_sum_derivatives k (h :: t) = h :: L_rest /\ length L_rest = length t.
+Proof.
+  induction k as [| k' IH]; intros h t; [simpl; exists t; auto |].
+  simpl. destruct (IH h t) as [L_rest [H1 H2]]. rewrite H1.
+  pose proof (length_poly_derive_n (S k') (h :: t)) as Hlen. simpl in Hlen.
+  assert (H3 : (length L_rest >= length (poly_derive_n (S k') (h :: t)))%nat) by (simpl in *; lia).
+  rewrite poly_add_pad_l; auto.
+  exists (poly_add L_rest (poly_derive_n (S k') (h :: t))). split; auto.
+  rewrite length_poly_add_le; auto.
+Qed.
+
+Lemma poly_derive_cons_0 : forall t,
+  poly_derive (0 :: t) = if Nat.eq_dec (length t) 0 then [] else 0 :: poly_derive t.
+Proof.
+  intros t. simpl. destruct t; auto. rewrite Rmult_0_l.
+  destruct (Nat.eq_dec (length (r :: t)) 0) as [H1 | H1].
+  - simpl in H1. lia.
+  - reflexivity.
+Qed.
+
+Lemma poly_derive_n_cons_0 : forall k t,
+  poly_derive_n k (0 :: t) = 
+  if (length t <? k)%nat then [] else 0 :: poly_derive_n k t.
+Proof.
+  induction k as [| k' H1]; intros t.
+  - simpl. destruct (length t) eqn:H2; reflexivity.
+  - simpl poly_derive_n. rewrite H1.
+    destruct (length t <? k')%nat eqn:H2.
+    + apply Nat.ltb_lt in H2.
+      assert (H3 : (length t < S k')%nat) by lia.
+      apply Nat.ltb_lt in H3. rewrite H3. reflexivity.
+    + apply Nat.ltb_nlt in H2.
+      destruct (length t <? S k')%nat eqn:H3.
+      * apply Nat.ltb_lt in H3.
+        assert (H4 : length t = k') by lia.
+        pose proof (length_poly_derive_n k' t) as H5.
+        rewrite H4 in H5. rewrite Nat.sub_diag in H5.
+        destruct (poly_derive_n k' t) as [| h' t'] eqn:H6.
+        -- simpl. reflexivity.
+        -- simpl in H5. discriminate.
+      * apply Nat.ltb_nlt in H3.
+        assert (H4 : (length t > k')%nat) by lia.
+        pose proof (length_poly_derive_n k' t) as H5.
+        destruct (poly_derive_n k' t) as [| h' t'] eqn:H6.
+        -- simpl in H5. lia.
+        -- simpl. rewrite Rmult_0_l. reflexivity.
+Qed.
+
+Lemma poly_sum_derivatives_cons_0 : forall k t,
+  poly_sum_derivatives k (0 :: t) = 
+  if Nat.eq_dec (length t) 0 then poly_sum_derivatives k [0] else 0 :: poly_sum_derivatives k t.
+Proof.
+  induction k as [| k' H1]; intros t.
+  - simpl. destruct (Nat.eq_dec (length t) 0) as [H2 | H2].
+    + apply length_zero_iff_nil in H2. subst. reflexivity.
+    + reflexivity.
+  - simpl poly_sum_derivatives.
+    destruct (Nat.eq_dec (length t) 0) as [H2 | H2].
+    + apply length_zero_iff_nil in H2. subst. reflexivity.
+    + rewrite H1. destruct (Nat.eq_dec (length t) 0) as [H3 | H3]; [contradiction |].
+      rewrite poly_derive_n_cons_0.
+      destruct (length t <? S k')%nat eqn:H4.
+      * apply Nat.ltb_lt in H4.
+        assert (H5 : poly_derive_n (S k') t = []).
+        { apply length_zero_iff_nil. rewrite length_poly_derive_n. lia. }
+        change (poly_derive (poly_derive_n k' t)) with (poly_derive_n (S k') t).
+        rewrite H5.
+        destruct (length t <? k')%nat eqn:H6.
+        -- simpl. repeat rewrite poly_add_nil_r. reflexivity.
+        -- apply Nat.ltb_nlt in H6.
+          assert (H7 : poly_derive_n k' t = []).
+          { apply length_zero_iff_nil. rewrite length_poly_derive_n. lia. }
+          rewrite H7. simpl. repeat rewrite poly_add_nil_r. reflexivity.
+      * assert (H5 : (length t <? k')%nat = false).
+        { apply Nat.ltb_nlt in H4. apply Nat.ltb_nlt. lia. }
+        rewrite H5.
+        rewrite poly_derive_cons_0.
+        destruct (Nat.eq_dec (length (poly_derive_n k' t)) 0) as [H6 | H6].
+        -- rewrite length_poly_derive_n in H6. apply Nat.ltb_nlt in H4. lia.
+        -- change (poly_add (0 :: poly_sum_derivatives k' t) (0 :: poly_derive (poly_derive_n k' t)) = 0 :: poly_add (poly_sum_derivatives k' t) (poly_derive (poly_derive_n k' t))).
+           assert (H7 : length (poly_sum_derivatives k' t) = length t).
+           { clear. induction k' as [| k'' H8].
+             - reflexivity.
+             - simpl poly_sum_derivatives. assert (H9 : (length (poly_sum_derivatives k'' t) >= length (poly_derive_n (S k'') t))%nat).
+               { rewrite H8. pose proof (length_poly_derive_n (S k'') t). lia. }
+               rewrite length_poly_add_le; auto. }
+           assert (H8 : forall X Y, (length X > length Y)%nat -> poly_add X (0 :: Y) = poly_add X Y).
+           { induction X as [| x X' H9]; intros Y H10.
+             - simpl in H10. lia.
+             - destruct (Nat.eq_dec (length X') (length Y)) as [H11 | H11].
+               + rewrite poly_add_eq_len; [| simpl; lia]. rewrite Rplus_0_r.
+                 rewrite poly_add_pad_l; [reflexivity | lia].
+               + rewrite poly_add_pad_l; [| simpl in *; lia ].
+                 rewrite poly_add_pad_l; [| simpl in *; lia].
+                 f_equal. apply H9. simpl in H10. lia. }
+           rewrite poly_add_pad_l.
+           ++ f_equal. apply H8. rewrite H7. pose proof (length_poly_derive_n (S k') t). simpl in *; lia.
+           ++ rewrite H7. pose proof (length_poly_derive_n (S k') t). simpl in *; lia.
+Qed.
+
+Lemma poly_sum_derivatives_degree_lead : forall k l,
+  degree (poly_sum_derivatives k l) = degree l /\
+  lead_coeff (poly_sum_derivatives k l) = lead_coeff l.
+Proof.
+  intros k l. induction l as [| h t H1].
+  - induction k as [| k' H2].
+    + simpl. auto.
+    + assert (H3: poly_derive_n k' [] = []) by (apply length_zero_iff_nil; rewrite length_poly_derive_n; simpl; lia).
+      simpl. rewrite H3. simpl. rewrite poly_add_nil_r. exact H2.
+  - destruct (Req_EM_T h 0) as [H2 | H2].
+    + subst h. rewrite poly_sum_derivatives_cons_0.
+      destruct (Nat.eq_dec (length t) 0) as [H3 | H3].
+      * apply length_zero_iff_nil in H3. subst t.
+        induction k as [| k' H4].
+        -- simpl. auto.
+        -- simpl. rewrite poly_derive_n_cons_0.
+           destruct (0 <? k')%nat eqn:H5.
+           ++ replace (length (@nil ℝ)) with 0%nat by reflexivity. rewrite H5. simpl. rewrite poly_add_nil_r.
+              assert (H6 : degree (poly_sum_derivatives k' []) = degree [] /\ lead_coeff (poly_sum_derivatives k' []) = lead_coeff []).
+              { assert (H7: poly_sum_derivatives k' [] = []).
+                { clear. induction k' as [| k'' H8]. reflexivity.
+                  assert (H9: poly_derive_n (S k'') [] = []) by (apply length_zero_iff_nil; rewrite length_poly_derive_n; simpl; lia).
+                  simpl. change (poly_derive (poly_derive_n k'' [])) with (poly_derive_n (S k'') []). rewrite H9. rewrite H8. simpl. reflexivity. }
+                rewrite H7. split; reflexivity. }
+              exact (H4 H6).
+           ++ assert (H6: poly_derive_n k' [] = []) by (apply length_zero_iff_nil; rewrite length_poly_derive_n; simpl; lia).
+              rewrite H6. replace (length (@nil ℝ)) with 0%nat by reflexivity. rewrite H5. simpl. rewrite poly_add_nil_r.
+              assert (H7 : degree (poly_sum_derivatives k' []) = degree [] /\ lead_coeff (poly_sum_derivatives k' []) = lead_coeff []).
+              { assert (H8: poly_sum_derivatives k' [] = []).
+                { clear. induction k' as [| k'' H9]. reflexivity.
+                  assert (H10: poly_derive_n (S k'') [] = []) by (apply length_zero_iff_nil; rewrite length_poly_derive_n; simpl; lia).
+                  simpl. change (poly_derive (poly_derive_n k'' [])) with (poly_derive_n (S k'') []). rewrite H10. rewrite H9. simpl. reflexivity. }
+                rewrite H8. split; reflexivity. }
+              exact (H4 H7).
+      * simpl. destruct (Req_EM_T 0 0) as [_ | H4]; [| lra]. exact H1.
+    + destruct (poly_sum_derivatives_cons k h t) as [x [H3 H4]].
+      rewrite H3. simpl. destruct (Req_EM_T h 0) as [H5 | H5]; [lra |].
+      split; [rewrite H4; reflexivity | reflexivity].
+Qed.

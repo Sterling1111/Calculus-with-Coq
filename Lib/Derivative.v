@@ -2100,6 +2100,20 @@ Proof.
   2 : { extensionality x'. lra. } apply limit_mult; solve_lim.
 Qed.
 
+Lemma global_min_deriv_zero : forall g g' c,
+  ⟦ der ⟧ g = g' ->
+  (∀ x, g x ≥ g c) ->
+  g' c = 0.
+Proof.
+  intros g g' c H1 H2.
+  assert (H3 : minimum_point g (c - 1, c + 1) c).
+  { split; [solve_R | intros y H3 ]. apply Rge_le, H2. }
+  assert (H4 : differentiable_at g c) by (exists (g' c); apply H1).
+  pose proof (derivative_at_minimum_point_zero g (c - 1) (c + 1) c H3 H4) as H5.
+  pose proof (derivative_at_unique g g' (λ _, 0) c (H1 c) H5) as H6.
+  exact H6.
+Qed.
+
 Theorem derivative_at_local_maximum_point_zero : forall f a b x,
   local_maximum_point f (a, b) x -> differentiable_at f x -> ⟦ der x ⟧ f = (λ _, 0).
 Proof.

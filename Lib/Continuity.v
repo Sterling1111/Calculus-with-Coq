@@ -1416,3 +1416,35 @@ Proof.
   unfold continuous_at in *.
   apply limit_sum; auto.
 Qed.
+
+Lemma continuous_limit_pinf_minf_global_min : forall g,
+  continuous g ->
+  ⟦ lim ∞ ⟧ g = ∞ ->
+  ⟦ lim -∞ ⟧ g = ∞ ->
+  ∃ c, ∀ x, g x >= g c.
+Proof.
+  intros g H1 H2 H3.
+  specialize (H2 (g 0)) as [u H4].
+  specialize (H3 (g 0)) as [v H5].
+  set (q := Rmax 1 (Rmax u 0)).
+  set (p := Rmin (-1) (Rmin v 0)).
+  assert (H6 : p < q) by (unfold p, q; solve_R).
+  assert (H7 : continuous_on g [p, q]).
+  { apply continuous_imp_continuous_on; auto. }
+  pose proof (continuous_on_interval_attains_minimum g p q H6 H7) as [c [H8 H9]].
+  exists c. intros x.
+  destruct (Rle_dec p x) as [H10 | H10].
+  - destruct (Rle_dec x q) as [H11 | H11].
+    + assert (H12 : x ∈ [p, q]) by (split; lra).
+      specialize (H9 x H12). lra.
+    + apply Rnot_le_lt in H11.
+      assert (H12 : x > u) by (unfold q in H11; solve_R).
+      specialize (H4 x H12).
+      assert (H13 : 0 ∈ [p, q]) by (unfold p, q; solve_R).
+      specialize (H9 0 H13). lra.
+  - apply Rnot_le_lt in H10.
+    assert (H11 : x < v) by (unfold p in H10; solve_R).
+    specialize (H5 x H11).
+    assert (H12 : 0 ∈ [p, q]) by (unfold p, q; solve_R).
+    specialize (H9 0 H12). lra.
+Qed.
