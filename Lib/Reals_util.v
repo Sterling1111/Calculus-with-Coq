@@ -1101,3 +1101,115 @@ Proof.
       --- assert (H8 : b^k <= a^k). { apply pow_incr. lra. } assert (H9 : b^k > 0). { apply pow_lt. lra. }
           assert (H10 : a * a^k > b * b^k). { nra. } assert (H11 : a * (a * a^k) > b * (b * b^k)). { apply Rmult_gt_0_lt_compat. nra. nra. nra. nra. } nra.
 Qed.
+
+Lemma pow_eq_even : ∀ (r1 r2 : ℝ) (m : ℕ),
+  (m > 0)%nat → Nat.Even m → r1 ^ m = r2 ^ m → r1 = r2 ∨ r1 = - r2.
+Proof.
+  intros r1 r2 m H1 H2 H3.
+  destruct H2 as [k H4].
+  assert (H5 : ∀ x k, x ^ (2 * k) = (x ^ 2) ^ k).
+  { intros x k0. induction k0 as [|k0 H6].
+    - simpl. ring.
+    - replace (2 * S k0)%nat with (S (S (2 * k0)))%nat by lia.
+      simpl in *. rewrite H6. ring. }
+  assert (H6 : (k > 0)%nat) by lia.
+  destruct (Req_dec r1 0) as [H7 | H7].
+  - rewrite H7 in H3.
+    assert (H8 : 0 ^ m = 0) by (destruct m; [lia | simpl; lra]).
+    rewrite H8 in H3.
+    destruct (Req_dec r2 0) as [H9 | H9].
+    + left. lra.
+    + assert (H10 : r2 ^ m ≠ 0) by (apply pow_nonzero; exact H9).
+      exfalso. apply H10. lra.
+  - destruct (Req_dec r2 0) as [H8 | H8].
+    + rewrite H8 in H3.
+      assert (H9 : 0 ^ m = 0) by (destruct m; [lia | simpl; lra]).
+      rewrite H9 in H3.
+      assert (H10 : r1 ^ m ≠ 0) by (apply pow_nonzero; exact H7).
+      exfalso. apply H10. lra.
+    + assert (H9 : r1 ^ 2 > 0) by (simpl; nra).
+      assert (H10 : r2 ^ 2 > 0) by (simpl; nra).
+      assert (H11 : (r1 ^ 2) ^ k = (r2 ^ 2) ^ k).
+      { rewrite <- 2!H5. rewrite <- H4. exact H3. }
+      assert (H12 : r1 ^ 2 = r2 ^ 2).
+      { apply pow_eq_1 with (n := k); try assumption. }
+      simpl in H12.
+      nra.
+Qed.
+
+Lemma pow_eq_odd : ∀ (r1 r2 : ℝ) (m : ℕ),
+  Nat.Odd m → r1 ^ m = r2 ^ m → r1 = r2.
+Proof.
+  intros r1 r2 m H1 H2.
+  destruct H1 as [k H3].
+  assert (H4 : (m > 0)%nat) by lia.
+  assert (H5 : (r1 ^ m) ^ 2 = (r2 ^ m) ^ 2) by nra.
+  assert (H6 : ∀ x n, (x ^ n) ^ 2 = (x ^ 2) ^ n).
+  { intros x n. induction n as [|n H7].
+    - simpl. ring.
+    - simpl in *. nra. 
+  }
+  rewrite H6 in H5.
+  rewrite H6 in H5.
+  destruct (Req_dec r1 0) as [H7 | H7].
+  - rewrite H7 in H2.
+    assert (H8 : 0 ^ m = 0) by (destruct m; [lia | simpl; lra]).
+    rewrite H8 in H2.
+    destruct (Req_dec r2 0) as [H9 | H9].
+    + lra.
+    + assert (H10 : r2 ^ m ≠ 0) by (apply pow_nonzero; exact H9).
+      exfalso. apply H10. lra.
+  - destruct (Req_dec r2 0) as [H8 | H8].
+    + rewrite H8 in H2.
+      assert (H9 : 0 ^ m = 0) by (destruct m; [lia | simpl; lra]).
+      rewrite H9 in H2.
+      assert (H10 : r1 ^ m ≠ 0) by (apply pow_nonzero; exact H7).
+      exfalso. apply H10. lra.
+    + assert (H9 : r1 ^ 2 > 0) by nra.
+      assert (H10 : r2 ^ 2 > 0) by nra.
+      assert (H11 : r1 ^ 2 = r2 ^ 2).
+      { apply pow_eq_1 with (n := m); try assumption. }
+      assert (H12 : r1 = r2 ∨ r1 = - r2) by nra.
+      destruct H12 as [H13 | H13].
+      * exact H13.
+      * rewrite H13 in H2.
+        assert (H14 : ∀ x, (- x) ^ m = - (x ^ m)).
+        { 
+          intro x. rewrite H3.
+          replace (2 * k + 1)%nat with (S (2 * k))%nat by lia.
+          simpl.
+          assert (H15 : ∀ y j, (- y) ^ (2 * j) = y ^ (2 * j)).
+          {
+            intros y j. induction j as [|j H16].
+            - simpl. ring.
+            - replace (2 * S j)%nat with (S (S (2 * j)))%nat by lia.
+              simpl in *. nra.
+          }
+          replace (k + (k + 0))%nat with (2 * k)%nat by lia.
+          rewrite H15. ring.
+        }
+        rewrite H14 in H2.
+        assert (H15 : r2 ^ m = 0) by nra.
+        assert (H16 : r2 ^ m ≠ 0) by (apply pow_nonzero; exact H8).
+        exfalso. apply H16. exact H15.
+Qed.
+
+Lemma pow_neg_even : forall (x : R) (n : nat),
+  Nat.Even n -> (- x) ^ n = x ^ n.
+Proof.
+  intros x n [k Hk]. subst n.
+  induction k as [| k IH].
+  - simpl. reflexivity.
+  - replace (2 * S k)%nat with (S (S (2 * k)))%nat by lia.
+    simpl in *. rewrite IH. lra.
+Qed.
+
+Lemma pow_neg_odd : forall (x : R) (n : nat),
+  Nat.Odd n -> (- x) ^ n = - (x ^ n).
+Proof.
+  intros x n [k Hk]. subst n.
+  replace (2 * k + 1)%nat with (S (2 * k))%nat by lia.
+  simpl. rewrite pow_neg_even.
+  - lra.
+  - exists k. lia.
+Qed.

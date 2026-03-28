@@ -353,3 +353,81 @@ Proof.
   replace 0 with (x0 - x0) at 2 by lra.
   apply limit_minus; solve_lim.
 Qed.
+
+Lemma global_inverse_theorem : forall f f_inv f',
+  inverse f f_inv ->
+  ⟦ der ⟧ f = f' ->
+  (forall x, f' x <> 0) ->
+  ⟦ der ⟧ f_inv = (fun y => / (f' (f_inv y))).
+Proof.
+  intros f f_inv f' H1 H2 H3 y.
+  set (x := f_inv y).
+  set (a := x - 1).
+  set (b := x + 1).
+  assert (H4 : a < b) by (unfold a, b; lra).
+  assert (H5 : continuous_on f [a, b]).
+  { apply differentiable_on_imp_continuous_on_closed; auto.
+    apply derivative_on_imp_differentiable_on with (f' := f').
+    apply derivative_imp_derivative_on_closed; auto. }
+  assert (H6 : one_to_one f) by (apply theorem_12_1_a with (f_inv := f_inv); auto).
+  assert (H7 : one_to_one_on f [a, b]).
+  { apply one_to_one_on_subset with (D2 := ℝ : Ensemble R); auto.
+    intros z H7. apply Full_intro. }
+  assert (H8 : f' (f_inv y) <> 0) by apply H3.
+  assert (H9 : ⟦ der ⟧ f (a, b) = f') by (apply derivative_imp_derivative_on_open; auto).
+  assert (H10 : increasing_on f [a, b] \/ decreasing_on f [a, b]).
+  { apply theorem_12_2; auto. }
+  assert (H11 : f x = y).
+  { destruct H1 as [_ [_ [_ H11]]]. apply H11. apply Full_intro. }
+  assert (H12 : y ∈ (Rmin (f a) (f b), Rmax (f a) (f b))).
+  {
+    rewrite <- H11.
+    destruct H10 as [H12 | H12].
+    - assert (H13 : f a < f x). { apply H12; unfold a, b; solve_R. }
+      assert (H14 : f x < f b). { apply H12; unfold a, b; solve_R. }
+      assert (H15 : f a <= f b) by lra.
+      rewrite Rmin_left, Rmax_right; solve_R.
+    - assert (H13 : f x < f a). { apply H12; unfold a, b; solve_R. }
+      assert (H14 : f b < f x). { apply H12; unfold a, b; solve_R. }
+      assert (H15 : f b <= f a) by lra. solve_R.
+  }
+  assert (H13 : inverse_on f f_inv [a, b] [Rmin (f a) (f b), Rmax (f a) (f b)]).
+  { destruct H1 as [_ [_ [H14 H15]]].
+    split; [| split; [| split]].
+    - intros z H16.
+      destruct H10 as [H17 | H17].
+      + apply increasing_on_imp_non_decreasing_on in H17.
+        assert (H18 : f a <= f z) by (apply H17; solve_R).
+        assert (H19 : f z <= f b) by (apply H17; solve_R).
+        assert (H20 : f a <= f b) by lra.
+        rewrite Rmin_left, Rmax_right; solve_R.
+      + apply decreasing_on_imp_non_increasing_on in H17.
+        assert (H18 : f a >= f z) by (apply H17; solve_R).
+        assert (H19 : f z >= f b) by (apply H17; solve_R).
+        assert (H20 : f b <= f a) by lra.
+        rewrite Rmin_right, Rmax_left; solve_R.
+    - intros w H16.
+      destruct H10 as [H17 | H17].
+      + assert (H18 : f a <= f b).
+        { apply increasing_on_imp_non_decreasing_on in H17. apply H17; solve_R. }
+        rewrite Rmin_left, Rmax_right in H16; auto.
+        assert (H19 : w = f a \/ w = f b \/ f a < w < f b) by solve_R.
+        destruct H19 as [H19 | [H19 | H19]].
+        * rewrite H19. rewrite H14. solve_R. apply Full_intro.
+        * rewrite H19. rewrite H14. solve_R. apply Full_intro.
+        * pose proof intermediate_value_theorem f a b w H4 H5 H19 as [z [H20 H21]].
+          rewrite <- H21, H14; auto. apply Full_intro.
+      + assert (H18 : f b <= f a).
+        { apply decreasing_on_imp_non_increasing_on in H17. apply Rge_le, H17; solve_R. }
+        rewrite Rmin_right, Rmax_left in H16; auto.
+        assert (H19 : w = f b \/ w = f a \/ f b < w < f a) by solve_R.
+        destruct H19 as [H19 | [H19 | H19]].
+        * rewrite H19. rewrite H14. solve_R. apply Full_intro.
+        * rewrite H19. rewrite H14. solve_R. apply Full_intro.
+        * pose proof intermediate_value_theorem_decreasing f a b w H4 H5 H19 as [z [H20 H21]].
+          rewrite <- H21, H14; auto. apply Full_intro.
+    - intros z H16. apply H14; auto. apply Full_intro.
+    - intros w H16. apply H15; auto. apply Full_intro.
+  }
+  apply theorem_12_5 with (f := f) (a := a) (b := b) (f' := f'); auto.
+Qed.
